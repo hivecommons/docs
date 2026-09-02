@@ -266,25 +266,7 @@ export default function DocsNavbar() {
             <span className="ml-2">Live Demo</span>
           </a>
 
-          <Link
-            href="/marketplace"
-            className={`${buttonClasses} cursor-pointer relative hidden xl:flex`}
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-              ></path>
-            </svg>
-            <span className="ml-2">Marketplace</span>
-          </Link>
+          
           
           <div 
             className="relative hidden xl:flex" 
@@ -337,53 +319,9 @@ export default function DocsNavbar() {
                 </svg>
                 Join In
               </a>
-              <Link
-                href="/contribute-handbook"
-                className={dropdownItemClasses}
-              >
-                <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                Contributor Handbook
-              </Link>
-              <Link
-                    href="/quick-installation"
-                    className={dropdownItemClasses}
-                  >
-                      <svg
-                        className="w-5 h-5 mr-2.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        ></path>
-                      </svg>
-                    <span>Quick Installation</span>
-                </Link>
-              <Link
-                    href="/products"
-                    className={dropdownItemClasses}
-                  >
-                      <svg
-                        className="w-5 h-5 mr-2.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                        ></path>
-                      </svg>
-                    <span>Products</span>
-                </Link>
+              
+              
+              
               <a
                     href={`${getBaseUrl()}/en/ladder`}
                     className={dropdownItemClasses}
@@ -449,24 +387,8 @@ export default function DocsNavbar() {
                 onMouseEnter={handleDropdownMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-              <Link
-                href="/contribute-handbook"
-                className={dropdownItemClasses}
-              >
-                <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                Get Involved
-              </Link>
-              <Link
-                href="/programs"
-                className={dropdownItemClasses}
-              >
-                <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                Programs
-              </Link>
+              
+              
               <Link
                 href="/docs/news/latest-news"
                 className={dropdownItemClasses}
@@ -885,16 +807,7 @@ export default function DocsNavbar() {
               </svg>
               Live Demo
             </a>
-            <Link href="/marketplace" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-              isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}>
-              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              Marketplace
-            </Link>
+            
             
             <div className={`text-sm font-medium uppercase px-2 py-1.5 mt-3 tracking-wider ${
               isDark ? 'text-gray-300' : 'text-gray-500'
@@ -909,36 +822,9 @@ export default function DocsNavbar() {
               </svg>
               Join In
             </a>
-            <Link href="/contribute-handbook" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-              isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}>
-              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-              Contributor Handbook
-            </Link>
-            <Link href="/quick-installation" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-              isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}>
-              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Quick Installation
-            </Link>
-            <Link href="/products" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-              isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}>
-              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              Products
-            </Link>
+            
+            
+            
             <a href={`${getBaseUrl()}/en/ladder`} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
                 ? 'text-gray-300 hover:bg-neutral-800'
@@ -963,26 +849,8 @@ export default function DocsNavbar() {
             <div className={`text-sm font-medium uppercase px-2 py-1.5 mt-3 tracking-wider ${
               isDark ? 'text-gray-300' : 'text-gray-500'
             }`}>Community</div>
-            <Link href="/contribute-handbook" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-              isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}>
-              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-              Get Involved
-            </Link>
-            <Link href="/programs" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-              isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}>
-              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              Programs
-            </Link>
+            
+            
 {/* --- REMOVED LADDER LINK FROM HERE --- */}
             <a href={`${getBaseUrl()}/en#contact`} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark

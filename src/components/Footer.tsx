@@ -206,12 +206,7 @@ export default function Footer() {
               </h3>
               <ul className="space-y-1 sm:space-y-3">
                 <li>
-                  <Link
-                    href="/quick-installation"
-                    className="text-gray-400 hover:text-white transition-colors duration-200 text-xs sm:text-sm inline-block"
-                  >
-                    {t("installationPage")}
-                  </Link>
+                  
                 </li>
                 <li>
                   <Link

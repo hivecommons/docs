@@ -263,16 +263,7 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/marketplace"
-                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
-                      isDark
-                        ? 'text-gray-400 hover:text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Marketplace
-                  </Link>
+                  
                 </li>
                 <li>
                   <Link
@@ -298,16 +289,7 @@ export default function Footer() {
               </h3>
               <ul className="space-y-1 sm:space-y-3">
                 <li>
-                  <Link
-                    href="/quick-installation"
-                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
-                      isDark
-                        ? 'text-gray-400 hover:text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Installation Page
-                  </Link>
+                  
                 </li>
                 <li>
                   <Link

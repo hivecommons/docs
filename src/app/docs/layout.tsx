@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { DocsNavbar, DocsFooter, DocsBanner } from '@/components/docs/index'
+import { DocsNavbar, DocsFooter } from '@/components/docs/index'
 import { DocsProvider } from '@/components/docs/DocsProvider'
 import { MobileOverlay } from '@/components/docs/MobileOverlay'
 import { Inter, JetBrains_Mono } from "next/font/google"
@@ -72,7 +72,6 @@ export default async function DocsLayout({ children }: Props) {
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <DocsProvider>
             <div className="flex flex-col min-h-screen">
-              <DocsBanner />
               <Suspense fallback={<div className="h-16" />}>
                 <DocsNavbar />
               </Suspense>
