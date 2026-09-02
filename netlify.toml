@@ -60,6 +60,26 @@
   to = "/docs/pluk/overview/introduction"
   status = 302
 
+[[redirects]]
+  from = "/docs/rationguard"
+  to = "/docs/rationguard/overview/introduction"
+  status = 302
+
+[[redirects]]
+  from = "/docs/rationguard/"
+  to = "/docs/rationguard/overview/introduction"
+  status = 302
+
+[[redirects]]
+  from = "/docs/promptargs"
+  to = "/docs/promptargs/overview/introduction"
+  status = 302
+
+[[redirects]]
+  from = "/docs/promptargs/"
+  to = "/docs/promptargs/overview/introduction"
+  status = 302
+
 # Short URLs
 [[redirects]]
   from = "/code"

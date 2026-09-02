@@ -14,6 +14,10 @@ export function getContentPath(projectId: ProjectId): string {
       return path.join(process.cwd(), 'docs', 'content', 'hotshot')
     case 'pluk':
       return path.join(process.cwd(), 'docs', 'content', 'pluk')
+    case 'rationguard':
+      return path.join(process.cwd(), 'docs', 'content', 'rationguard')
+    case 'promptargs':
+      return path.join(process.cwd(), 'docs', 'content', 'promptargs')
     case 'hive':
     default:
       return path.join(process.cwd(), 'docs', 'content', 'hive')
@@ -27,6 +31,10 @@ export function getBasePath(projectId: ProjectId): string {
       return 'docs/hotshot'
     case 'pluk':
       return 'docs/pluk'
+    case 'rationguard':
+      return 'docs/rationguard'
+    case 'promptargs':
+      return 'docs/promptargs'
     case 'hive':
     default:
       return 'docs/hive'
@@ -119,6 +127,26 @@ const NAV_STRUCTURE_PLUK: Array<{ title: string; items: NavItem[] }> = [
   }
 ]
 
+// rationguard Navigation Structure
+const NAV_STRUCTURE_RATIONGUARD: Array<{ title: string; items: NavItem[] }> = [
+  {
+    title: 'Overview',
+    items: [
+      { 'Introduction': 'readme.md' },
+    ]
+  }
+]
+
+// promptargs Navigation Structure
+const NAV_STRUCTURE_PROMPTARGS: Array<{ title: string; items: NavItem[] }> = [
+  {
+    title: 'Overview',
+    items: [
+      { 'Introduction': 'readme.md' },
+    ]
+  }
+]
+
 // Get navigation structure for a project
 function getNavStructure(projectId: ProjectId): Array<{ title: string; items: NavItem[] }> {
   switch (projectId) {
@@ -126,6 +154,10 @@ function getNavStructure(projectId: ProjectId): Array<{ title: string; items: Na
       return NAV_STRUCTURE_HOTSHOT
     case 'pluk':
       return NAV_STRUCTURE_PLUK
+    case 'rationguard':
+      return NAV_STRUCTURE_RATIONGUARD
+    case 'promptargs':
+      return NAV_STRUCTURE_PROMPTARGS
     case 'hive':
     default:
       return NAV_STRUCTURE_HIVE

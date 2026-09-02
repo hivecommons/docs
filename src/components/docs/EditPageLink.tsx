@@ -9,6 +9,8 @@ const STATIC_EDIT_BASE_URLS: Record<ProjectId, string> = {
   hive: 'https://github.com/hivecommons/hive/edit/v4/src/docs',
   hotshot: 'https://github.com/hivecommons/hotshot/edit/main',
   pluk: 'https://github.com/hivecommons/pluk/edit/main',
+  rationguard: 'https://github.com/hivecommons/rationguard/edit/main',
+  promptargs: 'https://github.com/hivecommons/promptargs/edit/main',
 };
 
 interface EditPageLinkProps {

@@ -12,6 +12,8 @@ function getProjectFromSlug(slug: string[]): ProjectId {
   if (slug.length > 0) {
     if (slug[0] === 'hotshot') return 'hotshot'
     if (slug[0] === 'pluk') return 'pluk'
+    if (slug[0] === 'rationguard') return 'rationguard'
+    if (slug[0] === 'promptargs') return 'promptargs'
   }
   return 'hive'
 }

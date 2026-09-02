@@ -1,5 +1,5 @@
 // Multi-project versions config for the Hive Commons docs site
-// Supports hive, hotshot, and pluk with independent versioning
+// Supports hive, hotshot, pluk, rationguard, and promptargs with independent versioning
 //
 // Versioning Strategy:
 // - Each project has its own version scheme
@@ -18,7 +18,7 @@ export const NETLIFY_SITE_NAME = "hivecommons-docs"
 export const PRODUCTION_URL = "https://docs.hivecommons.dev"
 
 // Project identifiers
-export type ProjectId = "hive" | "hotshot" | "pluk"
+export type ProjectId = "hive" | "hotshot" | "pluk" | "rationguard" | "promptargs"
 
 // Version info structure
 export interface VersionInfo {
@@ -66,6 +66,24 @@ const PLUK_VERSIONS: Record<string, VersionInfo> = {
   },
 }
 
+// rationguard versions
+const RATIONGUARD_VERSIONS: Record<string, VersionInfo> = {
+  latest: {
+    label: "main (Latest)",
+    branch: "main",
+    isDefault: true,
+  },
+}
+
+// promptargs versions
+const PROMPTARGS_VERSIONS: Record<string, VersionInfo> = {
+  latest: {
+    label: "main (Latest)",
+    branch: "main",
+    isDefault: true,
+  },
+}
+
 // All projects configuration
 export const PROJECTS: Record<ProjectId, ProjectConfig> = {
   hive: {
@@ -92,6 +110,22 @@ export const PROJECTS: Record<ProjectId, ProjectConfig> = {
     contentPath: "docs/content/pluk",
     versions: PLUK_VERSIONS,
   },
+  rationguard: {
+    id: "rationguard",
+    name: "rationguard",
+    basePath: "rationguard",
+    currentVersion: "main",
+    contentPath: "docs/content/rationguard",
+    versions: RATIONGUARD_VERSIONS,
+  },
+  promptargs: {
+    id: "promptargs",
+    name: "promptargs",
+    basePath: "promptargs",
+    currentVersion: "main",
+    contentPath: "docs/content/promptargs",
+    versions: PROMPTARGS_VERSIONS,
+  },
 }
 
 // Get project from URL pathname
@@ -101,6 +135,12 @@ export function getProjectFromPath(pathname: string): ProjectConfig {
   }
   if (pathname.startsWith("/docs/pluk")) {
     return PROJECTS.pluk
+  }
+  if (pathname.startsWith("/docs/rationguard")) {
+    return PROJECTS.rationguard
+  }
+  if (pathname.startsWith("/docs/promptargs")) {
+    return PROJECTS.promptargs
   }
   return PROJECTS.hive
 }

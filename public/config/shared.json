@@ -20,6 +20,20 @@
         "branch": "main",
         "isDefault": true
       }
+    },
+    "rationguard": {
+      "latest": {
+        "label": "main (Latest)",
+        "branch": "main",
+        "isDefault": true
+      }
+    },
+    "promptargs": {
+      "latest": {
+        "label": "main (Latest)",
+        "branch": "main",
+        "isDefault": true
+      }
     }
   },
   "projects": {
@@ -36,6 +50,16 @@
     "pluk": {
       "name": "pluk",
       "basePath": "pluk",
+      "currentVersion": "main"
+    },
+    "rationguard": {
+      "name": "rationguard",
+      "basePath": "rationguard",
+      "currentVersion": "main"
+    },
+    "promptargs": {
+      "name": "promptargs",
+      "basePath": "promptargs",
       "currentVersion": "main"
     }
   },
@@ -56,12 +80,26 @@
       "href": "/docs/pluk/overview/introduction",
       "description": "Pub-sub event streaming for AI agent tmux sessions",
       "secondary": true
+    },
+    {
+      "title": "rationguard",
+      "href": "/docs/rationguard/overview/introduction",
+      "description": "Detect and rebut rationalization patterns in AI agent output",
+      "secondary": true
+    },
+    {
+      "title": "promptargs",
+      "href": "/docs/promptargs/overview/introduction",
+      "description": "Template expansion for AI prompts",
+      "secondary": true
     }
   ],
   "editBaseUrls": {
     "hive": "https://github.com/hivecommons/hive/edit/v4/src/docs",
     "hotshot": "https://github.com/hivecommons/hotshot/edit/main",
-    "pluk": "https://github.com/hivecommons/pluk/edit/main"
+    "pluk": "https://github.com/hivecommons/pluk/edit/main",
+    "rationguard": "https://github.com/hivecommons/rationguard/edit/main",
+    "promptargs": "https://github.com/hivecommons/promptargs/edit/main"
   },
-  "updatedAt": "2026-09-02T14:24:56.184Z"
+  "updatedAt": "2026-09-02T14:29:28.264Z"
 }

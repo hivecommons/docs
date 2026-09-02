@@ -167,7 +167,7 @@ async function buildContent(slug: string[], projectId?: ProjectId): Promise<Page
 }
 
 function getProjectFromSlug(slug: string[]): { projectId: ProjectId | undefined; docSlug: string[] } {
-  const knownProjects: string[] = ['hive', 'hotshot', 'pluk']
+  const knownProjects: string[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs']
   
   if (slug.length > 0 && knownProjects.includes(slug[0])) {
     return {

@@ -34,6 +34,8 @@ const PRIMARY_PROJECTS = [
   { id: 'hive', label: 'Hive', href: '/docs/hive/overview/introduction' },
   { id: 'hotshot', label: 'hotshot', href: '/docs/hotshot/overview/introduction' },
   { id: 'pluk', label: 'pluk', href: '/docs/pluk/overview/introduction' },
+  { id: 'rationguard', label: 'rationguard', href: '/docs/rationguard/overview/introduction' },
+  { id: 'promptargs', label: 'promptargs', href: '/docs/promptargs/overview/introduction' },
 ] as const;
 
 // No legacy projects on the Hive Commons docs site.

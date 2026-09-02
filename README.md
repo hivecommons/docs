@@ -12,6 +12,8 @@ Official documentation site for [Hive Commons](https://hivecommons.dev), served 
 - **[Hive](https://github.com/hivecommons/hive)** — autonomous AI agent fleets for your repositories
 - **[hotshot](https://github.com/hivecommons/hotshot)** — screenshots straight into your AI coding terminal
 - **[pluk](https://github.com/hivecommons/pluk)** — pub-sub event streaming for AI agent tmux sessions
+- **[rationguard](https://github.com/hivecommons/rationguard)** — detect and rebut rationalization patterns in AI agent output
+- **[promptargs](https://github.com/hivecommons/promptargs)** — template expansion for AI prompts
 
 ## How content is sourced
 
@@ -20,7 +22,7 @@ at build time:
 
 - `scripts/sync-hive-docs.ts` pulls Hive docs from `hivecommons/hive` (`src/docs/`, branch `v4`;
   override with `HIVE_DOCS_OWNER` / `HIVE_DOCS_REPO` / `HIVE_DOCS_REF`).
-- `scripts/sync-sibling-docs.ts` pulls hotshot and pluk READMEs from their repos.
+- `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, and promptargs docs from their repos.
 
 Edit the canonical source in the project repository — not the synced copies under
 `docs/content/`. If a sync source is unreachable at build time, the committed copies
