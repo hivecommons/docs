@@ -49,6 +49,32 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "adr/0017-podman-quadlet-lifecycle.md" },
 ];
 
+
+// ---------------------------------------------------------------------------
+// Brand scrub
+// ---------------------------------------------------------------------------
+// The source repos predate the Hive Commons migration and still carry
+// KubeStellar-era identifiers. Rewrite them until the upstream repos are
+// scrubbed, so the published site never shows the old branding.
+function scrubLegacyBranding(content: string): string {
+  return content
+    .replace(/io\.kubestellar\.hive\./g, "io.hivecommons.hive.")
+    .replace(/hive\\?\.kubestellar\\?\.io/g, (m) =>
+      m.includes("\\") ? "hive\\.hivecommons\\.dev" : "hive.hivecommons.dev")
+    .replace(/examples\/kubestellar-fixer\.md/g, "examples/hivecommons-fixer.md")
+    .replace(/examples\/kubestellar\//g, "examples/hivecommons/")
+    .replace(/@kubestellar\//g, "@hivecommons/")
+    .replace(/github\.com\/kubestellar\/hive/g, "github.com/hivecommons/hive")
+    .replace(/github\.com\/kubestellar/g, "github.com/hivecommons")
+    .replace(/kubestellar\/hive/g, "hivecommons/hive")
+    .replace(/kubestellar\/pluk/g, "hivecommons/pluk")
+    .replace(/kubestellar\/hotshot/g, "hivecommons/hotshot")
+    .replace(/kubestellar\.io/g, "hivecommons.dev")
+    .replace(/KubeStellar/g, "Hive Commons")
+    .replace(/Kubestellar/g, "Hive Commons")
+    .replace(/kubestellar/g, "hivecommons");
+}
+
 function canonicalHeader(source: string): string {
   const canonical = `${canonicalBase}/${source}`;
   return `> **Synced from Hive.** This page is pulled from [hivecommons/hive@${branch}](${canonical}) during the docs build. Edit the canonical source in the Hive repository.\n\n`;
@@ -223,7 +249,7 @@ async function main() {
     // Rewrite GitHub-relative links so they resolve on the docs site.
     const rewritten = rewriteLinks(content, `src/docs/${file.source}`);
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-    fs.writeFileSync(targetPath, canonicalHeader(file.source) + rewritten);
+    fs.writeFileSync(targetPath, canonicalHeader(file.source) + scrubLegacyBranding(rewritten));
     console.log(`synced ${file.source} -> docs/content/hive/${target}`);
   }
 }

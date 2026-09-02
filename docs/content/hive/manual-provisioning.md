@@ -1672,7 +1672,7 @@ Given a namespace, find the hive that owns it:
 
 ```bash
 kubectl --context <hub-reachable-cluster> get ns hive-hosted-hosted-available-<cluster>-01-placeholder-bb95 \
-  -o jsonpath='{.metadata.annotations.hive\.kubestellar\.io/display-name}'
+  -o jsonpath='{.metadata.annotations.hive\.hivecommons\.dev/display-name}'
 # -> TradingAsBuddies
 ```
 

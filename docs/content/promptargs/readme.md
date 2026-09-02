@@ -27,13 +27,13 @@ Works as a **CLI** and as a **skill** in Claude Code, Copilot, Goose, and Bob.
 ### CLI
 
 ```bash
-npm install -g @kubestellar/promptargs
+npm install -g @hivecommons/promptargs
 ```
 
 Or just run it without installing:
 
 ```bash
-npx @kubestellar/promptargs help
+npx @hivecommons/promptargs help
 ```
 
 ### As a Slash Command / Skill
@@ -44,21 +44,21 @@ This repo ships skill files for multiple AI coding tools. Install the one(s) you
 ```bash
 mkdir -p ~/.claude/commands
 curl -o ~/.claude/commands/promptargs.md \
-  https://raw.githubusercontent.com/kubestellar/promptargs/main/.claude/commands/promptargs.md
+  https://raw.githubusercontent.com/hivecommons/promptargs/main/.claude/commands/promptargs.md
 ```
 
 **Goose:**
 ```bash
 mkdir -p ~/.config/goose/skills
 curl -o ~/.config/goose/skills/promptargs.md \
-  https://raw.githubusercontent.com/kubestellar/promptargs/main/.goose/agents/promptargs.md
+  https://raw.githubusercontent.com/hivecommons/promptargs/main/.goose/agents/promptargs.md
 ```
 
 **Bob (IBM):**
 ```bash
 mkdir -p ~/.bob/skills
 curl -o ~/.bob/skills/promptargs.md \
-  https://raw.githubusercontent.com/kubestellar/promptargs/main/.bob/skills/promptargs.md
+  https://raw.githubusercontent.com/hivecommons/promptargs/main/.bob/skills/promptargs.md
 ```
 
 **Copilot:** Automatically detected from `.github/copilot-instructions.md` when you clone this repo.

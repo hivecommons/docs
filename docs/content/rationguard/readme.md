@@ -6,15 +6,17 @@
 
 AI agents make excuses. "Standing by for instructions." "Too complex to fix." "I'll handle it next pass." These sound reasonable but mean the agent stopped working.
 
-rationguard catches these patterns and provides rebuttals — in real-time via [pluk](https://www.npmjs.com/package/@kubestellar/pluk), injected into the agent's system prompt (prevention), or checked against agent output after each response (detection).
+rationguard catches these patterns and provides rebuttals — in real-time via [pluk](https://www.npmjs.com/package/@hivecommons/pluk), injected into the agent's system prompt (prevention), or checked against agent output after each response (detection).
 
 ---
 
 ## Install
 
 ```bash
-npm install -g @kubestellar/rationguard @kubestellar/pluk
+npm install -g @hivecommons/rationguard @hivecommons/pluk
 ```
+
+> This repo moved to the `hivecommons` org; the npm package scope (`@hivecommons/...`) stays as-is for now — the scope migration is a coordinated follow-up.
 
 ---
 
@@ -181,7 +183,7 @@ Custom excuses live in `.rationguard/custom-excuses.json` (per-project) or `~/.r
 ## Programmatic API
 
 ```typescript
-import { check, Watcher, generatePromptBlock } from '@kubestellar/rationguard';
+import { check, Watcher, generatePromptBlock } from '@hivecommons/rationguard';
 
 // Check text
 const result = check('Standing by for instructions.');
@@ -227,14 +229,14 @@ const block = generatePromptBlock();
 
 ## Works With
 
-- **[@kubestellar/pluk](https://www.npmjs.com/package/@kubestellar/pluk)** — structured event streaming from AI agent terminals
-- **[@kubestellar/promptargs](https://www.npmjs.com/package/@kubestellar/promptargs)** — template variable substitution for AI prompts
+- **[@hivecommons/pluk](https://www.npmjs.com/package/@hivecommons/pluk)** — structured event streaming from AI agent terminals
+- **[@hivecommons/promptargs](https://www.npmjs.com/package/@hivecommons/promptargs)** — template variable substitution for AI prompts
 
 ---
 
 ## Origin
 
-rationguard was extracted from the [Hive](https://github.com/kubestellar/hive) multi-agent orchestration system. Hive runs 5+ AI agents continuously and discovered that agents rationalize inaction with predictable patterns. The original excuse-rebuttal tables (49 excuses across 5 agents) were built empirically — every excuse was observed in production before it was catalogued.
+rationguard was extracted from the [Hive](https://github.com/hivecommons/hive) multi-agent orchestration system. Hive runs 5+ AI agents continuously and discovered that agents rationalize inaction with predictable patterns. The original excuse-rebuttal tables (49 excuses across 5 agents) were built empirically — every excuse was observed in production before it was catalogued.
 
 The 15 default excuses in rationguard are the universal patterns that apply to any AI agent, not just Hive's.
 

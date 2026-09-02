@@ -406,7 +406,7 @@ podman volume rm hive-data
 systemctl --user start hive-gateway.service
 ```
 
-The Podman volume removal is the counterpart of `down -v`, and it is separated onto its own line for the same reason: stopping and starting the units is routine, and `podman volume rm hive-data` is not. `systemctl stop` alone does **not** delete the volume — the units can be stopped and started freely without losing state. To remove the units and every labelled resource as well, use [`bin/hive-podman-teardown.sh`](https://github.com/hivecommons/hive/blob/v4/bin/hive-podman-teardown.sh), which selects by the `io.kubestellar.hive.*` ownership labels.
+The Podman volume removal is the counterpart of `down -v`, and it is separated onto its own line for the same reason: stopping and starting the units is routine, and `podman volume rm hive-data` is not. `systemctl stop` alone does **not** delete the volume — the units can be stopped and started freely without losing state. To remove the units and every labelled resource as well, use [`bin/hive-podman-teardown.sh`](https://github.com/hivecommons/hive/blob/v4/bin/hive-podman-teardown.sh), which selects by the `io.hivecommons.hive.*` ownership labels.
 
 `/data` holds the dashboard config overlay, persisted tokens, logs, and other state; deleting it discards dashboard edits and cached credentials. Back up first if you need any of it — see [Backup & restore](/docs/hive/backup-dr).
 
