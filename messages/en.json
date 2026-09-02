@@ -1,0 +1,1005 @@
+{
+  "heroSection": {
+    "line1": "Multi-Cluster",
+    "line2": "Kubernetes Operations",
+    "line3": "and Orchestration",
+    "subtitle": "Experience the future of multi-cluster Kubernetes. Hive is an AI-powered dashboard that manages all your clusters with natural language missions, real-time monitoring, and community-driven automation.",
+    "terminalTitle": "hive-console",
+    "terminalStatus": "READY",
+    "buttonInstall": "Try Console",
+    "buttonDocs": "Explore Console Docs",
+    "getStartedWith": "Get Started with",
+    "immediateStart": "Less than a minute to get installed and started with your own Hive.",
+    "consoleInstall": "Hive",
+    "consoleInstallTime": "Sets up in less than a minute"
+  },
+  "footer": {
+    "description": "AI-powered multi-cluster Kubernetes dashboard. Manage all your clusters with natural language, real-time monitoring, and community-driven extensions.",
+    "docs": "Docs",
+    "overview": "Overview",
+    "userGuide": "User Guide",
+    "onboarding": "Onboarding",
+    "releasesNotes": "Release Notes",
+    "gettingStarted": "Getting Started",
+    "installationPage": "Installation Page",
+    "ladder": "Ladder",
+    "products": "Products",
+    "contributeHandbook": "Contributor Handbook",
+    "resources": "Resources",
+    "liveDemo": "Live Demo",
+    "programs": "Programs",
+    "partners": "Partners",
+    "blog": "Blog",
+    "product": "Product",
+    "features": "Features",
+    "useCases": "Use Cases",
+    "pricing": "Pricing",
+    "roadmap": "Roadmap",
+    "documentation": "Documentation",
+    "tutorials": "Tutorials",
+    "community": "Community",
+    "company": "Company",
+    "about": "About",
+    "team": "Team",
+    "careers": "Careers",
+    "contact": "Contact",
+    "stayUpdated": "Stay Updated",
+    "emailPlaceholder": "Email",
+    "subscribe": "Subscribe",
+    "subscribed": "Subscribed!",
+    "privacyNotice": "We respect your privacy. No spam.",
+    "copyright": "© {year} Hive. All rights reserved. Apache 2.0 Licence",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "cookiePolicy": "Cookie Policy",
+    "madeWithLove": "Made with ❤️ by the Hive Team",
+    "backToTop": "Back to top",
+    "news": "News"
+  },
+  "navigation": {
+    "docs": "Docs",
+    "blog": "Blog",
+    "liveDemo": "Live Demo",
+    "marketplace": "Marketplace",
+    "contribute": "Contribute",
+    "joinIn": "Join In",
+    "contributeHandbook": "Contributor Handbook",
+    "quickInstallation": "Quick Installation",
+    "products": "Projects",
+    "security": "Security",
+    "community": "Community",
+    "getInvolved": "Get Involved",
+    "agenda": "Meeting Agendas",
+    "programs": "Programs",
+    "ladder": "Ladder",
+    "contactUs": "Contact Us",
+    "partners": "Partners",
+    "language": "English",
+    "selectLanguage": "Select Language",
+    "langHindi": "हिन्दी",
+    "langEnglish": "English",
+    "langJapanese": "日本語",
+    "langSpanish": "Español",
+    "langGerman": "Deutsch",
+    "langFrench": "Français",
+    "langItalian": "Italiano",
+    "langChineseSimplified": "简体中文",
+    "langChineseTraditional": "繁體中文",
+    "langPortuguese": "Português",
+    "github": "Github",
+    "githubStar": "Star",
+    "githubFork": "Fork",
+    "githubWatch": "Watch",
+    "githubCreateIssue": "Create Issue",
+    "mobileAbout": "About",
+    "mobileHowItWorks": "How It Works",
+    "mobileUseCases": "Use Cases",
+    "mobileGetStarted": "Get Started",
+    "mobileContact": "Contact",
+    "news": "News",
+    "reviews": "Reviews"
+  },
+  "aboutSection": {
+    "title": "What is",
+    "titleSpan": "Hive",
+    "subtitle": "An AI-powered multi-cluster Kubernetes dashboard that gives you unified visibility and control across all your clusters — installed in under a minute.",
+    "card1Title": "AI-Powered Operations",
+    "card1Description": "Use natural language AI Missions to manage your clusters. Ask questions, deploy workloads, and troubleshoot issues through an intelligent assistant that understands your infrastructure.",
+    "card2Title": "Unified Multi-Cluster Dashboard",
+    "card2Description": "See all your Kubernetes clusters in a single pane of glass. Monitor resources, view logs, and manage workloads across any cluster — cloud, on-prem, or edge — from one interface.",
+    "card3Title": "Extensible Marketplace",
+    "card3Description": "Customize your Console with dashboards, card presets, and themes from the community marketplace. Build and share your own extensions to tailor the experience to your needs.",
+    "card4Title": "Using Lens?",
+    "card4Description": "Everything Lens had. Plus everything it didn't.",
+    "card4Details": "Hive goes beyond basic cluster management with AI, security, cost, and GitOps built in.",
+    "card5Title": "Using Headlamp?",
+    "card5Description": "Headlamp is a great Kubernetes dashboard.",
+    "card5Details": "Hive adds multi-cluster AI, GPU visibility, and built-in ops tools.",
+    "card6Title": "Your Brand. Our Platform",
+    "card6Description": "Give your CNCF project a production-ready Kubernetes dashboard in minutes.",
+    "card6Details": "150+ cards, 30 dashboards, AI missions — all rebranded to your project.",
+    "card7Title": "Using HolmesGPT?",
+    "card7Description": "Everything HolmesGPT does, plus 140+ dashboard cards",
+    "card7Details": "Hive includes AI-powered root cause analysis, investigation runbooks, PagerDuty/OpsGenie integration, and Inspektor Gadget eBPF tracing",
+    "card8Title": "What Do Users Say?",
+    "card8Description": "User Reviews and Tutorials",
+    "card8Details": "See what actual Hive users have to say",
+    "learnMore": "Learn more",
+    "appendix": "Hive plus Hive Commons-MCP form a new, standalone replacement for the functions of the legacy Hive Commons components. Information on those predecessors is included in the Legacy section of the documentation"
+  },
+  "contactSection": {
+    "title": "Get",
+    "titleSpan": "in Touch",
+    "subtitle": "Have questions about Hive? We're here to help!",
+    "card1Title": "Email Support",
+    "card1Description": "Get direct support from our team",
+    "card1Link": "support@hivecommons.dev",
+    "card2Title": "Community Chat",
+    "card2Description": "Join our Slack workspace for real-time support",
+    "card2Link": "Join Slack",
+    "card3Title": "GitHub",
+    "card3Description": "Contribute, report issues, or browse the source code",
+    "card3Link": "View Repository",
+    "card4Title": "LinkedIn",
+    "card4Description": "Connect with our professional community",
+    "card4Link": "Follow Us",
+    "card5Title": "YouTube",
+    "card5Description": "Check out meeting recording, support, and informational videos in the Hive Commons YouTube Channel",
+    "card5Link": "Hive Commons YouTube",
+    "formTitle": "Send us a message",
+    "formName": "Name *",
+    "formNamePlaceholder": "Your full name",
+    "formEmail": "Email *",
+    "formEmailPlaceholder": "you@example.com",
+    "formSubject": "Subject *",
+    "formSubjectPlaceholder": "Select a subject",
+    "formSubjectOption1": "General Inquiry",
+    "formSubjectOption2": "Technical Support",
+    "formSubjectOption3": "Partnership",
+    "formSubjectOption4": "Documentation Feedback",
+    "formSubjectOption5": "Enterprise Solutions",
+    "formSubjectOption6": "Other",
+    "formMessage": "Message *",
+    "formMessagePlaceholder": "Tell us about your use case and how we can help...",
+    "formPrivacy": "I agree to the",
+    "formPrivacyLink": "privacy policy",
+    "formPrivacyCont": "and consent to being contacted by the Hive Commons team.",
+    "formSubmit": "Send Message",
+    "formSubmitting": "Sending...",
+    "formSuccess": "Your email will be sent to the Hive development mailing list. Please check your email client to complete sending!"
+  },
+  "getStartedSection": {
+    "title": "Ready to",
+    "titleSpan": "Get Started?",
+    "installSubtitle": "Start with local testing or deploy to production infrastructure",
+    "subtitle": "Join the growing community of Hive users and contributors.",
+    "localDev": {
+      "title": "Local Development",
+      "subtitle": "Perfect for testing and learning",
+      "description": "Get started quickly with a local Kubernetes environment using Docker and Kind. Ideal for development, testing, and exploring Hive Commons features.",
+      "noCloudCosts": "No cloud costs",
+      "setupTime": "15 min setup",
+      "dockerKind": "Docker + Kind",
+      "k8sVersion": "K8s 1.34+",
+      "cta": "Start Local Installation"
+    },
+    "awsEks": {
+      "title": "AWS EKS Production",
+      "subtitle": "Enterprise-ready deployment",
+      "description": "Deploy Hive Commons on AWS EKS for production workloads with enterprise-grade scalability and reliability. Full cloud infrastructure automation included.",
+      "eksVersion": "EKS 1.34",
+      "setupTime": "30 min setup",
+      "autoScaling": "Auto-scaling",
+      "awsAccount": "AWS Account",
+      "cta": "Start AWS Installation"
+    },
+    "card1Title": "Quick Installation",
+    "card1Description": "Get up and running with Hive Commons in minutes using our streamlined installation guide with automated prerequisite checking and step-by-step deployment procedures.",
+    "card1Button": "Start Quick Installation",
+    "card2Title": "Explore Use Cases & Community",
+    "card2Description": "Discover multi-cluster workload management capabilities and connect with the community.",
+    "card2Button1": "Join Slack",
+    "card2Button2": "GitHub",
+    "card2Button3": "Projects",
+    "card2Button4": "Handbook",
+    "card2Button5": "YouTube",
+    "card2Button6": "Meeting Agenda",
+    "card3Title": "Explore Documentation",
+    "card3Description": "Comprehensive guides, tutorials, and API references to help you master Hive Commons's capabilities.",
+    "card3Link1": "Getting Started",
+    "card3Link2": "Architecture",
+    "card3Link3": "API Reference"
+  },
+  "howToUseSection": {
+    "title": "How to Use",
+    "titleSpan": "Hive Commons",
+    "subtitle": "Follow these 5 simple steps to get started with Hive Commons multi-cluster orchestration",
+    "step1Title": "Set Up Your Environment",
+    "step1Description": "Install required tools and initialize core components",
+    "step1DescriptionDesktop": "Install required tools and initialize core components including KubeFlex hosting cluster, ITS, WDS, and WECs.",
+    "step1CodeComment": "# Install required tools",
+    "step1Tool1": "kubectl",
+    "step1Tool2": "helm",
+    "step1Tool3": "docker",
+    "step1Tool4": "kind/k3d",
+    "step1Tool5": "KubeFlex",
+    "step1Tool6": "Open Cluster Management (OCM) CLI",
+    "step2Title": "Register and Label Clusters",
+    "step2Description": "Register WECs and apply labels for targeting",
+    "step2DescriptionDesktop": "Register WECs with the ITS using OCM, apply labels to clusters for targeting, and establish secure connections.",
+    "step2CodeComment": "# Example cluster labeling",
+    "step2Command": "kubectl label managedcluster",
+    "step2Cluster": "cluster1",
+    "step2Label1": "location-group=edge",
+    "step2Label2": "name=cluster1",
+    "step3Title": "Define Workload Placement",
+    "step3Description": "Create BindingPolicy objects to specify deployment rules",
+    "step3DescriptionDesktop": "Create BindingPolicy objects to specify which clusters receive workloads and which workloads to distribute.",
+    "step3ApiVersion": "control.hivecommons.dev/v1alpha1",
+    "step3Kind": "BindingPolicy",
+    "step3MetadataName": "example-policy",
+    "step3SpecClusterSelectors": "clusterSelectors",
+    "step3MatchLabels": "matchLabels",
+    "step3LocationGroup": "location-group: edge",
+    "step4Title": "Deploy Your Workloads",
+    "step4Description": "Deploy workloads in native Kubernetes format",
+    "step4DescriptionDesktop": "Deploy workloads in native Kubernetes format using kubectl apply, Helm charts, ArgoCD, or Custom Resources.",
+    "step4ApiVersion": "apps/v1",
+    "step4Kind": "Deployment",
+    "step4MetadataName": "example-app",
+    "step4Labels": "labels",
+    "step4AppName": "app.kubernetes.io/name: myapp",
+    "step4Spec": "spec",
+    "step4Replicas": "replicas",
+    "step4ReplicasValue": "3",
+    "step5Title": "Monitor and Manage",
+    "step5Description": "Monitor deployment status and manage workload health",
+    "step5DescriptionDesktop": "Monitor deployment status across clusters, view workload health, collect status information, and manage policy compliance.",
+    "step5Tag1": "Status Collection",
+    "step5Tag2": "Health Monitoring",
+    "step5Tag3": "Policy Management",
+    "step5Command1Comment": "# Check deployment status across clusters",
+    "step5Command2Comment": "# View workload distribution",
+    "step5Command3Comment": "# Monitor resource usage",
+    "showMoreSteps": "Show More Steps"
+  },
+  "useCasesSection": {
+    "title": "What You Can",
+    "titleSpan": "Do",
+    "subtitle": "Discover how Hive simplifies multi-cluster Kubernetes operations.",
+    "learnMore": "Learn more",
+    "cases": {
+      "edge": {
+        "title": "AI Missions",
+        "description": "Manage clusters using natural language. Deploy workloads, troubleshoot issues, and get intelligent recommendations — all through conversational AI.",
+        "backContent": {
+          "title": "Intelligent Cluster Management",
+          "description": "AI Missions let you interact with your clusters through natural language, powered by MCP and A2A protocols.",
+          "features": [
+            "Natural language cluster operations",
+            "AI-powered troubleshooting and recommendations",
+            "MCP and A2A agent integration"
+          ]
+        }
+      },
+      "compliance": {
+        "title": "Multi-Cluster Visibility",
+        "description": "Monitor all your Kubernetes clusters from a single dashboard. See resource usage, pod status, and cluster health at a glance across your entire fleet.",
+        "backContent": {
+          "title": "Unified Dashboard",
+          "description": "Get a real-time view of all clusters with customizable dashboards and card presets.",
+          "features": [
+            "Real-time cluster health monitoring",
+            "Cross-cluster resource views",
+            "Customizable dashboard layouts"
+          ]
+        }
+      },
+      "hybrid": {
+        "title": "One-Minute Setup",
+        "description": "Install Hive with a single curl command. GitHub OAuth authentication, automatic cluster discovery, and a ready-to-use dashboard in under 60 seconds.",
+        "backContent": {
+          "title": "Instant Deployment",
+          "description": "Get started immediately with minimal prerequisites — just curl and a GitHub account.",
+          "features": [
+            "Single command installation",
+            "GitHub OAuth out of the box",
+            "Automatic cluster auto-discovery"
+          ]
+        }
+      },
+      "dr": {
+        "title": "Marketplace & Themes",
+        "description": "Extend your Console with community-built dashboards, card presets, and themes. Install from the marketplace or create and share your own customizations.",
+        "backContent": {
+          "title": "Community Extensions",
+          "description": "The marketplace provides a growing library of extensions built by the community.",
+          "features": [
+            "70+ card presets available",
+            "Custom dashboard templates",
+            "Theme support for personalization"
+          ]
+        }
+      },
+      "multitenant": {
+        "title": "Secure Access Control",
+        "description": "Team-based access with GitHub OAuth. Control who can see and manage which clusters with role-based permissions and organization-level authentication.",
+        "backContent": {
+          "title": "Enterprise Security",
+          "description": "Built-in security with GitHub OAuth and configurable access controls.",
+          "features": [
+            "GitHub OAuth authentication",
+            "Team and org-based access",
+            "Configurable via environment variables"
+          ]
+        }
+      },
+      "performance": {
+        "title": "Agent & MCP Integration",
+        "description": "Connect AI agents to your clusters through the Model Context Protocol (MCP) and Agent-to-Agent (A2A) protocol for automated operations and intelligent orchestration.",
+        "backContent": {
+          "title": "AI-Native Architecture",
+          "description": "Console is built from the ground up to work with AI agents and automation.",
+          "features": [
+            "MCP server for AI tool integration",
+            "A2A protocol for agent collaboration",
+            "Extensible agent framework"
+          ]
+        }
+      }
+    }
+  },
+  "communityHandbook": {
+    "title": "Contributor",
+    "titleSpan": "Handbook",
+    "learnMore": "Learn More",
+    "cards": {
+      "onboarding": {
+        "title": "Onboarding",
+        "description": "Hive Commons GitHub Organization On-boarding and Off-boarding Policy. Learn how to get started with our community."
+      },
+      "codeOfConduct": {
+        "title": "Code of Conduct",
+        "description": "Our pledge to create a welcoming and inclusive community for everyone to contribute and thrive."
+      },
+      "codeGuidelines": {
+        "title": "Code Guidelines",
+        "description": "Best practices for contributing code to the Hive Commons project. Essential guidelines for quality contributions."
+      },
+      "license": {
+        "title": "License",
+        "description": "Hive Commons is licensed under the Apache 2.0 License. Learn about open source licensing and terms."
+      },
+      "governance": {
+        "title": "Governance",
+        "description": "How the Hive Commons project is governed and organized. Understand our decision-making processes."
+      },
+      "testing": {
+        "title": "Testing",
+        "description": "Procedures and guidelines for testing contributions. Ensure quality and reliability in every change."
+      },
+      "packaging": {
+        "title": "Packaging",
+        "description": "How to package and distribute Hive Commons components. Learn about build and deployment processes."
+      },
+      "docsManagement": {
+        "title": "Docs Management Overview",
+        "description": "Overview of how documentation is managed and updated. Comprehensive documentation workflow."
+      },
+      "docsGuidelines": {
+        "title": "Docs Guidelines",
+        "description": "Detailed guidelines for contributing to Hive Commons documentation and website."
+      },
+      "releaseProcess": {
+        "title": "Release Process",
+        "description": "The process for creating and publishing new Hive Commons releases. Complete release lifecycle management."
+      },
+      "releaseTesting": {
+        "title": "Release Testing",
+        "description": "How to test and validate new releases before publication. Comprehensive release validation process."
+      },
+      "signoffSigning": {
+        "title": "Signoff and Signing Contributions",
+        "description": "Requirements for signing off on your contributions. Legal compliance and contribution verification."
+      }
+    }
+  },
+  "programDetailsPage": {
+    "benefits": "Benefits",
+    "description": "Description",
+    "overview": "Overview",
+    "eligibility": "Eligibility Criteria",
+    "timeline": "Timeline",
+    "structure": "Program Structure",
+    "howToApply": "How to Apply",
+    "resources": "Resources"
+  },
+  "quickInstallationPage": {
+    "title": "Quick Installation Guide",
+    "subtitle": "Get Hive Commons up and running quickly with this streamlined installation guide. Follow the prerequisites and installation steps below.",
+    "prerequisitesTitle": "Prerequisites",
+    "prerequisitesSubtitle": "Install the required tools based on your use case",
+    "coreTitle": "Core Prerequisites",
+    "coreDescription": "Essential tools for using Hive Commons",
+    "coreDocker": "Docker",
+    "coreDockerDesc": "Container runtime platform",
+    "coreKubectl": "kubectl",
+    "coreKubectlDesc": "Kubernetes command-line tool",
+    "coreKubeflex": "KubeFlex",
+    "coreKubeflexDesc": "Core component for multi-cluster management",
+    "coreOcm": "OCM CLI",
+    "coreOcmDesc": "Open Cluster Management command line interface",
+    "coreHelm": "Helm",
+    "coreHelmDesc": "Package manager for Kubernetes",
+    "additionalTitle": "Additional Prerequisites",
+    "additionalDescription": "Additional tools for running Hive Commons examples",
+    "additionalKind": "kind",
+    "additionalKindDesc": "Kubernetes IN Docker - local Kubernetes cluster",
+    "additionalK3d": "k3d",
+    "additionalK3dDesc": "Lightweight wrapper to run k3s in Docker",
+    "additionalArgo": "Argo CD CLI",
+    "additionalArgoDesc": "GitOps continuous delivery tool for Kubernetes",
+    "buildTitle": "Build Prerequisites",
+    "buildDescription": "Tools required for building Hive Commons from source",
+    "buildMake": "Make",
+    "buildMakeDesc": "Build automation tool",
+    "buildGo": "Go",
+    "buildGoDesc": "Programming language for building Hive Commons",
+    "buildKo": "ko",
+    "buildKoDesc": "Container image builder for Go applications",
+    "prerequisitesInstall": "Install:",
+    "prerequisitesVerify": "Verify:",
+    "prerequisitesButton": "View Detailed Installation Guides",
+    "autoCheckTitle": "Automated Check of Prerequisites",
+    "autoCheckSubtitle": "Use this script to automatically verify your system has all required tools",
+    "autoCheckRun": "Run Prerequisites Check:",
+    "autoCheckAboutTitle": "About the Prerequisites Check Script",
+    "autoCheckAbout1": "Self-contained script suitable for \"curl-to-bash\" usage",
+    "autoCheckAbout2": "Checks for prerequisite presence in your $PATH using the which command",
+    "autoCheckAbout3": "Provides version and path information for present prerequisites",
+    "autoCheckAbout4": "Shows installation information for missing prerequisites",
+    "autoCheckReleaseTitle": "For Specific Releases",
+    "autoCheckReleaseDesc": "To check prerequisites for a particular Hive Commons release, use the script from that specific release instead of the main branch.",
+    "autoCheckReleaseTip": "Tip: Run this check before proceeding with the installation to ensure your system is properly configured.",
+    "installTitle": "Hive Commons Installation",
+    "installSubtitle": "Choose your platform and run the installation script",
+    "installPlatform": "Choose Your Platform:",
+    "installKind": "kind",
+    "installKindDesc": "Kubernetes in Docker",
+    "installK3d": "k3d",
+    "installK3dDesc": "Lightweight Kubernetes",
+    "installScriptTitle": "Installation Script for",
+    "installProcessTitle": "Installation Process",
+    "installProcess1": "Creates a local {platform} cluster",
+    "installProcess2": "Installs Hive Commons core components",
+    "installProcess3": "Sets up multi-cluster management capabilities",
+    "installProcess4": "Configures workload distribution",
+    "installNextTitle": "Next Steps",
+    "installNext1": "Verify installation",
+    "installNext2": "Check Hive Commons status",
+    "installNext3": "Explore the",
+    "installNext3Link": "documentation",
+    "installNext3Suffix": "for examples and advanced usage",
+    "faqTitle": "Frequently Asked Questions",
+    "faqSubtitle": "Common questions about Hive Commons installation and setup",
+    "faq1Q": "What's the difference between Core, Additional, and Build prerequisites?",
+    "faq1A": "Core prerequisites are essential for using Hive Commons. Additional prerequisites are needed for running examples and demos. Build prerequisites are only required if you plan to build Hive Commons from source code.",
+    "faq2Q": "Can I automatically check if I have all prerequisites installed?",
+    "faq2A": "Yes! Use the automated prerequisite check script: 'curl -fsSL https://raw.githubusercontent.com/hivecommons/hivecommons/refs/heads/main/scripts/check_pre_req.sh | bash'. This script will verify all prerequisites and provide installation guidance for missing tools.",
+    "faq3Q": "Do I need to install all prerequisites?",
+    "faq3A": "For basic Hive Commons usage, you only need the Core prerequisites. Install Additional prerequisites if you want to run examples. Build prerequisites are only needed for development and building from source.",
+    "faq4Q": "Can I use Hive Commons with existing Kubernetes clusters?",
+    "faq4A": "Yes! Hive Commons can manage existing Kubernetes clusters. You can connect your production clusters alongside local development clusters for unified multi-cluster management.",
+    "faq5Q": "What are the minimum system requirements?",
+    "faq5A": "Hive Commons requires at least 4GB RAM and 2 CPU cores. You'll need Docker (v20.0+), kubectl (v1.27+), and either kind (v0.20+) or k3d for local clusters."
+  },
+  "programsPage": {
+    "title": "Join Our",
+    "titleSpan": "Mission",
+    "subtitle": "Discover meaningful opportunities to contribute to Hive Commons and advance your career in open source development.",
+    "paid": "Paid Program",
+    "unpaid": "Unpaid Internship",
+    "programs": {
+      "gsoc": {
+        "name": "GSoC",
+        "fullName": "Google Summer of Code",
+        "description": "Transform your coding skills with Google's premier open source program",
+        "sections": {
+          "benefits": "Gain real-world experience, learn from experienced mentors, become part of an open-source community, and receive a stipend upon successful completion of the program.",
+          "description": "Google Summer of Code is a global program focused on bringing more student developers into open source software development. Students work with an open source organization on a 3-month programming project during their break from school.",
+          "overview": "Hive Commons participates as a mentor organization. We provide project ideas, mentors, and a welcoming community for students to learn and contribute.",
+          "eligibility": "Participants must be at least 18 years of age, a student or a beginner to open source software development. For detailed criteria, please refer to the official GSoC website.",
+          "timeline": "The program typically runs from May to August. Key dates include the application period, community bonding, and coding phases. Check the GSoC website for the official timeline.",
+          "structure": "Accepted contributors work on their project with the guidance of one or more mentors from Hive Commons. There are evaluations at the midpoint and end of the program.",
+          "howToApply": "Students can apply via the Google Summer of Code website during the application period. We recommend engaging with our community and contributing to Hive Commons beforehand.",
+          "resources": [
+            {
+              "name": "Official GSoC Website"
+            },
+            {
+              "name": "Hive Commons GitHub"
+            }
+          ]
+        }
+      },
+      "esoc": {
+        "name": "ESoC",
+        "fullName": "European Summer of Code",
+        "description": "Empower European talent in open source development",
+        "sections": {
+          "benefits": "A great opportunity to work on a real-world project, receive a stipend, and connect with the open source community.",
+          "description": "European Summer of Code is a program aimed at students and recent graduates in Europe, providing them with an opportunity to contribute to open source projects.",
+          "overview": "Hive Commons is excited to mentor participants in ESoC, offering challenging projects and dedicated support to help them grow as developers.",
+          "eligibility": "Open to students and recent graduates based in Europe. Please check the official ESoC website for detailed eligibility rules.",
+          "timeline": "The program usually takes place during the summer months. Refer to the ESoC website for the specific dates and deadlines.",
+          "structure": "Participants work closely with Hive Commons mentors on a pre-defined project, with regular check-ins and feedback sessions.",
+          "howToApply": "Applications should be submitted through the official European Summer of Code portal.",
+          "resources": [
+            {
+              "name": "Official ESoC Website (Link not available)"
+            },
+            {
+              "name": "Hive Commons GitHub"
+            }
+          ]
+        }
+      },
+      "ifos": {
+        "name": "IFoS",
+        "fullName": "Interns for Open Source",
+        "description": "Kickstart your open source journey with Hive Commons",
+        "sections": {
+          "benefits": "While this is an unpaid program, successful graduates receive a certificate of completion, a letter of recommendation, and are given priority consideration for any future paid mentorship programs like GSoC or LFX.",
+          "description": "Interns for Open Source (IFoS) is a unique, unpaid internship program created by Hive Commons. It is designed for individuals who are passionate about open source and want to gain hands-on experience with a cutting-edge project.",
+          "overview": "This 3-month program provides a direct pathway into the Hive Commons community. Participants work on meaningful projects and are mentored by our core developers.",
+          "eligibility": "We welcome applications from anyone with a strong interest in Kubernetes, multi-cluster orchestration, and open source. Basic knowledge of Go and container technologies is a plus.",
+          "timeline": "IFoS is a rolling program. Applications are accepted year-round, and internships start based on project availability and applicant schedules.",
+          "structure": "Interns are paired with a mentor and integrated into one of our development teams. The program is flexible, allowing for part-time or full-time commitment.",
+          "howToApply": "To apply, please send your resume and a brief statement of interest to our community email. We also encourage you to start contributing to our GitHub repository.",
+          "resources": [
+            {
+              "name": "Hive Commons GitHub"
+            },
+            {
+              "name": "Hive Commons Community Page"
+            }
+          ]
+        }
+      },
+      "lfx": {
+        "name": "LFX",
+        "fullName": "LFX Mentorship",
+        "description": "Accelerate your open source journey with Linux Foundation mentorship",
+        "sections": {
+          "benefits": "Receive a stipend, gain hands-on experience with cutting-edge technology, build your professional network, and enhance your resume.",
+          "description": "The LFX Mentorship program, run by the Linux Foundation, provides a structured, remote learning opportunity for aspiring open source contributors. Mentees get to work on real-world projects with experienced mentors.",
+          "overview": "Hive Commons is proud to be a part of the LFX Mentorship program. We offer projects that are critical to our roadmap, giving mentees a chance to make a significant impact.",
+          "eligibility": "The program is open to developers from all backgrounds. Specific requirements may vary by project. Check the LFX Mentorship platform for details on eligibility.",
+          "timeline": "LFX Mentorship runs in terms, typically Spring, Summer, and Fall. Each term is about 12 weeks long.",
+          "structure": "Mentees work one-on-one with a mentor from Hive Commons, contributing to the project and participating in the community.",
+          "howToApply": "Applications are submitted through the LFX Mentorship platform. Browse for Hive Commons projects and apply.",
+          "resources": [
+            {
+              "name": "LFX Mentorship Platform"
+            },
+            {
+              "name": "Hive Commons GitHub"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "productsPage": {
+    "title": "Our",
+    "titleSpan": "Projects",
+    "subtitle": "Discover our suite of tools and platforms that enhance the Hive ecosystem.",
+    "repoButton": "Repository",
+    "websiteButton": "Website",
+    "watchDemoButton": "Watch Demo",
+    "products": {
+      "console": {
+        "name": "Hive",
+        "fullName": "Hive",
+        "description": "An AI-powered, multi-cluster Kubernetes dashboard that adapts to how you work. Try it or install it locally in under a minute. It's multi-cluster from day one — OpenShift, EKS, GKE, kind, k3s, whatever you have in your kubeconfig shows up automatically."
+      },
+      "hive": {
+        "name": "Hive Commons (Legacy)",
+        "fullName": "Hive Commons (Legacy)",
+        "description": "The original multi-cluster Kubernetes orchestration engine. Now integrated into Hive for a unified experience."
+      },
+      "hiveUI": {
+        "name": "Hive Commons UI",
+        "fullName": "Hive Commons UI",
+        "description": "A powerful web-based interface for managing multi-cluster Kubernetes orchestration with intuitive dashboards, real-time monitoring, and comprehensive controls for streamlined cluster management. Features advanced visualization tools, customizable workspaces, and intelligent alerts to optimize your multi-cluster operations."
+      },
+      "kubeflex": {
+        "name": "KubeFlex",
+        "fullName": "KubeFlex",
+        "description": "A flexible Kubernetes management platform providing comprehensive tools and resources for multi-cluster orchestration and workload distribution. Enables dynamic cluster provisioning, automated scaling, and intelligent resource allocation across heterogeneous environments. Simplifies complex deployment scenarios with policy-driven automation."
+      },
+      "a2a": {
+        "name": "A2A",
+        "fullName": "A2A",
+        "description": "Application-to-Application communication platform enabling seamless connectivity within the Hive Commons ecosystem. Facilitates secure data exchange and real-time communication between distributed microservices. Provides advanced routing, load balancing, and service discovery capabilities for complex multi-cluster deployments."
+      },
+      "kubectlMulti": {
+        "name": "kubectl-multi",
+        "fullName": "kubectl-multi",
+        "description": "A comprehensive kubectl plugin for multi-cluster operations with Hive Commons. This plugin extends kubectl to work seamlessly across all Hive Commons managed clusters, providing unified views and operations while filtering out workflow staging clusters (WDS). Execute commands across multiple clusters simultaneously with intelligent output aggregation."
+      },
+      "galaxyMarketplace": {
+        "name": "Galaxy Marketplace",
+        "fullName": "KS Galaxy Marketplace",
+        "description": "A centralized marketplace for Hive Commons extensions, plugins, and community-contributed tools and integrations. Discover, install, and manage third-party components to enhance your multi-cluster orchestration capabilities. Features automated compatibility checking, version management, and seamless integration with existing Hive Commons deployments."
+      }
+    }
+  },
+  "ladderPage": {
+    "title": "Contribution",
+    "titleSpan": "Ladder",
+    "subtitle": "A transparent, merit-based path from first-time contributor to trusted maintainer in the Hive Commons community",
+    "requirementsLabel": "Requirements:",
+    "requirementsNote": "Failure to meet these requirements may result in removal from the program or title revocation.",
+    "goodStandingLabel": "Opportunities in Good Standing:",
+    "nextLevelLabel": "Next Level:",
+    "statsQuestion": "How do we audit our contributor ladder?",
+    "viewStats": "View Real-Time Statistics",
+    "levels": {
+      "contributor": {
+        "title": "Contributor",
+        "nextLevel": "Unpaid Mentee",
+        "description": "Start your journey in the Hive Commons community",
+        "requirements": [
+          "Earn at least 500 leaderboard points (≈ 1 merged PR, or 2 bug reports, or 5 other issues)",
+          "Display enthusiasm and interest in long-term participation",
+          "Be active on GitHub and Slack",
+          "Informal application or nomination to join the mentee program"
+        ],
+        "goodStanding": "Contributors in good standing (consistent leaderboard point growth across issue reports, PR reviews, and merged PRs) qualify for professional opportunities including assignment to mentor projects."
+      },
+      "unpaidMentee": {
+        "title": "Unpaid Mentee",
+        "nextLevel": "Paid Mentee",
+        "description": "12-week journey to demonstrate commitment and skill",
+        "timeframe": "12 weeks",
+        "requirements": [
+          "Earn at least 40,000 leaderboard points over the 12-week cycle",
+          "Reach at least 20,000 points within the first 6 weeks",
+          "Attend 80% or more of weekly meetings",
+          "Work collaboratively with mentors",
+          "Receive mentor's recommendation"
+        ],
+        "goodStanding": "Unpaid mentees in good standing receive certificates of completion, letters of recommendation, and priority consideration for paid mentorship programs (GSoC, LFX, etc.)."
+      },
+      "paidMentee": {
+        "title": "Paid Mentee",
+        "nextLevel": "Mentor",
+        "description": "Recognized contributor with compensation and responsibility",
+        "requirements": [
+          "Earn at least 40,000 leaderboard points over the 12-week cycle",
+          "Reach at least 20,000 points within the first 6 weeks",
+          "Attend 80% or more of weekly meetings",
+          "Help onboard and support at least one new mentee or contributor",
+          "Present or co-present at a community call"
+        ],
+        "goodStanding": "Paid mentees in good standing receive professional references, career mentorship, and opportunities to lead projects or mentor others."
+      },
+      "mentor": {
+        "title": "Mentor",
+        "nextLevel": "Maintainer",
+        "description": "Guide and support the next generation of contributors",
+        "requirements": [
+          "Earn at least 40,000 leaderboard points over 12 weeks",
+          "Reach at least 20,000 points within the first 6 weeks",
+          "Attend 80% or more of weekly meetings",
+          "Demonstrate technical leadership in one or more key areas",
+          "Engage with the community in GitHub and Slack",
+          "Approved by core maintainers following a public review process"
+        ],
+        "goodStanding": "Mentors in good standing can lead initiatives, represent Hive Commons at conferences, receive speaker support, have input on project roadmap decisions, and are eligible to receive training / exam vouchers from CNCF for successfully completed projects."
+      },
+      "maintainer": {
+        "title": "Maintainer",
+        "nextLevel": "Ambassador",
+        "description": "Trusted leader with full project responsibilities",
+        "requirements": [
+          "Earn at least 5,000 leaderboard points per month",
+          "Sustain maintainer-level presence across issues, PRs, and reviews"
+        ],
+        "goodStanding": "Maintainers in good standing have full write access, voting rights on project decisions, and can serve as official project representatives."
+      },
+      "ambassador": {
+        "title": "Ambassador",
+        "nextLevel": "Stellar Advocate",
+        "description": "Empower and advocate for Hive Commons adoption",
+        "requirements": [
+          "Actively promote Hive Commons through blog posts, presentations, or social media",
+          "Represent Hive Commons at meetups, conferences, or community events",
+          "Create educational content (tutorials, videos, demos) about Hive Commons",
+          "Engage with users to gather feedback and support adoption",
+          "Maintain maintainer-level leaderboard activity (sustained points from issues, PRs, and community engagement)"
+        ],
+        "goodStanding": "Ambassadors in good standing qualify for speaking opportunities, co-authoring blog posts, early access to new features, and promotional support for their advocacy efforts."
+      }
+    },
+    "activityRequirements": {
+      "title": "Maintainer Activity Requirements",
+      "subtitle": "Maintainers must meet these bi-monthly (every 2 months) contribution minimums:",
+      "table": {
+        "metric": "Metric",
+        "requirement": "Requirement (Per 2 Months)",
+        "helpWantedIssues": "\"Help Wanted\" Issues",
+        "helpWantedIssuesValue": "≥ 2",
+        "prsMerged": "PRs Merged",
+        "prsMergedValue": "≥ 3",
+        "prReviews": "PR Reviews or Constructive Comments",
+        "prReviewsValue": "≥ 8",
+        "meetingAttendance": "Community Meeting Attendance",
+        "meetingAttendanceValue": "≥ 3"
+      }
+    },
+    "callToAction": {
+      "title": "Ready to Start Your Journey?",
+      "subtitle": "Join the Hive Commons community and begin climbing the maintainer ladder today",
+      "communityMeetingsButton": "Community Meetings",
+      "viewIssuesButton": "View Open Issues",
+      "exploreCodeTitle": "Explore Code",
+      "exploreCodeDescription": "Browse our codebase and contribute to the project",
+      "viewRepositoryLink": "View Repository →",
+      "joinSlackTitle": "Join Slack",
+      "joinSlackDescription": "Connect with the community for real-time discussions",
+      "joinCommunityLink": "Join Community →",
+      "learnGuideTitle": "Learn Guide",
+      "learnGuideDescription": "Read our comprehensive contribution handbook",
+      "viewHandbookLink": "View Handbook →"
+    },
+    "pointsNote": "Thresholds are expressed in leaderboard points. See the contributor leaderboard for current point values (PR Merged = 500, Bug Report = 300, PR Opened = 200, Feature Request = 100, Other Issue = 50).",
+    "pointsNoteCtaLeaderboard": "View the leaderboard →"
+  },
+  "partnersPage": {
+    "title": "Our",
+    "titleSpan": "Partners",
+    "subtitle": "Collaborating with leading open source projects to enhance multi-cluster Kubernetes orchestration",
+    "learnMore": "Learn More",
+    "partners": {
+      "argocd": {
+        "description": "Declarative GitOps continuous delivery tool for Kubernetes that automates application deployment and lifecycle management."
+      },
+      "fluxcd": {
+        "description": "Progressive delivery tool for Kubernetes that enables automated deployments from Git repositories with powerful GitOps capabilities."
+      },
+      "kyverno": {
+        "description": "Kubernetes-native policy management solution that validates, mutates, and generates configurations using declarative policies."
+      },
+      "mvi": {
+        "description": "Multi-cluster visibility and insights platform providing comprehensive monitoring and analytics across distributed Kubernetes environments."
+      },
+      "openziti": {
+        "description": "Zero trust network overlay and edge application platform providing secure connectivity for distributed applications."
+      },
+      "turbonomic": {
+        "description": "Application resource management platform that ensures application performance while optimizing infrastructure costs through AI-driven automation."
+      }
+    },
+    "whyPartner": {
+      "title": "Why Partner With Us",
+      "subtitle": "Join our ecosystem of innovative partners to shape the future of multi-cluster Kubernetes management",
+      "benefits": [
+        {
+          "title": "Innovation",
+          "description": "Collaborate on cutting-edge multi-cluster orchestration solutions"
+        },
+        {
+          "title": "Community",
+          "description": "Connect with a vibrant ecosystem of cloud-native developers and organizations"
+        },
+        {
+          "title": "Excellence",
+          "description": "Drive industry standards and best practices in Kubernetes orchestration"
+        }
+      ]
+    },
+    "partnershipOpportunities": {
+      "title": "Become a Partner",
+      "subtitle": "Join forces with Hive Commons to drive innovation in multi-cluster Kubernetes orchestration and expand your reach in the cloud-native ecosystem.",
+      "description": "Our partnership program is designed to foster collaboration with technology providers, cloud platforms, and service integrators who share our vision of simplifying multi-cluster Kubernetes management. Together, we can deliver comprehensive solutions that empower enterprises to manage their distributed workloads seamlessly.",
+      "features": [
+        "Technical integration support and engineering resources",
+        "Joint go-to-market initiatives and co-marketing opportunities",
+        "Access to our growing community of cloud-native practitioners",
+        "Featured placement on our partners page and documentation",
+        "Collaborative product development and roadmap input",
+        "Priority support and dedicated partnership manager"
+      ],
+      "contactButton": "Get in Touch"
+    }
+  },
+  "comingSoonPage": {
+    "title": "Coming",
+    "titleSpan": "Soon",
+    "subtitle": "We're working on something amazing for the Hive community",
+    "description": "This exciting new feature is currently under development. Our team is crafting an exceptional experience that will enhance your multi-cluster Kubernetes orchestration journey.",
+    "statusBadge": "Under Development",
+    "demoTitle": "See It In Action",
+    "demoSubtitle": "Watch our marketplace demo to get a glimpse of what's coming",
+    "cta": {
+      "title": "Explore Hive Now",
+      "subtitle": "While you wait, discover what Hive can do for you today",
+      "documentsButton": "View Documentation",
+      "documentsDescription": "Comprehensive guides and API references",
+      "documentsAction": "Explore Docs",
+      "quickStartButton": "Quick Start Guide",
+      "quickStartDescription": "Get up and running in minutes",
+      "quickStartAction": "Start Installing",
+      "communityButton": "Join Community",
+      "communityDescription": "Connect with developers and contributors",
+      "communityAction": "Join GitHub",
+      "handbookButton": "Handbook",
+      "ladderButton": "Ladder",
+      "programsButton": "Programs",
+      "partnersButton": "Partners"
+    }
+  },
+  "marketplace": {
+    "hero": {
+      "title": "Hive Marketplace",
+      "titleSuffix": "Marketplace",
+      "subtitle": "Extend your Hive with dashboards, card presets, and themes from the community.",
+      "stats": {
+        "pluginsAvailable": "Plugins Available",
+        "freePlugins": "Free Plugins",
+        "totalDownloads": "Total Downloads"
+      }
+    },
+    "featured": {
+      "title": "Featured",
+      "titleSuffix": "& Most Popular",
+      "subtitle": "Discover our top-rated and most downloaded plugins"
+    },
+    "browse": {
+      "title": "Browse All Plugins",
+      "subtitle": "Find the perfect extensions for your Hive",
+      "searchPlaceholder": "Search plugins...",
+      "categoryFilter": "All",
+      "pricingFilter": {
+        "all": "All Pricing",
+        "free": "Free",
+        "monthly": "Monthly",
+        "oneTime": "One-time"
+      },
+      "showing": "Showing",
+      "of": "of",
+      "plugins": "plugins",
+      "noResults": {
+        "title": "No plugins found",
+        "subtitle": "Try adjusting your search or filters"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next"
+      }
+    },
+    "plugin": {
+      "badge": {
+        "free": "FREE"
+      },
+      "version": "v",
+      "by": "by",
+      "rating": "/5.0",
+      "downloads": "downloads",
+      "free": "Free",
+      "monthly": "/month",
+      "oneTime": "once",
+      "viewDetails": "View Details",
+      "backToMarketplace": "Back to Marketplace",
+      "installPlugin": "Install Plugin",
+      "payAndInstall": "Pay & Install",
+      "github": "GitHub",
+      "about": "About this plugin",
+      "keyFeatures": "Key Features",
+      "requirements": "Requirements",
+      "compatibility": "Compatibility",
+      "maintainers": "Maintainers",
+      "tags": "Tags",
+      "links": "Links",
+      "documentation": "Documentation",
+      "githubRepository": "GitHub Repository",
+      "officialWebsite": "Official Website",
+      "notFound": {
+        "title": "Plugin Not Found"
+      }
+    },
+    "payment": {
+      "title": "Complete Payment",
+      "subtitle": "Purchase {name} to get started",
+      "details": {
+        "plugin": "Plugin",
+        "licenseType": "License Type",
+        "total": "Total"
+      },
+      "form": {
+        "cardNumber": "Card Number",
+        "cardPlaceholder": "1234 5678 9012 3456",
+        "expiry": "Expiry",
+        "expiryPlaceholder": "MM/YY",
+        "cvv": "CVV",
+        "cvvPlaceholder": "123",
+        "cancel": "Cancel",
+        "payNow": "Pay Now",
+        "processing": "Processing...",
+        "secureNote": "🔒 Secure payment powered by Hive Commons Gateway"
+      },
+      "success": {
+        "title": "Payment Successful!",
+        "subtitle": "Starting installation..."
+      }
+    },
+    "maintainers": {
+      "andy": "Andy Anderson",
+      "mike": "Mike Spreitzer"
+    },
+    "installation": {
+      "installing": "Installing {name}",
+      "pleaseWait": "Please wait...",
+      "success": {
+        "title": "Successfully Installed!",
+        "subtitle": "{name} has been installed to your Hive Commons deployment.",
+        "commandTitle": "Run this command to get started:",
+        "close": "Close"
+      }
+    },
+    "categories": {
+      "all": "All",
+      "cliTools": "CLI Tools",
+      "synchronization": "Synchronization",
+      "security": "Security",
+      "observability": "Observability",
+      "visualization": "Visualization",
+      "developmentTools": "Development Tools",
+      "backupRecovery": "Backup & Recovery",
+      "resourceManagement": "Resource Management",
+      "governance": "Governance",
+      "networking": "Networking",
+      "gitops": "GitOps",
+      "costManagement": "Cost Management"
+    }
+  },
+  "networkGlobe": {
+    "hive": "Hive",
+    "controlPlane": "Control Plane",
+    "clusters": {
+      "kubeflexCore": {
+        "name": "KubeFlex Core",
+        "description": "KubeFlex control plane managing multi-cluster operations"
+      },
+      "edgeClusters": {
+        "name": "Edge Clusters",
+        "description": "Edge computing clusters for distributed workloads"
+      },
+      "productionCluster": {
+        "name": "Production Cluster",
+        "description": "Production workloads and mission-critical applications"
+      },
+      "devTestCluster": {
+        "name": "Dev/Test Cluster",
+        "description": "Development and testing environments"
+      },
+      "multiCloudHub": {
+        "name": "Multi-Cloud Hub",
+        "description": "Cross-cloud orchestration and management"
+      }
+    }
+  },
+  "metadata": {
+    "title": "Hive - AI-Powered Multi-Cluster Kubernetes Dashboard",
+    "description": "Simplify multi-cluster Kubernetes operations with intelligent workload distribution, unified management, and seamless orchestration across any infrastructure."
+  },
+  "notFound": {
+    "description": "Sorry, the page you are looking for does not exist.",
+    "message": "We couldn't find the page you're looking for, but you can explore our documentation or return to the homepage to get back on track.",
+    "homeButton": "Return Home",
+    "docsButton": "View Documentation",
+    "requestedPath": "Requested:"
+  }
+}

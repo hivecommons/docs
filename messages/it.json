@@ -1,0 +1,962 @@
+{
+  "heroSection": {
+    "line1": "Multi-cluster",
+    "line2": "Kubernetes",
+    "line3": "Orchestrazione",
+    "subtitle": "Scopri il futuro dell'orchestrazione cloud-native. Hive Commons rivoluziona la gestione multi‑cluster con automazione intelligente e visibilità in tempo reale.",
+    "terminalTitle": "hivecommons-control-center",
+    "terminalStatus": "PRONTO",
+    "terminalCommandL1": "bash <(curl -s \\",
+    "terminalCommandL2": "  https://raw.githubusercontent.com/hivecommons/hivecommons/ \\",
+    "terminalCommandL3": "  refs/tags/v0.27.2/scripts/ \\",
+    "terminalCommandL4": "  create-hivecommons-demo-env.sh) --platform kind",
+    "terminalOutputInfo": "INFO",
+    "terminalOutputInfoText": "Installazione dell'ambiente demo Hive Commons...",
+    "terminalOutputSetup": "SETUP",
+    "terminalOutputSetupText": "Creazione dei cluster kind: kubeflex, cluster1, cluster2",
+    "terminalOutputInstall": "INSTALL",
+    "terminalOutputInstallText": "Distribuzione dei componenti del control plane KubeFlex",
+    "terminalOutputConfig": "CONFIG",
+    "terminalOutputConfigText": "Configurazione di Open Cluster Management",
+    "terminalOutputSuccess": "SUCCESSO",
+    "terminalOutputSuccessText": "Ambiente demo Hive Commons pronto! Configurazione completata",
+    "buttonInstall": "Prova la console",
+    "buttonDocs": "Esplora la documentazione della console",
+    "getStartedWith": "Inizia con",
+    "chooseEnvironment": "Scegli il tuo ambiente di deployment",
+    "localDevelopment": "Sviluppo locale",
+    "localDevelopmentTime": "Docker + Kind • 15 min",
+    "awsEksProduction": "AWS EKS Produzione",
+    "awsEksProductionTime": "Enterprise Ready • 30 min"
+  },
+  "footer": {
+    "description": "Piattaforma di orchestrazione Kubernetes multi‑cluster che semplifica la gestione dei workload distribuiti su infrastrutture eterogenee.",
+    "docs": "Documentazione",
+    "overview": "Panoramica",
+    "userGuide": "Guida utente",
+    "onboarding": "Onboarding",
+    "releasesNotes": "Note di rilascio",
+    "gettingStarted": "Per iniziare",
+    "installationPage": "Pagina di installazione",
+    "ladder": "Ladder",
+    "products": "Progetti",
+    "contributeHandbook": "Manuale del contributore",
+    "resources": "Risorse",
+    "liveDemo": "Playground",
+    "programs": "Programmi",
+    "partners": "Partner",
+    "blog": "Blog",
+    "product": "Prodotto",
+    "features": "Funzionalità",
+    "useCases": "Casi d'uso",
+    "pricing": "Prezzi",
+    "roadmap": "Roadmap",
+    "documentation": "Documentazione",
+    "tutorials": "Tutorial",
+    "community": "Comunità",
+    "company": "Azienda",
+    "about": "Chi siamo",
+    "team": "Team",
+    "careers": "Carriere",
+    "contact": "Contatti",
+    "stayUpdated": "Rimani aggiornato",
+    "emailPlaceholder": "Email",
+    "subscribe": "Iscriviti",
+    "subscribed": "Iscritto!",
+    "privacyNotice": "Rispettiamo la tua privacy. Niente spam.",
+    "copyright": "© {year} Hive Commons. Tutti i diritti riservati. Licenza Apache 2.0",
+    "privacyPolicy": "Informativa sulla privacy",
+    "termsOfService": "Termini di servizio",
+    "cookiePolicy": "Cookie policy",
+    "madeWithLove": "Creato con ❤️ dal team Hive Commons",
+    "backToTop": "Torna su",
+    "news": "Notizie"
+  },
+  "navigation": {
+    "docs": "Documentazione",
+    "blog": "Blog",
+    "liveDemo": "Playground",
+    "marketplace": "Marketplace",
+    "contribute": "Contribuisci",
+    "joinIn": "Unisciti",
+    "contributeHandbook": "Manuale del contributore",
+    "quickInstallation": "Installazione rapida",
+    "products": "Progetti",
+    "security": "Sicurezza",
+    "community": "Comunità",
+    "getInvolved": "Partecipa",
+    "agenda": "Agenda delle Riunioni",
+    "programs": "Programmi",
+    "ladder": "Ladder",
+    "contactUs": "Contattaci",
+    "partners": "Partner",
+    "language": "Italiano",
+    "selectLanguage": "Seleziona lingua",
+    "langHindi": "हिन्दी",
+    "langEnglish": "English",
+    "langJapanese": "日本語",
+    "langSpanish": "Español",
+    "langGerman": "Deutsch",
+    "langFrench": "Français",
+    "langItalian": "Italiano",
+    "langChineseSimplified": "简体中文",
+    "langChineseTraditional": "繁體中文",
+    "langPortuguese": "Português",
+    "github": "GitHub",
+    "githubStar": "Stella",
+    "githubFork": "Fork",
+    "githubWatch": "Segui",
+    "githubCreateIssue": "Crea Issue",
+    "mobileAbout": "Chi siamo",
+    "mobileHowItWorks": "Come funziona",
+    "mobileUseCases": "Casi d'uso",
+    "mobileGetStarted": "Inizia",
+    "mobileContact": "Contatti",
+    "news": "Notizie",
+    "reviews": "Recensioni"
+  },
+  "aboutSection": {
+    "title": "Che cos'è",
+    "titleSpan": "Hive",
+    "subtitle": "Un dashboard Kubernetes multi-cluster alimentato da IA che ti offre visibilità e controllo unificati su tutti i tuoi cluster — installato in meno di un minuto.",
+    "card1Title": "Operazioni alimentate da IA",
+    "card1Description": "Usa missioni AI in linguaggio naturale per gestire i tuoi cluster. Poni domande, distribuisci workload e risolvi problemi tramite un assistente intelligente che comprende la tua infrastruttura.",
+    "card2Title": "Dashboard multi-cluster unificato",
+    "card2Description": "Vedi tutti i tuoi cluster Kubernetes su un'unica schermata. Monitora risorse, visualizza log e gestisci workload su qualsiasi cluster — cloud, on-premise o edge — da un'unica interfaccia.",
+    "card3Title": "Marketplace estensibile",
+    "card3Description": "Personalizza la tua Console con dashboard, preset di schede e temi dal marketplace della community. Crea e condividi le tue estensioni per adattare l'esperienza alle tue esigenze.",
+    "card4Title": "Usi Lens?",
+    "card4Description": "Tutto quello che Lens aveva. Più tutto quello che non aveva.",
+    "card4Details": "Hive va oltre la gestione di base dei cluster con AI, sicurezza, costi e GitOps integrati.",
+    "card5Title": "Usi Headlamp?",
+    "card5Description": "Headlamp è un'ottima dashboard di Kubernetes.",
+    "card5Details": "Hive aggiunge AI multi-cluster, visibilità GPU e strumenti ops integrati.",
+    "card6Title": "Il tuo marchio. La nostra piattaforma",
+    "card6Description": "Dai al tuo progetto CNCF una dashboard di Kubernetes pronta per la produzione in pochi minuti.",
+    "card6Details": "150+ schede, 30 dashboard, missioni AI — tutti rinominati per il tuo progetto.",
+    "card7Title": "Usi HolmesGPT?",
+    "card7Description": "Tutto ciò che fa HolmesGPT, più 140+ schede dashboard",
+    "card7Details": "Hive include analisi delle cause radice alimentate da IA, runbook di investigazione, integrazione PagerDuty/OpsGenie e tracciamento eBPF di Inspektor Gadget",
+    "card8Title": "Cosa dicono gli utenti?",
+    "card8Description": "Recensioni e tutorial degli utenti",
+    "card8Details": "Scopri cosa hanno da dire gli utenti effettivi di Hive",
+    "learnMore": "Scopri di più",
+    "appendix": "Hive e Hive Commons-MCP insieme formano un nuovo sostituto indipendente delle funzioni dei vecchi componenti Hive Commons. Le informazioni su questi predecessori sono incluse nella sezione Legacy della documentazione"
+  },
+  "contactSection": {
+    "title": "Mettiti",
+    "titleSpan": "in contatto",
+    "subtitle": "Hai domande su Hive Commons? Siamo qui per aiutarti!",
+    "card1Title": "Supporto email",
+    "card1Description": "Ottieni supporto diretto dal nostro team",
+    "card1Link": "support@hivecommons.dev",
+    "card2Title": "Chat della community",
+    "card2Description": "Unisciti al nostro workspace Slack per supporto in tempo reale",
+    "card2Link": "Entra su Slack",
+    "card3Title": "GitHub",
+    "card3Description": "Contribuisci, segnala problemi o consulta il codice sorgente",
+    "card3Link": "Vedi repository",
+    "card4Title": "LinkedIn",
+    "card4Description": "Connettiti con la nostra community professionale",
+    "card4Link": "Seguici",
+    "formTitle": "Inviaci un messaggio",
+    "formName": "Nome *",
+    "formNamePlaceholder": "Il tuo nome completo",
+    "formEmail": "Email *",
+    "formEmailPlaceholder": "tu@esempio.com",
+    "formSubject": "Oggetto *",
+    "formSubjectPlaceholder": "Seleziona un oggetto",
+    "formSubjectOption1": "Richiesta generale",
+    "formSubjectOption2": "Supporto tecnico",
+    "formSubjectOption3": "Partnership",
+    "formSubjectOption4": "Feedback sulla documentazione",
+    "formSubjectOption5": "Soluzioni enterprise",
+    "formSubjectOption6": "Altro",
+    "formMessage": "Messaggio *",
+    "formMessagePlaceholder": "Descrivi il tuo caso d'uso e come possiamo aiutarti...",
+    "formPrivacy": "Accetto la",
+    "formPrivacyLink": "informativa sulla privacy",
+    "formPrivacyCont": "e acconsento a essere contattato dal team Hive Commons.",
+    "formSubmit": "Invia messaggio",
+    "formSubmitting": "Invio in corso...",
+    "formSuccess": "La tua email sarà inviata alla mailing list di sviluppo di Hive Commons. Controlla il client di posta per completare l'invio!"
+  },
+  "getStartedSection": {
+    "title": "Pronto per",
+    "titleSpan": "iniziare?",
+    "installSubtitle": "Inizia con i test locali o effettua il deploy su un'infrastruttura di produzione",
+    "subtitle": "Unisciti alla crescente community di utenti e contributori Hive Commons.",
+    "localDev": {
+      "title": "Sviluppo locale",
+      "subtitle": "Ideale per test e apprendimento",
+      "description": "Inizia rapidamente con un ambiente Kubernetes locale usando Docker e Kind. Ideale per sviluppo, test ed esplorazione delle funzionalità di Hive Commons.",
+      "noCloudCosts": "Nessun costo cloud",
+      "setupTime": "15 min setup",
+      "dockerKind": "Docker + Kind",
+      "k8sVersion": "K8s 1.34+",
+      "cta": "Avvia installazione locale"
+    },
+    "awsEks": {
+      "title": "AWS EKS Produzione",
+      "subtitle": "Deployment enterprise-ready",
+      "description": "Distribuisci Hive Commons su AWS EKS per workload di produzione con scalabilità e affidabilità enterprise. Automazione completa dell'infrastruttura cloud inclusa.",
+      "eksVersion": "EKS 1.34",
+      "setupTime": "30 min setup",
+      "autoScaling": "Auto-scaling",
+      "awsAccount": "Account AWS",
+      "cta": "Avvia installazione AWS"
+    },
+    "card1Title": "Installazione rapida",
+    "card1Description": "Inizia con Hive Commons in pochi minuti grazie alla nostra guida di installazione semplificata, con controllo automatico dei prerequisiti e istruzioni passo‑passo.",
+    "card1Button": "Avvia installazione rapida",
+    "card2Title": "Esplora i casi d'uso e la community",
+    "card2Description": "Scopri le funzionalità di gestione dei workload multi‑cluster e connettiti con la community.",
+    "card2Button1": "Unisciti a Slack",
+    "card2Button2": "GitHub",
+    "card2Button3": "Progetti",
+    "card2Button4": "Handbook",
+    "card2Button5": "YouTube",
+    "card3Title": "Esplora la documentazione",
+    "card3Description": "Guide complete, tutorial e riferimenti API per aiutarti a padroneggiare le funzionalità di Hive Commons.",
+    "card3Link1": "Per iniziare",
+    "card3Link2": "Architettura",
+    "card3Link3": "Riferimento API"
+  },
+  "howToUseSection": {
+    "title": "Come usare",
+    "titleSpan": "Hive Commons",
+    "subtitle": "Segui questi 5 semplici passaggi per iniziare con l'orchestrazione multi‑cluster di Hive Commons",
+    "step1Title": "Configura l'ambiente",
+    "step1Description": "Installa gli strumenti richiesti e inizializza i componenti core",
+    "step1DescriptionDesktop": "Installa gli strumenti richiesti e inizializza i componenti core, inclusi il cluster di hosting KubeFlex, ITS, WDS e i WEC.",
+    "step1CodeComment": "# Installa gli strumenti richiesti",
+    "step1Tool1": "kubectl",
+    "step1Tool2": "helm",
+    "step1Tool3": "docker",
+    "step1Tool4": "kind/k3d",
+    "step1Tool5": "KubeFlex",
+    "step1Tool6": "OCM CLI (Open Cluster Management)",
+    "step2Title": "Registra e etichetta i cluster",
+    "step2Description": "Registra i WEC e applica le label per il targeting",
+    "step2DescriptionDesktop": "Registra i WEC nell'ITS utilizzando OCM, applica label ai cluster per il targeting e stabilisci connessioni sicure.",
+    "step2CodeComment": "# Esempio di etichettatura di un cluster",
+    "step2Command": "kubectl label managedcluster",
+    "step2Cluster": "cluster1",
+    "step2Label1": "location-group=edge",
+    "step2Label2": "name=cluster1",
+    "step3Title": "Definisci il posizionamento dei workload",
+    "step3Description": "Crea oggetti BindingPolicy per specificare le regole di distribuzione",
+    "step3DescriptionDesktop": "Crea oggetti BindingPolicy per specificare quali cluster ricevono quali workload e come distribuirli.",
+    "step3ApiVersion": "control.hivecommons.dev/v1alpha1",
+    "step3Kind": "BindingPolicy",
+    "step3MetadataName": "example-policy",
+    "step3SpecClusterSelectors": "clusterSelectors",
+    "step3MatchLabels": "matchLabels",
+    "step3LocationGroup": "location-group: edge",
+    "step4Title": "Distribuisci i workload",
+    "step4Description": "Distribuisci i workload nel formato Kubernetes nativo",
+    "step4DescriptionDesktop": "Distribuisci i workload nel formato Kubernetes nativo usando kubectl apply, chart Helm, ArgoCD o Custom Resource.",
+    "step4ApiVersion": "apps/v1",
+    "step4Kind": "Deployment",
+    "step4MetadataName": "example-app",
+    "step4Labels": "labels",
+    "step4AppName": "app.kubernetes.io/name: myapp",
+    "step4Spec": "spec",
+    "step4Replicas": "replicas",
+    "step4ReplicasValue": "3",
+    "step5Title": "Monitora e gestisci",
+    "step5Description": "Monitora lo stato delle distribuzioni e la salute dei workload",
+    "step5DescriptionDesktop": "Monitora lo stato delle distribuzioni tra i cluster, visualizza la salute dei workload, raccogli informazioni di stato e gestisci la conformità alle policy.",
+    "step5Tag1": "Raccolta stato",
+    "step5Tag2": "Monitoraggio salute",
+    "step5Tag3": "Gestione policy",
+    "step5Command1Comment": "# Verifica lo stato delle distribuzioni tra i cluster",
+    "step5Command2Comment": "# Visualizza la distribuzione dei workload",
+    "step5Command3Comment": "# Monitora l'utilizzo delle risorse",
+    "showMoreSteps": "Mostra altri passaggi"
+  },
+  "useCasesSection": {
+    "title": "Casi",
+    "titleSpan": "d'uso",
+    "subtitle": "Scopri come le organizzazioni utilizzano Hive Commons per le loro esigenze multi‑cluster.",
+    "learnMore": "Scopri di più",
+    "cases": {
+      "edge": {
+        "title": "Edge computing",
+        "description": "Distribuisci applicazioni tra sedi edge con gestione centralizzata. Ideale per retail, manifatturiero e telecom con infrastrutture distribuite.",
+        "backContent": {
+          "title": "Gestione dichiarativa dei workload multi‑cluster",
+          "description": "Distribuisci e gestisci workload Kubernetes su più cluster usando oggetti Kubernetes nativi senza wrapping o packaging.",
+          "features": [
+            "Distribuzione di oggetti Kubernetes nativi tra cluster",
+            "Selezione dei cluster basata su label per il targeting dei workload",
+            "Gestione centralizzata tramite Workload Definition Space (WDS)"
+          ]
+        }
+      },
+      "compliance": {
+        "title": "Conformità multi‑regione",
+        "description": "Distribuisci applicazioni con requisiti normativi specifici per regione. Garantisci residenza dei dati e conformità normativa nelle operazioni globali.",
+        "backContent": {
+          "title": "Distribuzione di Custom Resource",
+          "description": "Distribuisci e gestisci Custom Resource (CRD) su più cluster mantenendo sincronizzazione e ciclo di vita corretti.",
+          "features": [
+            "Supporto per tipi di workload esterni",
+            "Sincronizzazione automatica delle CRD",
+            "Configurazioni RBAC flessibili"
+          ]
+        }
+      },
+      "hybrid": {
+        "title": "Hybrid / Multi‑cloud",
+        "description": "Gestisci workload in modo uniforme tra più provider cloud e infrastrutture on‑prem con policy unificate ed esperienza coerente.",
+        "backContent": {
+          "title": "Operazioni multi‑cluster resilienti",
+          "description": "Mantieni una distribuzione e una gestione affidabili dei workload anche durante interruzioni del control plane o problemi di rete.",
+          "features": [
+            "Architettura resiliente basata su spazi multipli",
+            "Ripristino automatico dopo le interruzioni",
+            "Riconciliazione dello stato tra i cluster"
+          ]
+        }
+      },
+      "dr": {
+        "title": "Disaster recovery",
+        "description": "Implementa strategie robuste di disaster recovery con replica automatica dei workload e failover tra cluster in regioni diverse.",
+        "backContent": {
+          "title": "Gestione avanzata dello stato",
+          "description": "Monitora e gestisci lo stato dei workload tra più cluster con opzioni per reportistica sia individuale sia aggregata.",
+          "features": [
+            "Reportistica singleton per il monitoraggio dei singoli cluster",
+            "Aggregazione combinata dello stato tra cluster",
+            "Aggiornamenti di stato in tempo reale tramite OCM Status Add‑On"
+          ]
+        }
+      },
+      "multitenant": {
+        "title": "Isolamento multi‑tenant",
+        "description": "Crea ambienti isolati per team o clienti diversi mantenendo al contempo un control plane centralizzato. Ideale per provider SaaS e grandi imprese.",
+        "backContent": {
+          "title": "Distribuzione dei chart Helm",
+          "description": "Distribuisci e gestisci chart Helm tra più cluster mantenendo metadati e informazioni di rilascio.",
+          "features": [
+            "Supporto nativo per chart Helm",
+            "Gestione coerente dei rilasci tra cluster",
+            "Distribuzione dei chart basata su label"
+          ]
+        }
+      },
+      "performance": {
+        "title": "Ottimizzazione delle prestazioni",
+        "description": "Distribuisci i workload il più vicino possibile agli utenti o alle sorgenti dati per ottimizzare le prestazioni, ridurre la latenza e migliorare l'esperienza utente globale.",
+        "backContent": {
+          "title": "Personalizzazione basata su template",
+          "description": "Personalizza le configurazioni dei workload per cluster diversi mantenendo una singola fonte di verità.",
+          "features": [
+            "Supporto per espansione dei template",
+            "Personalizzazione specifica per cluster",
+            "Configurazione basata su proprietà"
+          ]
+        }
+      }
+    }
+  },
+  "communityHandbook": {
+    "title": "Manuale del",
+    "titleSpan": "contributore",
+    "learnMore": "Scopri di più",
+    "cards": {
+      "onboarding": {
+        "title": "Onboarding",
+        "description": "Policy di onboarding e offboarding dell'organizzazione GitHub Hive Commons. Scopri come iniziare con la nostra community."
+      },
+      "codeOfConduct": {
+        "title": "Codice di condotta",
+        "description": "Il nostro impegno per creare una community accogliente e inclusiva in cui tutti possano contribuire e crescere."
+      },
+      "codeGuidelines": {
+        "title": "Linee guida per il codice",
+        "description": "Best practice per contribuire al progetto Hive Commons. Linee guida essenziali per contributi di qualità."
+      },
+      "license": {
+        "title": "Licenza",
+        "description": "Hive Commons è rilasciato sotto licenza Apache 2.0. Scopri i dettagli della licenza open source e i termini."
+      },
+      "governance": {
+        "title": "Governance",
+        "description": "Come è governato e organizzato il progetto Hive Commons. Comprendi i nostri processi decisionali."
+      },
+      "testing": {
+        "title": "Testing",
+        "description": "Procedure e linee guida per testare i contributi. Garantiamo qualità e affidabilità in ogni modifica."
+      },
+      "packaging": {
+        "title": "Packaging",
+        "description": "Come pacchettizzare e distribuire i componenti Hive Commons. Scopri i processi di build e rilascio."
+      },
+      "docsManagement": {
+        "title": "Gestione della documentazione",
+        "description": "Panoramica sulla gestione e l'aggiornamento della documentazione. Workflow completo per la documentazione."
+      },
+      "docsGuidelines": {
+        "title": "Linee guida per la documentazione",
+        "description": "Linee guida dettagliate per contribuire alla documentazione e al sito web di Hive Commons."
+      },
+      "releaseProcess": {
+        "title": "Processo di rilascio",
+        "description": "Il processo per creare e pubblicare nuove release di Hive Commons. Gestione completa del ciclo di rilascio."
+      },
+      "releaseTesting": {
+        "title": "Testing delle release",
+        "description": "Come testare e validare le nuove release prima della pubblicazione. Processo completo di validazione."
+      },
+      "signoffSigning": {
+        "title": "Signoff e firma dei contributi",
+        "description": "Requisiti per il signoff dei contributi. Conformità legale e verifica dei contributi."
+      }
+    }
+  },
+  "programDetailsPage": {
+    "benefits": "Vantaggi",
+    "description": "Descrizione",
+    "overview": "Panoramica",
+    "eligibility": "Criteri di idoneità",
+    "timeline": "Timeline",
+    "structure": "Struttura del programma",
+    "howToApply": "Come candidarsi",
+    "resources": "Risorse"
+  },
+  "quickInstallationPage": {
+    "title": "Guida di installazione rapida",
+    "subtitle": "Configura Hive Commons rapidamente con questa guida semplificata. Segui i prerequisiti e i passaggi di installazione riportati di seguito.",
+    "prerequisitesTitle": "Prerequisiti",
+    "prerequisitesSubtitle": "Installa gli strumenti richiesti in base al tuo caso d'uso",
+    "coreTitle": "Prerequisiti core",
+    "coreDescription": "Strumenti essenziali per usare Hive Commons",
+    "coreDocker": "Docker",
+    "coreDockerDesc": "Piattaforma runtime per container",
+    "coreKubectl": "kubectl",
+    "coreKubectlDesc": "Strumento da riga di comando per Kubernetes",
+    "coreKubeflex": "KubeFlex",
+    "coreKubeflexDesc": "Componente core per la gestione multi‑cluster",
+    "coreOcm": "OCM CLI",
+    "coreOcmDesc": "Interfaccia a riga di comando Open Cluster Management",
+    "coreHelm": "Helm",
+    "coreHelmDesc": "Gestore di pacchetti per Kubernetes",
+    "additionalTitle": "Prerequisiti aggiuntivi",
+    "additionalDescription": "Strumenti aggiuntivi per eseguire gli esempi Hive Commons",
+    "additionalKind": "kind",
+    "additionalKindDesc": "Kubernetes IN Docker – cluster Kubernetes locale",
+    "additionalK3d": "k3d",
+    "additionalK3dDesc": "Wrapper leggero per eseguire k3s in Docker",
+    "additionalArgo": "Argo CD CLI",
+    "additionalArgoDesc": "Strumento GitOps di continuous delivery per Kubernetes",
+    "buildTitle": "Prerequisiti di build",
+    "buildDescription": "Strumenti richiesti per compilare Hive Commons dal sorgente",
+    "buildMake": "Make",
+    "buildMakeDesc": "Strumento di automazione build",
+    "buildGo": "Go",
+    "buildGoDesc": "Linguaggio di programmazione per compilare Hive Commons",
+    "buildKo": "ko",
+    "buildKoDesc": "Builder di immagini container per applicazioni Go",
+    "prerequisitesInstall": "Installa:",
+    "prerequisitesVerify": "Verifica:",
+    "prerequisitesButton": "Visualizza guide di installazione dettagliate",
+    "autoCheckTitle": "Verifica automatica dei prerequisiti",
+    "autoCheckSubtitle": "Usa questo script per verificare automaticamente che il tuo sistema disponga di tutti gli strumenti richiesti",
+    "autoCheckRun": "Esegui il controllo dei prerequisiti:",
+    "autoCheckAboutTitle": "Informazioni sullo script di controllo dei prerequisiti",
+    "autoCheckAbout1": "Script auto‑contenuto adatto all'uso \"curl‑to‑bash\"",
+    "autoCheckAbout2": "Controlla la presenza dei prerequisiti nel tuo $PATH usando il comando which",
+    "autoCheckAbout3": "Fornisce versione e percorso per i prerequisiti presenti",
+    "autoCheckAbout4": "Mostra informazioni di installazione per i prerequisiti mancanti",
+    "autoCheckReleaseTitle": "Per release specifiche",
+    "autoCheckReleaseDesc": "Per controllare i prerequisiti di una release specifica di Hive Commons, usa lo script di quella release invece del branch main.",
+    "autoCheckReleaseTip": "Suggerimento: esegui questo controllo prima di procedere con l'installazione per assicurarti che il sistema sia configurato correttamente.",
+    "installTitle": "Installazione di Hive Commons",
+    "installSubtitle": "Scegli la tua piattaforma ed esegui lo script di installazione",
+    "installPlatform": "Scegli la piattaforma:",
+    "installKind": "kind",
+    "installKindDesc": "Kubernetes in Docker",
+    "installK3d": "k3d",
+    "installK3dDesc": "Kubernetes leggero",
+    "installScriptTitle": "Script di installazione per",
+    "installProcessTitle": "Processo di installazione",
+    "installProcess1": "Crea un cluster locale {platform}",
+    "installProcess2": "Installa i componenti core di Hive Commons",
+    "installProcess3": "Configura le funzionalità di gestione multi‑cluster",
+    "installProcess4": "Configura la distribuzione dei workload",
+    "installNextTitle": "Passaggi successivi",
+    "installNext1": "Verifica l'installazione",
+    "installNext2": "Controlla lo stato di Hive Commons",
+    "installNext3": "Esplora la",
+    "installNext3Link": "documentazione",
+    "installNext3Suffix": "per esempi e utilizzo avanzato",
+    "faqTitle": "Domande frequenti",
+    "faqSubtitle": "Domande comuni sull'installazione e la configurazione di Hive Commons",
+    "faq1Q": "Qual è la differenza tra prerequisiti Core, Aggiuntivi e di Build?",
+    "faq1A": "I prerequisiti Core sono essenziali per usare Hive Commons. Quelli Aggiuntivi sono necessari per eseguire esempi e demo. I prerequisiti di Build servono solo se intendi compilare Hive Commons dal sorgente.",
+    "faq2Q": "Posso controllare automaticamente se ho installato tutti i prerequisiti?",
+    "faq2A": "Sì! Usa lo script di controllo automatico dei prerequisiti: 'curl -fsSL https://raw.githubusercontent.com/hivecommons/hivecommons/refs/heads/main/scripts/check_pre_req.sh | bash'. Questo script verifica tutti i prerequisiti e fornisce indicazioni di installazione per gli strumenti mancanti.",
+    "faq3Q": "Devo installare tutti i prerequisiti?",
+    "faq3A": "Per un uso di base di Hive Commons sono necessari solo i prerequisiti Core. Installa i prerequisiti Aggiuntivi se vuoi eseguire gli esempi. I prerequisiti di Build servono solo per lo sviluppo e la compilazione dal sorgente.",
+    "faq4Q": "Posso usare Hive Commons con cluster Kubernetes esistenti?",
+    "faq4A": "Sì! Hive Commons può gestire cluster Kubernetes esistenti. Puoi connettere i cluster di produzione insieme a quelli di sviluppo locale per una gestione multi‑cluster unificata.",
+    "faq5Q": "Quali sono i requisiti minimi di sistema?",
+    "faq5A": "Hive Commons richiede almeno 4 GB di RAM e 2 core CPU. Sono necessari Docker (v20.0+), kubectl (v1.27+) e kind (v0.20+) o k3d per i cluster locali."
+  },
+  "programsPage": {
+    "title": "Unisciti alla nostra",
+    "titleSpan": "missione",
+    "subtitle": "Scopri opportunità significative per contribuire a Hive Commons e far crescere la tua carriera nello sviluppo open source.",
+    "paid": "Programma retribuito",
+    "unpaid": "Tirocinio non retribuito",
+    "programs": {
+      "gsoc": {
+        "name": "GSoC",
+        "fullName": "Google Summer of Code",
+        "description": "Trasforma le tue competenze di sviluppo con il programma open source di punta di Google.",
+        "sections": {
+          "benefits": "Acquisisci esperienza reale, impara da mentor esperti, diventa parte di una community open source e ricevi uno stipendio al completamento del programma.",
+          "description": "Google Summer of Code è un programma globale che mira a coinvolgere più sviluppatori nella creazione di software open source. Gli studenti lavorano con un'organizzazione open source su un progetto di programmazione di 3 mesi durante la pausa estiva.",
+          "overview": "Hive Commons partecipa come organizzazione mentor. Forniamo idee di progetto, mentor e una community accogliente per imparare e contribuire.",
+          "eligibility": "I partecipanti devono avere almeno 18 anni ed essere studenti o principianti nello sviluppo open source. Per i criteri dettagliati, consulta il sito ufficiale di GSoC.",
+          "timeline": "Il programma si svolge in genere da maggio ad agosto. Le date chiave includono il periodo di candidatura, il community bonding e le fasi di sviluppo. Verifica il sito GSoC per la timeline ufficiale.",
+          "structure": "I contributor accettati lavorano al loro progetto con la guida di uno o più mentor di Hive Commons. Sono previste valutazioni a metà e a fine programma.",
+          "howToApply": "Gli studenti possono candidarsi tramite il sito Google Summer of Code durante il periodo di candidatura. Consigliamo di interagire con la community e contribuire a Hive Commons in anticipo.",
+          "resources": [
+            {
+              "name": "Sito ufficiale GSoC"
+            },
+            {
+              "name": "Hive Commons GitHub"
+            }
+          ]
+        }
+      },
+      "esoc": {
+        "name": "ESoC",
+        "fullName": "European Summer of Code",
+        "description": "Valorizza il talento europeo nello sviluppo open source.",
+        "sections": {
+          "benefits": "Un'ottima opportunità per lavorare su un progetto reale, ricevere uno stipendio e connetterti con la community open source.",
+          "description": "European Summer of Code è un programma rivolto a studenti e neolaureati in Europa, che offre l'opportunità di contribuire a progetti open source.",
+          "overview": "Hive Commons è entusiasta di fare da mentor ai partecipanti ESoC, offrendo progetti stimolanti e supporto dedicato per aiutarli a crescere come sviluppatori.",
+          "eligibility": "Aperto a studenti e neolaureati con sede in Europa. Consulta il sito ufficiale ESoC per i requisiti di idoneità.",
+          "timeline": "Il programma si svolge di solito durante i mesi estivi. Fai riferimento al sito ESoC per date e scadenze specifiche.",
+          "structure": "I partecipanti lavorano a stretto contatto con i mentor di Hive Commons su un progetto predefinito, con check‑in e feedback periodici.",
+          "howToApply": "Le candidature devono essere inviate tramite il portale ufficiale European Summer of Code.",
+          "resources": [
+            {
+              "name": "Sito ufficiale ESoC (link non disponibile)"
+            },
+            {
+              "name": "Hive Commons GitHub"
+            }
+          ]
+        }
+      },
+      "ifos": {
+        "name": "IFoS",
+        "fullName": "Interns for Open Source",
+        "description": "Dai il via al tuo percorso open source con Hive Commons.",
+        "sections": {
+          "benefits": "Pur essendo un programma non retribuito, i partecipanti che completano con successo ricevono un certificato, una lettera di raccomandazione e priorità per futuri programmi retribuiti come GSoC o LFX.",
+          "description": "Interns for Open Source (IFoS) è un programma di tirocinio non retribuito creato da Hive Commons. È pensato per chi è appassionato di open source e vuole acquisire esperienza pratica con un progetto all'avanguardia.",
+          "overview": "Questo programma di 3 mesi offre un percorso diretto nella community Hive Commons. I partecipanti lavorano su progetti significativi con il supporto dei nostri sviluppatori core.",
+          "eligibility": "Accogliamo candidature da chiunque abbia un forte interesse per Kubernetes, orchestrazione multi‑cluster e open source. Una conoscenza di base di Go e delle tecnologie container è un plus.",
+          "timeline": "IFoS è un programma continuo. Le candidature sono accettate tutto l'anno e gli stage iniziano in base alla disponibilità dei progetti e dei candidati.",
+          "structure": "Gli stagisti sono abbinati a un mentor e inseriti in uno dei nostri team di sviluppo. Il programma è flessibile, con possibilità di impegno part‑time o full‑time.",
+          "howToApply": "Per candidarti, invia il tuo CV e una breve lettera di motivazione alla nostra email di community. Ti incoraggiamo inoltre a iniziare a contribuire al nostro repository GitHub.",
+          "resources": [
+            {
+              "name": "Hive Commons GitHub"
+            },
+            {
+              "name": "Pagina community Hive Commons"
+            }
+          ]
+        }
+      },
+      "lfx": {
+        "name": "LFX",
+        "fullName": "LFX Mentorship",
+        "description": "Accelera il tuo percorso open source con la mentorship Linux Foundation.",
+        "sections": {
+          "benefits": "Ricevi uno stipendio, fai esperienza pratica con tecnologie all'avanguardia, costruisci il tuo network professionale e arricchisci il CV.",
+          "description": "Il programma LFX Mentorship, gestito dalla Linux Foundation, offre un'opportunità strutturata e remota per aspiranti contributor open source. I mentee lavorano su progetti reali con mentor esperti.",
+          "overview": "Hive Commons è orgogliosa di partecipare al programma LFX Mentorship. Offriamo progetti critici per la nostra roadmap, consentendo ai mentee di avere un impatto significativo.",
+          "eligibility": "Il programma è aperto a sviluppatori di ogni background. I requisiti specifici variano in base al progetto. Consulta la piattaforma LFX Mentorship per i dettagli.",
+          "timeline": "LFX Mentorship si svolge in termini, tipicamente primavera, estate e autunno. Ogni termine dura circa 12 settimane.",
+          "structure": "I mentee lavorano uno‑a‑uno con un mentor di Hive Commons, contribuendo al progetto e partecipando alla community.",
+          "howToApply": "Le candidature si inviano tramite la piattaforma LFX Mentorship. Cerca i progetti Hive Commons e candidati.",
+          "resources": [
+            {
+              "name": "Piattaforma LFX Mentorship"
+            },
+            {
+              "name": "Hive Commons GitHub"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "productsPage": {
+    "title": "I nostri",
+    "titleSpan": "Progetti",
+    "subtitle": "Scopri la nostra suite di strumenti e piattaforme che ampliano l'ecosistema Hive Commons e potenziano la gestione Kubernetes multi‑cluster.",
+    "repoButton": "Repository",
+    "websiteButton": "Sito web",
+    "watchDemoButton": "Guarda la demo",
+    "products": {
+      "hive": {
+        "name": "Hive Commons",
+        "fullName": "Hive Commons",
+        "description": "Piattaforma di orchestrazione Kubernetes multi‑cluster che semplifica la gestione dei workload distribuiti su ambienti infrastrutturali eterogenei. Fornisce un control plane unificato, posizionamento intelligente dei workload e governance guidata da policy per distribuzioni multi‑cluster complesse con scalabilità automatica, ottimizzazione delle risorse e integrazione trasparente tra provider cloud."
+      },
+      "hiveUI": {
+        "name": "Hive Commons UI",
+        "fullName": "Hive Commons UI",
+        "description": "Interfaccia web avanzata per gestire l'orchestrazione Kubernetes multi‑cluster con dashboard intuitive, monitoraggio in tempo reale e controlli completi per una gestione semplificata dei cluster. Include strumenti di visualizzazione avanzati, workspace personalizzabili e avvisi intelligenti per ottimizzare le operazioni multi‑cluster."
+      },
+      "kubeflex": {
+        "name": "KubeFlex",
+        "fullName": "KubeFlex",
+        "description": "Piattaforma flessibile di gestione Kubernetes che offre strumenti completi per orchestrazione multi‑cluster e distribuzione dei workload. Abilita provisioning dinamico dei cluster, scalabilità automatica e allocazione intelligente delle risorse in ambienti eterogenei. Semplifica scenari di distribuzione complessi con automazione guidata da policy."
+      },
+      "a2a": {
+        "name": "A2A",
+        "fullName": "A2A",
+        "description": "Piattaforma di comunicazione Application‑to‑Application che abilita una connettività fluida all'interno dell'ecosistema Hive Commons. Facilita lo scambio sicuro di dati e la comunicazione in tempo reale tra microservizi distribuiti. Fornisce routing avanzato, bilanciamento del carico e service discovery per distribuzioni multi‑cluster complesse."
+      },
+      "kubectlMulti": {
+        "name": "kubectl-multi",
+        "fullName": "kubectl-multi",
+        "description": "Plugin kubectl completo per operazioni multi‑cluster con Hive Commons. Estende kubectl per lavorare in modo trasparente su tutti i cluster gestiti da Hive Commons, fornendo viste e operazioni unificate e filtrando i cluster di staging dei workflow (WDS). Esegui comandi su più cluster in parallelo con aggregazione intelligente dell'output."
+      },
+      "galaxyMarketplace": {
+        "name": "Galaxy Marketplace",
+        "fullName": "KS Galaxy Marketplace",
+        "description": "Marketplace centralizzato per estensioni, plugin e strumenti contribuiti dalla community per Hive Commons. Scopri, installa e gestisci componenti di terze parti per aumentare le tue capacità di orchestrazione multi‑cluster. Include controlli di compatibilità automatizzati, gestione delle versioni e integrazione trasparente con le distribuzioni Hive Commons esistenti."
+      }
+    }
+  },
+  "ladderPage": {
+    "title": "Contribution",
+    "titleSpan": "Ladder",
+    "subtitle": "Un percorso trasparente e meritocratico dal primo contributo al ruolo di maintainer di fiducia nella community Hive Commons.",
+    "requirementsLabel": "Requisiti:",
+    "goodStandingLabel": "Opportunità in buona condotta:",
+    "nextLevelLabel": "Livello successivo:",
+    "levels": {
+      "contributor": {
+        "title": "Contributor",
+        "nextLevel": "Mentee non retribuito",
+        "description": "Inizia il tuo percorso nella community Hive Commons"
+      },
+      "unpaidMentee": {
+        "title": "Mentee non retribuito",
+        "nextLevel": "Mentee retribuito",
+        "description": "Percorso di 12 settimane per dimostrare impegno e competenze",
+        "timeframe": "12 settimane"
+      },
+      "paidMentee": {
+        "title": "Mentee retribuito",
+        "nextLevel": "Mentor",
+        "description": "Contributor riconosciuto con retribuzione e responsabilità"
+      },
+      "mentor": {
+        "title": "Mentor",
+        "nextLevel": "Maintainer",
+        "description": "Guida e supporta la prossima generazione di contributor"
+      },
+      "maintainer": {
+        "title": "Maintainer",
+        "nextLevel": "Ambassador",
+        "description": "Leader di fiducia con responsabilità complete sul progetto"
+      },
+      "ambassador": {
+        "title": "Ambassador",
+        "nextLevel": "Stellar Advocate",
+        "description": "Promuovi e favorisci l'adozione di Hive Commons"
+      }
+    },
+    "activityRequirements": {
+      "title": "Requisiti di attività dei maintainer",
+      "subtitle": "I maintainer devono rispettare questi minimi di contributo bimestrali (ogni 2 mesi):",
+      "table": {
+        "metric": "Metrica",
+        "requirement": "Requisito (per 2 mesi)",
+        "helpWantedIssues": "Issue 'Help Wanted'",
+        "helpWantedIssuesValue": "≥ 2",
+        "prsMerged": "PR mergeate",
+        "prsMergedValue": "≥ 3",
+        "prReviews": "Review di PR o commenti costruttivi",
+        "prReviewsValue": "≥ 8",
+        "meetingAttendance": "Partecipazione alle riunioni di community",
+        "meetingAttendanceValue": "≥ 3"
+      }
+    },
+    "callToAction": {
+      "title": "Pronto a iniziare il tuo percorso?",
+      "subtitle": "Unisciti alla community Hive Commons e comincia a salire la maintainer ladder oggi stesso.",
+      "communityMeetingsButton": "Riunioni della community",
+      "viewIssuesButton": "Vedi le issue aperte",
+      "exploreCodeTitle": "Esplora il codice",
+      "exploreCodeDescription": "Sfoglia il nostro codebase e contribuisci al progetto",
+      "viewRepositoryLink": "Vedi il repository →",
+      "joinSlackTitle": "Entra su Slack",
+      "joinSlackDescription": "Connettiti con la community per discussioni in tempo reale",
+      "joinCommunityLink": "Unisciti alla community →",
+      "learnGuideTitle": "Consulta la guida",
+      "learnGuideDescription": "Leggi il nostro manuale completo dei contributi",
+      "viewHandbookLink": "Vedi l'handbook →"
+    }
+  },
+  "partnersPage": {
+    "title": "I nostri",
+    "titleSpan": "partner",
+    "subtitle": "Collaboriamo con progetti open source di primo piano per migliorare l'orchestrazione Kubernetes multi‑cluster.",
+    "learnMore": "Scopri di più",
+    "partners": {
+      "argocd": {
+        "description": "Strumento GitOps dichiarativo di continuous delivery per Kubernetes che automatizza la distribuzione e la gestione del ciclo di vita delle applicazioni."
+      },
+      "fluxcd": {
+        "description": "Strumento di delivery progressiva per Kubernetes che abilita distribuzioni automatizzate da repository Git con potenti funzionalità GitOps."
+      },
+      "kyverno": {
+        "description": "Soluzione di gestione policy nativa per Kubernetes che valida, modifica e genera configurazioni tramite policy dichiarative."
+      },
+      "mvi": {
+        "description": "Piattaforma di visibilità e insight multi‑cluster che fornisce monitoraggio e analytics completi tra ambienti Kubernetes distribuiti."
+      },
+      "openziti": {
+        "description": "Overlay di rete zero trust e piattaforma edge che fornisce connettività sicura per applicazioni distribuite."
+      },
+      "turbonomic": {
+        "description": "Piattaforma di gestione delle risorse applicative che garantisce le prestazioni delle applicazioni ottimizzando al contempo i costi infrastrutturali tramite automazione guidata da AI."
+      }
+    },
+    "whyPartner": {
+      "title": "Perché diventare partner",
+      "subtitle": "Unisciti al nostro ecosistema di partner innovativi per plasmare il futuro della gestione Kubernetes multi‑cluster.",
+      "benefits": [
+        {
+          "title": "Innovazione",
+          "description": "Collabora a soluzioni all'avanguardia per l'orchestrazione multi‑cluster."
+        },
+        {
+          "title": "Community",
+          "description": "Connettiti con un ecosistema vivace di sviluppatori e organizzazioni cloud‑native."
+        },
+        {
+          "title": "Eccellenza",
+          "description": "Guida standard e best practice di settore nell'orchestrazione Kubernetes."
+        }
+      ]
+    },
+    "partnershipOpportunities": {
+      "title": "Diventa partner",
+      "subtitle": "Collabora con Hive Commons per guidare l'innovazione nell'orchestrazione Kubernetes multi‑cluster ed espandere la tua presenza nell'ecosistema cloud‑native.",
+      "description": "Il nostro programma di partnership è pensato per favorire la collaborazione con provider tecnologici, piattaforme cloud e system integrator che condividono la nostra visione di semplificare la gestione Kubernetes multi‑cluster. Insieme possiamo offrire soluzioni complete che consentono alle aziende di gestire workload distribuiti in modo fluido.",
+      "features": [
+        "Supporto tecnico all'integrazione e risorse di engineering",
+        "Iniziative go‑to‑market congiunte e opportunità di co‑marketing",
+        "Accesso alla nostra crescente community di professionisti cloud‑native",
+        "Visibilità in evidenza sulla pagina partner e nella documentazione",
+        "Sviluppo prodotto collaborativo e contributi alla roadmap",
+        "Supporto prioritario e partnership manager dedicato"
+      ],
+      "contactButton": "Mettiti in contatto"
+    }
+  },
+  "comingSoonPage": {
+    "title": "In arrivo",
+    "titleSpan": "presto",
+    "subtitle": "Stiamo lavorando a qualcosa di straordinario per la community Hive Commons.",
+    "description": "Questa nuova funzionalità è attualmente in fase di sviluppo. Il nostro team sta progettando un'esperienza eccezionale che arricchirà il tuo percorso di orchestrazione Kubernetes multi‑cluster.",
+    "statusBadge": "In sviluppo",
+    "cta": {
+      "title": "Scopri Hive Commons ora",
+      "subtitle": "Nel frattempo, esplora cosa può già offrirti Hive Commons",
+      "documentsButton": "Vedi documentazione",
+      "documentsDescription": "Guide complete e riferimenti API",
+      "documentsAction": "Esplora la documentazione",
+      "quickStartButton": "Guida rapida",
+      "quickStartDescription": "Inizia a usare Hive Commons in pochi minuti",
+      "quickStartAction": "Avvia installazione",
+      "communityButton": "Community",
+      "communityDescription": "Connettiti con sviluppatori e contributor",
+      "communityAction": "Unisciti su GitHub",
+      "handbookButton": "Handbook",
+      "ladderButton": "Ladder",
+      "programsButton": "Programmi",
+      "partnersButton": "Partner"
+    }
+  },
+  "marketplace": {
+    "hero": {
+      "title": "Hive Commons Galaxy",
+      "titleSuffix": "Marketplace",
+      "subtitle": "Estendi la tua distribuzione Hive Commons con plugin e strumenti potenti. Dai progetti community gratuiti alle soluzioni enterprise.",
+      "stats": {
+        "pluginsAvailable": "Plugin disponibili",
+        "freePlugins": "Plugin gratuiti",
+        "enterpriseReady": "Pronti per l'enterprise",
+        "activeInstalls": "Installazioni attive",
+        "totalDownloads": "Download totali"
+      }
+    },
+    "featured": {
+      "title": "In evidenza",
+      "titleSuffix": "& più popolari",
+      "subtitle": "Scopri i plugin più apprezzati e scaricati"
+    },
+    "browse": {
+      "title": "Sfoglia tutti i plugin",
+      "subtitle": "Trova gli strumenti perfetti per estendere la tua distribuzione Hive Commons",
+      "searchPlaceholder": "Cerca plugin...",
+      "categoryFilter": "Tutti",
+      "pricingFilter": {
+        "all": "Tutti i prezzi",
+        "free": "Gratuiti",
+        "monthly": "Mensili",
+        "oneTime": "Una tantum"
+      },
+      "showing": "Visualizzazione",
+      "of": "di",
+      "plugins": "plugin",
+      "noResults": {
+        "title": "Nessun plugin trovato",
+        "subtitle": "Prova a modificare la ricerca o i filtri"
+      },
+      "pagination": {
+        "previous": "Precedente",
+        "next": "Successivo"
+      }
+    },
+    "plugin": {
+      "badge": {
+        "free": "GRATIS"
+      },
+      "version": "v",
+      "by": "di",
+      "rating": "/5.0",
+      "downloads": "download",
+      "free": "Gratis",
+      "monthly": "/mese",
+      "oneTime": "una volta",
+      "viewDetails": "Vedi dettagli",
+      "backToMarketplace": "Torna al Marketplace",
+      "installPlugin": "Installa plugin",
+      "payAndInstall": "Paga e installa",
+      "github": "GitHub",
+      "about": "Informazioni sul plugin",
+      "keyFeatures": "Funzionalità principali",
+      "requirements": "Requisiti",
+      "compatibility": "Compatibilità",
+      "maintainers": "Maintainer",
+      "tags": "Tag",
+      "links": "Link",
+      "documentation": "Documentazione",
+      "githubRepository": "Repository GitHub",
+      "officialWebsite": "Sito ufficiale",
+      "notFound": {
+        "title": "Plugin non trovato"
+      }
+    },
+    "payment": {
+      "title": "Completa il pagamento",
+      "subtitle": "Acquista {name} per iniziare",
+      "details": {
+        "plugin": "Plugin",
+        "licenseType": "Tipo di licenza",
+        "total": "Totale"
+      },
+      "form": {
+        "cardNumber": "Numero di carta",
+        "cardPlaceholder": "1234 5678 9012 3456",
+        "expiry": "Scadenza",
+        "expiryPlaceholder": "MM/AA",
+        "cvv": "CVV",
+        "cvvPlaceholder": "123",
+        "cancel": "Annulla",
+        "payNow": "Paga ora",
+        "processing": "Elaborazione in corso...",
+        "secureNote": "🔒 Pagamento sicuro gestito da Hive Commons Gateway"
+      },
+      "success": {
+        "title": "Pagamento riuscito!",
+        "subtitle": "Avvio dell'installazione..."
+      }
+    },
+    "maintainers": {
+      "andy": "Andy Anderson",
+      "mike": "Mike Spreitzer"
+    },
+    "installation": {
+      "installing": "Installazione di {name}",
+      "pleaseWait": "Attendi...",
+      "success": {
+        "title": "Installato con successo!",
+        "subtitle": "{name} è stato installato nella tua distribuzione Hive Commons.",
+        "commandTitle": "Esegui questo comando per iniziare:",
+        "close": "Chiudi"
+      }
+    },
+    "categories": {
+      "all": "Tutti",
+      "cliTools": "Strumenti CLI",
+      "synchronization": "Sincronizzazione",
+      "security": "Sicurezza",
+      "observability": "Osservabilità",
+      "visualization": "Visualizzazione",
+      "developmentTools": "Strumenti di sviluppo",
+      "backupRecovery": "Backup & ripristino",
+      "resourceManagement": "Gestione risorse",
+      "governance": "Governance",
+      "networking": "Networking",
+      "gitops": "GitOps",
+      "costManagement": "Gestione dei costi"
+    }
+  },
+  "networkGlobe": {
+    "hive": "Hive Commons",
+    "controlPlane": "Control Plane",
+    "clusters": {
+      "kubeflexCore": {
+        "name": "KubeFlex Core",
+        "description": "Control plane KubeFlex per la gestione delle operazioni multi‑cluster"
+      },
+      "edgeClusters": {
+        "name": "Cluster Edge",
+        "description": "Cluster di edge computing per workload distribuiti"
+      },
+      "productionCluster": {
+        "name": "Cluster di produzione",
+        "description": "Workload di produzione e applicazioni mission‑critical"
+      },
+      "devTestCluster": {
+        "name": "Cluster Dev/Test",
+        "description": "Ambienti di sviluppo e test"
+      },
+      "multiCloudHub": {
+        "name": "Hub Multi‑Cloud",
+        "description": "Orchestrazione e gestione cross‑cloud"
+      }
+    }
+  },
+  "metadata": {
+    "title": "Hive Commons - Orchestrazione Kubernetes Multi‑Cluster",
+    "description": "Semplifica le operazioni Kubernetes multi‑cluster con distribuzione intelligente dei workload, gestione unificata e orchestrazione trasparente su qualsiasi infrastruttura."
+  },
+  "notFound": {
+    "description": "Spiacenti, la pagina che stai cercando non esiste.",
+    "message": "Non siamo riusciti a trovare la pagina che stai cercando, ma puoi consultare la documentazione o tornare alla home page per continuare.",
+    "homeButton": "Torna alla home",
+    "docsButton": "Visualizza la documentazione",
+    "requestedPath": "Richiesta:"
+  }
+}

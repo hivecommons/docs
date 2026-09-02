@@ -1,0 +1,111 @@
+# Documentation related changes
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+        - 'docs/**/*'
+        - 'README.md'
+        - '**/*.md'
+
+# Next.js frontend changes
+frontend:
+  - changed-files:
+    - any-glob-to-any-file:
+        - 'src/**/*'
+        - 'next.config.js'
+        - 'package.json'
+        - 'package-lock.json'
+        - 'yarn.lock'
+        - 'tailwind.config.js'
+        - 'postcss.config.js'
+
+# Pages and routing
+pages:
+  - changed-files:
+    - any-glob-to-any-file:
+        - 'src/app/**/*'
+        - 'src/pages/**/*'
+
+# Styles and assets
+styles:
+  - changed-files:
+    - any-glob-to-any-file:
+        - 'src/styles/**/*'
+        - '**/*.css'
+        - '**/*.scss'
+        - '**/*.sass'
+
+# GitHub workflows and CI/CD
+ci-cd:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '.github/workflows/**/*'
+        - '.github/actions/**/*'
+
+# Configuration files
+config:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '.github/labeler.yml'
+        - '.gitignore'
+        - '.eslintrc*'
+        - '.prettierrc*'
+        - 'tsconfig.json'
+        - 'next.config.js'
+        - 'tailwind.config.js'
+        - 'postcss.config.js'
+
+# Dependencies
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+        - 'package.json'
+        - 'package-lock.json'
+        - 'yarn.lock'
+
+# Contributing guidelines
+contributing:
+  - changed-files:
+    - any-glob-to-any-file:
+        - 'docs/content/contribution-guidelines/**/*'
+        - 'CONTRIBUTING.md'
+        - '**/*contribut*'
+
+# Operations
+operations:
+  - changed-files:
+    - any-glob-to-any-file:
+        - 'docs/content/contribution-guidelines/operations/**/*'
+        - '**/*operation*'
+
+# TypeScript files
+typescript:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/*.ts'
+        - '**/*.tsx'
+
+# JavaScript files
+javascript:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/*.js'
+        - '**/*.jsx'
+
+# HTML files
+html:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/*.html'
+
+# YAML files
+yaml:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/*.yml'
+        - '**/*.yaml'
+
+# JSON files
+json:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/*.json'

@@ -1,0 +1,67 @@
+{
+  "versions": {
+    "hive": {
+      "latest": {
+        "label": "v4 (Latest)",
+        "branch": "main",
+        "isDefault": true
+      }
+    },
+    "hotshot": {
+      "latest": {
+        "label": "main (Latest)",
+        "branch": "main",
+        "isDefault": true
+      }
+    },
+    "pluk": {
+      "latest": {
+        "label": "main (Latest)",
+        "branch": "main",
+        "isDefault": true
+      }
+    }
+  },
+  "projects": {
+    "hive": {
+      "name": "Hive",
+      "basePath": "hive",
+      "currentVersion": "v4"
+    },
+    "hotshot": {
+      "name": "hotshot",
+      "basePath": "hotshot",
+      "currentVersion": "main"
+    },
+    "pluk": {
+      "name": "pluk",
+      "basePath": "pluk",
+      "currentVersion": "main"
+    }
+  },
+  "relatedProjects": [
+    {
+      "title": "Hive",
+      "href": "/docs/hive/overview/introduction",
+      "description": "Autonomous AI agent fleets for your repos"
+    },
+    {
+      "title": "hotshot",
+      "href": "/docs/hotshot/overview/introduction",
+      "description": "Screenshots straight into your AI coding terminal",
+      "secondary": true
+    },
+    {
+      "title": "pluk",
+      "href": "/docs/pluk/overview/introduction",
+      "description": "Pub-sub event streaming for AI agent tmux sessions",
+      "secondary": true
+    }
+  ],
+  "editBaseUrls": {
+    "hive": "https://github.com/hivecommons/hive/edit/v4/src/docs",
+    "hotshot": "https://github.com/hivecommons/hotshot/edit/main",
+    "pluk": "https://github.com/hivecommons/pluk/edit/main"
+  },
+  "updatedAt": "2026-09-02T14:24:56.184Z"
+}

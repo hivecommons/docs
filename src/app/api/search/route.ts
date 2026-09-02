@@ -1,0 +1,198 @@
+import { NextRequest, NextResponse } from "next/server"
+import { convertHtmlScriptsToJsxComments } from "@/lib/transformMdx"
+import { buildPageMap, docsContentPath, basePath } from "../../docs/page-map"
+import fs from 'fs'
+import path from 'path'
+import { logger } from "@/lib/logger"
+import { recordApiRequest } from "@/lib/metrics"
+
+interface SearchResult {
+  title: string
+  url: string
+  category: string
+  content: string
+  snippet: string
+  highlightedSnippet: string
+  matchType: "title" | "content" | "category"
+}
+
+// Apply a regex removal repeatedly until the output is stable.
+// Prevents bypass via nested/interleaved input (CWE-20, CodeQL js/incomplete-multi-character-sanitization).
+function stripUntilStableSR(text: string, pattern: RegExp): string {
+  let prev = ''
+  while (text !== prev) {
+    prev = text
+    text = text.replace(pattern, '')
+  }
+  return text
+}
+
+function toPlainText(content: string): string {
+  let text = content
+
+  // Remove code blocks, inline code, comments
+  text = text.replace(/```[\s\S]*?```/g, "")
+  text = text.replace(/`[^`]+`/g, "")
+  // Loop until stable — single-pass removal of `<!--...-->` is bypassable via
+  // nested input e.g. `<!-<!--` → removes inner `<!--` → reassembles to `<!--`
+  // (CodeQL #11: js/incomplete-multi-character-sanitization)
+  text = stripUntilStableSR(text, /<!--[\s\S]*?-->/g)
+
+  // Links/images
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
+  text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, "")
+
+  // Headings -> keep text
+  text = text.replace(/^#{1,6}\s+(.+)$/gm, "$1")
+
+  // Bold/italic
+  text = text.replace(/\*\*([^*]+)\*\*/g, "$1")
+  text = text.replace(/\*([^*]+)\*/g, "$1")
+  text = text.replace(/_([^_]+)_/g, "$1")
+
+  // HR
+  text = text.replace(/^---+$/gm, "")
+
+  // Strip residual HTML tags — loop until stable to prevent nested-tag bypass
+  // (CodeQL #12: js/incomplete-multi-character-sanitization)
+  text = stripUntilStableSR(text, /<\/?[^>]+>/g)
+
+  // Collapse whitespace
+  text = text.replace(/\n\s*\n/g, "\n").trim()
+  return text
+}
+
+function extractTitle(md: string, fallback: string): string {
+  const m = md.match(/^#\s+(.+)$/m)
+  return m ? m[1].trim() : fallback
+}
+
+function routeKeyToUrl(routeKey: string): string {
+  return routeKey ? `/${basePath}/${routeKey}` : `/${basePath}`
+}
+
+function readLocalFile(filePath: string): string | null {
+  const fullPath = path.join(docsContentPath, filePath)
+  try {
+    if (fs.existsSync(fullPath)) {
+      return fs.readFileSync(fullPath, 'utf-8')
+    }
+  } catch {
+    // File doesn't exist
+  }
+  return null
+}
+
+/** HTML-encode special characters so they render as text in innerHTML */
+function htmlEncode(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+}
+
+export async function GET(request: NextRequest) {
+  const startedAt = performance.now()
+  let status = 200
+  try {
+    const sp = request.nextUrl.searchParams
+    const queryRaw = sp.get("q") || ""
+    const query = queryRaw.toLowerCase().trim()
+    if (!query) return NextResponse.json({ results: [], count: 0 })
+
+    const { routeMap } = buildPageMap()
+
+    const entries = Object.entries(routeMap) as Array<[string, string]>
+
+    const results: SearchResult[] = []
+
+    for (const [routeKey, filePath] of entries) {
+      const raw = readLocalFile(filePath)
+      if (!raw) continue
+
+      const preprocessed = convertHtmlScriptsToJsxComments(raw)
+      const text = toPlainText(preprocessed)
+
+      const fallbackTitle =
+        routeKey
+          .split("/")
+          .pop()
+          ?.replace(/-/g, " ")
+          .replace(/\b\w/g, c => c.toUpperCase()) || "Untitled"
+      const title = extractTitle(raw, fallbackTitle)
+
+      const hay = text.toLowerCase()
+      const titleMatch = title.toLowerCase().includes(query)
+      const contentMatch = hay.includes(query)
+      if (!titleMatch && !contentMatch) continue
+
+      let snippet = ""
+      let highlightedSnippet = ""
+      if (contentMatch) {
+        const idx = hay.indexOf(query)
+        const start = Math.max(0, idx - 60)
+        const end = Math.min(text.length, idx + query.length + 80)
+        snippet =
+          (start > 0 ? "..." : "") +
+          text.slice(start, end) +
+          (end < text.length ? "..." : "")
+
+        // HTML-encode the snippet so HTML entities in docs content (&lt;img&gt;
+        // etc.) cannot become live HTML when rendered via dangerouslySetInnerHTML.
+        // Only the <mark>/<\/mark> tags we insert below are trusted raw HTML.
+        const encodedSnippet = htmlEncode(snippet)
+        const rx = new RegExp(
+          `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+          "gi"
+        )
+        highlightedSnippet = encodedSnippet.replace(rx, "<mark>$1</mark>")
+      } else {
+        snippet = text.slice(0, 140) + (text.length > 140 ? "..." : "")
+        highlightedSnippet = htmlEncode(snippet)
+      }
+
+      const category =
+        routeKey
+          .split("/")[0]
+          ?.replace(/-/g, " ")
+          .replace(/\b\w/g, c => c.toUpperCase()) || "Docs"
+
+      results.push({
+        title,
+        url: routeKeyToUrl(routeKey),
+        category,
+        content: text.slice(0, 500),
+        snippet,
+        highlightedSnippet,
+        matchType: titleMatch ? "title" : "content",
+      })
+    }
+
+    // Sort: title matches first, then by title alphabetically
+    results.sort((a, b) => {
+      if (a.matchType === "title" && b.matchType !== "title") return -1
+      if (a.matchType !== "title" && b.matchType === "title") return 1
+      return a.title.localeCompare(b.title)
+    })
+
+    return NextResponse.json({
+      results: results.slice(0, 20),
+      count: results.length,
+    })
+  } catch (error) {
+    status = 500
+    logger.error("search request failed", {
+      route: "search",
+      method: "GET",
+      status,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return NextResponse.json(
+      { error: "Search failed", results: [], count: 0 },
+      { status: 500 }
+    )
+  } finally {
+    const durationMs = performance.now() - startedAt
+    recordApiRequest("search", "GET", status, durationMs)
+  }
+}

@@ -1,0 +1,104 @@
+import type { Metadata } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
+
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
+import { notFound } from "next/navigation";
+import { locales, type Locale } from "@/i18n/settings";
+import { ThemeProvider } from "next-themes";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+import "../globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+});
+
+const SITE_URL = "https://docs.hivecommons.dev";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "metadata" });
+
+  const title = t("title");
+  const description = t("description");
+
+  return {
+    title,
+    description,
+    metadataBase: new URL(SITE_URL),
+    alternates: {
+      canonical: `/${locale}`,
+    },
+    openGraph: {
+      type: "website",
+      locale: locale === "en" ? "en_US" : locale,
+      url: `${SITE_URL}/${locale}`,
+      siteName: "Hive Commons",
+      title,
+      description,
+      images: [
+        {
+          url: "/hive-commons-logo.png",
+          width: 1200,
+          height: 630,
+          alt: "Hive Commons",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/hive-commons-logo.png"],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
+
+type Props = {
+  children: ReactNode;
+  params: Promise<{ locale: string }>;
+};
+
+export default async function RootLayout({ children, params }: Props) {
+  const { locale } = await params;
+
+  const isLocale = (val: string): val is Locale =>
+    (locales as readonly string[]).includes(val);
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
+  const messages = await getMessages();
+
+  return (
+    <html lang={locale} suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
+      >
+        <GoogleAnalytics />
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <NextIntlClientProvider messages={messages}>
+            {children}
+          </NextIntlClientProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

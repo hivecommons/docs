@@ -1,0 +1,44 @@
+# Typos configuration
+# https://github.com/crate-ci/typos
+
+[files]
+extend-exclude = [
+    "*.svg",
+    "public/data/contributors/",
+    "public/data/leaderboard.json",
+    "messages/",
+]
+
+[default.extend-words]
+KubeFlex = "KubeFlex"
+kubeflex = "kubeflex"
+# Abbreviations
+WDS = "WDS"
+ITS = "ITS"
+WEC = "WEC"
+wec = "wec"
+WMCS = "WMCS"
+OCM = "OCM"
+MCP = "MCP"
+# Kubernetes abbreviations
+AKS = "AKS"
+aks = "aks"
+EKS = "EKS"
+GKE = "GKE"
+# Common false positives
+ND = "ND"
+IST = "IST"
+
+# Technical terms
+Hashi = "Hashi"
+RTO = "RTO"
+IFoS = "IFoS"
+Fo = "Fo"
+
+# Contributor usernames (not typos)
+MAVRICK = "MAVRICK"
+mavrick = "mavrick"
+Parth = "Parth"
+
+# Add repo-specific false positives here:
+# word = "word"
