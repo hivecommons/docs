@@ -78,7 +78,7 @@ export default function Footer() {
                 <Image
                   src="/hive-commons-logo.png"
                   alt="Hive Commons logo"
-                  width={160}
+                  width={40}
                   height={40}
                   className="h-8 sm:h-9 md:h-10 w-auto"
                 />
@@ -128,7 +128,7 @@ export default function Footer() {
               <Image
                 src="/hive-commons-logo.png"
                 alt="Hive Commons logo"
-                width={160}
+                width={40}
                 height={40}
                 className="h-8 sm:h-9 md:h-10 w-auto"
               />
