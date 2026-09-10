@@ -228,7 +228,7 @@ export default function DocsNavbar() {
                 <Image
                   src="/hive-commons-logo.png"
                   alt="Hive Commons logo"
-                  width={160}
+                  width={40}
                   height={40}
                   className="h-10 w-auto object-contain"
                 />
