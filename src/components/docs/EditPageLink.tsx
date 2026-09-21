@@ -6,7 +6,7 @@ import type { ProjectId } from '@/config/versions';
 // See DocsSourceActions.tsx for the full rationale; kept in sync with
 // scripts/sync-hive-docs.ts.
 const STATIC_EDIT_BASE_URLS: Record<ProjectId, string> = {
-  hive: 'https://github.com/hivecommons/hive/edit/v4/src/docs',
+  hive: 'https://github.com/hivecommons/hive/edit/v5/src/docs',
   hotshot: 'https://github.com/hivecommons/hotshot/edit/main',
   pluk: 'https://github.com/hivecommons/pluk/edit/main',
   rationguard: 'https://github.com/hivecommons/rationguard/edit/main',

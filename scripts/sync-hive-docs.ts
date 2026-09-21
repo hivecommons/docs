@@ -5,7 +5,8 @@ import path from "path";
 // transfer lands the docs stay in hivecommons/hive. Override with HIVE_DOCS_OWNER.
 const owner = process.env.HIVE_DOCS_OWNER || "hivecommons";
 const repo = process.env.HIVE_DOCS_REPO || "hive";
-const branch = process.env.HIVE_DOCS_REF || "v4";
+// Default tracks the Hive branch that feeds the `stable` release channel (hivecommons/hive#7814, #7721 Phase 3).
+const branch = process.env.HIVE_DOCS_REF || "v5";
 const docsRoot = path.join(process.cwd(), "docs", "content", "hive");
 const rawBase = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/src/docs`;
 const canonicalBase = `https://github.com/${owner}/${repo}/blob/${branch}/src/docs`;

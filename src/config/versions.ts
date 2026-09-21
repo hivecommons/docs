@@ -7,7 +7,7 @@
 // - Hive is continuously deployed rather than semver-released, so the docs are
 //   a single "latest" line: content is fetched at build time from the hive
 //   branch named by HIVE_DOCS_REF (see scripts/sync-hive-docs.ts), which tracks
-//   hive's current major release line (v4 today). When hive moves to a new
+//   hive's current major release line (v5 after the first v5 stable promotion). When hive moves to a new
 //   major line, update this label, currentVersion below, and the HIVE_DOCS_REF
 //   default together.
 
@@ -42,7 +42,7 @@ export interface ProjectConfig {
 // hive versions
 const HIVE_VERSIONS: Record<string, VersionInfo> = {
   latest: {
-    label: "v4 (Latest)",
+    label: "v5 (Latest)",
     branch: "main",
     isDefault: true,
   },
@@ -90,7 +90,7 @@ export const PROJECTS: Record<ProjectId, ProjectConfig> = {
     id: "hive",
     name: "Hive",
     basePath: "hive",
-    currentVersion: "v4",
+    currentVersion: "v5",
     contentPath: "docs/content/hive",
     versions: HIVE_VERSIONS,
   },
