@@ -5,13 +5,13 @@ import type { ProjectId } from "@/config/versions";
 import { GitPullRequest, FileCode, AlertCircle } from "lucide-react";
 
 
-// Hive has no `main` branch (default is `v4`) and its docs live under
+// Hive has no `main` branch (default tracks the stable release branch) and its docs live under
 // `src/docs`. Kept in sync with scripts/sync-hive-docs.ts. NOTE: page
 // filePaths use `readme.md` (lowercased), but the canonical source is
 // `README.md`; that single page's edit/source link will 404 until the
 // filePath casing is reconciled.
 const STATIC_EDIT_BASE_URLS: Record<ProjectId, string> = {
-  hive: 'https://github.com/hivecommons/hive/edit/v4/src/docs',
+  hive: 'https://github.com/hivecommons/hive/edit/v5/src/docs',
   hotshot: 'https://github.com/hivecommons/hotshot/edit/main',
   pluk: 'https://github.com/hivecommons/pluk/edit/main',
   rationguard: 'https://github.com/hivecommons/rationguard/edit/main',

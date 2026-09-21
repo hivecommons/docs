@@ -38,14 +38,14 @@ describe("rewriteLinkTarget — Case 2: escapes / unsynced -> absolute GitHub UR
   it("resolves `../../` escape to the repo-root path on the sync branch", () => {
     // src/docs/ + ../../bin/README.md = bin/README.md at the repo root.
     expect(rewriteLinkTarget("../../bin/README.md", README)).toBe(
-      "https://github.com/hivecommons/hive/blob/v4/bin/README.md"
+      "https://github.com/hivecommons/hive/blob/v5/bin/README.md"
     );
   });
 
   it("resolves a single `../` escape into the sibling repo directory", () => {
     // src/docs/ + ../deploy/README.md = src/deploy/README.md.
     expect(rewriteLinkTarget("../deploy/README.md", README)).toBe(
-      "https://github.com/hivecommons/hive/blob/v4/src/deploy/README.md"
+      "https://github.com/hivecommons/hive/blob/v5/src/deploy/README.md"
     );
   });
 
@@ -53,7 +53,7 @@ describe("rewriteLinkTarget — Case 2: escapes / unsynced -> absolute GitHub UR
     // env-vars.md exists in hive src/docs but is not on the sync allow-list,
     // so links to it resolve to a GitHub blob URL rather than a site route.
     expect(rewriteLinkTarget("env-vars.md", README)).toBe(
-      "https://github.com/hivecommons/hive/blob/v4/src/docs/env-vars.md"
+      "https://github.com/hivecommons/hive/blob/v5/src/docs/env-vars.md"
     );
   });
 
@@ -68,7 +68,7 @@ describe("rewriteLinkTarget — Case 2: escapes / unsynced -> absolute GitHub UR
 
   it("handles a JSON (non-markdown) escape target", () => {
     expect(rewriteLinkTarget("../../dashboard/openapi.json", README)).toBe(
-      "https://github.com/hivecommons/hive/blob/v4/dashboard/openapi.json"
+      "https://github.com/hivecommons/hive/blob/v5/dashboard/openapi.json"
     );
   });
 });
@@ -80,7 +80,7 @@ describe("rewriteLinkTarget — left untouched", () => {
   });
 
   it("leaves an already-rewritten GitHub blob URL alone (idempotent)", () => {
-    const url = "https://github.com/hivecommons/hive/blob/v4/bin/README.md";
+    const url = "https://github.com/hivecommons/hive/blob/v5/bin/README.md";
     expect(rewriteLinkTarget(url, README)).toBe(url);
   });
 
@@ -105,7 +105,7 @@ describe("rewriteLinks — over full markdown content", () => {
     const out = rewriteLinks(md, README);
     expect(out).toContain("[Architecture](/docs/hive/architecture)");
     expect(out).toContain(
-      '[bin](https://github.com/hivecommons/hive/blob/v4/bin/README.md "index")'
+      '[bin](https://github.com/hivecommons/hive/blob/v5/bin/README.md "index")'
     );
   });
 

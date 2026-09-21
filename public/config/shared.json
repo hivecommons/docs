@@ -2,7 +2,7 @@
   "versions": {
     "hive": {
       "latest": {
-        "label": "v4 (Latest)",
+        "label": "v5 (Latest)",
         "branch": "main",
         "isDefault": true
       }
@@ -40,7 +40,7 @@
     "hive": {
       "name": "Hive",
       "basePath": "hive",
-      "currentVersion": "v4"
+      "currentVersion": "v5"
     },
     "hotshot": {
       "name": "hotshot",
@@ -95,7 +95,7 @@
     }
   ],
   "editBaseUrls": {
-    "hive": "https://github.com/hivecommons/hive/edit/v4/src/docs",
+    "hive": "https://github.com/hivecommons/hive/edit/v5/src/docs",
     "hotshot": "https://github.com/hivecommons/hotshot/edit/main",
     "pluk": "https://github.com/hivecommons/pluk/edit/main",
     "rationguard": "https://github.com/hivecommons/rationguard/edit/main",
