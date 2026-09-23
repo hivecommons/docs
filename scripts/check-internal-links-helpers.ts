@@ -76,13 +76,15 @@ export const ASSET_EXT =
  * resolution).
  */
 export const PROJECT_FOR_NAV: Record<string, string> = {
-  A2A: "docs/a2a",
-  MULTI_PLUGIN: "docs/multi-plugin",
-  KUBEFLEX: "docs/kubeflex",
-  KUBESTELLAR_MCP: "docs/kubestellar-mcp",
-  CONSOLE: "docs/console",
   HIVE: "docs/hive",
-  KUBESTELLAR: "docs",
+  HOTSHOT: "docs/hotshot",
+  PLUK: "docs/pluk",
+  RATIONGUARD: "docs/rationguard",
+  PROMPTARGS: "docs/promptargs",
+  SPEKTACULAR: "docs/spektacular",
+  // Shared sections (Community, …) live under docs/content/<section>/ and
+  // are served at /docs/<section>/<slug>.
+  GENERAL: "docs",
 };
 
 /**
