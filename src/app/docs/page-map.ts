@@ -176,8 +176,30 @@ const NAV_STRUCTURE_SPEKTACULAR: Array<{ title: string; items: NavItem[] }> = [
   }
 ]
 
+// Shared sections that appear once, below the projects, in every sidebar.
+// Files live in docs/content/<section>/ (not synced from any project) and
+// are routed at /docs/<section>/... — see GENERAL_SECTION_DIRS.
+const GENERAL_SECTION_DIRS = ['contributing', 'community', 'news'] as const
+const NAV_STRUCTURE_GENERAL: Array<{ title: string; items: NavItem[] }> = [
+  {
+    title: 'Community',
+    items: [
+      { 'What is Hive Commons?': 'community/what-is-hive-commons.md' },
+      { 'Join Hive Commons': 'community/join-hive-commons.md' },
+    ]
+  }
+]
+
+export function isGeneralSectionFile(file: string): boolean {
+  return GENERAL_SECTION_DIRS.some(dir => file.startsWith(`${dir}/`))
+}
+
 // Get navigation structure for a project
 function getNavStructure(projectId: ProjectId): Array<{ title: string; items: NavItem[] }> {
+  return [...getProjectNavStructure(projectId), ...NAV_STRUCTURE_GENERAL]
+}
+
+function getProjectNavStructure(projectId: ProjectId): Array<{ title: string; items: NavItem[] }> {
   switch (projectId) {
     case 'hotshot':
       return NAV_STRUCTURE_HOTSHOT
@@ -200,7 +222,11 @@ export function buildPageMap(projectId: ProjectId = 'hive') {
   const projectBasePath = getBasePath(projectId)
   const navStructure = getNavStructure(projectId)
 
-  const allDocFiles = getAllDocFiles(contentPath)
+  // Project files plus the shared general-section files from docs/content/.
+  const allDocFiles = [
+    ...getAllDocFiles(contentPath),
+    ...getAllDocFiles(docsContentPath).filter(isGeneralSectionFile),
+  ]
   const processedFiles = new Set<string>()
   const routeMap: Record<string, string> = {}
   const _pageMap: PageMapNode[] = []
