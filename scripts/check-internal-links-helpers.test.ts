@@ -120,17 +120,17 @@ describe("ASSET_EXT", () => {
 });
 
 describe("PROJECT_FOR_NAV", () => {
-  it("maps the default KUBESTELLAR nav to bare 'docs' (no project subpath)", () => {
-    expect(PROJECT_FOR_NAV.KUBESTELLAR).toBe("docs");
+  it("maps the shared GENERAL nav to bare 'docs' (no project subpath)", () => {
+    expect(PROJECT_FOR_NAV.GENERAL).toBe("docs");
   });
 
   it("maps each project nav to its base path", () => {
     expect(PROJECT_FOR_NAV.HIVE).toBe("docs/hive");
-    expect(PROJECT_FOR_NAV.CONSOLE).toBe("docs/console");
-    expect(PROJECT_FOR_NAV.KUBEFLEX).toBe("docs/kubeflex");
-    expect(PROJECT_FOR_NAV.KUBESTELLAR_MCP).toBe("docs/kubestellar-mcp");
-    expect(PROJECT_FOR_NAV.A2A).toBe("docs/a2a");
-    expect(PROJECT_FOR_NAV.MULTI_PLUGIN).toBe("docs/multi-plugin");
+    expect(PROJECT_FOR_NAV.HOTSHOT).toBe("docs/hotshot");
+    expect(PROJECT_FOR_NAV.PLUK).toBe("docs/pluk");
+    expect(PROJECT_FOR_NAV.RATIONGUARD).toBe("docs/rationguard");
+    expect(PROJECT_FOR_NAV.PROMPTARGS).toBe("docs/promptargs");
+    expect(PROJECT_FOR_NAV.SPEKTACULAR).toBe("docs/spektacular");
   });
 });
 

@@ -273,23 +273,23 @@ describe("resolveInternalLink", () => {
 describe("PROJECT_FOR_NAV", () => {
   it("maps every documented project name to its docs base path", () => {
     expect(PROJECT_FOR_NAV).toEqual({
-      A2A: "docs/a2a",
-      MULTI_PLUGIN: "docs/multi-plugin",
-      KUBEFLEX: "docs/kubeflex",
-      KUBESTELLAR_MCP: "docs/kubestellar-mcp",
-      CONSOLE: "docs/console",
       HIVE: "docs/hive",
-      KUBESTELLAR: "docs",
+      HOTSHOT: "docs/hotshot",
+      PLUK: "docs/pluk",
+      RATIONGUARD: "docs/rationguard",
+      PROMPTARGS: "docs/promptargs",
+      SPEKTACULAR: "docs/spektacular",
+      GENERAL: "docs",
     });
   });
 
-  it("uses docs/<slug> for every non-kubestellar project", () => {
-    // The root Kubestellar project lives at docs/ (no sub-slug); every
+  it("uses docs/<slug> for every project nav", () => {
+    // The shared GENERAL nav lives at docs/ (no sub-slug); every
     // other project must be under docs/<slug>. This invariant is what
     // makes route registration deterministic — breaking it would move
     // nav aliases to the wrong path and mass-report broken links.
     for (const [name, base] of Object.entries(PROJECT_FOR_NAV)) {
-      if (name === "KUBESTELLAR") {
+      if (name === "GENERAL") {
         expect(base).toBe("docs");
       } else {
         expect(base.startsWith("docs/")).toBe(true);
@@ -449,7 +449,7 @@ expect(sectioned.sectionSlug).toBe("whats-new");
       const NAV_STRUCTURE_HIVE = [
         { 'Intro': 'intro.md' },
 ]
-      const NAV_STRUCTURE_CONSOLE = [
+      const NAV_STRUCTURE_HOTSHOT = [
         { 'Home': 'home.md' },
 ]
 `;
@@ -460,12 +460,12 @@ expect(sectioned.sectionSlug).toBe("whats-new");
       byNav.set(e.navName, list);
     }
     expect(byNav.get("HIVE")).toEqual(["/docs/hive/intro"]);
-    expect(byNav.get("CONSOLE")).toEqual(["/docs/console/home"]);
+    expect(byNav.get("HOTSHOT")).toEqual(["/docs/hotshot/home"]);
   });
 
-  it("handles the KUBESTELLAR base (root docs path, no sub-slug)", () => {
+  it("handles the GENERAL base (root docs path, no sub-slug)", () => {
     const src = `
-      const NAV_STRUCTURE_KUBESTELLAR = [
+      const NAV_STRUCTURE_GENERAL = [
         { 'Getting Started': 'getting-started.md' },
 ]
 `;

@@ -5,7 +5,7 @@ import { useMDXComponents as getMDXComponents } from '../../../../mdx-components
 import { convertHtmlScriptsToJsxComments } from '@/lib/transformMdx'
 import { sanitizeHtmlForMdx, removeCommentPatterns } from '@/lib/sanitizeHtml'
 import { rewriteRelativeImagePaths } from '@/lib/rewriteImagePaths'
-import { buildPageMap, docsContentPath, getContentPath } from '../page-map'
+import { buildPageMap, docsContentPath, getContentPath, isGeneralSectionFile } from '../page-map'
 import { CURRENT_VERSION, type ProjectId } from '@/config/versions'
 import fs from 'fs'
 import path from 'path'
@@ -267,6 +267,9 @@ export async function generateStaticParams(): Promise<Array<{ slug: string[] }>>
   for (const projectId of STATIC_PROJECTS) {
     const { routeMap } = buildPageMap(projectId)
     for (const routeKey of Object.keys(routeMap)) {
+      // General sections are routed at /docs/<section>/..., not per project;
+      // collectParams(docsContentPath) above already covers them.
+      if (isGeneralSectionFile(routeKey)) continue
       addParam([projectId, ...routeKey.split('/')])
     }
   }
