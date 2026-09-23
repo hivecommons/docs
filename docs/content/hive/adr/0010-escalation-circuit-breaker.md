@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0010-escalation-circuit-breaker.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0010-escalation-circuit-breaker.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0010: Escalation circuit breaker for CI fix loops
 
@@ -10,7 +10,7 @@ Hive agents can repair their own failing PRs, but an unbounded retry loop can
 keep re-dispatching blind fixes without surfacing the root CI error. The
 escalation package records the incident that forced this boundary: a console
 test split kept `main` red for days while scanner fix PRs missed the one-line
-failure in shard logs ([escalation package](https://github.com/hivecommons/hive/blob/v4/src/pkg/escalation/escalation.go)).
+failure in shard logs ([escalation package](https://github.com/hivecommons/hive/blob/v5/src/pkg/escalation/escalation.go)).
 
 ## Decision
 
@@ -25,6 +25,31 @@ future fix dispatch skips the PR.
 For unchanged red heads, track staleness separately and cap re-engagements at
 three per current SHA. A branch that moves resets the re-engagement counter; a
 permanently red, never-moving branch is not nudged forever.
+
+A PR escalating for the SECOND time — after the reviewer lane ([#5480]) already
+repaired or de-escalated it once — gets a structured hand-off note instead of
+the generic body. The ledger stamps the head SHA the reviewer left on the branch
+and when its verdict was reconciled, and keeps both across the reset that
+reconciliation performs, so the comment can say what was already tried, that the
+attempt count is measured from the reviewer's pass, and that no further
+automated pass is coming. One reviewer pass per PR is the whole ladder: without
+the note, nothing distinguished that terminal hand-off from a first escalation
+except the label set.
+
+[#5480]: https://github.com/hivecommons/hive/issues/5480
+
+The `needs-human` label on the forge, not the ledger, is the authoritative
+record that a PR has been escalated. The ledger is a cache of it: a PR that
+wears the label reads as escalated even to an empty ledger (so the evidence
+comment is never posted twice, whatever happens to `/data`), and a PR whose
+confirmed label a human removes is un-parked with a fresh budget. A pass that
+cannot conclude CI state (checks running, or the check-run fetch failed — both
+surface as `pending`) leaves the ledger untouched; only a conclusive green
+clears history. Entries are pruned 24h after their PR stops being enumerated,
+not on the first pass that misses it.
+
+Dependency bots (`renovate[bot]`, `dependabot[bot]`, `mergeraptor[bot]`) are
+not agent authors: their red PRs are not fix loops to break.
 
 ## Consequences
 

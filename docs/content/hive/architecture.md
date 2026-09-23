@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/architecture.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/architecture.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # Hive Reference Architecture
 
@@ -19,7 +19,7 @@ before any LLM sees the task; agents only handle the judgment.
 > is gated at ACMM **L5+**, because the architect that decomposes epics has no
 > cadence below L5, and its final step — turning the architect's plan into child
 > beads — currently runs through the `bd decompose` CLI rather than automatically.
-> See [`planning-intelligence.md`](https://github.com/hivecommons/hive/blob/v4/src/docs/planning-intelligence.md) and
+> See [`planning-intelligence.md`](https://github.com/hivecommons/hive/blob/v5/src/docs/planning-intelligence.md) and
 > [ADR-0006](/docs/hive/adr/0006-planning-intelligence).
 
 ---
@@ -151,7 +151,7 @@ Before any agent is kicked, `run-pipeline.sh` runs the `pre-kick` stages defined
 in `hive-project.yaml`, topologically sorted by their declared dependencies. Each
 stage is a shell script that writes a JSON artifact other stages and agents
 consume — so an agent is handed pre-filtered, pre-classified, merge-gated work.
-For a script-by-script index of this layer, see [`../../bin/README.md`](https://github.com/hivecommons/hive/blob/v4/bin/README.md).
+For a script-by-script index of this layer, see [`../../bin/README.md`](https://github.com/hivecommons/hive/blob/v5/bin/README.md).
 
 ```mermaid
 flowchart LR
@@ -181,6 +181,45 @@ flowchart LR
 - **Enforcement** is the always-on `gh` wrapper (`/usr/local/bin/gh`): it injects
   the scoped App token and blocks writes that exceed the agent's permission
   tier — the shell-level twin of the network-level MITM proxy (§6).
+
+---
+
+## Archetypes for long-running work
+
+Long-running runs use a provisional vocabulary while the stage handoff receipt
+schema and proof contract settle ([#8295](https://github.com/hivecommons/hive/issues/8295)).
+The names describe roles in the existing architecture, not new machinery, and
+remain provisional until the adapter, effect, and proof contract lands.
+
+**Oracle** is the source-of-truth observer for actionable work. In Hive that is
+the `pkg/worksource` seam: it normalizes GitHub issues, Linear/Jira items, and
+run-stage work into source-neutral records with stable keys and current state.
+
+**Generator** is the stage-specific producer of proposed artifacts: a spec,
+plan, implementation wave, audit finding, or other output that can be reviewed.
+The generator is usually an agent or external workflow runner; its Hive-side
+package mapping is `pkg/outputschema`, where stage receipts and artifact records
+describe what the producer emitted. Hive records the stage and generation on the
+run lease rather than giving the generator a separate store.
+
+**Executor** is the mutation boundary that applies one authorized external
+effect. `pkg/convergence/mutation.Executor` binds the durable claim ledger and
+operation journal around that effect so retries and reassignments are fenced or
+recorded according to the resolved convergence mode.
+
+**Gate** is the admission decision. `pkg/convergence.Evaluate` turns an
+authoritative observation into a tri-state decision (`True`, `False`, or
+`Unknown`) before a stage advances or a mutation is allowed. Proof and Outcome
+are Gate inputs rather than peer archetypes: `pkg/convergence/proof` supplies
+bounded receipts for declared predicates, and `pkg/convergence/outcome` is the
+staged ledger that will compare predicted decisions with observed results once
+it is wired.
+
+| Run stage | Oracle | Generator | Gate inputs | Executor |
+| --- | --- | --- | --- | --- |
+| Spec | `pkg/worksource` identifies the run item and current stage. | Spec interview or external workflow emits the spec artifact. | Admission reads stage/generation state; missing or stale evidence is `Unknown`. | None unless the approved spec records an external effect. |
+| Plan | `pkg/worksource` exposes the same run key with `Stage=plan`. | Planner emits a revisioned plan, allowed scope, effects, and assumptions. | Proof receipts and outcome observations bind the plan revision and approved scope. | Mutation executor journals any approved issue/comment/metadata effects. |
+| Implement | `pkg/worksource` exposes `Stage=implement` for the lease generation. | Agent or external runner performs an implementation or report-only campaign. | Gate evaluates proof and outcome evidence before publication or stage completion. | Mutation executor applies authorized effects; a report-only audit campaign may exercise the path without opening a PR. |
 
 ---
 
@@ -323,7 +362,7 @@ reroutes Anthropic-shaped calls to OpenAI-shaped endpoints where needed.
 each backend's **session JSONL** files (plus a live proxy sniff of Copilot's
 usage block) and multiplies token counts by a dated per-model price table. This
 feeds the dashboard's live cost, hourly spend, and per-agent/model attribution.
-See [Token collection and usage tracking](https://github.com/hivecommons/hive/blob/v4/src/docs/token-tracking.md) for the data shape,
+See [Token collection and usage tracking](https://github.com/hivecommons/hive/blob/v5/src/docs/token-tracking.md) for the data shape,
 `/api/cost`, and hub `/api/saas/usage` rollups.
 
 ---
@@ -342,7 +381,7 @@ flowchart LR
 
 - `/api/status` — full fleet + governor state (`BuildFrontendStatus`).
 - `/api/audit` — recent audit entries for read-write users: dashboard config changes, logins, GitHub App setup changes, and agent lifecycle events such as start, stop, launch failure, pause/resume/kick, add/remove, backend changes, and model changes. Entries are kept in memory and, when `/data` exists, appended to `/data/audit.jsonl` with lumberjack rotation (5 MB files, 3 backups, 90 days).
-- The machine-readable dashboard API reference is [dashboard/openapi.json](https://github.com/hivecommons/hive/blob/v4/dashboard/openapi.json).
+- The machine-readable dashboard API reference is [dashboard/openapi.json](https://github.com/hivecommons/hive/blob/v5/dashboard/openapi.json).
 - `/api/events` — Server-Sent Events; the dashboard is pushed a fresh snapshot on
   every eval cycle (and a lighter agent-only update on the fast poll).
 - `/api/health`, `/api/health/deep`, `/api/livez` — readiness and liveness; the
@@ -356,10 +395,10 @@ flowchart LR
   `gen_ai.request.model`, and token usage fields when that data is available,
   plus Hive attributes like `hive.agent`, `hive.lane`, `hive.acmm_level`, and
   `hive.governor.mode`.
-- Log output is wrapped by `pkg/logscrub`, which redacts recognized GitHub token and JWT-like strings from messages and string attributes. See [Security notes](https://github.com/hivecommons/hive/blob/v4/src/docs/security.md) for guarantees and limits.
-- Network exposure and TLS termination are documented in [Network and port requirements](https://github.com/hivecommons/hive/blob/v4/src/docs/network-requirements.md) and [TLS setup](https://github.com/hivecommons/hive/blob/v4/src/docs/tls-setup.md).
+- Log output is wrapped by `pkg/logscrub`, which redacts recognized GitHub token and JWT-like strings from messages and string attributes. See [Security notes](https://github.com/hivecommons/hive/blob/v5/src/docs/security.md) for guarantees and limits.
+- Network exposure and TLS termination are documented in [Network and port requirements](https://github.com/hivecommons/hive/blob/v5/src/docs/network-requirements.md) and [TLS setup](https://github.com/hivecommons/hive/blob/v5/src/docs/tls-setup.md).
 - `/terminal` is served by `ttyd`, which invokes `deploy/ttyd-tmux.sh` to attach to the selected `hive-<agent>` tmux session as the socket-owning UID. This is required when agents run under per-agent users and tmux rejects attaches from the proxy user.
-- `deploy/hive-panes.sh` backs a read-only peer-observation workflow: it reads pluk JSONL logs from `/var/run/pluk/logs`, skips the calling agent, strips terminal escapes, and prints recent output without opening another agent's tmux socket. See [Agent peer-awareness logging](https://github.com/hivecommons/hive/blob/v4/src/docs/agent-logging.md) for the log format, attachment conditions, and retention.
+- `deploy/hive-panes.sh` backs a read-only peer-observation workflow: it reads pluk JSONL logs from `/var/run/pluk/logs`, skips the calling agent, strips terminal escapes, and prints recent output without opening another agent's tmux socket. See [Agent peer-awareness logging](https://github.com/hivecommons/hive/blob/v5/src/docs/agent-logging.md) for the log format, attachment conditions, and retention.
 
 ---
 
@@ -390,12 +429,12 @@ flowchart TB
 
 | Store | Path | Role |
 |-------|------|------|
-| Beads ledger | `/data/beads/<agent>/beads.json` | Per-agent work items (source of truth for tasks); see [SQLite state backend](https://github.com/hivecommons/hive/blob/v4/examples/sqlite-state.md) for a single-machine alternative |
-| Running config | `/data/hive.yaml.dashboard` (overlay) + `/data/hive.yaml.runtime`; seed `/etc/hive/hive.yaml` | Authoritative runtime config lives on the PVC; precedence is documented in [config layering](https://github.com/hivecommons/hive/blob/v4/src/docs/config-layering.md) |
+| Beads ledger | `/data/beads/<agent>/beads.json` | Per-agent work items (source of truth for tasks); see [SQLite state backend](https://github.com/hivecommons/hive/blob/v5/examples/sqlite-state.md) for a single-machine alternative |
+| Running config | `/data/hive.yaml.dashboard` (overlay) + `/data/hive.yaml.runtime`; seed `/etc/hive/hive.yaml` | Authoritative runtime config lives on the PVC; precedence is documented in [config layering](https://github.com/hivecommons/hive/blob/v5/src/docs/config-layering.md) |
 | Pipeline outputs | `/var/run/hive-metrics/{actionable,merge-eligible,pipeline-run}.json` | Deterministic pre-kick artifacts |
 | Knowledge graph | `/data/graph/knowledge.db` + `/data/vaults/` | Facts, primers, inception scaffolds |
 | Secrets | `/secrets/gh-app-key.pem`, `/data/gh-user-token`, `/data/proxy-ca.pem` | GitHub App key, user token, MITM CA |
-| Per-agent mode | `/tmp/.hive-mode-<agent>` | Hot-reloadable proxy enforcement mode; per-agent `gh` wrapper denials are configured with [restriction files](https://github.com/hivecommons/hive/blob/v4/config/restrictions/README.md) |
+| Per-agent mode | `/tmp/.hive-mode-<agent>` | Hot-reloadable proxy enforcement mode; per-agent `gh` wrapper denials are configured with [restriction files](https://github.com/hivecommons/hive/blob/v5/config/restrictions/README.md) |
 
 ---
 
@@ -407,6 +446,6 @@ flowchart TB
 [roadmap.md](/docs/hive/roadmap) ·
 [landscape.md](/docs/hive/landscape) ·
 [manual-provisioning.md](/docs/hive/manual-provisioning) ·
-[cross-cluster-migration.md](https://github.com/hivecommons/hive/blob/v4/src/docs/cross-cluster-migration.md) ·
-[trajectory-review.md](https://github.com/hivecommons/hive/blob/v4/src/docs/trajectory-review.md) ·
-[design/knowledge-system.md](https://github.com/hivecommons/hive/blob/v4/src/docs/design/knowledge-system.md)*
+[cross-cluster-migration.md](https://github.com/hivecommons/hive/blob/v5/src/docs/cross-cluster-migration.md) ·
+[trajectory-review.md](https://github.com/hivecommons/hive/blob/v5/src/docs/trajectory-review.md) ·
+[design/knowledge-system.md](https://github.com/hivecommons/hive/blob/v5/src/docs/design/knowledge-system.md)*

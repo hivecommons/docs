@@ -1,11 +1,11 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0007-token-mint.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0007-token-mint.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0007: Mint short-lived scoped agent credentials
 
 Status: Accepted (retroactive)
 
 For the operator-facing config reference (`mint:` block, key lifecycle, and
-the trust boundary stated plainly), see [Token mint](https://github.com/hivecommons/hive/blob/v4/src/docs/token-mint.md).
+the trust boundary stated plainly), see [Token mint](https://github.com/hivecommons/hive/blob/v5/src/docs/token-mint.md).
 
 ## Context
 
@@ -21,12 +21,12 @@ without distributing shared long-lived credentials.
 ## Decision
 
 Introduce the mint as an opt-in short-lived credential issuer
-([mint package](https://github.com/hivecommons/hive/blob/v4/src/pkg/mint/mint.go)). It signs scoped JWTs with bounded TTLs,
+([mint package](https://github.com/hivecommons/hive/blob/v5/src/pkg/mint/mint.go)). It signs scoped JWTs with bounded TTLs,
 verification that fails closed, and a JWKS endpoint for downstream Workload
 Identity Federation providers. Agent integration maps the same trust tiers used
 by agent modes (`advisor`, `newcomer`, `contributor`, `trusted`) to explicit
 scope strings such as `issues:read`, `contents:write`, and `pulls:merge`
-([agent minting](https://github.com/hivecommons/hive/blob/v4/src/pkg/mint/agent.go)).
+([agent minting](https://github.com/hivecommons/hive/blob/v5/src/pkg/mint/agent.go)).
 
 The mint supplements, rather than replaces, the existing GitHub App token path.
 When disabled, agent minting is a no-op. When enabled, empty agent identities,

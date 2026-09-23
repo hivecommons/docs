@@ -63,14 +63,14 @@ sudo apt install grim slurp wl-clipboard wtype jq
 - **hyprland**: `bind = CTRL SHIFT, Print, exec, ~/.local/bin/hotshot-capture`
 - **sxhkd**:
 
-  ```
+  ```text
   ctrl + shift + Print
       ~/.local/bin/hotshot-capture
   ```
 
 ## Usage
 
-```
+```text
 hotshot-capture [--region|--full] [--no-type] [--dir DIR]
 ```
 

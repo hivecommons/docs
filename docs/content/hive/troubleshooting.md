@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/troubleshooting.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/troubleshooting.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # Hive troubleshooting
 
@@ -50,6 +50,49 @@ Hive reads `/etc/hive/hive.yaml` by default, or `HIVE_CONFIG`/`--config` when se
 
 In Kubernetes, edit the ConfigMap/Secret source and restart the pod; dashboard edits are stored in the `/data` PVC overlay. In Docker Compose, edit the bind-mounted `src/hive.yaml` or the dashboard overlay and restart `hive`.
 
+### Validate without booting: `hive validate`
+
+Since v4.15.0 (#6027) you do not have to apply a config and watch for a
+crash-loop to learn whether it is valid. `hive validate` (alias
+`hive --config-check`) loads the config byte-for-byte the way a real boot does
+— `config.LoadWithDashboardOverlay`, so the dashboard overlay
+(`/data/hive.yaml.dashboard`) **and** the per-agent overlay files under
+`data.agents_dir` (`/data/agent-configs/*.yaml`) are included — then exits
+without starting anything. Validating only `hive.yaml` would miss exactly the
+failure mode that motivated the command: in #6024 the contradiction that
+bricked a spoke lived in an agent overlay file, and once the spoke was
+crash-looping, the dashboard API that is the supported way to fix the config
+was served by the very process the config was killing.
+
+```console
+$ hive validate
+config OK: /etc/hive/hive.yaml
+  agents (3): [guide quality supervisor]
+    supervisor <- /data/agent-configs/supervisor.yaml
+```
+
+- **Config path** — same resolution as a real boot: `/etc/hive/hive.yaml` by
+  default, overridden by `HIVE_CONFIG` or `-config <path>`.
+- **Exit code** — `0` when valid; `1` when not, deliberately the same code as
+  a boot-time config failure, so a CI step or pre-flight init container needs
+  no special casing. On failure it prints `config INVALID: <path>` and the
+  first error.
+- **Provenance** — the `<agent> <- <file>` lines name which overlay file each
+  surviving agent entry came from, so you can see entries that arrived from
+  files you might not have thought to look at. Overlays dropped by the
+  invalid-overlay guard are already gone from the reported roster and were
+  logged at `ERROR` during the load — see
+  [Config layering](https://github.com/hivecommons/hive/blob/v5/src/docs/config-layering.md#what-makes-an-overlay-valid).
+
+Run it inside the deployment that holds the real overlay files, not against a
+local copy of `hive.yaml`:
+
+```bash
+docker compose exec hive hive validate          # Docker Compose
+kubectl exec deploy/hive -- hive validate       # Kubernetes
+podman exec hive hive validate                  # Podman
+```
+
 ## GitHub credentials are missing or invalid
 
 When no token or App credentials are usable, Hive starts the dashboard but disables write-capable GitHub work. The code logs these exact messages from `src/cmd/hive/main.go` depending on the state:
@@ -58,19 +101,85 @@ When no token or App credentials are usable, Hive starts the dashboard but disab
 - `GitHub App configured without credentials — hive starting in dashboard-only mode. Install the app and provide installation_id + key to enable agents.`
 - `persisted user token is invalid or expired`
 
-Check the configured `github:` block, the `HIVE_GITHUB_TOKEN` secret/env var, or the GitHub App `app_id`, `installation_id`, and `key_file`. For App setup, use the dashboard banner or `/gh-setup`; details are in [GitHub App setup](https://github.com/hivecommons/hive/blob/v4/src/docs/github-app-setup.md). Note the dashboard calls this the **Forge App** — the app for your forge (your source control system, e.g., GitHub, GitHub Enterprise, GitLab, or Gitea) — under Governor Config → Forge App.
+Check the configured `github:` block, the `HIVE_GITHUB_TOKEN` secret/env var, or the GitHub App `app_id`, `installation_id`, and `key_file`. For App setup, use the dashboard banner or `/gh-setup`; details are in [GitHub App setup](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md). Note the dashboard calls this the **Forge App** — the app for your forge (your source control system, e.g., GitHub, GitHub Enterprise, GitLab, or Gitea) — under Governor Config → Forge App. GitLab, Gitea, and Forgejo are **not supported for running a hive** today; see [Forge setup: GitLab, Gitea, and Forgejo](https://github.com/hivecommons/hive/blob/v5/src/docs/forge-app-setup.md).
+
+## Workflow-file pushes are rejected by GitHub App tokens
+
+This rejection means the GitHub App installation has not accepted the
+repository **Workflows** permission:
+
+```text
+! [remote rejected] <branch> -> <branch> (refusing to allow a GitHub App to create or update workflow `.github/workflows/<file>.yml` without `workflows` permission)
+```
+
+The branch and filename vary, but the trigger is any push authenticated with a
+GitHub App installation token that creates or updates a file under
+`.github/workflows/`. The failure happens during `git push`, before
+[`hive-open-pr`](https://github.com/hivecommons/hive/blob/v5/src/docs/hive-open-pr.md) can request a PR, so an otherwise healthy
+agent may finish with local commits but no remote branch or PR.
+
+The in-repo token tiers are deliberately asymmetric:
+
+- `contributor` tokens request issues, contents, and pull-requests write, but
+  do **not** request Workflows. This keeps ordinary PR-capable agents from
+  modifying GitHub Actions workflows.
+- `trusted` and `merger` tokens request `workflows:write` so trusted-tier
+  agents can publish workflow fixes. If the App installation has not granted
+  Workflows yet, GitHub refuses that token mint; Hive logs the missing grant,
+  retries without Workflows, and the later workflow-file push is rejected by
+  GitHub.
+
+Only an organization owner or App owner can fix the grant. A PR cannot change
+GitHub App permissions. Remediation:
+
+1. Open the Hive GitHub App settings in GitHub:
+   **Settings → Developer settings → GitHub Apps → `<hive app>`** (or the
+   owning organization's GitHub App settings).
+2. Open **Permissions & events**.
+3. Under **Repository permissions**, set **Workflows** to **Read and write**,
+   then save the App permission change.
+4. Re-authorize every affected installation. Existing installations keep their
+   old grants until an owner accepts the updated permission request, typically
+   from the installation's GitHub prompt or **Settings → Integrations/GitHub
+   Apps → `<hive app>` → Review request**.
+5. Re-run the agent or re-push the branch after the installation has accepted
+   the new grant.
+
+Until the installation grants Workflows read/write, workflow changes from
+agents must be delivered as a patch on the tracking issue for a maintainer to
+apply with their own credentials. Include the target branch, every changed
+workflow path, a complete unified diff, and the verification command/output a
+human should run after applying it.
 
 ## Hosted hive disappeared or its URL times out
 
 Hosted hives that never complete setup or go inactive are **reaped on a timer**: the hive vanishes from the hub's Usage view and the old `https://<id>.hive.hivecommons.dev` URL times out permanently. This is expected reclamation, not an outage. Recovery:
 
 1. **Request a new hive** from the hub's `/get-started` wizard (hosted hub: `https://hive.hivecommons.dev/get-started`, the **Request a hive** button). The old URL will not come back.
-2. **Install the Forge App immediately** on the new hive — the GitHub App on GitHub.com, or the same app on your GHE host for enterprise. See [GitHub App setup](https://github.com/hivecommons/hive/blob/v4/src/docs/github-app-setup.md) and the [getting-started guide's Step 0](/docs/hive/getting-started#step-0--before-you-start-do-this-first).
+2. **Install the Forge App immediately** on the new hive — the GitHub App on GitHub.com, or the same app on your GHE host for enterprise. See [GitHub App setup](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md) and the [getting-started guide's Step 0](/docs/hive/getting-started#step-0--before-you-start-do-this-first).
 3. An installed Forge App plus regular heartbeats keeps the new hive from being reaped again.
 
 On GitHub Enterprise, a 404 from the install link usually means the hive is pointed at github.com instead of your GHE host (or vice versa) — check which source control host is configured under Governor Config → Forge App.
 
 ## Agents are stuck, paused, or need CLI login
+
+### Start on the agent card, not in tmux
+
+Since v4.1.0 ([#5594](https://github.com/hivecommons/hive/issues/5594)) the dashboard agent card states **every** reason an agent will not run at once, so read it before reaching for `tmux`. Under the card state (and on the ops-center detail panel) is a blockers line with three segments:
+
+- **`session`** — `up` (live tmux session), `down` (no live session; `↻ restart` asks the supervisor to respawn it), or `disabled` (disabled in config; the governor never starts it). Since [#7223](https://github.com/hivecommons/hive/issues/7223) re-enabling is one click: flip the **0/1 master-power switch** shown on the agent card, the ops-center detail panel, and the config dialog — it writes the agent's `enabled` flag (`PUT /api/config/agent/{name}/general`). Enablement is a separate axis from pause: disabling removes the agent from scheduling in every mode, so a disabled agent deliberately offers no pause/resume toggle — the power switch is its only control.
+- **`scheduling`** — the governor cadence for the current mode when the agent is kickable, or **every** live reason it is not, joined together (for example `paused + off in surge mode`). All of the listed reasons must be cleared; fixing one is not enough. On-demand agents show `on demand`.
+- **`next kick`** — an ETA (`in 12m`, `due now`) rather than a wall-clock time, or `never` while any scheduling blocker exists.
+
+Two more card behaviors remove the old one-reason-per-click treasure hunt:
+
+- **Zero cadence is named.** An enabled, governor-kickable agent with no cadence in *any* mode that has never been kicked shows a `⏱ never scheduled — set cadences` chip; clicking it opens the agent's Cadences tab. This is the per-agent form of the fleet-level "never kicked" banner — both are driven by the same predicate, so they cannot name different agents.
+- **A cadence in the wrong mode is named too** ([#7474](https://github.com/hivecommons/hive/issues/7474)). An agent that *some* mode schedules but the current one does not — no entry for the current mode, and none in `idle`, which every other mode inherits — is not kicked until the mode changes, and would otherwise read as healthy: enabled, session up, a cadence configured, not on-demand. The card renders it in the same hollow-green "off" state as a governor-paused agent, the `scheduling` segment reads `no cadence in busy (only in surge)`, and the fleet banner `agent(s) reviewer (cadence only in surge) not scheduled in the current busy mode …` names the same agents. The shape to look for is a cadence **only in `surge`**: the agent runs while the backlog holds the fleet in surge, and its own success — driving the backlog below the threshold — removes its schedule. Add an entry for the mode the fleet is in, or an `idle` entry to cover every mode. An explicit `pause`/`off` entry is not this: that is an operator choice, and the card reports it as `off in <mode> mode`.
+- **A paused agent's primary action is always its pause toggle.** With a live session the button is `▶ resume`, and its tooltip names anything resuming will *not* clear. If the session is also down, the one button reads `▶ start & resume` and clears both flags in a single click — client-side chaining of the two existing endpoints (`POST /api/resume/{agent}` first, so the fresh session is never born paused, then `POST /api/restart/{agent}`). No new API surface; scripts can chain the same two calls. A paused agent never offers a bare Start.
+
+If the card says the agent should be running (session up, scheduling shows a cadence, next kick has an ETA) and it still misbehaves, *then* drop into the session as described below.
+
+### Inspecting the session
 
 Agents run in tmux sessions named `hive-<agent>` managed by Hive's agent manager. There is no v1 `AGENT_READY_MARKER` or `bin/supervisor.sh` loop: the manager drives each agent by delivering a *kick* (its next work prompt) directly into the session and, once running, auto-dismisses the CLI's own startup consent screens.
 
@@ -89,7 +198,7 @@ Detach from tmux with `Ctrl+B`, then `D` — the session keeps running.
 To recover a paused agent:
 
 1. Complete the CLI login for that backend outside the pause. Attach to the session (`tmux attach -t hive-<agent>`) and run the login command shown in the notification: `claude login`, `copilot auth login`, `gemini auth login`, or the backend-specific command. The picker expects an interactive OAuth/browser flow, so complete it from a terminal you control rather than leaving the unattended session blocked on it.
-2. Resume the agent from the dashboard, or `POST /api/resume/{agent}`.
+2. Resume the agent from the dashboard, or `POST /api/resume/{agent}`. If the pause outlived its session, the card offers a single `▶ start & resume` instead — see [Start on the agent card, not in tmux](#start-on-the-agent-card-not-in-tmux).
 
 If an agent returns to "needs login" immediately after resuming, the credentials themselves are the problem (expired token, revoked API key, or an account-level sign-out). Re-authenticate that backend's CLI as the agent user, then resume again so the fresh session is picked up.
 
@@ -110,7 +219,7 @@ notifications:
     topic: my-hive-alerts
 ```
 
-The Docker Compose `NTFY_SERVER` / `NTFY_TOPIC` environment variables are just passthrough for this block and, when set, override the YAML values. Fields are `notifications.ntfy.server` and `notifications.ntfy.topic` (both required); Slack and Discord use `notifications.slack.webhook` and `notifications.discord.webhook`. See [Notifications](https://github.com/hivecommons/hive/blob/v4/src/docs/notifications.md) for the full schema.
+The Docker Compose `NTFY_SERVER` / `NTFY_TOPIC` environment variables are just passthrough for this block and, when set, override the YAML values. Fields are `notifications.ntfy.server` and `notifications.ntfy.topic` (both required); Slack and Discord use `notifications.slack.webhook` and `notifications.discord.webhook`. See [Notifications](https://github.com/hivecommons/hive/blob/v5/src/docs/notifications.md) for the full schema.
 
 To debug:
 
@@ -131,6 +240,90 @@ Liveness is judged by the governor's in-process health check, so an agent that k
 1. **Read the work counts, not just liveness.** If an agent reports "Issues triaged: 0" cycle after cycle in the logs, that is the signal — `kubectl -n hive logs deploy/hive | grep <agent>` or attach to the session.
 2. **Cross-check an external surface.** Confirm the effect the agent is supposed to produce (a GitHub API query for the PRs/issues it claims to have handled) rather than trusting its self-reported state.
 
+## An agent session completes but no branch or PR appears
+
+The agent ran, the session ended cleanly, the fleet view shows it healthy — and there is no PR and no branch on the remote. Often the agent's own summary says so plainly, in words like "branch committed locally but push failed due to git authentication issue."
+
+This is not the agent deciding no work was needed. The work was done; it could not be published. The fleet view cannot tell you which, because from the governor's point of view the session *is* healthy — the agent hit an auth error, correctly refused to manipulate git credentials, and wrote an honest summary. See [hivecommons/hive#5343](https://github.com/hivecommons/hive/issues/5343).
+
+There are two distinct causes with the same symptom, and they are distinguishable.
+
+### First: confirm the work exists and is unpublished
+
+```sh
+# Does the branch exist on the remote at all?
+gh api "repos/<owner>/<repo>/git/ref/heads/<branch>" 2>&1 | head -3
+
+# Did the agent commit it locally? (per-agent HOME, not the dev user's)
+ls -d /data/home/agents/<agent>/* 2>/dev/null
+```
+
+A 404 from the first command plus commits in the agent's working copy is this scenario. If the branch *is* on the remote, the problem is downstream — go to [`hive-open-pr`](https://github.com/hivecommons/hive/blob/v5/src/docs/hive-open-pr.md#diagnosing-a-pr-request-that-never-opens) instead.
+
+### Cause 1 — the credential helper is not reachable from the agent's UID
+
+The helper is invoked per-UID, and agents do **not** share the dev user's `$HOME`: each per-agent UID runs with its own `$HOME` under `/data/home/agents/<name>`, which has no `.gitconfig`. `git config --global` writes to the *caller's* `$HOME`, so wiring the helper that way makes it invisible to every agent. The helper is therefore wired **system-wide in `/etc/gitconfig`**, written from the entrypoint's root phase — see [#5343](https://github.com/hivecommons/hive/issues/5343) for the original defect and [#5352](https://github.com/hivecommons/hive/pull/5352) for the fix.
+
+Check the layer that actually matters, from a process with no per-user config — this is the same probe the entrypoint runs at boot:
+
+```sh
+# Inside the hive container. Empty output = the helper is invisible to agents.
+HOME=/nonexistent XDG_CONFIG_HOME=/nonexistent \
+  git config --get-regexp '^credential\.' | grep git-credential-hive.sh
+
+# Or ask as the agent UID directly:
+su -s /bin/sh hive-<agent> -c 'git config --get-regexp credential'
+
+# The file that supplies it — must exist and be world-readable (0644).
+ls -l /etc/gitconfig
+```
+
+Each should list `/usr/local/bin/git-credential-hive.sh`. The boot log records the same verdict, so you can also just read it back:
+
+```sh
+kubectl -n hive logs deploy/hive | grep 'git credential helper'
+```
+
+- `git credential helper VERIFIED reachable without a per-user .gitconfig` — this cause is ruled out. Go to cause 2.
+- `WARN: git credential helper is NOT reachable ...` — this is your cause. Every agent on this hive will commit branches it cannot push. Restart the hive so the entrypoint's root phase rewrites `/etc/gitconfig`; if that phase never ran (a boot that could not become root), only the dev user's global config exists and no agent will ever push.
+
+Also confirm the agent's own scoped token is present and readable by its UID — the helper needs it:
+
+```sh
+su -s /bin/sh hive-<agent> -c 'test -r "$HIVE_AGENT_TOKEN_CACHE" && echo readable || echo MISSING'
+```
+
+Never print the file's contents.
+
+### Cause 2 — the credential went stale mid-task (silent refresh failure)
+
+Contributor-relay tasks are pushed with a scoped token the hub re-mints periodically, a few minutes before its TTL expires. When a re-mint **fails**, the hub logs a warning and keeps the old token; the relay is told nothing. See [hivecommons/hive#5447](https://github.com/hivecommons/hive/issues/5447).
+
+The signature is different from cause 1, and it is a timing signature:
+
+| | Cause 1 (helper unreachable) | Cause 2 (refresh failed) |
+| --- | --- | --- |
+| Which agents | **all** agents on the hive | usually one long-running task |
+| When the push fails | the **first** push of any task | roughly an hour in, after earlier pushes in the *same* task succeeded |
+| Boot-log probe | `WARN: ... NOT reachable` | `VERIFIED reachable` |
+| Where it is recorded | entrypoint boot log | hub log only — nothing agent-side |
+
+So: **a task whose earlier pushes worked and whose later ones did not is cause 2, not cause 1.** Confirm from the hub log:
+
+```sh
+kubectl -n hive logs deploy/hive | grep -iE 'token.*(refresh|mint)'
+```
+
+A short task that never pushes successfully at all is cause 1.
+
+### If neither fits
+
+Read what the PR-request watcher itself concluded. It probes the repository and then the head ref before blaming a push, and writes its verdict to the request's result file — the shapes and where to find them are in [`hive-open-pr`](https://github.com/hivecommons/hive/blob/v5/src/docs/hive-open-pr.md#diagnosing-a-pr-request-that-never-opens).
+
+```sh
+kubectl -n hive logs deploy/hive | grep 'pr-request watcher'
+```
+
 ## An agent says "Please run /login" but logging in changes nothing
 
 Check whether the same line carries **`API Error: 403`**. If it does, the agent is
@@ -139,7 +332,7 @@ Check whether the same line carries **`API Error: 403`**. If it does, the agent 
 Claude Code prefixes *every* API error with its login hint, so an upstream refusal
 renders like this:
 
-```
+```text
 ● Please run /login · API Error: 403 {"type":"error","error":{"type":"api_error",
   "message":"inference backend returned 403: {"error":{"message":"team not allowed
   to access model. This team can only access models=['gemini-2.5-pro',
@@ -158,7 +351,7 @@ agent's **model id does not match what the gateway entitles**, exactly. Read the
 allowed list out of the error and compare it character by character with the
 agent's configured model — separators and prefixes both matter:
 
-```
+```text
 configured:  claude-sonnet-4.6
 entitled:    aws/claude-sonnet-4-6
                  ^^^^         ^
@@ -190,6 +383,62 @@ a login prompt: it badged the agent 🔑, and — because a valid token was on d
 auto-restarted it straight back into the same 403, which looked like the agent
 crash-looping. Hive no longer treats a 403 as a login signal; a 401 still is.
 
+## Every Copilot agent says "You are not licensed to use Copilot"
+
+```text
+ ✗ You are not licensed to use Copilot. (Request ID: CF24:249477:13194BA:1505534:6AA2A42E)
+```
+
+The wording points at your GitHub seat, but the whole fleet failing **at once**,
+against an entitlement nobody changed, usually means the hive is presenting a
+Copilot token the account no longer owns — not that your licence lapsed
+([#6500](https://github.com/hivecommons/hive/issues/6500)). Check the seat first
+at <https://github.com/settings/copilot>; if it is active, this is the hive's
+problem, and the recovery is:
+
+1. Open any agent's Terminal and run **`/login`** with a currently-licensed
+   identity. This writes the new token into the Copilot CLI's shared
+   `config.json`.
+2. Wait about 30 seconds for the session reconciler's next tick.
+
+Within that tick the hive **promotes** the token you just logged in with to its
+durable store and then moves the fleet onto it: agents whose `backend_auth`
+reads `unlicensed`, `token-expired`, or `forbidden` (see
+[fleet-health.md](https://github.com/hivecommons/hive/blob/v5/src/docs/fleet-health.md#agent-backend-auth-health-canary-6558)) are
+relaunched onto the new credential, and healthy agents get it pushed into their
+session environment for their next relaunch. You should not have to restart
+agents by hand.
+
+**Start by reading which credential was refused.** The model dropdown's
+`(Copilot seat not licensed)` suffix is GitHub's verdict on whichever
+credential the hive actually presented, which is not necessarily the login you
+just did ([#7302](https://github.com/hivecommons/hive/issues/7302)). Hover the
+dropdown (or read the `copilot model discovery rejected by upstream` log line's
+`credential` field): it names the source — `the dashboard Copilot login`, `the
+COPILOT_GITHUB_TOKEN environment variable`, `an in-agent /login promoted from
+the shared Copilot CLI config`, or `the Copilot CLI's own stored login` — and,
+when GitHub answers `/user`, the account (`GitHub account @name`). If that is
+not the account you expected, the hive is running on a different credential
+and a dashboard re-login with the right one is the fix; if it *is* your
+account, GitHub is refusing that account for the Copilot CLI/API integration —
+an org-managed seat can be licensed for the IDE while org policy blocks the
+CLI — so check the seat and your org's Copilot policy rather than the hive.
+
+Two log lines tell you which way it went:
+
+| line | meaning |
+| --- | --- |
+| `promoted in-agent login token to the durable store` | your `/login` won; the relaunch onto it follows immediately |
+| `replaced stale CLI identity with authoritative token` | the hive overrode your `/login` with a token it considers authoritative — that token is the one being refused |
+
+If you see the second line, the offending credential is the hive's own
+configured one: re-run the dashboard's Copilot login (or fix
+`COPILOT_GITHUB_TOKEN` in the deployment) rather than logging in inside an
+agent, because a dashboard login is authoritative and an in-agent one is not.
+
+Relaunching is deliberately limited to panes that have actually been refused, so
+a token rotation never destroys an agent's in-flight work.
+
 ## The terminal looks frozen — no new output, and reopening it doesn't help
 
 You are almost certainly **scrolled back**, not looking at a halted agent.
@@ -198,7 +447,7 @@ The browser terminal is a live `tmux` attach, and the mouse wheel scrolls by ent
 
 Look at the right-hand end of the status bar:
 
-```
+```text
 [SCROLLBACK 812/4837 lines back - not following live output - press q to resume]   now 14:22:07
 [live]                                                                             now 14:22:07
 ```
@@ -216,6 +465,18 @@ If the status bar shows `[live]` and output really has stopped, the agent is idl
 The agent-card **last kick** / **next kick** fields describe when work is *started*, not how long it runs. A kick sends one prompt into the agent's CLI; the resulting work pass then runs as long as it needs — often hours for a deep quality or scan pass. So an agent visibly busy at 01:47 with `last kick 8:12 PM` and `next kick 2:12 AM` is not off schedule: it is still working through the pass that began at 20:12. (These fields were labelled "last run" / "next run" before [#4399](https://github.com/hivecommons/hive/issues/4399), which invited exactly this misreading.)
 
 Every kick path — scheduled cadence, manual restart, crash-resume, CEL event triggers — records itself in `last kick` and the 🕘 *past kicks* archive, so a timestamp that has *not* moved is positive evidence that no new kick happened.
+
+## The card says "working" but the pane is sitting at a prompt
+
+A kick is recorded when the prompt is *delivered*, not when the agent produces anything, and a running process is not evidence of work. Once the agent's CLI is back at its idle prompt after a kick, the hive classifies how that turn **ended** ([#7421](https://github.com/hivecommons/hive/issues/7421)) and the card stops saying `working`:
+
+| Card | What happened | What the hive does |
+|---|---|---|
+| **asked for direction** | The agent ended its turn asking the operator what to do (`What should I focus on?`, `Awaiting your kick or specific task assignment.`). The kick already told it; this is a defect. | Re-kicks the agent ~5 minutes later instead of waiting out the cadence — once per hour, so a model that answers every kick with a question cannot turn the cadence into a loop. |
+| **blocked** — `policy stand-down: …` | The agent stood down on a policy condition (`STAND DOWN.`). A legitimate refusal. | Recorded as blocked with the stand-down line as the reason; the cadence is unchanged — fix the condition it names. |
+| **no-op** | The agent reported `no issue opened, no PR opened, no bead created` without standing down. | Recorded as a no-op. |
+
+The verdict is also stamped on the kick history (`outcome` / `outcomeReason` on each entry), so the 🕘 *past kicks* list distinguishes a kick that produced work from one that did not. A turn with none of these signatures is recorded as `ended` — which means only that no no-op was recognised, not that work was done. The hive can prove from a pane that nothing happened; it cannot prove that something did.
 
 ## An agent runs, but not the way I expect — why did it do that?
 
@@ -289,6 +550,38 @@ The dashboard config lives under `dashboard:`. `dashboard.auth_token` protects n
 
 If API calls fail, check whether the request is going through the gateway on port `3001` or directly to Hive on `3002`, then inspect the response and Hive logs. Dashboard handlers return concrete messages such as `X-Hive-Role header required`, `insufficient access`, `owner access required`, and `only the owner can back up this hive` for role/header failures.
 
+## The API says `service starting up, please retry`
+
+`{"error":"service starting up, please retry","ok":false}` is not an application
+response — it is synthesized by the nginx gateway (`src/deploy/nginx.conf`,
+`@api_error`) when it has **no upstream body to relay**. Since
+[#6494](https://github.com/hivecommons/hive/issues/6494) that means exactly two
+conditions, both gateway-origin:
+
+- **502** — the upstream (the auth proxy on `:3001`, which fronts the Go API
+  on `:3002`) is unreachable.
+- **504** — the upstream accepted the connection but timed out.
+
+Every other JSON error body — **including a 503** — comes from the running
+application itself and should be read verbatim. The Go dashboard and Node proxy
+return deliberate, actionable 503 bodies (for example `/api/terminal/handoff`:
+`terminal handoff requires terminal signing key and hive id`), and the dashboard
+toast renders them as-is. Before #6494 the gateway intercepted those too, so a
+hive that had been up for a day could still claim to be "starting up"
+([#6489](https://github.com/hivecommons/hive/issues/6489)); if you see that
+symptom, update.
+
+What to do when the synthesized message persists beyond startup: the upstream
+really is unreachable, so run the paired probes in
+[Health endpoints](#health-endpoints) below — `:3002` failing means the Go API
+is down; `:3002` healthy but `:3001` failing means the auth proxy refused to
+start.
+
+One related status is also nginx-origin but never wears this body: **429** on
+`/api/auth/token` and the `/api/gh-user-auth/` device-flow paths is the
+gateway's `limit_req` rate limiter, not a service failure — back off and
+retry after the window.
+
 ## Health endpoints
 
 Use the same endpoints as the probes:
@@ -303,9 +596,72 @@ Run both of the first two. They are the two halves of the container health probe
 
 `/api/livez` is deliberately process-focused: the Kubernetes manifest notes that stale hub heartbeat state belongs in deeper health reporting and should not crash-loop a healthy pod.
 
+## The version badge says `⚠ auto-update failed` or `⟳ auto-update retrying`
+
+These two badges next to the version SHA surface the spoke's own self-upgrade
+bookkeeping ([#6765](https://github.com/hivecommons/hive/issues/6765)). A spoke
+that is instructed to upgrade (by the hub, or via **Self Upgrade**) records the
+attempt at `/data/upgrade-requested` on the PVC and restarts its pod; the marker
+is removed on the boot that actually lands the new image. A marker that is still
+present therefore always describes an upgrade that has **not** landed, and the
+badge renders its state:
+
+- **`⟳ auto-update retrying n/5`** — the pod restarted on the *same* image, so
+  the previous attempt failed; the spoke is retrying with exponential backoff
+  (2 minutes before retry #2, doubling per attempt, capped at 30 minutes).
+- **`⚠ auto-update failed`** (red) — the retry budget of 5 attempts is
+  exhausted for this (current → target) pair, the spoke has given up, and it
+  has reported the failure to the hub. It will not retry until a **new** target
+  is armed — a new target always gets a fresh budget, so a fix that arrives
+  late (an RBAC Role applied after the fact, a registry blip) still converges
+  on the next instructed upgrade.
+
+While a marker exists, the `Queued for auto-upgrade` hint is suppressed — an
+upgrade that is actively failing is not "queued", and before
+[#6765](https://github.com/hivecommons/hive/issues/6765) those two states were
+indistinguishable.
+
+Both badge tooltips carry the target SHA, the attempt count, the first-requested
+time, and the last error. The same data is available without the dashboard:
+
+```bash
+# Through the API — the upgradeMarker field of /api/version
+curl -fsS http://127.0.0.1:3002/api/version | jq .upgradeMarker
+
+# The consolidated auto-update status (#6962/#6963) — state, whether it is
+# healthy, the configured schedule, how far behind, and any failure reason.
+# state is one of disabled/up_to_date/behind/retrying/failed/unknown, and
+# healthy is false for anything other than up_to_date/disabled, so a stuck or
+# unknown update is never mistaken for a healthy one.
+curl -fsS http://127.0.0.1:3002/api/version | jq .autoUpdate
+
+# Or read the marker itself off the PVC
+kubectl -n hive exec deploy/hive -- cat /data/upgrade-requested
+```
+
+The two dominant causes, in order:
+
+1. **The spoke cannot patch its own Deployment.** Self-upgrade works by the
+   spoke get/patching the `hive` Deployment in its own namespace, which needs
+   the `hive-self-upgrade` Role and RoleBinding on the spoke's ServiceAccount.
+   The retry log (`self-upgrade retrying after a failed attempt`) and the
+   terminal error (`self-upgrade FAILED: giving up after repeated attempts`)
+   both carry the last error and this hint. The manifests are in
+   [manual-provisioning.md](/docs/hive/manual-provisioning) (RBAC section).
+2. **The Deployment tracks a tag that can never deliver the target SHA** — for
+   example a pinned digest or a stale floating tag, so patching the Deployment
+   rolls the pod onto the same image every time. Check what the Deployment's
+   image field tracks against the armed target, and see
+   [release-channels.md](/docs/hive/release-channels) for how targets are resolved
+   through the tracked tag.
+
+A failed self-upgrade also exits the process with code **17**
+(`selfUpgradeFailureExitCode`) rather than 0, so the failure is visible in the
+container's termination state instead of looking like a clean shutdown.
+
 ## Podman (Quadlet) deployments: failure modes Docker does not have
 
-These are specific to running Hive as systemd units. Everything else in this guide applies unchanged; the install-side counterpart is the **Traps** section of [podman-standalone-quadlet.md](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-standalone-quadlet.md).
+These are specific to running Hive as systemd units. Everything else in this guide applies unchanged; the install-side counterpart is the **Traps** section of [podman-standalone-quadlet.md](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-standalone-quadlet.md).
 
 Commands are shown rootless. For a rootful install drop `--user` from `systemctl`/`journalctl`, and read `%E/hive` as `/etc/hive` rather than `~/.config/hive`. The examples below use `$CONF` for that configuration directory:
 
@@ -355,7 +711,7 @@ What does move is `Result=timeout` during the auto-restart window, and `NRestart
 systemctl --user show hive.service -p ActiveState -p SubState -p Result -p NRestarts
 ```
 
-For boot persistence specifically, `systemctl is-enabled` is not evidence either — it reports `generated` regardless. Use `bin/hive-podman-lifecycle-probe.sh check`; see [podman-quadlet-lifecycle.md](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-quadlet-lifecycle.md).
+For boot persistence specifically, `systemctl is-enabled` is not evidence either — it reports `generated` regardless. Use `bin/hive-podman-lifecycle-probe.sh check`; see [podman-quadlet-lifecycle.md](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-quadlet-lifecycle.md).
 
 ### `systemctl cat hive.service` does not show my drop-in
 
@@ -366,13 +722,13 @@ systemctl --user cat hive.service | grep -m1 '^ExecStart='
 ls -l ~/.config/containers/systemd/hive.container.d/
 ```
 
-This matters most when an image pin is not taking effect — [podman-quadlet-update-rollback.md](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-quadlet-update-rollback.md) covers the pin, and `bin/hive-podman-update.sh status` prints the pinned digest, the running container's digest, and the unit state together.
+This matters most when an image pin is not taking effect — [podman-quadlet-update-rollback.md](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-quadlet-update-rollback.md) covers the pin, and `bin/hive-podman-update.sh status` prints the pinned digest, the running container's digest, and the unit state together.
 
 ### SELinux denials on `/data` or the secrets directory
 
 On an enforcing host a mislabelled bind mount fails in ways that do not name SELinux — and a private-category denial records **no AVC at all**. The bind mounts carry `:Z` and the named volume deliberately carries **no** relabel suffix; adding `:Z` to the volume is the trap.
 
-Do not weaken SELinux to test the theory. The measured behaviour, including the restore, is in [podman-selinux-avc-evidence.md](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-selinux-avc-evidence.md) and [podman-volume-persistence.md](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-volume-persistence.md); `bin/hive-podman-preflight-host.sh` reports the labels and the secrets group-traverse check directly.
+Do not weaken SELinux to test the theory. The measured behaviour, including the restore, is in [podman-selinux-avc-evidence.md](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-selinux-avc-evidence.md) and [podman-volume-persistence.md](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-volume-persistence.md); `bin/hive-podman-preflight-host.sh` reports the labels and the secrets group-traverse check directly.
 
 ### `tar: can't open '/backup/…': Permission denied` restoring or migrating an archive
 
@@ -382,7 +738,7 @@ Rootless, and the archive was written by a root process — anything from Docker
 
 ### Auto-update rolled back, or is not updating
 
-Auto-update is opt-in and off by default. If it rolled back, the published image is bad and **will be retried on the next timer firing** — the unit's own state stays green throughout. If it reports success but changes nothing, a digest pin is probably in force. Both are covered in [podman-auto-update.md](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-auto-update.md).
+Auto-update is opt-in and off by default. If it rolled back, the published image is bad and **will be retried on the next timer firing** — the unit's own state stays green throughout. If it reports success but changes nothing, a digest pin is probably in force. Both are covered in [podman-auto-update.md](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-auto-update.md).
 
 ## Clean reset
 
@@ -406,7 +762,7 @@ podman volume rm hive-data
 systemctl --user start hive-gateway.service
 ```
 
-The Podman volume removal is the counterpart of `down -v`, and it is separated onto its own line for the same reason: stopping and starting the units is routine, and `podman volume rm hive-data` is not. `systemctl stop` alone does **not** delete the volume — the units can be stopped and started freely without losing state. To remove the units and every labelled resource as well, use [`bin/hive-podman-teardown.sh`](https://github.com/hivecommons/hive/blob/v4/bin/hive-podman-teardown.sh), which selects by the `io.hivecommons.hive.*` ownership labels.
+The Podman volume removal is the counterpart of `down -v`, and it is separated onto its own line for the same reason: stopping and starting the units is routine, and `podman volume rm hive-data` is not. `systemctl stop` alone does **not** delete the volume — the units can be stopped and started freely without losing state. To remove the units and every labelled resource as well, use [`bin/hive-podman-teardown.sh`](https://github.com/hivecommons/hive/blob/v5/bin/hive-podman-teardown.sh), which selects by the `io.hivecommons.hive.*` ownership labels.
 
 `/data` holds the dashboard config overlay, persisted tokens, logs, and other state; deleting it discards dashboard edits and cached credentials. Back up first if you need any of it — see [Backup & restore](/docs/hive/backup-dr).
 

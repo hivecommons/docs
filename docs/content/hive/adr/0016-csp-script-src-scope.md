@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0016-csp-script-src-scope.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0016-csp-script-src-scope.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0016: Scope `script-src` as two directives, close the element half with hashes
 
@@ -8,8 +8,8 @@ Status: Accepted
 
 The dashboard's Content-Security-Policy carried one blanket `script-src 'self'
 'unsafe-inline'`, on both CSP emitters — the Go spoke server
-([securityHeaders](https://github.com/hivecommons/hive/blob/v4/src/pkg/dashboard/server.go)) and the Node proxy
-([proxy/server.js](https://github.com/hivecommons/hive/blob/v4/src/proxy/server.js)). That directive was the residual of
+([securityHeaders](https://github.com/hivecommons/hive/blob/v5/src/pkg/dashboard/server.go)) and the Node proxy
+([proxy/server.js](https://github.com/hivecommons/hive/blob/v5/src/proxy/server.js)). That directive was the residual of
 [hivecommons/hive#3315](https://github.com/hivecommons/hive/issues/3315): the
 token-injection half of that finding was fixed by #3844, but any XSS in the
 dashboard origin could still execute an injected inline `<script>` and, for
@@ -89,7 +89,7 @@ What this ADR accepts, stated plainly:
   blocks inline handlers.
 - The dashboard credential still lives in `localStorage` (operator-pasted);
   moving it out is tracked separately in #3315's recommendation trail.
-- The hub SaaS SPA ([pkg/hub/saas.go](https://github.com/hivecommons/hive/blob/v4/src/pkg/hub/saas.go)) serves no CSP
+- The hub SaaS SPA ([pkg/hub/saas.go](https://github.com/hivecommons/hive/blob/v5/src/pkg/hub/saas.go)) serves no CSP
   header at all today; it is outside both emitters this ADR covers.
 
 ## Consequences

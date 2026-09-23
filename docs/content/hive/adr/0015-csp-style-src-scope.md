@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0015-csp-style-src-scope.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0015-csp-style-src-scope.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0015: Scope `style-src` as two directives and accept inline style attributes
 
@@ -7,7 +7,7 @@ Status: Accepted
 ## Context
 
 The dashboard's Content-Security-Policy carried one blanket `style-src 'self'
-'unsafe-inline'` ([securityHeaders](https://github.com/hivecommons/hive/blob/v4/src/pkg/dashboard/server.go)). That single
+'unsafe-inline'` ([securityHeaders](https://github.com/hivecommons/hive/blob/v5/src/pkg/dashboard/server.go)). That single
 token covered two different things with two different futures, and hid the fact
 that only one of them is closable.
 
@@ -48,7 +48,7 @@ protection.
 Split the single `style-src` into the two directives CSP Level 3 provides, and
 state a different verdict for each.
 
-```
+```text
 style-src      'self' 'unsafe-inline'   ← CSP2 fallback, unchanged
 style-src-elem 'self' 'unsafe-inline'   ← the 7 <style> elements: CLOSABLE, staged
 style-src-attr 'unsafe-inline'          ← the 2061 attributes: ACCEPTED

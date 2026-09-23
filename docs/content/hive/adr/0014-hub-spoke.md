@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0014-hub-spoke.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0014-hub-spoke.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0014: Hub/spoke fleet over heartbeat callbacks
 
@@ -19,7 +19,7 @@ Use spoke-initiated heartbeats as the control channel. A spoke posts identity,
 repos, ACMM level, agents, governor state, contributors, leaderboard, health,
 version, image, and related status to `/api/heartbeat`; the hub persists a
 sanitized registry entry and marks the spoke online
-([heartbeat payload](https://github.com/hivecommons/hive/blob/v4/src/pkg/hub/heartbeat.go), [hub registry](https://github.com/hivecommons/hive/blob/v4/src/pkg/hub/server.go)).
+([heartbeat payload](https://github.com/hivecommons/hive/blob/v5/src/pkg/hub/heartbeat.go), [hub registry](https://github.com/hivecommons/hive/blob/v5/src/pkg/hub/server.go)).
 The heartbeat response carries callbacks for upgrade, branch switch, GitHub App
 config, banners, visibility, authorized users, project config, gateway config,
 and restart requests, letting the hub act even when it cannot open a connection

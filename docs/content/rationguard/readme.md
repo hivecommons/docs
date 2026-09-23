@@ -16,8 +16,6 @@ rationguard catches these patterns and provides rebuttals — in real-time via [
 npm install -g @hivecommons/rationguard @hivecommons/pluk
 ```
 
-> This repo moved to the `hivecommons` org; the npm package scope (`@hivecommons/...`) stays as-is for now — the scope migration is a coordinated follow-up.
-
 ---
 
 ## Quick Start
@@ -73,7 +71,7 @@ rationguard watch scanner --rebuttal=send
 
 When rationguard detects an excuse, it prints the match and sends the rebuttal directly to the agent:
 
-```
+```text
 ⚠ 100% False Completion — "tests are all passing"
   Rebuttal: Did you actually run the checks THIS cycle? Paste the output.
   → Sent rebuttal to scanner
@@ -123,7 +121,7 @@ echo "$AGENT_RESPONSE" | rationguard check
 rationguard check --json "I will defer this to next pass"
 ```
 
-```
+```text
 ✗ Found 2 rationalization pattern(s):
 
   45% False Completion

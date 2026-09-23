@@ -49,7 +49,7 @@ A new terminal window is always opened for the tmux session (unless `--no-open` 
 pluk sessions
 ```
 
-```
+```text
 SESSION          CLI       STATE     TMUX  LAST ACTIVITY EVENTS
 scanner          claude    working   ●     2s ago        1204
 helper           claude    idle      ●     45s ago       892

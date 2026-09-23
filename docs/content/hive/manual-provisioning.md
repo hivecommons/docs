@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/manual-provisioning.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/manual-provisioning.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # Provisioning a Hosted Hive
 
@@ -133,7 +133,7 @@ swap first.
 because you **must** swap values before it works:
 
 ```bash
-git clone -b v4 https://github.com/hivecommons/hive.git
+git clone -b v5 https://github.com/hivecommons/hive.git
 cd hive/src/deploy/kustomize/overlays/standalone
 # Edit the placeholders — see "What you must swap" below:
 #   patch-configmap.yaml       (org/repos, owner login, OAuth client id, litellm endpoint)
@@ -163,8 +163,8 @@ kubectl apply -k .
 > **Which image tags exist.** `ghcr.io/hivecommons/hive` carries the channel
 > tags (`stable`, `candidate`, `edge`, `v4-latest`) and a short-SHA tag per
 > merge. A `vX.Y.Z` **image** tag exists only when the automated tagged-release
-> workflow (`.github/workflows/release.yml`, see
-> [Tagged releases](https://github.com/hivecommons/hive/blob/v4/src/docs/releases.md)) has cut that version — it retags the merge's
+> workflow (`.github/workflows/tagged-release.yml`, see
+> [Tagged releases](https://github.com/hivecommons/hive/blob/v5/src/docs/releases.md)) has cut that version — it retags the merge's
 > short-SHA images. That workflow landed after the `v4.0.0` git tag, so there is
 > **no `:v4.0.0` image**; `newTag: v4.0.0` is an `ImagePullBackOff`. Pin a
 > version tag only after confirming it on the
@@ -245,7 +245,7 @@ merge conflicts, no accidental exposure.
 Create a **private** repo (on your GHE instance, a private GitHub.com repo,
 GitLab, Gitea — whatever you control). The structure is minimal:
 
-```
+```text
 my-hive-config/                     ← your private repo
 ├── overlays/
 │   └── spyre/                      ← one subdirectory per cluster/environment
@@ -259,7 +259,7 @@ my-hive-config/                     ← your private repo
 If you have more than one cluster (staging, production, a second team's Spyre),
 add another subdirectory per cluster — each references the same upstream base:
 
-```
+```text
 overlays/
 ├── spyre-staging/
 │   ├── kustomization.yaml
@@ -634,7 +634,9 @@ forced-proxy-egress `iptables` REDIRECT that enforces the ACMM MITM egress proxy
 - **Cluster DENIES `NET_ADMIN`:** the entrypoint **FATALs** (refusing to start
   with an advisory-only capability model — `src/deploy/entrypoint.sh`) and the
   pod crash-loops, with **exit code 77** when the missing capability is the
-  cause (see the checks section below for what 77 means and how to read it).
+  cause (see the checks section below for what 77 means and how to read it;
+  since #6003 the same code also fires when the node's kernel lacks a
+  netfilter module the gate needs, which neither remedy here fixes).
   Two remedies:
   1. **Grant the capability (preferred — full gate).** On OpenShift, a
      cluster-admin applies the
@@ -724,7 +726,7 @@ an admission webhook stripped the capability, or a hand-edited manifest dropped
 the request), the entrypoint refuses to start and exits with a **distinct code,
 77** (sysexits.h `EX_NOPERM`), after logging:
 
-```
+```text
 [entrypoint] FATAL: refusing to start. Grant NET_ADMIN + install iptables, or set HIVE_PROXY_ADVISORY_OK=true to deliberately run in advisory mode.
 [entrypoint] FATAL: CAP_NET_ADMIN is not in the container's capability bounding set — exiting 77 (EX_NOPERM) rather than 1.
 ```
@@ -734,10 +736,31 @@ kubectl -n hive get pod -l app.kubernetes.io/name=hive \
   -o jsonpath='{.items[0].status.containerStatuses[0].lastState.terminated.exitCode}'
 ```
 
-`77` means precisely "grant the capability (or opt into advisory mode)"; any
-*other* cause of the same FATAL (no `iptables` binary, netfilter lock
-contention) exits `1`, since granting `NET_ADMIN` would not fix those. Full
-rationale: [net-admin-requirement.md](/docs/hive/net-admin-requirement).
+`77` has exactly two causes, and only one of them is the capability. Since
+#6003 the entrypoint probes the kernel's netfilter extension modules in a
+throwaway chain *before* building the real ruleset, and a node whose kernel is
+missing `xt_mark` (the packet-mark exemption) or `xt_REDIRECT` (the `:443`
+redirect) also exits `77`, after a different set of lines:
+
+```text
+[entrypoint] ERROR: netfilter REDIRECT target unavailable on this node (kernel module xt_REDIRECT): ...
+[entrypoint] FATAL: this node's kernel is missing netfilter module(s) required by the forced-egress gate: xt_REDIRECT.
+[entrypoint] FATAL: load the module(s) on this node - the durable fix is a MachineConfig writing an /etc/modules-load.d/ drop-in ...
+[entrypoint] FATAL: exiting 77 (EX_NOPERM) rather than 1 - see EXIT_NET_ADMIN_REQUIRED near the top of entrypoint.sh.
+```
+
+Tell them apart by the log, not the code: the module case names the module and
+never prints `Grant NET_ADMIN`; the capability case prints `Grant NET_ADMIN`
+and then the bounding-set line. Granting `NET_ADMIN` does not fix the module
+case (the capability is already there), and the SCC overlay above is the wrong
+remedy for it: load the modules on the node (on OpenShift/RHCOS, a MachineConfig
+writing an `/etc/modules-load.d/` drop-in so they survive a node rebuild) and
+taint or label the node until then. `xt_owner` is probed too but only warns.
+`HIVE_PROXY_ADVISORY_OK=true` is the opt-out for both causes. Any *other*
+cause of the same FATAL (no `iptables` binary, netfilter lock contention) still
+exits `1`, since neither fix would help those. Full rationale and the check
+order:
+[net-admin-requirement.md](/docs/hive/net-admin-requirement#which-exit-77-do-i-have-the-check-order-since-6003).
 
 ### Firewall / egress (locked-down cluster)
 
@@ -752,7 +775,7 @@ A standalone hive needs **no hub egress**. The minimal outbound allowlist is:
 
 Hub hosts (`hub.hivecommons.dev`) are **not** required. For the full egress matrix
 (ports, hosts, when each is needed) see
-[network-requirements.md](https://github.com/hivecommons/hive/blob/v4/src/docs/network-requirements.md); for the capability rationale
+[network-requirements.md](https://github.com/hivecommons/hive/blob/v5/src/docs/network-requirements.md); for the capability rationale
 see [net-admin-requirement.md](/docs/hive/net-admin-requirement).
 
 ### Agent backend
@@ -771,8 +794,10 @@ governor:
     default_model: qwen2.5-0.5b-instruct
 ```
 
-Swap `backend: vllm` to hit `HIVE_VLLM_ENDPOINT` directly (the base deployment
-wires both `HIVE_VLLM_ENDPOINT` and `HIVE_LLMD_ENDPOINT`). Verify any key against
+Swap `backend: vllm` to hit `HIVE_VLLM_ENDPOINT` directly. Hive does not
+default this to an in-cluster Service; set it only when the target cluster can
+resolve and reach that endpoint (hosted provisioning injects it from the
+cluster `inference_endpoint` setting). Verify any key against
 `src/pkg/config/config.go` before adding it.
 
 ---
@@ -1705,7 +1730,7 @@ creates an **additional** OpenShift Route whose host is derived from the
 hive's own display name, rather than the org/repo-derived host used
 previously:
 
-```
+```text
 <sanitized-hive-name>-<4-char-suffix>.<cluster-domain>
 ```
 

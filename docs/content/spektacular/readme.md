@@ -1,4 +1,6 @@
 > **Synced from spektacular.** This page is pulled from [hivecommons/spektacular@main](https://github.com/hivecommons/spektacular/blob/main/README.md) during the docs build. Edit the canonical source in the spektacular repository.
+>
+> Also published at [spektacular.dev](https://spektacular.dev), which is the canonical copy of this documentation.
 
 # Spektacular
 
@@ -90,7 +92,7 @@ Both the coding agent and the storage layer are pluggable behind defined Go inte
 
 Running `spektacular init <agent>` creates:
 
-```
+```text
 .spektacular/
 ├── config.yaml              # agent, command, debug, store settings, and the repo registry
 ├── repo.yaml                # the colocated repo's own configuration
@@ -129,7 +131,7 @@ Reading and writing name exactly one store, so they take a `tier` and a `name` a
 
 Lookups are **consolidated and de-duplicated** across stores: each entry carries a SHA-256 checksum over its exact bytes, and byte-identical entries appearing in more than one store collapse to a single result. A search result looks like:
 
-```
+```text
 Hit {
   tier      // addressing tier of the originating store (project or repo)
   name      // name of the originating store (e.g. docs)
@@ -332,7 +334,7 @@ make harbor-test-repo-delegated  # guided repo add, handing the whole set over (
 
 Results are written to `tests/harbor/jobs/` (gitignored). Each run produces:
 
-```
+```text
 tests/harbor/jobs/<timestamp>/
 ├── result.json                    # Overall pass/fail and metrics
 └── spec-workflow__<id>/

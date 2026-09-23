@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0004-beads-work-ledger.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0004-beads-work-ledger.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0004: Beads work ledger
 
@@ -9,7 +9,7 @@ Status: Accepted (retroactive)
 Hive agents need durable coordination state that is separate from GitHub's issue
 queue. The reference architecture describes beads as a git-backed JSON ledger
 per agent, with typed work items, priorities, dependencies, metadata, and
-actor-scoped ready queues ([architecture §7](/docs/hive/architecture#7-beads-the-work-ledger)).
+actor-scoped ready queues ([architecture §7](/docs/hive/architecture#7-beads--the-work-ledger)).
 The deterministic pipeline can turn GitHub work into internal artifacts before
 agents act ([architecture §4](/docs/hive/architecture#4-the-deterministic-pipeline)).
 

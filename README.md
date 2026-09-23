@@ -24,6 +24,8 @@ at build time:
 - `scripts/sync-hive-docs.ts` pulls Hive docs from `hivecommons/hive` (`src/docs/`, branch `v5`;
   override with `HIVE_DOCS_OWNER` / `HIVE_DOCS_REPO` / `HIVE_DOCS_REF`).
 - `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, promptargs, and Spektacular docs from their repos.
+  Spektacular also pulls its tutorials from `hivecommons/spektacular-website` (MDX, converted to Markdown by
+  `scripts/mdx-to-markdown.ts`; override the ref with `SPEKTACULAR_WEBSITE_DOCS_REF`).
 
 Edit the canonical source in the project repository — not the synced copies under
 `docs/content/`. If a sync source is unreachable at build time, the committed copies

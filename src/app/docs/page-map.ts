@@ -152,11 +152,20 @@ const NAV_STRUCTURE_PROMPTARGS: Array<{ title: string; items: NavItem[] }> = [
 ]
 
 // Spektacular Navigation Structure (canonical site: https://spektacular.dev)
+// readme.md and knowledge-base.md are synced from hivecommons/spektacular; the
+// tutorials are converted from MDX in hivecommons/spektacular-website.
 const NAV_STRUCTURE_SPEKTACULAR: Array<{ title: string; items: NavItem[] }> = [
   {
     title: 'Overview',
     items: [
       { 'Introduction': 'readme.md' },
+    ]
+  },
+  {
+    title: 'Tutorials',
+    items: [
+      { 'Getting started': 'getting-started.md' },
+      { 'Unknown criteria': 'unknown-criteria.md' },
     ]
   },
   {

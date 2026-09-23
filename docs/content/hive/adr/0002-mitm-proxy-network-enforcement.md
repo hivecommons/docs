@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0002-mitm-proxy-network-enforcement.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0002-mitm-proxy-network-enforcement.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0002: MITM proxy network enforcement
 

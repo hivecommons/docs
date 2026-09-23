@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0008-ioscan-untrusted-input.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0008-ioscan-untrusted-input.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0008: Redact untrusted kick input with visible markers
 
@@ -11,7 +11,7 @@ may be controlled by an attacker. That text can carry prompt-injection phrases,
 hidden Unicode, base64-encoded instructions, destructive commands, or secret
 shapes. The ioscan package provides a pure scanner for input and output text
 with structured findings and block decisions
-([ioscan scanner](https://github.com/hivecommons/hive/blob/v4/src/pkg/ioscan/ioscan.go)).
+([ioscan scanner](https://github.com/hivecommons/hive/blob/v5/src/pkg/ioscan/ioscan.go)).
 
 ## Decision
 
@@ -19,14 +19,14 @@ Scan untrusted kick-path text before injection and redact blocked content rather
 than silently dropping the item or passing the raw payload through. `EnforceInput`
 returns benign text byte-for-byte, but replaces blocked text with a visible
 marker of the form `[ioscan: content withheld — ...]` that names the fired rules
-without echoing the payload ([enforcement](https://github.com/hivecommons/hive/blob/v4/src/pkg/ioscan/enforce.go)). The
+without echoing the payload ([enforcement](https://github.com/hivecommons/hive/blob/v5/src/pkg/ioscan/enforce.go)). The
 scheduler applies this to issue text and labels and writes an audit entry for
 blocked findings when an audit sink is attached
-([scheduler enforcement](https://github.com/hivecommons/hive/blob/v4/src/pkg/scheduler/ioscan_enforce.go)).
+([scheduler enforcement](https://github.com/hivecommons/hive/blob/v5/src/pkg/scheduler/ioscan_enforce.go)).
 
 The v4 base also includes the fail-safe default-on mode: absent `ioscan:`
 configuration scans by default, while an explicit `ioscan.enabled: false`
-opts out ([config](https://github.com/hivecommons/hive/blob/v4/src/pkg/config/config.go)).
+opts out ([config](https://github.com/hivecommons/hive/blob/v5/src/pkg/config/config.go)).
 
 Operators may additionally enable `ioscan.canaries: true`. Hive then prepends a
 random `HIVE-CANARY-...` marker to each kick with instructions that the agent

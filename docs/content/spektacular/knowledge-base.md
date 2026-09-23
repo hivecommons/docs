@@ -1,4 +1,6 @@
 > **Synced from spektacular.** This page is pulled from [hivecommons/spektacular@main](https://github.com/hivecommons/spektacular/blob/main/docs/knowledge-base.md) during the docs build. Edit the canonical source in the spektacular repository.
+>
+> Also published at [spektacular.dev](https://spektacular.dev), which is the canonical copy of this documentation.
 
 # The Knowledge Base
 
