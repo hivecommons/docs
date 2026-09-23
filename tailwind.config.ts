@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "space-dark": "#0a0a0a",
+        "space-dark": "#14110b",
       },
       fontFamily: {
         inter: ["var(--font-inter)"],

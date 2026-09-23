@@ -264,7 +264,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
           {/* Vertical line for nested items */}
           {depth > 0 && (
             <div
-              className="absolute left-0 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700/50"
+              className="absolute left-0 top-0 bottom-0 w-px bg-line"
               style={{ left: `${(depth - 1) * 16 + 20}px` }}
             />
           )}
@@ -274,13 +274,13 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
             const firstRoute = getFirstChildRoute(item);
             return firstRoute ? (
               <div
-                className="flex items-center gap-0 px-3 py-1.5 text-[13px] font-normal text-gray-600 dark:text-gray-50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors w-full relative z-10"
+                className="flex items-center gap-0 px-3 py-1.5 text-[13px] font-normal text-ink-2  hover:bg-bg-2 hover:bg-bg-2 rounded-md transition-colors w-full relative z-10"
                 style={{ paddingLeft: `${depth * 16 + 12}px` }}
               >
                 <Link
                   href={firstRoute}
                   onClick={() => { if (isCollapsed) toggleCollapse(itemKey); }}
-                  className="flex-1 min-w-0 truncate hover:text-gray-900 dark:hover:text-gray-50"
+                  className="flex-1 min-w-0 truncate hover:text-ink"
                 >
                   {displayTitle}
                 </Link>
@@ -291,28 +291,28 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
                     e.stopPropagation();
                     toggleCollapse(itemKey);
                   }}
-                  className="ks-sidebar-chevron ml-auto shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="ks-sidebar-chevron ml-auto shrink-0 p-0.5 rounded hover:bg-bg-3 transition-colors"
                   aria-label={isCollapsed ? 'Expand section' : 'Collapse section'}
                 >
                   {isCollapsed ? (
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-500 dark:text-gray-300 transition-transform duration-200" />
+                    <ChevronRight className="w-3.5 h-3.5 text-ink-3 -2 transition-transform duration-200" />
                   ) : (
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-500 dark:text-gray-300 transition-transform duration-200" />
+                    <ChevronDown className="w-3.5 h-3.5 text-ink-3 -2 transition-transform duration-200" />
                   )}
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => toggleCollapse(itemKey)}
-                className="flex items-center gap-2 px-3 py-1.5 text-[13px] font-normal text-gray-600 dark:text-gray-50 hover:text-gray-900 dark:hover:text-gray-50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors text-left w-full relative z-10"
+                className="flex items-center gap-2 px-3 py-1.5 text-[13px] font-normal text-ink-2  hover:text-ink hover:bg-bg-2 hover:bg-bg-2 rounded-md transition-colors text-left w-full relative z-10"
                 style={{ paddingLeft: `${depth * 16 + 12}px` }}
               >
                 <span className="flex-1 truncate">{displayTitle}</span>
                 <span className="ml-auto shrink-0">
                   {isCollapsed ? (
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-500 dark:text-gray-300 transition-transform duration-200" />
+                    <ChevronRight className="w-3.5 h-3.5 text-ink-3 -2 transition-transform duration-200" />
                   ) : (
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-500 dark:text-gray-300 transition-transform duration-200" />
+                    <ChevronDown className="w-3.5 h-3.5 text-ink-3 -2 transition-transform duration-200" />
                   )}
                 </span>
               </button>
@@ -324,14 +324,14 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
                 flex items-center gap-2 px-3 py-1.5 text-[13px] rounded-md transition-colors relative z-10 w-full
                 ${
                   isActive
-                    ? 'font-medium text-blue-600 dark:text-blue-100 bg-blue-50 dark:bg-blue-900/30'
-                    : 'font-normal text-gray-600 dark:text-gray-50 hover:text-gray-900 dark:hover:text-gray-50 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? 'font-medium text-honey bg-bg-3'
+                    : 'font-normal text-ink-2  hover:text-ink hover:bg-bg-2 hover:bg-bg-2'
                 }
               `}
               style={{ paddingLeft: `${depth * 16 + 12}px` }}
             >
               <FileText
-                className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-100' : 'text-gray-500 dark:text-gray-300'}`}
+                className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-honey' : 'text-ink-3 -2'}`}
               />
               <span className="flex-1 truncate">{displayTitle}</span>
             </Link>
@@ -347,7 +347,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
             `}
           >
             <div
-              className="absolute left-0 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700/50"
+              className="absolute left-0 top-0 bottom-0 w-px bg-line"
               style={{ left: `${depth * 16 + 20}px` }}
             />
             {item.children!.map(child => renderMenuItem(child, depth + 1, itemKey))}
@@ -369,7 +369,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
       <div key={projId} className="relative">
         <button
           onClick={() => toggleCollapse(sectionKey)}
-          className="flex items-center gap-2 px-3 py-2 text-[13px] rounded-md transition-colors text-left w-full font-semibold text-blue-600 dark:text-blue-100 bg-blue-50 dark:bg-blue-900/30"
+          className="flex items-center gap-2 px-3 py-2 text-[13px] rounded-md transition-colors text-left w-full font-semibold text-honey bg-bg-3"
           style={{ paddingLeft: `${depth * 16 + 12}px` }}
         >
           <span className="flex-1 truncate">{label}</span>
@@ -402,7 +402,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
     return (
       <div key={projId} className="relative">
         <div
-          className="flex items-center gap-2 px-3 py-2 text-[13px] rounded-md transition-colors text-left w-full font-medium text-gray-600 dark:text-gray-50 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="flex items-center gap-2 px-3 py-2 text-[13px] rounded-md transition-colors text-left w-full font-medium text-ink-2  hover:bg-bg-2 hover:bg-bg-2"
           style={{ paddingLeft: `${depth * 16 + 12}px` }}
         >
           <Link
@@ -419,13 +419,13 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
               e.stopPropagation();
               toggleCollapse(sectionKey);
             }}
-            className="ks-sidebar-chevron ml-auto shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="ks-sidebar-chevron ml-auto shrink-0 p-0.5 rounded hover:bg-bg-3 transition-colors"
             aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
           >
             {isExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 text-gray-500 dark:text-gray-300 transition-transform duration-200" />
+              <ChevronDown className="w-3.5 h-3.5 text-ink-3 -2 transition-transform duration-200" />
             ) : (
-              <ChevronRight className="w-3.5 h-3.5 text-gray-500 dark:text-gray-300 transition-transform duration-200" />
+              <ChevronRight className="w-3.5 h-3.5 text-ink-3 -2 transition-transform duration-200" />
             )}
           </button>
         </div>
@@ -438,10 +438,10 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
         >
           <Link
             href={href}
-            className="flex items-center gap-2 px-3 py-1.5 text-[13px] rounded-md transition-colors w-full font-normal text-gray-600 dark:text-gray-50 hover:text-gray-900 dark:hover:text-gray-50 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="flex items-center gap-2 px-3 py-1.5 text-[13px] rounded-md transition-colors w-full font-normal text-ink-2  hover:text-ink hover:bg-bg-2 hover:bg-bg-2"
             style={{ paddingLeft: `${(depth + 1) * 16 + 12}px` }}
           >
-            <FileText className="w-3.5 h-3.5 shrink-0 text-gray-500 dark:text-gray-300" />
+            <FileText className="w-3.5 h-3.5 shrink-0 text-ink-3 -2" />
             <span className="flex-1 truncate">Overview</span>
           </Link>
         </div>
@@ -471,8 +471,8 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
           className={`
             flex items-center gap-0 px-3 py-2 text-[13px] rounded-md transition-colors w-full font-semibold
             ${isActiveLegacy
-              ? 'text-blue-600 dark:text-blue-100 bg-blue-50 dark:bg-blue-900/30'
-              : 'text-gray-500 dark:text-gray-50 hover:bg-gray-100 dark:hover:bg-gray-700'
+              ? 'text-honey bg-bg-3'
+              : 'text-ink-3  hover:bg-bg-2 hover:bg-bg-2'
             }
           `}
         >
@@ -490,7 +490,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
               e.stopPropagation();
               toggleCollapse(LEGACY_GROUP_KEY);
             }}
-            className="ks-sidebar-chevron ml-auto shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="ks-sidebar-chevron ml-auto shrink-0 p-0.5 rounded hover:bg-bg-3 transition-colors"
             aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
           >
             {isExpanded ? (
@@ -521,10 +521,10 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
     return (
       <>
         {/* Mobile close button - visible only on mobile */}
-        <div className="lg:hidden flex items-center justify-end px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="lg:hidden flex items-center justify-end px-3 py-2 border-b border-line">
           <button
             onClick={toggleMenu}
-            className="p-1.5 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-md text-ink-2 hover:text-ink hover:bg-bg-2 transition-colors"
             aria-label="Close sidebar"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -542,7 +542,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+            <div className="border-t border-line my-4" />
 
             {/* General sections — Contributing, Community, News */}
             <div className="space-y-1">
@@ -569,12 +569,12 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
       data-sidebar="docs"
       className={`
         fixed lg:sticky left-0
-        shadow-sm dark:shadow-none
+        shadow-sm
         flex flex-col
         overflow-hidden
         transition-all duration-300 ease-in-out
-        bg-white dark:bg-black
-        border-r border-gray-200 dark:border-gray-800
+        bg-bg
+        border-r border-line
         ${menuOpen ? 'translate-x-0 w-60 z-30' : '-translate-x-full w-0 lg:translate-x-0 z-20'}
         ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-60'}
         ${className || ''}

@@ -168,11 +168,11 @@ function ActionLink({
       className={[
         "inline-flex items-center justify-center rounded-md border font-medium transition-all duration-150",
         compact
-          ? "h-11 w-11 border-gray-700 bg-gray-900 text-gray-100 hover:bg-gray-800"
+          ? "h-11 w-11"
           : "min-w-[150px] gap-2 px-3 py-1.5 text-sm",
-        "border-gray-300 text-gray-800 bg-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100",
-        "hover:bg-gray-100 hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:border-gray-500",
-        "focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600",
+        "border-line text-ink bg-transparent",
+        "hover:bg-bg-2 hover:border-honey-deep hover:text-honey",
+        "focus:outline-none focus:ring-2 focus:ring-honey",
       ].join(" ")}
     >
       {children}

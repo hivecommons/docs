@@ -167,8 +167,8 @@ export function VersionSelector({ className = '', isMobile = false }: VersionSel
           onClick={() => setIsOpen(!isOpen)}
           className={`flex items-center justify-between w-full px-3 py-2 text-sm rounded-md transition-colors ${
             isDark
-              ? 'text-gray-300 hover:bg-neutral-800'
-              : 'text-gray-700 hover:bg-gray-100'
+              ? 'text-ink-2 hover:bg-bg-3'
+              : 'text-ink-2 hover:bg-bg-2'
           }`}
         >
           <span className="flex items-center">
@@ -200,11 +200,11 @@ export function VersionSelector({ className = '', isMobile = false }: VersionSel
                   className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
                     isCurrentVersion
                       ? isDark
-                        ? 'bg-neutral-800 text-white font-medium'
-                        : 'bg-gray-100 text-gray-900 font-medium'
+                        ? 'bg-bg-3 text-ink font-medium'
+                        : 'bg-bg-2 text-ink font-medium'
                       : isDark
-                        ? 'text-gray-400 hover:bg-neutral-800 hover:text-gray-200'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'text-ink-3 hover:bg-bg-3 hover:text-ink'
+                        : 'text-ink-2 hover:bg-bg-2 hover:text-ink'
                   }`}
                 >
                   {label}
@@ -229,8 +229,8 @@ export function VersionSelector({ className = '', isMobile = false }: VersionSel
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1 text-xs font-mono px-2 py-1.5 rounded-md transition-colors cursor-pointer ${
           isDark
-            ? 'text-gray-400 bg-neutral-800/50 hover:bg-neutral-700 hover:text-gray-200'
-            : 'text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-900'
+            ? 'text-ink-3 bg-bg-3/50 hover:bg-bg-3 hover:text-ink'
+            : 'text-ink-2 bg-bg-2 hover:bg-bg-3 hover:text-ink'
         }`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
@@ -252,8 +252,8 @@ export function VersionSelector({ className = '', isMobile = false }: VersionSel
         <div
           className={`absolute top-full right-0 mt-1 w-44 max-h-80 overflow-y-auto rounded-md shadow-lg border z-50 ${
             isDark
-              ? 'bg-neutral-900 border-neutral-700'
-              : 'bg-white border-gray-200'
+              ? 'bg-bg-2 border-line'
+              : 'bg-bg border-line'
           }`}
           role="listbox"
           aria-label={`${currentProject.name} documentation versions`}
@@ -270,18 +270,18 @@ export function VersionSelector({ className = '', isMobile = false }: VersionSel
                   className={`flex items-center justify-between w-full text-left px-3 py-2 text-sm transition-colors ${
                     isCurrentVersion
                       ? isDark
-                        ? 'bg-neutral-800 text-white font-medium'
-                        : 'bg-gray-100 text-gray-900 font-medium'
+                        ? 'bg-bg-3 text-ink font-medium'
+                        : 'bg-bg-2 text-ink font-medium'
                       : isDark
-                        ? 'text-gray-300 hover:bg-neutral-800'
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'text-ink-2 hover:bg-bg-3'
+                        : 'text-ink-2 hover:bg-bg-2'
                   }`}
                   role="option"
                   aria-selected={isCurrentVersion}
                 >
                   <span>{label}</span>
                   {isExternal && (
-                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                   )}

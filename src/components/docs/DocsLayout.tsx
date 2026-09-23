@@ -65,8 +65,6 @@ export function DocsLayout({ children, toc, metadata, filePath, projectId, sourc
             className="
               prose
               prose-lg
-              prose-slate
-              dark:prose-invert
               mx-auto
               max-w-none
               prose-headings:scroll-mt-24

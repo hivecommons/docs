@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
 import { useDocsMenu } from './DocsProvider';
 
@@ -11,15 +9,7 @@ interface MobileHeaderProps {
 
 export function MobileHeader({ onToggleSidebar }: MobileHeaderProps) {
   const pathname = usePathname();
-  const { resolvedTheme } = useTheme();
   const { dismissBanner } = useDocsMenu();
-  const [mounted, setMounted] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Build breadcrumb from pathname: '/docs/console/features/dashboards' -> 'Docs > Console > Features > Dashboards'
   const getBreadcrumb = () => {
     // Special case for docs introduction page
@@ -48,22 +38,12 @@ export function MobileHeader({ onToggleSidebar }: MobileHeaderProps) {
     onToggleSidebar();
   };
 
-  // Prevent hydration mismatch by not applying theme-specific styles until mounted
-  const isDark = mounted ? resolvedTheme === 'dark' : false;
-
   return (
     <div className="lg:hidden">
       <button
         onClick={handleToggle}
-        className="flex items-center py-3 focus:outline-none transition-colors w-full gap-3"
+        className="flex items-center py-3 focus:outline-none transition-colors w-full gap-3 text-ink-2 hover:text-ink"
         aria-label="Open sidebar"
-        style={{
-          color: isHovered
-            ? (isDark ? '#f3f4f6' : '#111827')
-            : (isDark ? '#9ca3af' : '#6b7280'),
-        }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         suppressHydrationWarning
       >
         {/* Book icon + Hamburger icon container */}

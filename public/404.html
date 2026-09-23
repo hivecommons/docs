@@ -13,123 +13,49 @@
 -->
 <style>
   :root {
-    /* Hive Commons palette (see src/app/globals.css / tailwind.config.ts) */
-    --bg: #0a0a0a;            /* space-dark */
-    --fg: #f3f4f6;
-    --muted: #9ca3af;
-    --card: rgba(255, 255, 255, 0.05);
-    --accent: #3b82f6;
-    --accent-fg: #ffffff;
-    --grad-a: #667eea;
-    --grad-b: #764ba2;
-    --grad-c: #f093fb;
+    --bg: #14110b; --bg-2: #1b170f; --bg-3: #221c11;
+    --ink: #efe7d7; --ink-2: #b9ad93; --ink-3: #7d7460;
+    --honey: #e0a33a; --honey-deep: #b8791a; --honey-ink: #14110b;
+    --line: #332c1e; --focus: #e0a33a; --radius: .5rem;
+    --font-wordmark: Georgia, "Times New Roman", serif;
+    color-scheme: dark;
   }
   @media (prefers-color-scheme: light) {
     :root {
-      --bg: #f8fafc;
-      --fg: #0f172a;
-      --muted: #475569;
-      --card: rgba(15, 23, 42, 0.04);
+      --bg: #f6efe0; --bg-2: #efe6d2; --bg-3: #e8ddc4;
+      --ink: #1c1710; --ink-2: #5a5040; --ink-3: #8a7f68;
+      --honey: #b8791a; --honey-deep: #8f5c10; --honey-ink: #fff8e8;
+      --line: #d8cbae; color-scheme: light;
     }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--fg);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    /* subtle starfield rendered purely in CSS -- no image requests */
-    background-image:
-      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.35) 50%, transparent 51%),
-      radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,0.28) 50%, transparent 51%),
-      radial-gradient(1.5px 1.5px at 85% 65%, rgba(255,255,255,0.25) 50%, transparent 51%),
-      radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.3) 50%, transparent 51%),
-      radial-gradient(1.5px 1.5px at 10% 70%, rgba(255,255,255,0.22) 50%, transparent 51%),
-      radial-gradient(1px 1px at 55% 45%, rgba(255,255,255,0.25) 50%, transparent 51%);
+    font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--ink); display: flex; flex-direction: column; min-height: 100vh;
+    background-image: radial-gradient(900px 520px at 78% 10%, color-mix(in srgb, var(--honey) 10%, transparent) 0%, transparent 62%);
   }
-  @media (prefers-color-scheme: light) {
-    body { background-image: none; }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .7;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 1l27 15.5v31L28 63 1 47.5v-31zM28 34l27 15.5v31L28 96 1 80.5v-31z' fill='none' stroke='%23e0a33a' stroke-opacity='.07'/%3E%3C/svg%3E");
+    mask-image: radial-gradient(70% 80% at 70% 40%, #000 20%, transparent 100%);
   }
-  header {
-    padding: 1.25rem 1.5rem;
-  }
-  .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    text-decoration: none;
-    color: var(--fg);
-    font-weight: 600;
-    font-size: 1.05rem;
-    letter-spacing: 0.01em;
-  }
+  a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
+  header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(8px); }
+  .brand { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--ink); font-family: var(--font-wordmark); font-weight: 600; font-size: 1.05rem; letter-spacing: -.01em; }
   .brand img { display: block; width: 28px; height: 28px; }
-  main {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1.5rem;
-    text-align: center;
-  }
+  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; text-align: center; }
   .wrap { max-width: 44rem; }
-  .code {
-    font-size: clamp(4.5rem, 16vw, 8rem);
-    font-weight: 800;
-    line-height: 1;
-    background-image: linear-gradient(135deg, var(--grad-a) 0%, var(--grad-b) 50%, var(--grad-c) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: var(--grad-b); /* fallback if background-clip:text unsupported */
-    margin-bottom: 1.25rem;
-  }
-  h1 {
-    font-size: clamp(1.4rem, 4vw, 2rem);
-    font-weight: 600;
-    margin-bottom: 0.9rem;
-  }
-  p.lede {
-    color: var(--muted);
-    font-size: 1.05rem;
-    line-height: 1.6;
-    margin-bottom: 2.25rem;
-  }
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: center;
-  }
-  .btn {
-    display: inline-block;
-    padding: 0.7rem 1.6rem;
-    border-radius: 0.5rem;
-    font-size: 0.95rem;
-    font-weight: 500;
-    text-decoration: none;
-    border: 1px solid rgba(59, 130, 246, 0.35); /* accent-tinted, not a stark white edge */
-    color: var(--fg);
-    background: var(--card);
-  }
-  .btn:hover { border-color: var(--accent); }
-  .btn.primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-fg);
-  }
-  .btn.primary:hover { filter: brightness(1.1); }
-  footer {
-    padding: 1.25rem 1.5rem;
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-  footer a { color: var(--muted); }
+  .code { font-size: clamp(4.5rem, 16vw, 8rem); font-weight: 600; line-height: 1; color: var(--honey); margin-bottom: 1.25rem; letter-spacing: -.03em; }
+  h1 { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 600; letter-spacing: -.01em; margin-bottom: .9rem; }
+  p.lede { color: var(--ink-2); font-size: 1.05rem; line-height: 1.6; margin-bottom: 2.25rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: center; }
+  .btn { display: inline-block; padding: .7rem 1.2rem; border-radius: var(--radius); font-size: .95rem; font-weight: 500; text-decoration: none; border: 1px solid var(--line); color: var(--ink); background: transparent; transition: border-color .15s ease, color .15s ease, background-color .15s ease; }
+  .btn:hover { border-color: var(--honey-deep); color: var(--honey); }
+  .btn.primary { background: var(--honey); border-color: var(--honey); color: var(--honey-ink); }
+  .btn.primary:hover { background: var(--honey-deep); border-color: var(--honey-deep); color: var(--honey-ink); }
+  footer { padding: 1.25rem 1.5rem; text-align: center; color: var(--ink-3); font-size: .85rem; border-top: 1px solid var(--line); }
+  footer a { color: var(--ink-3); }
 </style>
 </head>
 <body>

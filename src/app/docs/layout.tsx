@@ -2,15 +2,22 @@ import type { Metadata } from 'next'
 import { DocsNavbar, DocsFooter } from '@/components/docs/index'
 import { DocsProvider } from '@/components/docs/DocsProvider'
 import { MobileOverlay } from '@/components/docs/MobileOverlay'
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { IBM_Plex_Sans, Fraunces, JetBrains_Mono } from "next/font/google"
 import { Suspense } from 'react'
 import { ThemeProvider } from "next-themes"
 import "../globals.css"
 
-const inter = Inter({
+const inter = IBM_Plex_Sans({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+})
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["600"],
 })
 
 const jetbrainsMono = JetBrains_Mono({
@@ -68,7 +75,7 @@ type Props = {
 export default async function DocsLayout({ children }: Props) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
+      <body className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <DocsProvider>
             <div className="flex flex-col min-h-screen">

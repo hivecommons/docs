@@ -104,7 +104,7 @@ export function RelatedProjects({ variant = 'full', onCollapse, bannerActive = f
             <LinkOrA
               key={itemKey}
               href={route}
-              className="block px-2 py-1 text-xs rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="block px-2 py-1 text-xs rounded transition-colors hover:bg-bg-2 dark:hover:bg-bg-3"
               style={{ color: mutedTextColor, paddingLeft: `${paddingLeft + 8}px` }}
             >
               {item.name}
@@ -119,7 +119,7 @@ export function RelatedProjects({ variant = 'full', onCollapse, bannerActive = f
           <div key={itemKey}>
             <button
               onClick={() => toggleExpandItem(itemKey)}
-              className="flex items-center w-full px-2 py-1 text-xs rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
+              className="flex items-center w-full px-2 py-1 text-xs rounded transition-colors hover:bg-bg-2 dark:hover:bg-bg-3 text-left"
               style={{ color: mutedTextColor, paddingLeft: `${paddingLeft + 8}px` }}
             >
               <span className="mr-1 transition-transform" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
@@ -141,7 +141,7 @@ export function RelatedProjects({ variant = 'full', onCollapse, bannerActive = f
           <LinkOrA
             key={itemKey}
             href={route}
-            className="block px-2 py-1 text-xs rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="block px-2 py-1 text-xs rounded transition-colors hover:bg-bg-2 dark:hover:bg-bg-3"
             style={{ color: mutedTextColor, paddingLeft: `${paddingLeft + 12}px` }}
           >
             {item.name}
@@ -180,7 +180,7 @@ export function RelatedProjects({ variant = 'full', onCollapse, bannerActive = f
 
     return (
       <div
-        className="shrink-0 sticky flex flex-col items-center gap-2 py-4 min-w-16 border-t border-gray-200 dark:border-gray-700"
+        className="shrink-0 sticky flex flex-col items-center gap-2 py-4 min-w-16 border-t border-line"
         suppressHydrationWarning
       >
         {/* Theme Toggle Icon */}
@@ -383,7 +383,7 @@ export function RelatedProjects({ variant = 'full', onCollapse, bannerActive = f
                     </LinkOrA>
                     {/* Render legacy project nav items with full hierarchy */}
                     {isCurrentProject && legacyPageMap && legacyPageMap.length > 0 && (
-                      <div className="ml-4 mt-1 space-y-0 border-l border-gray-700/50 pl-2">
+                      <div className="ml-4 mt-1 space-y-0 border-l border-line/50 pl-2">
                         {renderLegacyMenuTree(legacyPageMap)}
                       </div>
                     )}

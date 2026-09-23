@@ -196,34 +196,18 @@ export default function DocsNavbar() {
     return null;
   }
   
-  const buttonClasses = `text-sm transition-colors px-2 py-1.5 rounded-md flex items-center gap-1.5 ${
-    isDark 
-      ? 'text-gray-300 hover:text-gray-100 hover:bg-neutral-800'
-      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-  }`;
+  const buttonClasses = 'text-sm font-medium transition-colors px-2 py-1.5 rounded-md flex items-center gap-1.5 text-ink-2 hover:text-ink hover:bg-bg-2 border-b border-transparent hover:border-honey-deep';
   
-  const dropdownClasses = `absolute left-0 top-full mt-0.5 w-52 rounded-md shadow-xl py-1 border z-50 ${
-    isDark 
-      ? 'bg-neutral-900 border-neutral-800'
-      : 'bg-white border-gray-200'
-  }`;
+  const dropdownClasses = 'absolute left-0 top-full mt-0.5 w-52 rounded-md shadow-xl py-1 border z-50 bg-bg-2 border-line';
   
-  const dropdownItemClasses = `flex items-center px-3 py-2 text-sm transition-colors ${
-    isDark
-      ? 'text-gray-300 hover:bg-neutral-800'
-      : 'text-gray-700 hover:bg-gray-100'
-  }`;
+  const dropdownItemClasses = 'flex items-center px-3 py-2 text-sm transition-colors text-ink-2 hover:text-ink hover:bg-bg-3';
 
   return (
     <div className="nextra-nav-container sticky top-0 z-30 w-full bg-transparent">
-      <div className={`nextra-nav-container-blur pointer-events-none absolute z-[-1] h-full w-full shadow-sm border-b ${
-        isDark 
-          ? 'bg-[#111] border-neutral-800' 
-          : 'bg-white border-gray-200'
-      }`} />
+      <div className="nextra-nav-container-blur pointer-events-none absolute z-[-1] h-full w-full border-b border-line bg-bg/85 backdrop-blur-md" />
       
       <div className="mx-auto flex items-center gap-2 h-16 px-4 max-w-[90rem]">
-        <Link href="/" className="cursor-pointer">
+        <Link href="/" className="cursor-pointer inline-flex items-center gap-2">
               <div className="flex-shrink-0 cursor-pointer relative z-10">
                 <Image
                   src="/hive-commons-logo.png"
@@ -233,6 +217,7 @@ export default function DocsNavbar() {
                   className="h-10 w-auto object-contain"
                 />
               </div>
+              <span className="hidden sm:inline font-[family-name:var(--font-wordmark)] text-lg text-ink">Hive Commons</span>
             </Link>
 
         <div className="flex-1" />
@@ -429,7 +414,7 @@ export default function DocsNavbar() {
             )}
           </div>
 
-          <div className="relative hidden xl:flex w-px h-5 bg-gray-300 dark:bg-neutral-700 mx-1" />
+          <div className="relative hidden xl:flex w-px h-5 bg-line mx-1" />
 
           {/* Version selector dropdown */}
           <VersionSelector />
@@ -442,8 +427,8 @@ export default function DocsNavbar() {
             <div
               className={`text-sm transition-colors p-1.5 rounded-md flex items-center gap-1 cursor-pointer ${
                 isDark
-                  ? 'text-gray-300 hover:text-gray-100 hover:bg-neutral-800'
-                  : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'text-ink-2 hover:text-ink hover:bg-bg-3'
+                  : 'text-ink-2 hover:text-ink hover:bg-bg-2'
               }`}
               aria-label="GitHub"
               aria-haspopup="true"
@@ -479,8 +464,8 @@ export default function DocsNavbar() {
               <div
                 className={`absolute right-0 top-full mt-2 w-44 rounded-md shadow-xl py-1 border z-50 ${
                   isDark 
-                    ? 'bg-neutral-900 border-neutral-800'
-                    : 'bg-white border-gray-200'
+                    ? 'bg-bg-2 border-line'
+                    : 'bg-bg border-line'
                 }`}
                 onMouseEnter={handleDropdownMouseEnter}
                 onMouseLeave={handleMouseLeave}
@@ -491,8 +476,8 @@ export default function DocsNavbar() {
                 rel="noopener noreferrer"
                 className={`flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                   isDark
-                    ? 'text-gray-300 hover:bg-neutral-800'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'text-ink-2 hover:bg-bg-3'
+                    : 'text-ink-2 hover:bg-bg-2'
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -502,7 +487,7 @@ export default function DocsNavbar() {
                   Star
                 </span>
                 <span className={`text-xs px-1.5 py-0.5 rounded ${
-                  isDark ? 'bg-neutral-800' : 'bg-gray-200'
+                  isDark ? 'bg-bg-3' : 'bg-bg-3'
                 }`}>
                   {githubStats.stars}
                 </span>
@@ -513,8 +498,8 @@ export default function DocsNavbar() {
                 rel="noopener noreferrer"
                 className={`flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                   isDark
-                    ? 'text-gray-300 hover:bg-neutral-800'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'text-ink-2 hover:bg-bg-3'
+                    : 'text-ink-2 hover:bg-bg-2'
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -524,7 +509,7 @@ export default function DocsNavbar() {
                   Fork
                 </span>
                 <span className={`text-xs px-1.5 py-0.5 rounded ${
-                  isDark ? 'bg-neutral-800' : 'bg-gray-200'
+                  isDark ? 'bg-bg-3' : 'bg-bg-3'
                 }`}>
                   {githubStats.forks}
                 </span>
@@ -535,8 +520,8 @@ export default function DocsNavbar() {
                 rel="noopener noreferrer"
                 className={`flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                   isDark
-                    ? 'text-gray-300 hover:bg-neutral-800'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'text-ink-2 hover:bg-bg-3'
+                    : 'text-ink-2 hover:bg-bg-2'
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -546,7 +531,7 @@ export default function DocsNavbar() {
                   Watch
                 </span>
                 <span className={`text-xs px-1.5 py-0.5 rounded ${
-                  isDark ? 'bg-neutral-800' : 'bg-gray-200'
+                  isDark ? 'bg-bg-3' : 'bg-bg-3'
                 }`}>
                   {githubStats.watchers}
                 </span>
@@ -557,8 +542,8 @@ export default function DocsNavbar() {
                 rel="noopener noreferrer"
                 className={`flex items-center justify-between px-3 py-2 text-sm transition-colors ${
                   isDark
-                    ? 'text-gray-300 hover:bg-neutral-800'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'text-ink-2 hover:bg-bg-3'
+                    : 'text-ink-2 hover:bg-bg-2'
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -580,8 +565,8 @@ export default function DocsNavbar() {
           }}
           className={`hidden md:flex w-80 text-sm transition-colors px-3 py-1.5 rounded-md items-center gap-2 ml-2 cursor-pointer ${
             isDark 
-              ? 'text-gray-300 hover:text-gray-100 hover:bg-neutral-800 border border-neutral-800'
-              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-gray-200'
+              ? 'text-ink-2 hover:text-ink hover:bg-bg-3 border border-line'
+              : 'text-ink-2 hover:text-ink hover:bg-bg-2 border border-line'
           }`}
           aria-label="Search documentation"
         >
@@ -590,7 +575,7 @@ export default function DocsNavbar() {
           </svg>
           <span className="text-xs">Search docs...</span>
           <kbd className={`ml-auto text-xs px-1.5 py-0.5 rounded ${
-            isDark ? 'bg-neutral-800 text-gray-300' : 'bg-gray-100 text-gray-500'
+            isDark ? 'bg-bg-3 text-ink-2' : 'bg-bg-2 text-ink-3'
           }`}>
             ⌘K
           </kbd>
@@ -603,8 +588,8 @@ export default function DocsNavbar() {
           }}
           className={`md:hidden p-1.5 rounded-md transition-colors cursor-pointer ${
             isDark 
-              ? 'text-gray-300 hover:text-gray-100 hover:bg-neutral-800'
-              : 'text-gray-300 hover:text-gray-100 hover:bg-gray-100'
+              ? 'text-ink-2 hover:text-ink hover:bg-bg-3'
+              : 'text-ink-2 hover:text-ink hover:bg-bg-2'
           }`}
           aria-label="Search documentation"
         >
@@ -617,8 +602,8 @@ export default function DocsNavbar() {
         <button
           className={`xl:hidden p-1.5 rounded-md transition-colors cursor-pointer ${
             isDark 
-              ? 'text-gray-300 hover:text-gray-100 hover:bg-neutral-800'
-              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+              ? 'text-ink-2 hover:text-ink hover:bg-bg-3'
+              : 'text-ink-2 hover:text-ink hover:bg-bg-2'
           }`}
           aria-label="Toggle menu"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -648,13 +633,13 @@ export default function DocsNavbar() {
               ref={commandPaletteRef}
               className={`rounded-lg shadow-2xl border ${
                 isDark 
-                  ? 'bg-neutral-900 border-neutral-700' 
-                  : 'bg-white border-gray-200'
+                  ? 'bg-bg-2 border-line' 
+                  : 'bg-bg border-line'
               }`}
             >
               {/* Search Input */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-700">
-                <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-line">
+                <svg className="w-5 h-5 text-ink-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -664,12 +649,12 @@ export default function DocsNavbar() {
                   onChange={(e) => performSearch(e.target.value)}
                   placeholder="Search documentation..."
                   className={`flex-1 bg-transparent outline-none text-base ${
-                    isDark ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
+                    isDark ? 'text-ink placeholder-ink-3' : 'text-ink placeholder-ink-3'
                   }`}
                   autoFocus
                 />
                 <kbd className={`text-xs px-2 py-1 rounded ${
-                  isDark ? 'bg-neutral-800 text-gray-300' : 'bg-gray-100 text-gray-500'
+                  isDark ? 'bg-bg-3 text-ink-2' : 'bg-bg-2 text-ink-3'
                 }`}>
                   ESC
                 </kbd>
@@ -679,32 +664,32 @@ export default function DocsNavbar() {
               <div className="max-h-96 overflow-y-auto">
                 {searchQuery.trim() === "" ? (
                   <div className="px-4 py-8 text-center">
-                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-12 h-12 mx-auto mb-3 text-ink-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <p className={`text-sm ${isDark ? 'text-ink-2' : 'text-ink-2'}`}>
                       Search for any word or phrase in the documentation...
                     </p>
-                    <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                    <p className={`text-xs mt-2 ${isDark ? 'text-ink-3' : 'text-ink-3'}`}>
                       Try &quot;kubectl&quot;, &quot;cluster&quot;, &quot;workload&quot;, or &quot;installation&quot;
                     </p>
                   </div>
                 ) : isSearching ? (
                   <div className="px-4 py-8 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-300 mb-3"></div>
-                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-line mb-3"></div>
+                    <p className={`text-sm ${isDark ? 'text-ink-2' : 'text-ink-2'}`}>
                       Searching documentation...
                     </p>
                   </div>
                 ) : searchResults.length === 0 ? (
                   <div className="px-4 py-8 text-center">
-                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-12 h-12 mx-auto mb-3 text-ink-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <p className={`text-sm ${isDark ? 'text-ink-2' : 'text-ink-2'}`}>
                       No results found for &quot;{searchQuery}&quot;
                     </p>
-                    <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                    <p className={`text-xs mt-2 ${isDark ? 'text-ink-3' : 'text-ink-3'}`}>
                       Try different keywords or check spelling
                     </p>
                   </div>
@@ -717,38 +702,38 @@ export default function DocsNavbar() {
                         className={`block px-4 py-3 transition-colors border-l-2 ${
                           index === selectedIndex
                             ? isDark 
-                              ? 'bg-neutral-800 border-blue-500' 
-                              : 'bg-gray-100 border-blue-600'
+                              ? 'bg-bg-3 border-honey' 
+                              : 'bg-bg-2 border-honey'
                             : isDark
-                              ? 'hover:bg-neutral-800 border-transparent'
-                              : 'hover:bg-gray-50 border-transparent'
+                              ? 'hover:bg-bg-3 border-transparent'
+                              : 'hover:bg-bg-2 border-transparent'
                         }`}
                         onMouseEnter={() => setSelectedIndex(index)}
                       >
                         <div className="flex items-start gap-3">
                           <div className={`mt-0.5 p-1.5 rounded flex-shrink-0 ${
-                            isDark ? 'bg-neutral-700' : 'bg-gray-200'
+                            isDark ? 'bg-bg-3' : 'bg-bg-3'
                           }`}>
-                            <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-ink-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <div className={`font-medium text-sm ${
-                                isDark ? 'text-gray-100' : 'text-gray-900'
+                                isDark ? 'text-ink' : 'text-ink'
                               }`}>
                                 {result.title}
                               </div>
                               <span className={`text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${
-                                isDark ? 'bg-neutral-700 text-gray-300' : 'bg-gray-200 text-gray-600'
+                                isDark ? 'bg-bg-3 text-ink-2' : 'bg-bg-3 text-ink-2'
                               }`}>
                                 {result.category}
                               </span>
                             </div>
                             <div 
                               className={`text-xs leading-relaxed ${
-                                isDark ? 'text-gray-300' : 'text-gray-600'
+                                isDark ? 'text-ink-2' : 'text-ink-2'
                               }`}
                               dangerouslySetInnerHTML={{ 
                                 __html: result.highlightedSnippet.replace(
@@ -769,17 +754,17 @@ export default function DocsNavbar() {
               {searchResults.length > 0 && (
                 <div className={`flex items-center justify-between px-4 py-2 text-xs border-t ${
                   isDark 
-                    ? 'border-neutral-700 text-gray-500' 
-                    : 'border-gray-200 text-gray-600'
+                    ? 'border-line text-ink-3' 
+                    : 'border-line text-ink-2'
                 }`}>
                   <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1">
-                      <kbd className={`px-1.5 py-0.5 rounded ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>↑</kbd>
-                      <kbd className={`px-1.5 py-0.5 rounded ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>↓</kbd>
+                      <kbd className={`px-1.5 py-0.5 rounded ${isDark ? 'bg-bg-3' : 'bg-bg-2'}`}>↑</kbd>
+                      <kbd className={`px-1.5 py-0.5 rounded ${isDark ? 'bg-bg-3' : 'bg-bg-2'}`}>↓</kbd>
                       to navigate
                     </span>
                     <span className="flex items-center gap-1">
-                      <kbd className={`px-1.5 py-0.5 rounded ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>↵</kbd>
+                      <kbd className={`px-1.5 py-0.5 rounded ${isDark ? 'bg-bg-3' : 'bg-bg-2'}`}>↵</kbd>
                       to select
                     </span>
                   </div>
@@ -793,13 +778,13 @@ export default function DocsNavbar() {
 
       {isMenuOpen && (
         <div className={`xl:hidden border-t ${
-          isDark ? 'border-neutral-800 bg-[#111]' : 'border-gray-200 bg-white'
+          isDark ? 'border-line bg-bg' : 'border-line bg-bg'
         }`}>
           <div className="px-4 py-3 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
             <a href="https://hivecommons.dev" target="_blank" rel="noopener noreferrer" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -810,12 +795,12 @@ export default function DocsNavbar() {
             
             
             <div className={`text-sm font-medium uppercase px-2 py-1.5 mt-3 tracking-wider ${
-              isDark ? 'text-gray-300' : 'text-gray-500'
+              isDark ? 'text-ink-2' : 'text-ink-3'
             }`}>Contribute</div>
             <a href={getLocalizedUrl("https://github.com/hivecommons")} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -827,8 +812,8 @@ export default function DocsNavbar() {
             
             <a href={`${getBaseUrl()}/en/ladder`} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -837,8 +822,8 @@ export default function DocsNavbar() {
             </a>
             <Link href="/docs/contributing/security/security-inc" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -847,15 +832,15 @@ export default function DocsNavbar() {
             </Link>
             
             <div className={`text-sm font-medium uppercase px-2 py-1.5 mt-3 tracking-wider ${
-              isDark ? 'text-gray-300' : 'text-gray-500'
+              isDark ? 'text-ink-2' : 'text-ink-3'
             }`}>Community</div>
             
             
 {/* --- REMOVED LADDER LINK FROM HERE --- */}
             <a href={`${getBaseUrl()}/en#contact`} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -864,16 +849,16 @@ export default function DocsNavbar() {
             </a>
             <a href="https://github.com/hivecommons" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <LinkedinIcon className="w-4 h-4 mr-3" />
               LinkedIn
             </a>
             <a href={`${getBaseUrl()}/en/partners`} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
-                ? 'text-gray-300 hover:bg-neutral-800'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -883,13 +868,13 @@ export default function DocsNavbar() {
 
             {/* Version selector - mobile */}
             <div className={`md:hidden pt-3 border-t mt-3 ${
-              isDark ? 'border-neutral-800' : 'border-gray-200'
+              isDark ? 'border-line' : 'border-line'
             }`}>
               <VersionSelector isMobile={true} />
             </div>
 
             <div className={`pt-3 border-t mt-3 ${
-              isDark ? 'border-neutral-800' : 'border-gray-200'
+              isDark ? 'border-line' : 'border-line'
             }`}>
               <a
                 href="https://github.com/hivecommons/docs"
@@ -897,8 +882,8 @@ export default function DocsNavbar() {
                 rel="noopener noreferrer"
                 className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
                   isDark
-                    ? 'text-gray-300 hover:bg-neutral-800'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'text-ink-2 hover:bg-bg-3'
+                    : 'text-ink-2 hover:bg-bg-2'
                 }`}
               >
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -906,7 +891,7 @@ export default function DocsNavbar() {
                 </svg>
                 View on GitHub
                 <span className={`ml-auto text-xs px-2 py-0.5 rounded ${
-                  isDark ? 'bg-neutral-800' : 'bg-gray-200'
+                  isDark ? 'bg-bg-3' : 'bg-bg-3'
                 }`}>
                   {githubStats.stars} ★
                 </span>

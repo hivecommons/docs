@@ -33,17 +33,14 @@ export function SidebarFooter({ onCollapse, variant = 'full', isMobile = false }
 
     return (
       <div
-        className="shrink-0 sticky flex flex-col items-center gap-2 py-16 min-w-16 border-t border-gray-200 dark:border-gray-700"
+        className="shrink-0 sticky flex flex-col items-center gap-2 py-16 min-w-16 border-t border-line"
         suppressHydrationWarning
       >
         {/* Theme Toggle Icon */}
         <button
           onClick={() => setTheme(isDark ? 'light' : 'dark')}
           title="Change theme"
-          className="group p-2 rounded-md hover:font-bold transition-all"
-          style={{
-            color: isDark ? '#f3f4f6' : '#111827',
-          }}
+          className="group p-2 rounded-md text-ink hover:bg-bg-2 transition-all"
           suppressHydrationWarning
         >
           <div className="relative w-5 h-5">
@@ -62,10 +59,7 @@ export function SidebarFooter({ onCollapse, variant = 'full', isMobile = false }
         <button
           onClick={onCollapse}
           title="Expand sidebar"
-          className="p-2 rounded-md hover:font-bold transition-all"
-          style={{
-            color: isDark ? '#f3f4f6' : '#111827',
-          }}
+          className="p-2 rounded-md text-ink hover:bg-bg-2 transition-all"
           suppressHydrationWarning
         >
           <PanelLeftOpen className="w-5 h-5" />
@@ -78,9 +72,8 @@ export function SidebarFooter({ onCollapse, variant = 'full', isMobile = false }
   if (!mounted) {
     return (
       <div
-        className="shrink-0 flex items-center gap-2 py-4 px-4 border-t border-gray-200"
+        className="shrink-0 flex items-center gap-2 py-4 px-4 border-t border-line"
         style={{
-          backgroundColor: '#ffffff',
           boxShadow: '0 -1px 6px 0 rgba(0,0,0,0.07)',
         }}
         suppressHydrationWarning
@@ -92,10 +85,8 @@ export function SidebarFooter({ onCollapse, variant = 'full', isMobile = false }
 
   return (
     <div
-      className="shrink-0 flex items-center gap-2 py-4 px-4 border-t"
+      className="shrink-0 flex items-center gap-2 py-4 px-4 border-t border-line bg-bg"
       style={{
-        backgroundColor: isDark ? '#111827' : '#ffffff',
-        borderTopColor: isDark ? '#1f2937' : '#e5e7eb',
         boxShadow: '0 -1px 6px 0 rgba(0,0,0,0.07)',
       }}
       suppressHydrationWarning
@@ -104,10 +95,7 @@ export function SidebarFooter({ onCollapse, variant = 'full', isMobile = false }
       <button
         onClick={() => setTheme(isDark ? 'light' : 'dark')}
         title="Change theme"
-        className="group cursor-pointer h-7 rounded-md px-2 space-x-3 text-sm font-thin transition-all hover:font-bold flex items-center gap-2 flex-1"
-        style={{
-          color: isDark ? '#f3f4f6' : '#111827',
-        }}
+        className="group cursor-pointer h-7 rounded-md px-2 space-x-3 text-sm font-medium transition-all flex items-center gap-2 flex-1 text-ink hover:bg-bg-2"
         suppressHydrationWarning
       >
         <div className="relative w-5 h-5">
@@ -127,10 +115,7 @@ export function SidebarFooter({ onCollapse, variant = 'full', isMobile = false }
       {!isMobile && (
         <button
           onClick={onCollapse}
-          className="transition-all cursor-pointer rounded-md p-2 hover:font-bold"
-          style={{
-            color: isDark ? '#f3f4f6' : '#111827',
-          }}
+          className="transition-all cursor-pointer rounded-md p-2 text-ink hover:bg-bg-2"
           title="Collapse sidebar"
           type="button"
           suppressHydrationWarning
