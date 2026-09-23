@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0005-forge-abstraction.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0005-forge-abstraction.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0005: Forge-neutral source control interface
 
@@ -11,7 +11,7 @@ needs agents and schedulers to reason about work without baking GitHub names
 into every interface. The forge package defines this boundary explicitly: it is
 "not hardcoded to GitHub" and exposes neutral repositories, issues, and change
 requests while concrete adapters handle GitHub, GitLab, and Gitea/Forgejo
-details ([forge package](https://github.com/hivecommons/hive/blob/v4/src/pkg/forge/forge.go)).
+details ([forge package](https://github.com/hivecommons/hive/blob/v5/src/pkg/forge/forge.go)).
 
 ## Decision
 

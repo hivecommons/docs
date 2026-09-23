@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { normalizeFences } from "./markdown-fences";
 
 // Post-migration the canonical hive repo is hivecommons/hive; until the code
 // transfer lands the docs stay in hivecommons/hive. Override with HIVE_DOCS_OWNER.
@@ -250,7 +251,10 @@ async function main() {
     // Rewrite GitHub-relative links so they resolve on the docs site.
     const rewritten = rewriteLinks(content, `src/docs/${file.source}`);
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-    fs.writeFileSync(targetPath, canonicalHeader(file.source) + scrubLegacyBranding(rewritten));
+    fs.writeFileSync(
+      targetPath,
+      canonicalHeader(file.source) + normalizeFences(scrubLegacyBranding(rewritten))
+    );
     console.log(`synced ${file.source} -> docs/content/hive/${target}`);
   }
 }

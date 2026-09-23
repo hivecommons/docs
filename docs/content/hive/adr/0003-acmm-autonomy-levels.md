@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0003-acmm-autonomy-levels.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0003-acmm-autonomy-levels.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0003: ACMM autonomy levels
 
@@ -10,7 +10,7 @@ Hive needs one operator-facing control for how autonomous agents may be. The
 reference architecture describes ACMM as the human-selected dial that maps to
 per-agent modes, and the policy matrix defines which agents may only advise,
 file issues, open hold-gated PRs, or auto-merge at each level
-([architecture §6](/docs/hive/architecture#6-acmm-controlling-agent-autonomy),
+([architecture §6](/docs/hive/architecture#6-acmm--controlling-agent-autonomy),
 [ACMM policy matrix](/docs/hive/acmm-policy-matrix)). The same modes feed the
 layered guardrails in [architecture §5](/docs/hive/architecture#5-layered-guardrails-defense-in-depth).
 

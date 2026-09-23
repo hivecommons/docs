@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/agent-configuration.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/agent-configuration.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # Agent Configuration
 
@@ -16,7 +16,7 @@ agents:
 ```
 
 
-For the portable agent definition YAML format, see [`../AGENT-DEFINITION.md`](https://github.com/hivecommons/hive/blob/v4/src/AGENT-DEFINITION.md). For a complete portable `AgentDefinition` that exercises advanced display, channel, tool, and connection fields, see [`../examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v4/src/examples/agents/customized-agent.yaml).
+For the portable agent definition YAML format, see [`../AGENT-DEFINITION.md`](https://github.com/hivecommons/hive/blob/v5/src/AGENT-DEFINITION.md). For a complete portable `AgentDefinition` that exercises advanced display, channel, tool, and connection fields, see [`../examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v5/src/examples/agents/customized-agent.yaml).
 
 That is a complete, valid agent. Defaults fill in the rest at load time:
 
@@ -28,12 +28,14 @@ That is a complete, valid agent. Defaults fill in the rest at load time:
 
 You almost never write a full roster by hand: applying an ACMM level (below) generates one for you, and the dashboard edits it live.
 
+The formal-verification quality-lane opt-in (`quality.formal`) also lives in the dashboard under Settings -> Features.
+
 ## Where configuration lives
 
 Hive's config is layered, and the layering is the point: **a file's location says who owns the setting.**
 
-```
-/etc/hive/hive.yaml            ← ConfigMap seed (Kubernetes) or bind mount (Docker/LXC).
+```text
+/etc/hive/hive.yaml            ← ConfigMap seed (Kubernetes) or bind mount (Docker, Podman, LXC).
 │                                 The operator/platform layer. Re-seeded on every pod
 │                                 boot; authoritative for acmm_level and hub.is_public.
 ├── /data/hive.yaml.dashboard  ← Dashboard overlay on the PVC. Every save from the
@@ -45,7 +47,7 @@ Hive's config is layered, and the layering is the point: **a file's location say
 │                                 Merged over the agents: map at load time.
 ├── /data/hive.yaml.runtime    ← Persisted runtime config (was hive.yaml.bak). Never
 │                                 edit. On K8s a post-merge snapshot the entrypoint
-│                                 restores from if the seed is lost; on Docker/LXC the
+│                                 restores from if the seed is lost; outside Kubernetes the
 │                                 boot-time source of truth. The legacy name is still
 │                                 read as a fallback during the migration.
 ├── /data/secrets/             ← Secret VALUES written by the dashboard (writable PVC).
@@ -81,16 +83,100 @@ agents:
 
 ```yaml
     backend: copilot             # the method: claude | copilot | goose | codex | pi |
-                                 #   bob | aider, or an inference backend:
+                                 #   bob | aider | omp, or an inference backend:
                                  #   vllm | llm-d | litellm | watsonx | named gateway
     model: claude-sonnet-4-6     # model id for that method
+    reasoning_effort: high       # reasoning effort, for methods that have one:
+                                 #   codex (minimal|low|medium|high|xhigh, passed
+                                 #   as -c model_reasoning_effort), agy
+                                 #   (low|medium|high, passed as --effort), claude
+                                 #   (low|medium|high|xhigh|max, passed as --effort),
+                                 #   and omp (per selected model; passed as --thinking).
+                                 #   Omit for the method's own default.
     cli_pinned: true             # pin the CLI so nothing auto-switches it
     launch_cmd: "/usr/bin/copilot --allow-all --model claude-sonnet-4-6"
                                  # explicit launch command (optional — hive builds
                                  #   one from backend + model + mode when omitted)
+    agent_spec: /data/agent-specs/reviewer
+                                 # optional BYO-agent spec file or directory.
+                                 #   When set, Hive loads agent.yaml/spec.yaml
+                                 #   and applies its backend, model, mode,
+                                 #   launch_cmd, prompt, tools, and skills at launch.
 ```
 
+The dashboard API can update this field through [`POST /api/effort/{agent}/{effort}`](https://github.com/hivecommons/hive/blob/v5/src/docs/api-reference.md#agents-and-controls).
+
+The dashboard shows a reasoning-effort dropdown next to the model picker for every method that has an effort control (`codex`, `agy`, `claude`, and `omp`). The value is validated at set time against the method's own set, so a `codex`-only level such as `minimal` is refused for a `claude` agent rather than stored and dropped at launch. For `omp`, the dropdown is per selected model: Hive reads `omp models --json` and uses that model's `thinking` levels, hiding the control for models that report no thinking support. Picking `default` clears the stored value; for `claude` and `omp` that means no effort flag at all and the CLI's own default. The dropdown persists through the same path as the model picker (`hive.yaml` plus the per-agent overlay under `agents_dir`), which is the durable path on a hosted spoke: a hand edit of the agent's file is reverted by the next sync, the dashboard write is not. Each dropdown change is recorded in the audit trail as `set_reasoning_effort` with the new value, like the other per-agent setting changes. The effort the agent was actually launched with is what the run rows and the `- hive:` PR trailer report, so a `claude` agent at `xhigh` shows `effort=xhigh` there and an agent with no stored effort shows none.
+
+#### Oh My Pi (`omp`) hub agents
+
+`backend: omp` launches the OMP CLI as a first-class dashboard method. Hive gives each agent its own durable HOME under `/data/home/agents/<name>`, so `~/.omp/agent/agent.db` can hold several provider sign-ins for that one agent (for example `openai-codex` for the primary model and `anthropic` for an advisor) without sharing refresh-token writers across agents. Select models with their provider prefix (`provider/model`). The dashboard model probe runs `omp models --json` and uses each model's `thinking` list for the effort dropdown. At launch Hive passes `--approval-mode ${HIVE_OMP_APPROVAL_MODE:-yolo}`, `--model <id>`, and `--thinking <effort>` when set.
+
+
 > The dashboard also offers **gemini** as a live method (with live model discovery); as a persisted `backend:` value in `hive.yaml`, stick to the validated list above.
+
+### Reviewer independence
+
+Reviewer agents can declare an ordered `review_models` pool so a PR is reviewed
+by a model independent from the one that authored it. The reviewer still receives
+one queue kick; each PR line carries `review_with=<backend>/<model>`, and the
+reviewer delegates that PR to an in-session Agent/task sub-agent with the listed
+model override:
+
+```yaml
+agents:
+  reviewer:
+    backend: copilot
+    model: claude-fable-5
+    review_models:
+      pool:
+        - {backend: copilot, model: gpt-5.6-terra}
+        - {backend: copilot, model: gemini-3.7-flash}
+        - {backend: copilot, model: claude-opus-4-6}
+      exclude_author_model: true
+      exclude_author_family: false
+      fallback: pinned
+```
+
+`exclude_author_model` defaults to true. `exclude_author_family` compares the
+normalized vendor prefix before the first dash (`claude`, `gpt`, `gemini`,
+`grok`, ...). If no pool entry is eligible, `fallback` is `pinned` (use the
+agent's configured `model`), `skip` (omit the PR from that kick), or
+`requires_human` (keep the PR visible with a human-review marker). Reviewers
+record the delegated sub-agent's model as `review_model` in the verdict artifact,
+which feeds the author/reviewer model-pair metrics.
+
+### BYO-agent specs
+
+`agent_spec` wires ADR-0012's bring-your-own-agent contract into the launcher.
+Point it at a YAML file, or at a directory containing `agent.yaml`,
+`agent.yml`, `agent-spec.yaml`, `agent-spec.yml`, `spec.yaml`, or `spec.yml`:
+
+```yaml
+agents:
+  reviewer:
+    agent_spec: /data/agent-specs/reviewer
+```
+
+```yaml
+# /data/agent-specs/reviewer/agent.yaml
+name: reviewer
+backend: claude
+model: claude-sonnet-4-6
+mode: suggest
+launch_cmd: /opt/reviewer/bin/reviewer --stdio
+prompt: "Start with the external reviewer checklist."
+tools:
+  preset: advisory
+skills:
+  - review-checklist
+```
+
+At launch time Hive loads the spec with `skillreg.LoadAgentSpec`; the spec's
+backend, model, mapped mode (`observe` → `ADVISORY`, `suggest` →
+`ISSUES_AND_PRS`, `autonomous` → `ISSUES_PRS_MERGE`), `launch_cmd`, `prompt`,
+`tools`, and `skills` become the agent's effective launch configuration. If the
+spec omits `launch_cmd`, Hive still builds the backend command normally.
 
 ### Behavior — what it may do, and when
 
@@ -108,6 +194,13 @@ agents:
     include_repos: true          # append the project repo list to each kick (default true).
                                  #   Prompt text only — it authorizes repos, it does
                                  #   NOT clone, mount, or provision anything on disk.
+    repos: [console]             # WHICH repos this agent serves. Omit (the default) for
+                                 #   the whole hive. Naming repos makes the agent a
+                                 #   specialist: it is only handed work on these, its
+                                 #   $HIVE_REPO/$HIVE_REPOS follow, and writes elsewhere
+                                 #   are REFUSED by the proxy and the hive-open-pr /
+                                 #   hive-merge / hive-open-issue relays — not merely
+                                 #   discouraged. See docs/per-repo-agents.md.
     on_demand: false             # true = never kicked by the governor timer;
                                  #   only triggered explicitly (e.g. inception)
     clear_on_kick: true          # default true; false keeps session context across kicks
@@ -118,6 +211,11 @@ agents:
     replicas: 3                  # materialize scanner, scanner-2, scanner-3 (max 5)
     lane_keywords: [bug, triage, fix]   # routes matching issues into this agent's lane
     detect_keywords: [scanner, triage]  # attributes GitHub activity back to this agent
+    cadence_scope: per_repo      # aggregate (default) | per_repo — opt this agent into
+                                 #   one governor timer PER WATCHED REPO instead of one
+                                 #   hive-wide timer. Only effective when the hive-level
+                                 #   governor.cadence_scope is also per_repo; see
+                                 #   "Repo-scoped cadences" below.
 ```
 
 #### Conversation is not a tier
@@ -166,7 +264,7 @@ comments **and** edits an issue, or comments and merges, is not conversation and
 is refused at the tier the non-conversational half requires.
 
 For prompt file resolution and the complete built-in `${VAR}` reference, see
-[Policy and prompt templates](https://github.com/hivecommons/hive/blob/v4/src/policies/README.md).
+[Policy and prompt templates](https://github.com/hivecommons/hive/blob/v5/src/policies/README.md).
 
 ### Declarative extensions
 
@@ -174,14 +272,7 @@ Three optional blocks replace hardcoded behavior with declarations:
 
 ```yaml
     channels:                    # how the agent gets triggered. Omit = governor timer.
-      - type: kick               # kick | webhook | discord | schedule | bead
-      - type: webhook
-        events: ["issues.opened", "issues.labeled"]
-        repos: [repo-one]        # optional repo-name filter
-      - type: bead
-        match: { nudge_target: scanner }
-      - type: schedule
-        schedule: "0 */4 * * *"  # cron; required for type: schedule
+      - type: kick               # kick is the only supported type (see below)
     tools:                       # tool permissions. Omit = the mode field governs.
       preset: issues-only        # advisory | issues-only | issues-prs | full
       rules:                     # per-tool allow/deny overrides on top of the preset
@@ -202,15 +293,13 @@ Set `replicas: N` on a declared agent to run a small pool with the same prompt, 
 
 ### Trigger channels
 
-`channels:` declares non-default ways to wake an agent. If the block is omitted, governor timer kicks still work. If you include the block, add `type: kick` when the agent should keep normal governor kicks alongside other triggers.
+`channels:` declares how an agent is woken. If the block is omitted, governor timer kicks work as usual. `kick` is the only supported type; declaring it just makes the default explicit.
 
 | Type | Required fields | Behavior |
 |---|---|---|
 | `kick` | none | Keep ordinary governor timer kicks. |
-| `webhook` | `events` | `/webhook`/GitHub webhook receiver matches `X-GitHub-Event` or `event.action` strings such as `issues.opened`; optional `repos` filters by repository name. `HIVE_WEBHOOK_SECRET` is required and every request must include a valid GitHub `X-Hub-Signature-256` HMAC. Missing configuration or invalid signatures fail closed with `401`. |
-| `bead` | `match` | The bead watcher polls the agent's `beads_dir` about every 30 seconds and kicks when an individual JSON file has every `key: value` in `match` at the top level. Current watcher matching is not the nested `metadata` map inside the `bd` ledger file. |
-| `schedule` | `schedule` | Cron-style channel trigger independent of governor-mode cadences. |
-| `discord` | `patterns` | Declared shape for Discord-triggered work; patterns are validated by config load. |
+
+The former `webhook`, `bead`, `schedule`, and `discord` types were declarative-only: the trigger runtime meant to serve them (`pkg/channels`) was never wired into the binary and was removed (#5591). Declaring one of them used to validate cleanly and then silently suppress governor kicks, leaving the agent permanently dormant — config validation now rejects them instead.
 
 Rounding out the schema — fields you will rarely touch:
 
@@ -221,7 +310,7 @@ Rounding out the schema — fields you will rarely touch:
 | `caveman_mode` | Prompt-compression experiment: `lite`, `full`, `ultra`, `wenyan`; see below | off |
 | `explain_mode` | Ask the agent to report why it made each tool call: `off`, `brief`, `full`; see below | inherit the hive default |
 | `metrics_collector` | Named metrics source for the stats panel | none |
-| `stats_display` | Custom sidebar metrics (key, label, source, field, style) | none |
+| `stats_display` | Custom sidebar metrics (key, label, source, field, style). The `health` source (the primary repo's CI/coverage/release checks) is offered only to agents that can own CI — never to an `ADVISORY` or `on_demand` agent — and a `pct`/`pct-bar` stat with no measurement renders `—`, not `0%`. | none (an agent starts with no stats unless it is a built-in with defaults) |
 | `hidden` (packs only) | Keep a pack agent out of the default roster view | false |
 
 ## Explain mode (debugging agent behaviour)
@@ -336,11 +425,11 @@ Two rules of thumb:
 
   Only `POST /v1/messages` is translated into an OpenAI `/v1/chat/completions` call. The Claude CLI also talks to its Anthropic host for housekeeping — telemetry batches (`/api/event_logging/...`), error reports, `POST /v1/messages/count_tokens` — and none of that has a meaning to an OpenAI-compatible gateway; forwarding it used to cost a gateway `400 Missing required parameter: 'messages'` per call, charged against the provider's request rate limit (roughly two failures per real completion in practice). The translator and the MITM reroute now answer those locally: `count_tokens` returns a chars-based estimate, anything under `/api/` returns `{}`, and any other path is a 404 in Anthropic error shape with a `WARN` log line naming the method and path, so a new CLI endpoint shows up in the hive log rather than as gateway noise. Inference-routed `claude` sessions are additionally launched with `DISABLE_TELEMETRY=1`, `DISABLE_ERROR_REPORTING=1`, and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`; subscription sessions are not.
 
-Every Model Gateway (and the bob backend) also accepts an optional `key_name` — a human-chosen LABEL for the configured key, e.g. `key_name: openrouter-prod-key`. It is safe-to-show metadata, not a secret: the dashboard's gateway row displays it as "Using key: `<name>`", or "(unnamed)" when no label is set, so operators can tell keys apart without ever seeing the value. See [`inference-backends.md`](https://github.com/hivecommons/hive/blob/v4/docs/inference-backends.md) for a full YAML example.
+Every Model Gateway (and the bob backend) also accepts an optional `key_name` — a human-chosen LABEL for the configured key, e.g. `key_name: openrouter-prod-key`. It is safe-to-show metadata, not a secret: the dashboard's gateway row displays it as "Using key: `<name>`", or "(unnamed)" when no label is set, so operators can tell keys apart without ever seeing the value. See [`inference-backends.md`](https://github.com/hivecommons/hive/blob/v5/docs/inference-backends.md) for a full YAML example.
 
-Kubernetes manifests for deploying inference backends (vllm Deployment, EPP RBAC, kustomization) are in [`deploy/inference/`](https://github.com/hivecommons/hive/blob/v4/src/deploy/inference/).
+Kubernetes manifests for deploying inference backends (vllm Deployment, EPP RBAC, kustomization) are in [`deploy/inference/`](https://github.com/hivecommons/hive/blob/v5/src/deploy/inference/).
 
-Agents can inspect peer panes with `hive-panes [lines]` when the deployment includes `src/deploy/hive-panes.sh`. It reads pluk JSONL logs from `/var/run/pluk/logs`, skips the calling agent named by `HIVE_PROXY_AGENT`, strips terminal escapes, and prints the last N raw-output lines for every other agent. Use it for situational awareness; it is read-only and does not attach to another agent's tmux session. See [Agent peer-awareness logging](https://github.com/hivecommons/hive/blob/v4/src/docs/agent-logging.md) for the pluk log format, when it's available, and its retention behavior.
+Agents can inspect peer panes with `hive-panes [lines]` when the deployment includes `src/deploy/hive-panes.sh`. It reads pluk JSONL logs from `/var/run/pluk/logs`, skips the calling agent named by `HIVE_PROXY_AGENT`, strips terminal escapes, and prints the last N raw-output lines for every other agent. Use it for situational awareness; it is read-only and does not attach to another agent's tmux session. See [Agent peer-awareness logging](https://github.com/hivecommons/hive/blob/v5/src/docs/agent-logging.md) for the pluk log format, when it's available, and its retention behavior.
 
 Every discovery probe is best-effort: a failed or absent probe falls back to a current static list, so a model dropdown is never empty. Fallback entries are marked "unverified" in the UI.
 
@@ -352,6 +441,38 @@ Each agent shows a 📌 pin on its CLI and its model in the dashboard. The seman
 2. **Discovery says the model is gone.** When a *genuine* (non-fallback) discovery returns a model set that no longer contains an agent's selected model — a key swap or endpoint change stripped the entitlement — the agent is switched to the first available model, with a toast. A static-fallback list never triggers this, and a model that is still present is never re-selected.
 
 Pin a model when reproducibility matters more than the governor's budget optimizations. Leave it unpinned when you want the hive to manage cost for you.
+
+### Changing backend and model together: use the atomic endpoint
+
+Three API routes can change an agent's method or model. If you are changing **both**, use the single atomic one:
+
+```text
+PUT /api/config/agent/{name}/models     {"backend": "codex", "model": "gpt-5-codex"}
+```
+
+The other two set one field each and are fine on their own — but using them **in sequence** to change both is a live footgun ([#5698](https://github.com/hivecommons/hive/issues/5698)):
+
+```text
+POST /api/switch/{agent}/{backend}      # then
+POST /api/model/{agent}/{model}
+```
+
+There is no transaction across those two calls. If the second fails, times out, or is simply never made, the agent is left with the new backend and the **old** backend's model — a pair like `codex --model claude-opus-5` that cannot launch. The failure does not surface at set time; it surfaces later as a dead pane.
+
+The three routes differ in ways that matter here:
+
+| | `switch` + `model` (two calls) | `PUT .../models` (one call) |
+|---|---|---|
+| Backend and model applied together | **no** — separate requests | **yes** |
+| Backend value validated | yes | yes |
+| Model value validated | yes, but see below | **not yet** — [#5698](https://github.com/hivecommons/hive/issues/5698) phase 2 |
+| Restarts the agent | yes, **once per call** | no — syncs into the live process config |
+| Claims operator ownership | yes | yes |
+
+Two consequences worth knowing:
+
+- **Model validation does not save you here.** `POST /api/model/...` checks the model against the agent's *current effective* backend, and deliberately fails **open** when that backend's model list cannot be enumerated (see `validateModelForAgent`). Codex is exactly such a backend, so `switch` to codex followed by `model` set to a Claude id is accepted. Reverse the order and the model is validated against the backend you are about to leave. Neither order gives you a checked pair.
+- **The atomic route does not restart the agent.** It persists the pair and syncs it into the live process config, so the running CLI keeps its current method until the agent next restarts. That is usually what you want for a scripted change — the two-call path pays for two restarts — but if you need the change to take effect now, restart the agent afterwards.
 
 ## Cadences and the governor
 
@@ -376,7 +497,7 @@ governor:
       architect: pause     # "pause" stops kicks for this agent in this mode
 ```
 
-- **Thresholds scale with repo count.** The *default* thresholds above are per-repo bases, multiplied by `len(project.repos)` — so `surge` is 20 on a 1-repo hive and 780 on a 39-repo one, and the mode ladder means the same thing at any hive size. A `threshold:` you set yourself is used verbatim and never scaled. Tune the curve with `governor.threshold_scaling` (`linear` default, `sqrt`, `none`). See [Governor mode thresholds](https://github.com/hivecommons/hive/blob/v4/src/docs/governor-thresholds.md), which also covers the ACMM-pack interaction.
+- **Thresholds scale with repo count.** The *default* thresholds above are per-repo bases, multiplied by `len(project.repos)` — so `surge` is 20 on a 1-repo hive and 780 on a 39-repo one, and the mode ladder means the same thing at any hive size. A `threshold:` you set yourself is used verbatim and never scaled. Tune the curve with `governor.threshold_scaling` (`linear` default, `sqrt`, `none`). See [Governor mode thresholds](https://github.com/hivecommons/hive/blob/v5/src/docs/governor-thresholds.md), which also covers the ACMM-pack interaction.
 - **Mutually exclusive modes.** Each per-agent, per-mode cadence is either an interval (`5m`, `2h`, `pause`) or a time-of-day schedule — never both. Config load and API writes reject mixed forms with a 400/error.
 - **Time-of-day schedules.** Use `times: ["HH:MM"]` with optional `days` (`mon` … `sun`) and a required IANA `tz`. The timezone is stored explicitly and displayed with the schedule; it does not float with the viewer.
 - **Advanced cron.** Power users can provide a constrained five-field cron expression plus `tz`. Hive evaluates these with robfig/cron and schedule-local timezone handling.
@@ -388,6 +509,46 @@ governor:
 - **Budget.** When the weekly token budget is exhausted, kicks are suppressed hive-wide (exempt agents excepted) until the period rolls over.
 
 Set `stale_timeout` with your cadences in mind: an agent kicked every 4h with a 30-minute stale timeout will look dead between kicks. The shipped packs use "longest cadence × 2".
+
+Cadences are not the only way an agent gets kicked: the additive `triggers:`
+config key declares CEL rules that kick a named agent directly off a
+source-control event (issue opened, PR opened, a label applied, a comment
+posted), independent of the governor's queue-depth cadence. See
+[CEL-based agent triggers](https://github.com/hivecommons/hive/blob/v5/src/docs/cel-triggers.md).
+
+### Repo-scoped cadences (`cadence_scope`)
+
+By default the governor runs ONE mode for the whole hive: total queue pressure
+picks idle/quiet/busy/surge, and every agent gets one timer. On a many-repo
+hive that aggregate can mislead in both directions — one hot repo drags every
+repo's agents into surge cadences, or a hot repo's backlog is diluted below
+the (repo-count-scaled) thresholds by dozens of quiet repos. `cadence_scope`
+(#6932) lets the governor resolve a mode **per repo** instead:
+
+```yaml
+governor:
+  cadence_scope: per_repo   # aggregate (default) | per_repo
+
+agents:
+  scanner:
+    cadence_scope: per_repo # per-agent opt-in — only agents that ask get split timers
+```
+
+- **Two switches, both required.** `governor.cadence_scope: per_repo` turns on
+  per-repo mode resolution; each agent still keeps its single aggregate timer
+  unless it *also* sets `cadence_scope: per_repo`. Replicas inherit the base
+  agent's setting. Either value may be `aggregate` (or omitted) to keep the
+  historical one-timer behavior.
+- **Base thresholds, unscaled.** In per-repo scope each repo's own actionable
+  queue depth (issues + PRs) is compared against the **base** thresholds —
+  repo-count [threshold scaling](https://github.com/hivecommons/hive/blob/v5/src/docs/governor-thresholds.md) does not apply,
+  because the comparison is already per-repo.
+- **One timer per repo.** An opted-in agent gets a cadence entry — and
+  last-kick bookkeeping — per successfully scanned repo, keyed `agent|repo`.
+  Repos in different modes kick the same agent at different intervals.
+- **Live control.** The owner-only `GET`/`PUT`
+  `/api/config/governor/cadence-scope` routes read and set the hive-level
+  scope at runtime; see the [API reference](https://github.com/hivecommons/hive/blob/v5/src/docs/api-reference.md).
 
 ## ACMM levels: agent rosters as packs
 
@@ -402,9 +563,9 @@ You don't have to design a roster. Hive ships six **ACMM packs** (`level-1.yaml`
 | L5 | Semi-Autonomous (Semi-Automated) | issues **and** hold-gated PRs; humans batch-approve |
 | L6 | Fully Autonomous | auto-merge on green CI, no hold label |
 
-Applying a level **reconciles the whole roster**, not just the diff: missing agents are created (as overlay files in `/data/agent-configs/`), existing agents are merged — pack values fill blanks, but your explicit `backend:`, `model:`, and `enabled: false` always win — and the level's `kick_template` and `mode` are updated so the agent's *policy* matches the level. A failed agent doesn't abort the rest; the level is only recorded as cleanly applied when every agent reconciled.
+Applying a level **reconciles the whole roster**, not just the diff: missing agents are created (as overlay files in `/data/agent-configs/`), existing agents are merged — pack values fill blanks, but your explicit `backend:`, `model:`, and `enabled: false` always win — and the level's `kick_template`, `mode` and `on_demand` are updated so the agent's *policy* matches the level (an `on_demand` you toggled yourself in the agent's settings dialog is operator-owned and left alone; leaving on-demand starts the agent, entering it stops it). A failed agent doesn't abort the rest; the level is only recorded as cleanly applied when every agent reconciled.
 
-The L5 roster is the canonical worked example — eleven agents, eight on the governor timer, two opt-in agents paused in every governor mode, plus one on demand:
+The L5 roster is the canonical worked example — twelve agents, nine on the governor timer, two opt-in agents paused in every governor mode, plus one on demand:
 
 | Agent | | Mode | Cadence (all governor modes) |
 |---|---|---|---|
@@ -414,6 +575,7 @@ The L5 roster is the canonical worked example — eleven agents, eight on the go
 | quality 🧪 | test coverage | ISSUES_AND_PRS | 2h |
 | guide 🧭 | documentation | ISSUES_AND_PRS | 4h |
 | sec-check 🛡 | CVEs, vulnerabilities | ISSUES_AND_PRS | 4h |
+| reviewer 🔬 | repo-grounded PR review; routes to a human, never merges | ADVISORY | 30m |
 | architect 🏗 | RFCs, refactors | ISSUES_AND_PRS | 4h |
 | strategist 🧠 | cross-agent coordination | ISSUES_AND_PRS | 4h |
 | telemetry 📡 | managed-project instrumentation | ISSUES_AND_PRS | paused |
@@ -422,14 +584,24 @@ The L5 roster is the canonical worked example — eleven agents, eight on the go
 
 At L5, every agent PR gets a `hold` label automatically. The system proposes; it does not merge autonomously.
 
+The quality lane has an additional opt-in formal-verification capability at
+L5/L6. Set top-level `quality.formal: true` to let quality identify
+protocol-shaped subsystems and author Spin/Promela models, their executable
+property contract, and reporting-only CI. The setting is inert below L5 and
+does not turn modeling into a default for every repository. See
+[Formal verification](https://github.com/hivecommons/hive/blob/v5/src/docs/formal-verification.md) for the admission, artifact,
+reporting, and maintenance rules.
+
 Telemetry and operations are L5/L6-only agents. They stay absent below L5 and remain paused at L5/L6 until an operator deliberately opts in. Their lane keywords are disjoint: telemetry owns instrumentation and observability terms, while operations owns health, SLO, runbook, incident, rollback, and alerting terms.
 
 Configure that opt-in under **Settings → Project Observability**. This tab is
 for the managed project's target stack; the **Features** tab separately controls
 Hive's own OpenTelemetry export. Selecting platforms persists them under
-`governor.project_observability`, and enabling an agent replaces its all-mode
-paused cadence with a conservative `24h` interval (which can then be tuned from
-the agent's Cadences tab).
+`governor.project_observability` — and nothing else. The tab does not enable
+either agent (#7261 removed its enable toggles): it shows a read-only status
+line per agent (the agent card's `Enabled` flag plus its real per-mode
+cadences), and actually un-pausing an agent is done from **Agents → Cadences**
+(a conservative `24h` per mode is a good starting point).
 
 ```yaml
 governor:
@@ -456,7 +628,7 @@ future telemetry and operations work.
 
 ## Live-linked agent definitions (`definition_source`)
 
-An agent can be linked to a whole portable `AgentDefinition` YAML file living in a GitHub repo, so an edit to that file propagates into the agent's config on the next reload or startup — no redeploy, no dashboard edit. This is the whole-agent analogue of `promptTemplate`/prompt-source live-linking (see [Policy and prompt templates](https://github.com/hivecommons/hive/blob/v4/src/policies/README.md)); both are implemented as graceful-fallback resolvers in `src/pkg/promptsrc` and `src/pkg/defsrc` respectively.
+An agent can be linked to a whole portable `AgentDefinition` YAML file living in a GitHub repo, so an edit to that file propagates into the agent's config on the next reload or startup — no redeploy, no dashboard edit. This is the whole-agent analogue of `promptTemplate`/prompt-source live-linking (see [Policy and prompt templates](https://github.com/hivecommons/hive/blob/v5/src/policies/README.md)); both are implemented as graceful-fallback resolvers in `src/pkg/promptsrc` and `src/pkg/defsrc` respectively.
 
 ```yaml
 agents:
@@ -471,16 +643,16 @@ agents:
       ref: main              # optional; branch/tag/SHA — omit for the default branch
 ```
 
-`definition_source` is `DefinitionSourceConfig` (`src/pkg/config/config.go:469`), a field on `AgentConfig` (`config.go:908`). `owner`, `repo`, and `path` are required for the source to be considered set (`IsSet()`, `config.go:492`); `ref` is optional and falls back to the repo's default branch. `url` is a fifth, informational-only field the dashboard import UI uses to round-trip the pasted `github.com` blob URL — it plays no part in fetching.
+`definition_source` is `DefinitionSourceConfig` (`src/pkg/config/config.go:518`), a field on `AgentConfig` (`config.go:935`). `owner`, `repo`, and `path` are required for the source to be considered set (`IsSet()`, `config.go:544`); `ref` is optional and falls back to the repo's default branch. `url` is a fifth, informational-only field the dashboard import UI uses to round-trip the pasted `github.com` blob URL — it plays no part in fetching.
 
 ### What it does
 
 On startup and on every config reload, `defsrc.ApplyToConfig` (`src/pkg/defsrc/defsrc.go:416`) walks every agent that has `definition_source` set, fetches the file's content from GitHub, and merges the parsed `AgentDefinition`'s operator-safe fields over the agent's baked config in place. It is wired at two call sites in `src/cmd/hive/main.go`:
 
-- **Startup**, line 1294 — applied once before the first kick, so a repo edit made while the hive was down is already reflected.
-- **Config reload**, line 3009 — re-applied on every reload, before `initAgentConfigDrivenSystems`, so downstream systems see the merged config.
+- **Startup**, line 1363 — applied once before the first kick, so a repo edit made while the hive was down is already reflected.
+- **Config reload**, line 3299 — re-applied on every reload, before `initAgentConfigDrivenSystems`, so downstream systems see the merged config.
 
-Both call sites build the same `defsrc.Resolver` (`main.go:1287`), gated by `func(slug string) bool { return cfg.GitHubDefinitionAllowed(slug) }` (`main.go:1289`).
+Both call sites build the same `defsrc.Resolver` (`main.go:1356`), gated by `func(slug string) bool { return cfg.GitHubDefinitionAllowed(slug) }` (`main.go:1358`).
 
 ### What fields the live definition can change
 
@@ -518,7 +690,7 @@ Two merge rules to know before you rely on this:
 
 ### The trust boundary: allowlisted repos are seed-only
 
-`definition_source` is gated by `Config.GitHubDefinitionAllowed(slug)` (`config.go:4162`), which simply delegates to `Config.GitHubPromptAllowed(slug)` (`config.go:4142`) — the **same** seed-only gate used by `prompt_source`. Fetching requires both:
+`definition_source` is gated by `Config.GitHubDefinitionAllowed(slug)` (`config.go:4731`), which simply delegates to `Config.GitHubPromptAllowed(slug)` (`config.go:4711`) — the **same** seed-only gate used by `prompt_source`. Fetching requires both:
 
 ```yaml
 variables:
@@ -528,11 +700,11 @@ variables:
       - my-org/agent-definitions           # exact "owner/repo" slugs only
 ```
 
-This is the property operators most need to understand before enabling the feature: **`variables.security` is honored only from the trusted config seed.** `LoadWithDashboardOverlay` never merges the dashboard overlay's `Variables` block (`config.go:397-399`, `config.go:4157-4161`), so:
+This is the property operators most need to understand before enabling the feature: **`variables.security` is honored only from the trusted config seed.** `LoadWithDashboardOverlay` never merges the dashboard overlay's `Variables` block (`config.go:4412`, `config.go:4483-4485`), so:
 
 - A dashboard save cannot turn `allow_github_prompt` on if the seed has it off.
 - A dashboard save cannot add a repo slug to `github_prompt_allowlist`.
-- A compromised or malicious dashboard overlay can neither widen the set of readable repos nor repoint an agent's `definition_source` at an arbitrary repo — only a seed edit (ConfigMap in Kubernetes, bind-mounted file in Docker/LXC) can do either.
+- A compromised or malicious dashboard overlay can neither widen the set of readable repos nor repoint an agent's `definition_source` at an arbitrary repo — only a seed edit (ConfigMap in Kubernetes, bind-mounted file under Docker, Podman or LXC) can do either.
 
 An empty allowlist denies every repo even with `allow_github_prompt: true` — the allowlist is required, not merely advisory.
 
@@ -553,15 +725,51 @@ A fetched file is capped at 512 KiB (`maxDefinitionBytes`, `defsrc.go:43`); an o
 
 ### Format reference
 
-The fetched file must be a valid portable `AgentDefinition`: `kind: AgentDefinition` and a non-empty `metadata.name` are required (`ParseDefinition`, `defsrc.go:138`); everything else is optional. For the full schema and a worked example, see [`../AGENT-DEFINITION.md`](https://github.com/hivecommons/hive/blob/v4/src/AGENT-DEFINITION.md) and [`../examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v4/src/examples/agents/customized-agent.yaml).
+The fetched file must be a valid portable `AgentDefinition`: `kind: AgentDefinition` and a non-empty `metadata.name` are required (`ParseDefinition`, `defsrc.go:138`); everything else is optional. For the full schema and a worked example, see [`../AGENT-DEFINITION.md`](https://github.com/hivecommons/hive/blob/v5/src/AGENT-DEFINITION.md) and [`../examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v5/src/examples/agents/customized-agent.yaml).
 
 ## Kick templates: what an agent is told to do
 
-`kick_template` names a Markdown file resolved from the hive's policies checkout (`/data/policies/examples/hivecommons/agents/`, or the directory your `policies:` config points at), falling back to the defaults embedded in the binary (`src/pkg/policies/defaults/`). It is the agent's **periodic work prompt**: on every kick, the template is loaded, variables like `${ISSUE_LIST}`, `${PR_LIST}`, `${AGENT_NAME}`, `${PROJECT_ORG}`, and `${KNOWLEDGE}` are substituted, and the result is dispatched to the agent's session.
+`kick_template` names a Markdown file resolved from the hive's policies checkout (`/data/policies/examples/hivecommons/agents/`, or the directory your `policies:` config points at), falling back to the defaults embedded in the binary (`src/pkg/policies/defaults/`). It is the agent's **periodic work prompt**: on every kick, the template is loaded, variables like `${ISSUE_LIST}`, `${PR_LIST}`, `${REVIEW_PERSPECTIVES}`, `${AGENT_NAME}`, `${PROJECT_ORG}`, and `${KNOWLEDGE}` are substituted, and the result is dispatched to the agent's session.
 
 Resolution order: the agent's explicit `kick_template` wins; otherwise the ACMM pack's template for that agent at the current level; otherwise convention — `/data/agents/<name>/CLAUDE.md`, then `<name>.md` in the policies checkout, then the embedded default. Pack templates carry the level's policy in their names — `scanner-holdgated.md` is scanner-at-L5; the same scanner at L6 gets `scanner-automerge.md`.
 
-Portable agents bundle everything — config plus a `promptTemplate` — in a single `AgentDefinition` YAML you can import from a URL in the dashboard. The reference schema is [`../AGENT-DEFINITION.md`](https://github.com/hivecommons/hive/blob/v4/src/AGENT-DEFINITION.md), and a worked example lives at [`../examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v4/src/examples/agents/customized-agent.yaml).
+A `kick_template` that names a file which exists nowhere in that chain is a **dangling** template, and it is not silent ([#7390](https://github.com/hivecommons/hive/issues/7390)): the hive logs `config: kick_template does not resolve` at boot and `config kick_template not found; falling back` on every kick — both naming the agent, the fallback the kick actually uses, and every path tried — the agent's Prompt Template tab shows `⚠ template not found: <name> (falling back to …)` instead of an empty editor and renders no repo link for a file the repo does not ship, and the General tab refuses to *set* a new name that does not resolve. Saving text in the Prompt Template tab creates `/data/policies/<name>`, which then resolves; clear `kick_template` to keep the fallback instead. The value must be a bare file name (`scanner-holdgated.md`), never a path — a path is rejected at config load and by the per-agent overlay guard. Agents whose prompts are built in Go rather than from a template (the review swarm's `[review-perspective:…]` kicks) should carry no `kick_template` at all.
+
+### The reviewer lane's template, and what an override cannot change
+
+One agent reaches its template by **role** rather than by `kick_template`: an agent with `role: reviewer` runs the escalated-PR adjudication lane ([#5480](https://github.com/hivecommons/hive/issues/5480)) and renders `reviewer-lane.md`. An operator enables that lane by adding a cadence agent with that role, under any name and with no `kick_template`, so the ordinary resolution order above never reaches it.
+
+`reviewer-lane.md` resolves through the same paths as every other template, so the contract **is** editable — the operator-saved copy wins, then the policies checkout, then the embedded default. That matters because this contract governs an agent acting on PRs sitting in a human queue, so three decisions are deliberately **not** in the template and cannot be changed by editing it ([#5617](https://github.com/hivecommons/hive/issues/5617)):
+
+| Decision | Where it lives | Why |
+|---|---|---|
+| Is the lane awake? | Go, before any template is read | Below ACMM L5 the kick is a stand-down. An edited template must not be able to wake a lane on a low-trust hive. |
+| Is there work? | Go, before any template is read | An empty escalated queue is a stand-down. A template must not be able to manufacture a contract with nothing to adjudicate. |
+| May this agent close a PR? | Go, rendered into `${REVIEWER_CLOSE_AUTHORITY}` | Closing is operator-only below ACMM L6. Whether an agent may close a human-queued PR is a trust decision, not wording. |
+
+So the worst an override can do is change the *wording* of a kick that was already going to be sent. The template-specific variables are `${REVIEWER_WORK_LIST}`, `${REVIEWER_MAX_PRS}`, `${REVIEWER_PASSED_LABEL}`, `${REVIEWER_RECOMMEND_CLOSE_LABEL}` and `${REVIEWER_CLOSE_AUTHORITY}`, alongside the usual built-ins.
+
+Do not confuse it with `reviewer-queue.md`, which belongs to the pack-defined `reviewer` agent in the L5/L6 packs: that agent wakes on a 30-minute cadence, works the open PR queue in advisory mode and routes `requires_human` / `reject` verdicts to a maintainer via the triage label itself.
+
+Portable agents bundle everything — config plus a `promptTemplate` — in a single `AgentDefinition` YAML you can import from a URL in the dashboard. The reference schema is [`../AGENT-DEFINITION.md`](https://github.com/hivecommons/hive/blob/v5/src/AGENT-DEFINITION.md), and a worked example lives at [`../examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v5/src/examples/agents/customized-agent.yaml).
+
+### Writing guide: how issues and PRs should read (`project.writing_guide`)
+
+Every default template that files an issue or PR carries the variable `${WRITING_GUIDE}` immediately before the body template it tells the agent to fill in (`--body "## Finding …"`, `--body "## Test Improvement …"`). It expands to the text of `project.writing_guide`, wrapped in a short header that says who set it and that it governs how the body *reads*, not what the policy requires it to contain. It is **empty by default**, and an empty guide renders nothing — a hive that never sets it gets byte-identical prompts.
+
+```yaml
+project:
+  writing_guide: |
+    A person who was not in your head will read this. Write for them.
+    Open with two or three short sentences: what changed, why, and what
+    to look at. Short sentences. One idea per bullet. Use the project's
+    own words. Put evidence under a <details> block and keep it to about
+    300 words outside that block.
+```
+
+Why a setting and not `AGENTS.md` ([#7667](https://github.com/hivecommons/hive/issues/7667)): a style rule in a repo's `AGENTS.md` reaches the agent as background knowledge, lower in the prompt than the policy's own body template, and when the two disagree the agent follows the template. The variable puts the owner's rule *next to* the template, which is the only position that changed anything when tried. The alternative — editing each template in the prompt editor — saves a full copy of that policy to `/data/policies/` that then shadows every upstream update to it, per agent, for a style preference.
+
+Where you will see it: the agent's Prompt Template tab renders the guide where the kick will place it, so you can confirm the setting took. Templates whose prompts are built in Go rather than from a policy file do not all carry the variable: the **review swarm** still does not. The **contributor relay's task prompt** does, since [#8124](https://github.com/hivecommons/hive/issues/8124) — it is built in Go, so it takes the rendered guide as a parameter rather than expanding `${WRITING_GUIDE}`, and places it immediately before the instruction that tells the agent to open the PR. The guide travels with the *assigning* hive, so a relay subscribed to two hives gets each hive's guide on that hive's tasks; see [`contributor-relay.md`](/docs/hive/contributor-relay#the-assigning-hives-writing-guide-travels-with-the-task). Review comments (`reviewer-queue.md`) are deliberately outside it: the guide is about issue and PR bodies.
 
 ## Label policy: which issues agents may work
 
@@ -611,18 +819,26 @@ Both polarities are enforced at **enumeration** — the point where GitHub issue
 | a higher ACMM level | your review capacity, CI trust, and appetite for autonomy have all grown — raise the level and let the pack reconcile the roster |
 | an inference method | you have GPUs (or a LiteLLM gateway) and want agents off subscription seats |
 
+## Stage receipt agent report
+
+Agents that hand work from one stage to another can emit a `kind: stage_receipt` report at `AgentReportPath(agentName)` under `AgentReportDir`. The receipt is the validated handoff document; it uses the existing `outputschema` contract rather than a new store, CRD, or directory.
+
+A stage receipt includes the normal report envelope (`lane`, `kind`, `findings`, `prs_opened`, `beads_filed`, and `summary`) plus a `stage_receipt` object. Version `stage-receipt/v1` requires `work_key`, `assignment_id`, `generation`, `stage`, `contract_revision`, `execution_key`, `engine.name`, `engine.version`, `input_revision`, `output_digest`, `result_class`, `started_at`, `ended_at`, `provenance`, and `artifacts`; `remote_run_id` and `remote_incarnation` are optional. `started_at` and `ended_at` are RFC3339 timestamps, and `ended_at` must not be before `started_at`.
+
+`result_class` is one of `completed`, `no_change`, `blocked`, `failed`, or `unknown`. `completed` requires at least one artifact. `no_change` and `blocked` are separate classes, not successful completion aliases, so a `no_change` receipt with no artifacts is valid. When artifacts are inline, `output_digest` must match the stable digest of that artifact set.
+
 ## What to read next
 
-- **[Supervisor agent](https://github.com/hivecommons/hive/blob/v4/src/docs/supervisor.md)** — what the supervisor does, how it differs from the governor, when to enable it, `bead_role` semantics, and policy modes.
+- **[Supervisor agent](https://github.com/hivecommons/hive/blob/v5/src/docs/supervisor.md)** — what the supervisor does, how it differs from the governor, when to enable it, `bead_role` semantics, and policy modes.
 - **[Documentation index](/docs/hive/readme)** — what hive is, setup, and the full topic-guide surface.
 - **[Architecture](/docs/hive/architecture)** — process model, deterministic pipeline, governor loop, guardrails, and hub/spoke design.
-- **[Portable AgentDefinition format](https://github.com/hivecommons/hive/blob/v4/src/AGENT-DEFINITION.md)** — standalone YAML schema for agent imports, exports, and overlays.
-- **[AGENTS.md repo instructions](https://github.com/hivecommons/hive/blob/v4/src/docs/agents-md.md)** — the per-repo instruction file format Hive's parser understands. **Not wired into kicks today** — see the page for why.
-- **[Dashboard route and health checks](https://github.com/hivecommons/hive/blob/v4/src/docs/health-checks.md)** — listener probes and alert behavior for stuck sessions and restart loops.
+- **[Portable AgentDefinition format](https://github.com/hivecommons/hive/blob/v5/src/AGENT-DEFINITION.md)** — standalone YAML schema for agent imports, exports, and overlays.
+- **[AGENTS.md repo instructions](https://github.com/hivecommons/hive/blob/v5/src/docs/agents-md.md)** — the per-repo instruction file format Hive's parser understands. Injected into kicks once `project.checkouts_dir` gives Hive a checkout to read it from — see the page.
+- **[Dashboard route and health checks](https://github.com/hivecommons/hive/blob/v5/src/docs/health-checks.md)** — listener probes and alert behavior for stuck sessions and restart loops.
 - **[Troubleshooting](/docs/hive/troubleshooting)** — stuck sessions, login expiry, restart loops, and notification checks.
 - **[ACMM policy matrix](/docs/hive/acmm-policy-matrix)** — the full per-level, per-agent policy table.
-- **[Config layering](https://github.com/hivecommons/hive/blob/v4/src/docs/config-layering.md)** — precedence for seed, dashboard overlay, agent overlays, and runtime snapshots.
-- **[Cross-cluster migration](https://github.com/hivecommons/hive/blob/v4/src/docs/cross-cluster-migration.md)** — the manual procedure for moving a hive (and its PVC state) between clusters.
-- **[Dashboard OpenAPI spec](https://github.com/hivecommons/hive/blob/v4/dashboard/openapi.json)** — REST endpoints used by the dashboard and integrations.
-- **[SQLite state backend example](https://github.com/hivecommons/hive/blob/v4/examples/sqlite-state.md)** — single-machine alternative to beads for state queries.
-- **[ACMM policy fragments](https://github.com/hivecommons/hive/blob/v4/examples/acmm/README.md)** — per-level ACMM policy reference fragments.
+- **[Config layering](https://github.com/hivecommons/hive/blob/v5/src/docs/config-layering.md)** — precedence for seed, dashboard overlay, agent overlays, and runtime snapshots.
+- **[Cross-cluster migration](https://github.com/hivecommons/hive/blob/v5/src/docs/cross-cluster-migration.md)** — the manual procedure for moving a hive (and its PVC state) between clusters.
+- **[Dashboard OpenAPI spec](https://github.com/hivecommons/hive/blob/v5/dashboard/openapi.json)** — REST endpoints used by the dashboard and integrations.
+- **[SQLite state backend example](https://github.com/hivecommons/hive/blob/v5/examples/sqlite-state.md)** — single-machine alternative to beads for state queries.
+- **[ACMM policy fragments](https://github.com/hivecommons/hive/blob/v5/examples/acmm/README.md)** — per-level ACMM policy reference fragments.

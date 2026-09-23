@@ -34,6 +34,13 @@
         "branch": "main",
         "isDefault": true
       }
+    },
+    "spektacular": {
+      "latest": {
+        "label": "main (Latest)",
+        "branch": "main",
+        "isDefault": true
+      }
     }
   },
   "projects": {
@@ -60,6 +67,11 @@
     "promptargs": {
       "name": "promptargs",
       "basePath": "promptargs",
+      "currentVersion": "main"
+    },
+    "spektacular": {
+      "name": "Spektacular",
+      "basePath": "spektacular",
       "currentVersion": "main"
     }
   },
@@ -92,6 +104,12 @@
       "href": "/docs/promptargs/overview/introduction",
       "description": "Template expansion for AI prompts",
       "secondary": true
+    },
+    {
+      "title": "Spektacular",
+      "href": "/docs/spektacular/overview/introduction",
+      "description": "Spec-driven development for AI coding agents (canonical site: spektacular.dev)",
+      "secondary": true
     }
   ],
   "editBaseUrls": {
@@ -99,7 +117,8 @@
     "hotshot": "https://github.com/hivecommons/hotshot/edit/main",
     "pluk": "https://github.com/hivecommons/pluk/edit/main",
     "rationguard": "https://github.com/hivecommons/rationguard/edit/main",
-    "promptargs": "https://github.com/hivecommons/promptargs/edit/main"
+    "promptargs": "https://github.com/hivecommons/promptargs/edit/main",
+    "spektacular": "https://github.com/hivecommons/spektacular/edit/main"
   },
   "updatedAt": "2026-09-02T15:07:02.112Z"
 }

@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0017-podman-quadlet-lifecycle.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0017-podman-quadlet-lifecycle.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0017: Quadlet `.container`/`.pod` units as the Podman persistent lifecycle
 
@@ -173,7 +173,7 @@ silently assume any of them.
    7681 must be published nowhere. If that contract cannot be asserted at the
    pod level, the topology reopens.
 4. **The rootless enforcing cell failing its promotion criteria.** The
-   [support matrix](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-support-matrix.md) graded rootless + enforcing as
+   [support matrix](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-support-matrix.md) graded rootless + enforcing as
    experimental until its three promotion criteria were measured (#4487); the
    cell is now supported. That is a support question rather than a lifecycle
    one, but it bounds what the rootless half of this ADR can promise.
@@ -204,9 +204,9 @@ silently assume any of them.
 
 ## References
 
-- [Podman Quadlet `.container`/`.pod` feasibility spike](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-quadlet-container-pod-spike.md) — #4202.
-- [Podman Compose-provider selection spike](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-compose-provider-spike.md) — #4201.
-- [Podman Quadlet `.kube` compatibility spike](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-quadlet-kube-spike.md) — #4203.
-- [Podman support matrix](https://github.com/hivecommons/hive/blob/v4/src/docs/podman-support-matrix.md) — which rootful/rootless × enforcing/advisory combinations this lifecycle may be installed into.
+- [Podman Quadlet `.container`/`.pod` feasibility spike](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-quadlet-container-pod-spike.md) — #4202.
+- [Podman Compose-provider selection spike](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-compose-provider-spike.md) — #4201.
+- [Podman Quadlet `.kube` compatibility spike](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-quadlet-kube-spike.md) — #4203.
+- [Podman support matrix](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-support-matrix.md) — which rootful/rootless × enforcing/advisory combinations this lifecycle may be installed into.
 - [`podman-systemd.unit(5)`](https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html)
 - [Podman release notes](https://github.com/containers/podman/blob/main/RELEASE_NOTES.md) — the source for every version in the table above.

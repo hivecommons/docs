@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/getting-started.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/getting-started.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # Zero to Automation: Getting Started with Hive
 
@@ -44,11 +44,12 @@ The biggest mistake new users make: seeing agent output and either (a) panicking
 
 None of the level guidance below works until your hive is connected to your git host. Do this in your **first session**:
 
-1. **Install the Forge App.** The Forge App is the app Hive installs on your forge (your source control system, e.g., GitHub, GitHub Enterprise, GitLab, or Gitea) — on **GitHub.com and GitHub Enterprise (GHE) it's a GitHub App**; on GitLab or Gitea it's the equivalent host app. This is how Hive talks to your repo.
+1. **Install the Forge App.** The Forge App is the app Hive installs on your forge (your source control system, e.g., GitHub, GitHub Enterprise, GitLab, or Gitea) — on **GitHub.com and GitHub Enterprise (GHE) it's a GitHub App**. This is how Hive talks to your repo. GitLab, Gitea, and Forgejo are **not supported for running a hive** today — see [Forge setup: GitLab, Gitea, and Forgejo](https://github.com/hivecommons/hive/blob/v5/src/docs/forge-app-setup.md).
    - **From the dashboard (easiest):** click **Install Forge App** in the welcome checklist, or open **Governor Config → Forge App** and use the install link there. Grant the app access to your repo.
    - **On GitHub.com:** the install button sends you to `github.com/apps/<app-slug>` — pick your org/repo and approve.
    - **On GitHub Enterprise (IBM, corporate):** the same flow lives on your **GHE host**, not github.com — the install page is `https://<your-ghe-host>/github-apps/<app-slug>`. Make sure your hive is pointed at your GHE host URL (Governor Config → Forge App shows which host is configured).
-   - **Self-hosting or creating the app yourself?** See the [GitHub App setup guide](https://github.com/hivecommons/hive/blob/v4/src/docs/github-app-setup.md) for app creation, permissions, and the `/gh-setup` flow.
+   - **Self-hosting or creating the app yourself?** See the [GitHub App setup guide](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md) for app creation, permissions, and the `/gh-setup` flow.
+   - **On GitLab, Gitea, or Forgejo?** There is no Forge App to install: those forges are **not supported for running a hive** today, and the rest of this guide assumes GitHub. See [Forge setup: GitLab, Gitea, and Forgejo](https://github.com/hivecommons/hive/blob/v5/src/docs/forge-app-setup.md) for what is and is not implemented.
 2. **⏰ Don't put this off.** Unconfigured hive instances are reclaimed on a timer. Finish the Forge App install in your first session or your hive may be reaped — see [What if my hive disappeared?](#what-if-my-hive-disappeared-inactive-hive-reaping) below.
 3. **Wait for the first heartbeat.** After installing, a heartbeat cycle has to run (a few minutes) before everything lights up green.
 
@@ -151,6 +152,8 @@ New users often expect PRs at L2 (they don't happen) or are surprised when they 
 | **L6** | PRs auto-merge when CI goes green. No hold labels. Full automation. |
 
 > **The hold label is your safety net.** At every level below L6, every PR an agent opens is blocked from merging until you remove the `hold` label. You are always in control. Nothing ships without your approval until you reach L6 — and you'll only reach L6 after months of trusting the system.
+>
+> One exception, so it doesn't surprise you: when you **raise the level**, the hive releases the level holds *it* placed on its own open PRs that the new level no longer requires. It never removes a hold you applied yourself, and never one you re-applied after the hive removed it — those stay put until you lift them.
 
 > **L6 is earned, not chased.** Auto-merge is not the goal you're optimizing for on day one — it's the outcome you earn after months of watching agents work and building confidence in their judgment. Most teams spend months at L4 and L5. That's not failure — that's the system working as designed.
 
@@ -221,7 +224,7 @@ New users often expect PRs at L2 (they don't happen) or are surprised when they 
 
 > 💡 **Tip: customize before you escalate.** Before moving from L3 to L4, take 30 minutes to edit each agent's policy template. Add your coding conventions, your preferred test framework, your off-limits directories. Agents follow instructions literally — the more specific you are, the better the output.
 
-### 🔒 Where agents actually run (read this before L3)
+### Where agents actually run (read this before L3)
 
 By L3, agents are writing code and running commands on your behalf — so it's worth knowing exactly where that happens. On the contributor path (`just contribute-hive <backend>`), agents run in a **tmux session on the host** by default: the backend CLI runs as your own user, with permission prompts bypassed, and nothing containing it to the assigned workspace unless the backend provides its own confinement.
 
@@ -233,13 +236,14 @@ By L3, agents are writing code and running commands on your behalf — so it's w
 | `codex` | Yes — its own `workspace-write` sandbox |
 | `copilot` | Yes — Copilot CLI's own `--sandbox`, checked at launch |
 | `opencode` | Partial — a command deny-list only, **not** a filesystem sandbox |
+| `muse` | Yes — muse's own OS sandbox (bubblewrap/seccomp on Linux, seatbelt on macOS), narrowed further by hive |
 | `goose`, `agy`, `bob`, `pi`, `aider` | No — these backends have no confinement mechanism at all. Local mode **refuses to launch** for them unless you explicitly set that backend's own `HIVE_<BACKEND>_DANGEROUSLY_RUN_UNCONFINED=1` |
 
 If you see one of those `_DANGEROUSLY_RUN_UNCONFINED` variables mentioned in setup instructions, it means exactly what it says: that backend has no sandbox, and setting the variable is you accepting that the agent runs with full access to your machine. Prefer container mode (drop `local` from the command) or a confined/denylisted backend if you're running hive on a machine you care about.
 
 This matters beyond backend choice, too: the hub-side Podman sandbox (`agent_sandbox`) is a separate, opt-in mechanism, and enabling it requires setting **both** the global `agent_sandbox.enabled` flag **and** a per-agent `sandbox.enabled` flag — the dashboard's Security tab only writes the global one, so turning that toggle on by itself does not sandbox any agent.
 
-See [sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v4/src/docs/sandbox-isolation.md) for the full threat model, the complete per-backend matrix, and the hub-side sandbox setup.
+See [sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md) for the full threat model, the complete per-backend matrix, and the hub-side sandbox setup.
 
 ## L4 — Issues and Security
 
@@ -271,9 +275,11 @@ See [sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v4/src/docs/
 **What you get:** The full hive works for you. Architect produces RFCs for bigger design changes. You shift from doing the work to batch-reviewing it.
 
 **Un-pause:** supervisor, architect — and yes, now you can un-pause brainstorm too
-**Leave paused:** nothing
+**Leave paused:** telemetry, operations — unless you opt in (see below)
 
 ⚠️ **Set cadences first:** Every newly un-paused agent gets the gear treatment: all modes **12h or 1d**. More agents running = faster token burn, so this matters more than ever.
+
+**Two new agents appear at L5:** `telemetry` and `operations` become available for the first time — they don't exist in the roster at any lower level — but they remain **paused by default**, even here. They're opt-in on purpose, in two steps: first open **Settings → Project Observability**, select your managed project's observability stack (OpenTelemetry, Prometheus, Grafana, a `ServiceMonitor`, a commercial backend — whatever you actually run), and save — without a declared stack their PR-capable policies fail closed. Then un-pause each agent from its Cadences tab like any other agent (a conservative `24h` is a good start); saving the Project Observability tab only persists the stack declaration and never changes cadences (#7261). Leave both steps undone and the agents stay paused — there's no rush to enable them just because you reached L5. See [Telemetry agent](https://github.com/hivecommons/hive/blob/v5/src/docs/telemetry.md) and [Operations agent](https://github.com/hivecommons/hive/blob/v5/src/docs/operations.md) for what each one actually does, and [agent-configuration.md](/docs/hive/agent-configuration) for the `project_observability` config block.
 
 **Using the findings:** Batch-review on a schedule (say, twice a week). Approve the PRs you like, decline the ones you don't, 👍 the issues that match your roadmap.
 
@@ -292,9 +298,11 @@ See [sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v4/src/docs/
 **What you get:** A repo that improves itself while you sleep. The tests quality built at L3 are now the guardrails that keep agents honest.
 
 **Un-pause:** everything stays on from L5
-**Leave paused:** nothing
+**Leave paused:** telemetry, operations — still opt-in, unless you already enabled them at L5
 
 ⚠️ **Cadence check:** You can shorten cadences now if your token budget allows — but 12h/1d still works fine. Faster isn't better if you're not reading the output.
+
+Telemetry and operations don't auto-enable just because you reached L6 — they carry the same opt-in requirement here as at L5 (**Settings → Project Observability**). If you enabled them at L5, they stay on and switch to full mode (auto-merge on green CI) like the rest of your roster.
 
 **Using the findings:** Spot-check merged PRs weekly. 👍 issues to steer agent priorities.
 

@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/release-channels.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/release-channels.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # Release Channels
 
@@ -10,21 +10,23 @@ Hive publishes three **release channels** — moving GHCR image tags an operator
 | `candidate` | A build believed good, awaiting soak before promotion to stable. |
 | `edge` | The newest good build, with no soak period. |
 
-> **Note — current promotion policy:** today all three channels are retagged on **every merge to `v4`**, so `stable`, `candidate`, and `edge` all point at the same digest as `v4-latest`. The distinct meanings above take effect only once a soak/promotion policy lands in CI (see [#3702](https://github.com/hivecommons/hive/pull/3702)). Treat the channel names as forward-looking track selection, not as a guarantee of differing maturity yet.
+> **Promotion policy:** the channels diverge by release line and maturity. Every green merge to **`v5`** retags **`candidate`** (and `:latest`); **`stable`** advances later by digest through the scheduled/manual stable-promotion workflow after the [stable soak and promotion policy](https://github.com/hivecommons/hive/blob/v5/src/docs/stable-soak-policy.md) passes. Merges to **`v6`** retag **`edge`**, so `edge` is an active-development v6 build, not a synonym for `stable`. **`v4`** is a maintenance line: its builds publish only `v4-latest` and short-SHA tags, no channel (#7721 Phase 1).
 
 ## How channels are published
 
-Channels are **retags, not rebuilds**. The `docker.yml` workflow adds `stable`, `candidate`, and `edge` as extra tags in the same `docker buildx imagetools create` call that publishes `v4-latest` and the immutable short-SHA tag, so a channel always points at an already-built, multi-arch digest. All three images get all three channels:
+Channels are **retags, not rebuilds**. Each release line's `docker.yml` workflow adds fast-moving channels as extra tags in the same `docker buildx imagetools create` call that publishes the branch's `-latest` and immutable short-SHA tags, so a channel always points at an already-built, multi-arch digest. Builds of branch `v5` publish `candidate`; the separate stable-promotion workflow later retags `stable` by candidate digest after the soak gate passes. Builds of branch `v6` publish `edge`. All three images get their line's channels in both published orgs:
 
-- `ghcr.io/hivecommons/hive`
-- `ghcr.io/hivecommons/hive-contributor`
-- `ghcr.io/hivecommons/hive-hub`
+- `ghcr.io/hivecommons/hive` and `ghcr.io/hivecommons/hive`
+- `ghcr.io/hivecommons/hive-contributor` and `ghcr.io/hivecommons/hive-contributor`
+- `ghcr.io/hivecommons/hive-hub` and `ghcr.io/hivecommons/hive-hub`
 
-Only builds of branch `v4` publish channels — a feature-branch build can never move a production channel.
+The `hivecommons` packages are mirror tags of the same manifest digest as the native `hivecommons` packages during the org transfer, so operators can verify or pin the digest against either registry. Only builds of the release branches (`v5`, `v6`) publish channels — a feature-branch build can never move a production channel.
 
-Publishing is monotonic by workflow run number. Every successful multi-arch build receives its immutable short-SHA tag even if a newer merge has already reached the branch. If that exact short-SHA tag already exists, a re-run leaves it untouched. Moving tags (`v4-latest` and the three channels) advance only when that build is newer than the generation currently published; an older workflow that runs out of queue order publishes only any missing immutable tag. This avoids both failure modes of a HEAD-only guard: a merge burst cannot starve all tags, and an old queued build cannot move a channel backwards. Registry inspection failures fail the publish job instead of producing a silent green skip.
+Publishing is monotonic by workflow run number. Every successful multi-arch build receives its immutable short-SHA tag even if a newer merge has already reached the branch. If that exact short-SHA tag already exists, a re-run leaves it untouched. Moving tags (the branch's `-latest` tag and fast channels such as `candidate`/`edge`) advance only when that build is newer than the generation currently published; an older workflow that runs out of queue order publishes only any missing immutable tag. `stable` uses the same generation guard during digest promotion, so a delayed promotion cannot move it backwards over a newer stable. Registry inspection failures fail the publish or promotion job instead of producing a silent green skip.
 
 Short-SHA tags are retained as a bounded rollback/debug window, not forever. The scheduled GHCR pruning workflow deletes only old package versions whose complete tag set is one or more 7-hex short-SHA tags, after 90 days. Versions still carrying any moving tag (`v4-latest`, `latest`, `stable`, `candidate`, `edge`, or future channel names) are never deleted by that cleanup.
+
+Pinning a hive back to one of those short-SHA builds for all three images, and verifying by digest that the pin landed on the running spoke, is the [digest-verifiable rollback](https://github.com/hivecommons/hive/blob/v5/src/docs/release-rollback.md) runbook. Switching channels (below) is not a rollback: a channel is a moving tag, and the switch is judged complete when the heartbeat reports a matching *tag*, not a matching digest.
 
 ## Switching a hive to a channel
 
@@ -53,6 +55,24 @@ Resolution is live: the hub HEADs the GHCR manifests for each tracked branch's `
 
 The **My Hives** page also shows a `Release channels:` block above the per-branch `Latest available images:` rows, mapping each channel to its currently resolved branch/digest. Each branch row also carries a compact per-line image-pulls bar chart (package pulls landing during each of that line's release windows; `—` when the line has no closed window yet), and the header's "Pulls per release" chart follows the **active** line — the branch `stable` currently resolves to — rather than any hard-coded branch.
 
+## Channel distance: how much is queued for promotion
+
+Each row in the `Release channels:` block also shows how far that channel has drifted from the stage **immediately upstream** of it in the promotion order ([#6418](https://github.com/hivecommons/hive/pull/6418)): `stable` is measured against `candidate`, `candidate` against `edge`. Edge has no upstream — it is where builds enter — so its row carries no distance. The upstream stage is derived from the promotion order rather than hardcoded, so a new track wires itself up. Measuring every channel against edge instead would roughly restate the sum of the hops and could not distinguish a starved soak from a stalled promotion; one hop per row keeps each number actionable.
+
+How to read it:
+
+- `↓N vs candidate` (amber) — N commits are on `candidate` that `stable` does not have: the promotion backlog for that hop.
+- `↑N` (blue) — N commits are on this channel that its upstream does not have. Both arrows can appear at once: the channels follow different branches, and a branch synced from another both carries commits the other lacks and misses commits merged since the sync. GitHub's compare API reports this as *diverged*, and the UI shows **both** counts rather than collapsing them into a direction that does not exist. The tooltip spells out the full sentence.
+- `in sync with candidate` — the two stages resolve to the same commit (or the compare returned no counts).
+- `↓N 3d 5h vs candidate` — when a row is a plain ancestor of its upstream (compare status *behind*), the amber duration after the count is how much **older** the promoted build is than the upstream's: the difference between the two rows' commit timestamps. It appears only for that pure-behind case. A *diverged* pair (`candidate` on v5 vs `edge` on v6) shares no single line of history, so a time gap there would compare two unrelated clocks — those rows show commit counts only.
+- **No distance shown at all** — the compare could not be resolved. This is deliberate: rendering `0` would read as "level with upstream", the one answer that must never be guessed, since it turns a stalled promotion into a healthy-looking row.
+
+Each row also carries the **commit timestamp** of the build it points at (`<sha> 2026-09-21 16:51`, viewer's local time, minute precision; the tooltip has the UTC RFC3339 value). It is the committer date of that SHA, fetched hub-side (`pkg/hub/channel_commit_date.go`) and cached permanently. A row whose date could not be fetched shows no stamp rather than a placeholder.
+
+Distances are computed hub-side (`pkg/hub/channel_distance.go`) via GitHub's compare API and cached permanently: the distance between two fixed commits is immutable, and a moved channel is a new SHA pair, so entries become unreferenced rather than stale — there is no TTL after which a shown distance could be wrong.
+
+Both reads, like every other hub-originated `api.github.com` call (branch tips, commit messages, workflow runs), are made anonymously unless **`HIVE_HUB_GITHUB_TOKEN`** is set on the hub. The anonymous budget is 60 requests/hour per source IP and the branch poller alone exhausts it once the hub tracks more than a couple of branches; GitHub then answers `403`/`429`, the compares fail, and the distance column and timestamps silently disappear (the hub logs `channel distance: compare failed … HTTP 403`). Set the token (a fine-grained or classic token with public-repo read; 5000 requests/hour) and the rows come back on the next 5-minute channel refresh. See [`env-vars.md`](https://github.com/hivecommons/hive/blob/v5/src/docs/env-vars.md).
+
 ## Persistence: the tracked channel is durable
 
 The hive's tracked channel is stored hub-side in the per-hive metadata record (`tracked_channel` in `/data/saas/hives/<hive-id>/meta.json`, on the hub PVC). It is set when you switch to a channel and cleared when you switch to a plain branch. Two failure modes are specifically handled:
@@ -62,13 +82,38 @@ The hive's tracked channel is stored hub-side in the per-hive metadata record (`
 
 ## Spoke navbar badge
 
-A spoke running a channel image shows the channel in its own dashboard version badge — `stable (v4)` — with the tooltip `Tracking release channel stable (currently a v4 build)` ([#3762](https://github.com/hivecommons/hive/pull/3762)). The spoke learns its channel by reading its own Deployment's image tag via the in-cluster API; a spoke that cannot read its Deployment (for example a plain docker run) shows only the branch badge.
+A spoke running a channel image shows both delivery dimensions in its own dashboard version badge: for example, `a1b2c3d · stable (v4) · floating`. The linked short SHA identifies the running build, `stable (v4)` identifies the release channel and built-from branch, and `floating` confirms that the Deployment follows a mutable tag. `candidate` and `edge` are displayed the same way when reported by the backend. A branch tag such as `v5-latest` renders as `a1b2c3d · v5 · floating`, while a SHA tag or digest pin renders as `a1b2c3d · v5 · pinned`.
+
+The tooltip includes the running SHA, channel when present, built-from branch, authoritative Deployment image ref, and tracking mode. The spoke derives both channel and tracking mode server-side from its cached in-cluster Deployment image lookup; browser code does not infer mutability from tag strings. If the Deployment cannot be read (for example, during a plain `docker run`) or its image ref is malformed, the badge says `tracking unknown` and the API does not expose the untrusted ref. This preserves the distinction between unknown provenance and an intentional pin. The channel portion was introduced by [#3762](https://github.com/hivecommons/hive/pull/3762); the tracking detail is specified by [#6321](https://github.com/hivecommons/hive/issues/6321).
+
+On a self-hosted Podman Quadlet spoke there is no Kubernetes Deployment to read. `bin/hive-podman-setup.sh` therefore writes the unit's own image metadata into `hive.env`, which `hive.container` already loads through `EnvironmentFile=`: `HIVE_SELF_IMAGE` carries the `Image=` reference and `HIVE_SELF_IMAGE_TRACKING` is `registry` when Quadlet registry auto-update is enabled for a non-digest image, otherwise `pinned`. The spoke dashboard uses those variables only when the Deployment lookup is unavailable, so Kubernetes spokes keep the Deployment-derived behaviour above. A Quadlet spoke running `Image=ghcr.io/hivecommons/hive:candidate` with registry auto-update shows `candidate · tracking registry` in the header and `Channel: candidate` in the release-status panel; a digest-pinned Quadlet image shows pinned tracking and the digest while leaving the channel unresolved.
+
+## Spoke self-service selector
+
+Hosted spoke dashboards that are already following a release-channel tag show a **Follow channel** selector in the release-status panel. Choosing `stable`, `candidate`, or `edge` calls the spoke-local `POST /api/release-channel`, which relays the request to the hub's existing `POST /api/saas/hives/{id}/switch-branch` path using the spoke's dashboard-token proof. The hub still performs the authorization, channel/tag validation, GHCR publishability check, tracked-channel persistence, and kubectl-or-heartbeat delivery.
+
+The spoke UI keeps reported state and intent separate: after a selection it continues to show the channel observed from the Deployment image, plus a pending "switch requested" note, until the rollout/heartbeat lands on the requested tag. Spokes that are self-hosted, pinned, branch-tracking, missing hub credentials, or otherwise unresolved show an honest "selection unavailable" explanation rather than a dead control.
+
+For self-hosted Podman Quadlet spokes the selector is intentionally unavailable even when `HIVE_SELF_IMAGE` resolves a channel, because there is no hub-managed Deployment image to patch. The panel says to change `Image=` in `hive.container`; after editing, reload/restart through the Podman lifecycle so `hive.env` carries the updated `HIVE_SELF_IMAGE` and tracking mode.
 
 ## Known limitations
 
 - **Bulk actions cannot set a channel.** The bulk *Switch branch* action validates against real branches only and rejects channel names (`unknown branch`); it also never writes the tracked channel. Switching to a channel is per-hive.
-- **A manual Upgrade on a channel-tracking hive transiently arms a branch-SHA target.** The upgrade handler targets the tracked *branch*'s latest SHA; the heartbeat re-arm drags the hive back to the channel tag on the next non-upgrading beat. Expect a short window where the pill says `stable (v4)` while an upgrade converges on a SHA.
-- **"Behind" / drift comparison keys on the branch, not the channel digest.** A channel-tracking hive's up-to-date math still compares against its underlying branch head.
+- **A manual Upgrade on a channel-tracking hive transiently arms a branch-SHA target.** The manual upgrade handler still targets the tracked *branch*'s latest SHA (`getLatestSHAForBranch`, `pkg/hub/saas.go`); the heartbeat re-arm drags the hive back to the channel tag on the next non-upgrading beat. Expect a short window where the pill says `stable (v4)` while an upgrade converges on a SHA. This is now the exception — automatic targeting resolves through the channel tag (see below).
+
+## Channel-aware upgrade targeting
+
+Automatic upgrade targeting resolves **through the tag the spoke's Deployment tracks**, not around it ([#5994](https://github.com/hivecommons/hive/issues/5994), landed in [#6005](https://github.com/hivecommons/hive/pull/6005), `pkg/hub/channel_targeting.go`).
+
+The stable soak policy made this necessary: per-merge publishes move only `candidate`, while `stable` advances later by digest. A spoke's Deployment tracks one image tag, and rolling the pod re-pulls that tag — nothing the hub instructs can make a restart land on a digest the tag does not carry. A hub that targets branch HEAD is therefore asking a `:stable` spoke to reach a digest its own tag is deliberately withholding; before the fix this looped 41 spokes into permanent `UPGRADE FAILED` (hub instructs a SHA, spoke rolls, re-pulls `:stable`, reports the SHA it started on, hub re-sends the identical instruction).
+
+How targets are now resolved (`reachableUpgradeTarget`, used by the auto-upgrade sweep and the heartbeat spoke-managed path):
+
+- **Which channel a spoke is on:** the spoke's *reported image ref* leads, because it is what the kubelet will pull; the hub-side `tracked_channel` record is intent, and the two disagree exactly while a channel switch is still on the wire. `tracked_channel` remains the fallback only for spokes too old to report an image ref. Branch tags and SHA pins resolve to branch targeting, exactly as before.
+- **Channel → commit:** the hub walks GHCR from the channel tag to the image index, picks the `linux/amd64` platform manifest (buildx attaches `unknown/unknown` provenance descriptors to the same index, so position is not enough), and reads the `org.opencontainers.image.revision` OCI label from the config blob — the only commit identity that survives a retag. Answers are cached for 5 minutes (`channelDigestTTL`); when a refresh fails, the last good answer is served for up to 4× that (`channelRevisionStaleGrace`, 20 minutes) since a channel moves at most hourly, then resolution is treated as failed.
+- **Unresolved channel = hold, loudly.** If the channel does not resolve to a commit, the hub instructs *nothing* for that spoke and logs a WARN — falling back to branch HEAD would be exactly the bug. Grep the hub log for `auto-upgrade held — the spoke's release channel did not resolve to a commit` (sweep) or `heartbeat: upgrade instruction withheld — the spoke's release channel did not resolve to a commit` (heartbeat path). The next cycle retries.
+- **Downgrade guard.** A channel is a moving pointer, not a monotonic branch, so a spoke can legitimately sit *ahead* of the channel it tracks (rolled while the channel was further along, or switched from `candidate` moments ago). Such spokes are skipped rather than instructed to downgrade (`no upgrade — spoke is at or ahead of its release channel`).
+- **"Up to date" is judged through the tag too.** The stale-latch recovery clears a floating-tag hive's upgrade latch once it runs the newest build *its tag can deliver* (`clearing upgrade latch — floating-tag hive is at latest`). Judging a `:stable` spoke against branch HEAD instead kept it latched for the whole soak window — the failure mode measured above.
 
 ## Grouping hives by upgrade state
 

@@ -80,6 +80,16 @@
   to = "/docs/promptargs/overview/introduction"
   status = 302
 
+[[redirects]]
+  from = "/docs/spektacular"
+  to = "/docs/spektacular/overview/introduction"
+  status = 302
+
+[[redirects]]
+  from = "/docs/spektacular/"
+  to = "/docs/spektacular/overview/introduction"
+  status = 302
+
 # Short URLs
 [[redirects]]
   from = "/code"

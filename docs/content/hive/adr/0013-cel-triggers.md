@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0013-cel-triggers.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0013-cel-triggers.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0013: CEL triggers over normalized forge events
 
@@ -15,7 +15,7 @@ operator writes a bad rule.
 ## Decision
 
 Add CEL-based declarative triggers over a forge-neutral `NormalizedEvent`
-([CEL trigger engine](https://github.com/hivecommons/hive/blob/v4/src/pkg/celtrigger/celtrigger.go)). Forge adapters map
+([CEL trigger engine](https://github.com/hivecommons/hive/blob/v5/src/pkg/celtrigger/celtrigger.go)). Forge adapters map
 native events onto stable kinds such as `issue.opened`, `pr.labeled`,
 `pr.ready_for_review`, and `comment.created`; CEL expressions see only the
 `event` object with normalized fields such as repo, labels, title, author, body,
@@ -26,7 +26,7 @@ parse errors, type errors, empty expressions, or non-boolean results reject the
 engine at config load. Runtime evaluation errors are treated as no match. Matched
 rules are returned in descending priority, and `MatchAgents` de-duplicates agent
 names before the governor unions them with existing built-in triggers
-([config wiring](https://github.com/hivecommons/hive/blob/v4/src/pkg/celtrigger/wire.go)).
+([config wiring](https://github.com/hivecommons/hive/blob/v5/src/pkg/celtrigger/wire.go)).
 
 ## Consequences
 

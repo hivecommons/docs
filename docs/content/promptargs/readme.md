@@ -6,13 +6,13 @@
 
 You write a prompt with blanks (`{{like_this}}`), and promptargs fills them in.
 
-```
+```text
 Review {{file}} for {{focus}} issues.
 ```
 
 becomes...
 
-```
+```text
 Review src/app.ts for security issues.
 ```
 
@@ -41,6 +41,7 @@ npx @hivecommons/promptargs help
 This repo ships skill files for multiple AI coding tools. Install the one(s) you use:
 
 **Claude Code:**
+
 ```bash
 mkdir -p ~/.claude/commands
 curl -o ~/.claude/commands/promptargs.md \
@@ -48,6 +49,7 @@ curl -o ~/.claude/commands/promptargs.md \
 ```
 
 **Goose:**
+
 ```bash
 mkdir -p ~/.config/goose/skills
 curl -o ~/.config/goose/skills/promptargs.md \
@@ -55,6 +57,7 @@ curl -o ~/.config/goose/skills/promptargs.md \
 ```
 
 **Bob (IBM):**
+
 ```bash
 mkdir -p ~/.bob/skills
 curl -o ~/.bob/skills/promptargs.md \
@@ -81,7 +84,7 @@ This creates a `.prompts/` folder with 3 starter templates. Done!
 promptargs list
 ```
 
-```
+```text
 Available templates:
 
   review
@@ -100,7 +103,7 @@ Available templates:
 promptargs review --file=src/app.ts
 ```
 
-```
+```text
 Review src/app.ts for correctness issues.
 Be concise in your feedback.
 Focus on real bugs, not style nitpicks.
@@ -153,7 +156,7 @@ promptargs review
 promptargs "Explain {{thing}} to a {{audience=5-year-old}}" --thing=recursion
 ```
 
-```
+```text
 Explain recursion to a 5-year-old
 ```
 
@@ -169,7 +172,7 @@ promptargs review --file=api.go,auth.go,db.go,cache.go,main.go
 
 promptargs runs the template **once for each value** and prints each expanded result separated by `---`:
 
-```
+```text
 Review api.go for correctness issues.
 Be concise in your feedback.
 Focus on real bugs, not style nitpicks.
@@ -184,7 +187,7 @@ Review db.go for correctness issues.
 
 Status lines showing iteration progress go to stderr:
 
-```
+```text
 ✅ review [1/5]: file=api.go    focus=correctness  tone=concise
 ✅ review [2/5]: file=auth.go   focus=correctness  tone=concise
 ...
@@ -208,7 +211,7 @@ promptargs "Review {{file}} for {{focus}}" \
   --focus=security,perf,correctness
 ```
 
-```
+```text
 ✅ [1/3]: file=api.go   focus=security
 ✅ [2/3]: file=auth.go  focus=perf
 ✅ [3/3]: file=db.go    focus=correctness
@@ -223,7 +226,7 @@ promptargs "Review {{file}} for {{focus}}" \
   --cross
 ```
 
-```
+```text
 ✅ [1/9]: file=api.go   focus=security
 ✅ [2/9]: file=api.go   focus=perf
 ✅ [3/9]: file=api.go   focus=correctness
@@ -312,7 +315,7 @@ promptargs review --file=main.go --json
 promptargs review --file=main.go --status
 ```
 
-```
+```text
 ✅ review: file=main.go  focus=correctness(default)  tone=concise(default)
 ```
 
@@ -350,7 +353,8 @@ promptargs ui --port=4000
 Create a file in `.prompts/` with any name ending in `.md`:
 
 **.prompts/buddy.md**
-```
+
+```text
 Hey {{name=buddy}}! Can you help me understand {{topic}}?
 I learn best with {{style=examples and analogies}}.
 ```
@@ -361,7 +365,7 @@ Now use it:
 promptargs buddy --topic="async/await"
 ```
 
-```
+```text
 Hey buddy! Can you help me understand async/await?
 I learn best with examples and analogies.
 ```
@@ -390,7 +394,8 @@ promptargs review --file=src/main.ts --no-interactive | gh copilot explain
 If you installed the skill (see [Install](#as-a-skill)), use it directly inside your session:
 
 **Claude Code:**
-```
+
+```text
 /promptargs review --file=src/api.ts
 ```
 

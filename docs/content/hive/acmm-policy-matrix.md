@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/acmm-policy-matrix.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/acmm-policy-matrix.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ACMM Policy Matrix
 
@@ -15,14 +15,14 @@ Each agent runs in one of four modes, controlling what actions it can take on Gi
 
 - **Advisory**: Agent observes and records findings as beads on the dashboard. No GitHub interaction.
 - **Measured**: Agent can file GitHub issues to make findings visible to the team. No code changes.
-- **Holdgated**: Agent can write code and open PRs, but every PR gets a `hold` label. A human must review and remove `hold` before merge. Agent never merges.
+- **Holdgated**: Agent can write code and open PRs, but every PR gets a `hold` label. A human must review and remove `hold` before merge. Agent never merges. One exception: a hold the hive applied *for level reasons* is released automatically once the current level no longer calls for it — see the promotion note below. A hold **you** applied is never removed automatically.
 - **Full**: Agent operates autonomously — opens PRs and merges on green CI. Highest trust level.
 
 ## ACMM Levels
 
 ### L1 — Inception (Assisted) (2 agents)
 
-A single interactive advisor helps with repo setup and architecture decisions. Guide agent makes advisory beads. Brainstorm agent handles project inception — turning raw ideas into structured KB facts and scaffold. No feedback loops. See the [Inception operator guide](https://github.com/hivecommons/hive/blob/v4/src/docs/inception.md) for the end-to-end workflow and API reference.
+A single interactive advisor helps with repo setup and architecture decisions. Guide agent makes advisory beads. Brainstorm agent handles project inception — turning raw ideas into structured KB facts and scaffold. No feedback loops. See the [Inception operator guide](https://github.com/hivecommons/hive/blob/v5/src/docs/inception.md) for the end-to-end workflow and API reference.
 
 | Agent | Mode | Template |
 |-------|------|----------|
@@ -68,9 +68,9 @@ Delivery agents open GitHub issues — bugs, docs gaps, CI problems, security vu
 | **sec-check** | **holdgated** | `sec-check-holdgated.md` |
 | brainstorm | advisory | `brainstorm-advisory.md` |
 
-### L5 — Semi-Autonomous (Semi-Automated) (11 agents)
+### L5 — Semi-Autonomous (Semi-Automated) (12 agents)
 
-Agents open issues AND pull requests. All PRs get a hold label — humans batch-review and approve. Architect produces RFCs, strategist coordinates across agents. The system proposes; it does not merge autonomously.
+Agents open issues AND pull requests. All PRs get a hold label — humans batch-review and approve. Architect produces RFCs, strategist coordinates across agents, and reviewer works the hold-gated PR queue every 30 minutes. The system proposes; it does not merge autonomously.
 
 | Agent | Mode | Template |
 |-------|------|----------|
@@ -82,13 +82,14 @@ Agents open issues AND pull requests. All PRs get a hold label — humans batch-
 | sec-check | holdgated | `sec-check-holdgated.md` |
 | architect | holdgated | `architect-holdgated.md` |
 | strategist | holdgated | `strategist-holdgated.md` |
+| reviewer | converse | `reviewer-queue.md` |
 | telemetry (paused) | holdgated | `telemetry-holdgated.md` |
 | operations (paused) | holdgated | `operations-holdgated.md` |
 | brainstorm | advisory | `brainstorm-advisory.md` |
 
-### L6 — Fully Autonomous (12 agents)
+### L6 — Fully Autonomous (13 agents)
 
-Existing autonomous lanes can open issues, create PRs, and auto-merge on green CI. No hold label. Outreach handles community engagement. Telemetry and operations remain paused and use `ISSUES_AND_PRS`, so they never merge their own PRs.
+Existing autonomous lanes can open issues, create PRs, and auto-merge on green CI. No hold label. Outreach handles community engagement. Reviewer stays advisory even here — its `requires_human` verdict is what pulls a PR out of the auto-merge lane. Telemetry and operations remain paused and use `ISSUES_AND_PRS`, so they never merge their own PRs.
 
 | Agent | Mode | Template |
 |-------|------|----------|
@@ -101,6 +102,7 @@ Existing autonomous lanes can open issues, create PRs, and auto-merge on green C
 | architect | full | `architect-full.md` |
 | strategist | full | `strategist-full.md` |
 | outreach | full | `outreach-full.md` |
+| reviewer | converse | `reviewer-queue.md` |
 | telemetry (paused) | full | `telemetry-full.md` |
 | operations (paused) | full | `operations-full.md` |
 | brainstorm | advisory | `brainstorm-advisory.md` |
@@ -112,12 +114,43 @@ Existing autonomous lanes can open issues, create PRs, and auto-merge on green C
 ## Key Rules
 
 1. **All PRs are holdgated below L6.** No agent can auto-merge unless running at L6 (Fully Autonomous).
-2. **Advisory agents never get GH auth.** The `${GH_AUTH}` template variable is only injected into measured, holdgated, and full templates.
+2. **Advisory agents never get GH auth.** The `${GH_AUTH}` template variable is only injected into measured, holdgated, full, and converse templates. The converse tier is the one place an agent writes to GitHub without sitting on the mode ladder: `reviewer` is `mode: ADVISORY` plus the orthogonal `converse` capability ([#4492](https://github.com/hivecommons/hive/issues/4492)), which grants comments and PR reviews and nothing else — no issue creation, no relabelling, no push, no merge. It needs the auth block because posting a review *is* a GitHub write.
 3. **Supervisor uses no-GitHub advisory mode.** At every level, supervisor uses `supervisor-nogithub.md` in the built-in ACMM packs — it monitors agent health, not code.
 4. **Mode escalation is per-agent.** At L4, some agents are measured (issues only) while others are holdgated (issues + PRs). The level defines the mix.
 5. **Knowledge priming works at all levels.** The `${KNOWLEDGE}` template variable injects relevant facts from git sources and wiki layers regardless of the agent's mode.
 6. **Brainstorm is always advisory.** It produces KB facts and beads, never GitHub issues or PRs. Its role evolves from inception (L1) to ongoing ideation (L2+), but its mode stays advisory at all levels.
-7. **Telemetry and operations are L5/L6-only opt-in agents.** Below L5 they are absent from the pack roster and dashboard, do not spawn panes, and cannot be kicked. At L5–L6 they use a paused cadence in every governor mode until an operator opts in; they may open issues and PRs but never merge.
+7. **Reviewer is L5/L6-only by default and never merges.** It joined the L5 and L6 rosters in [#8023](https://github.com/hivecommons/hive/issues/8023) at a 30-minute cadence in every governor mode. Below L5 no pack lists it, so an operator who wants repo-grounded PR review creates it by hand and a pack apply leaves that agent's mode, model, backend, and pause state alone. Its mode stays `ADVISORY` at both levels, including L6: it reads the queue, comments, and returns a verdict, and it is that verdict — `requires_human` or `reject` — that pulls a PR out of the auto-merge lane.
+8. **Telemetry and operations are L5/L6-only opt-in agents.** Below L5 they are absent from the pack roster and dashboard, do not spawn panes, and cannot be kicked. At L5–L6 they use a paused cadence in every governor mode until an operator opts in; they may open issues and PRs but never merge.
+
+## ioscan hardening defaults per level
+
+Two `ioscan` hardening modes take their default from the pack governor rather
+than being fixed globally. Both are overridable per hive in either direction —
+the pack only supplies the default when the hive leaves the key unset.
+
+| Setting | L1–L4 default | L5–L6 default | What the default does | Override |
+|---|---|---|---|---|
+| `ioscan.canaries` | **on** | **on** | Plants a per-kick `HIVE-CANARY-*` marker and scans agent egress for it. Default flipped on ([#7083](https://github.com/hivecommons/hive/issues/7083)) now that the egress scan is encoding-aware ([#6701](https://github.com/hivecommons/hive/issues/6701), [#6720](https://github.com/hivecommons/hive/issues/6720)). | `ioscan.canaries: false` |
+| `ioscan.fail_mode` | `open` | **`closed`** (set by the L5/L6 packs' `governor.ioscan_fail_mode`) | `open` redacts a Critical injection finding and continues the kick; `closed` blocks the kick and records an `ioscan_fail_closed` audit entry. | `ioscan.fail_mode: open` (or `closed` to opt in below L5) |
+
+`fail_mode: closed` is the default only at L5–L6 because those are the levels
+where agents can merge, so a Critical finding that slips through has the highest
+blast radius. **The tradeoff is real and worth stating plainly: under `closed`,
+every Critical false-positive becomes a stalled queue item that an operator must
+clear by hand.** A hive that cannot absorb that operational load should set
+`ioscan.fail_mode: open` explicitly; an L1–L4 hive that wants the stricter
+posture sets `ioscan.fail_mode: closed`. An explicit value always wins over the
+pack default. The knob lives on the pack governor:
+
+```yaml
+# packs/level-5.yaml (and level-6.yaml)
+governor:
+  ioscan_fail_mode: closed   # "" (open) below L5; closed at L5/L6
+```
+
+## Which levels may publish audit findings
+
+The audit campaign's issue publisher ([audit-campaign.md](https://github.com/hivecommons/hive/blob/v5/src/docs/audit-campaign.md#publication)) files validated findings as issues only at **L3 and above**, the first level whose pack grants an agent the measured (issues) mode. At L1 and L2 every agent is advisory, so the publisher refuses with a typed error and an audit entry instead of filing. Security-sensitive findings never become public issues at any level; they go to `publication.private_channel` or are refused. Publication also requires `publication.enabled: true` and the `enforce` convergence mode; `shadow` records `withheld:mode` and writes nothing.
 
 ## Where ACMM gap issues are filed
 
@@ -187,6 +220,13 @@ Notes:
 - **Promotion adds agents and capability; demotion narrows it.** Moving up to L6
   makes agents auto-merge on green CI; moving down returns them to holdgated or
   advisory. The per-level capability grid is the table at the top of this page.
+  Promotion also **releases the level holds the hive itself applied** to open App
+  PRs that the new level no longer requires, so you do not have to clean them up
+  by hand after a level bump. Release is fail-closed: it applies only to
+  App-authored PRs carrying the hive's own attributable level-hold notice, only
+  when the most recent `hold` label event was applied by the App, and never while
+  a self-authorization hold applies. A hold a human applied — or re-applied after
+  the hive removed one — is never touched.
 - **Operator-created agents are preserved.** `ApplyPack` reconciles pack agents;
   agents you created yourself are not removed by a level change (deletion is
   tombstoned separately — see agent configuration).
@@ -200,6 +240,34 @@ A separate, advisory-only computation — the ACMM advisor (`pkg/acmmadvisor`) �
 can tell you whether a hive has earned progression to the next level, based on
 test coverage, green-CI streak, merge success rate, and backlog/hold signals.
 It never changes the applied level itself; changing the level is always the
-manual process described above. See the [ACMM advisor](https://github.com/hivecommons/hive/blob/v4/src/docs/acmm-advisor.md) page
+manual process described above. See the [ACMM advisor](https://github.com/hivecommons/hive/blob/v5/src/docs/acmm-advisor.md) page
 for the exact thresholds per target level and what the `GET
 /api/acmm-recommendation` endpoint returns.
+
+## Automatic autonomy-signal level changes
+
+The retro lane can also act on recorded autonomy signal findings. This policy is
+additive and **off by default**:
+
+```yaml
+autonomy:
+  auto_promote: false
+  auto_demote: false
+  promote_after: 3
+  demote_on: rollback   # rollback | rework | either
+  max_level: 6
+  cooldown_days: 7
+```
+
+When enabled, three consecutive qualifying repo-scoped retro findings promote
+the repo by one level, never skipping a level and never above `max_level`.
+A rollback finding demotes by one level immediately; demotions are not blocked
+by cooldown. A pinned repo policy (`project.repo_policies[].acmm_pinned: true`)
+is never moved automatically.
+
+Every automatic move writes a repo-keyed `project.repo_policies[]` record with
+the last change, evidence bead IDs, and pin state, and also records an audit
+entry plus a visible decision bead. The hive-wide `acmm_level` remains the
+ceiling. Until the per-repo ACMM RFC (#6111) lands, Hive keeps this repo-keyed
+seam and teaches the live proxy to apply the repo override on matching
+repository requests so enforcement observes the decision without a restart.

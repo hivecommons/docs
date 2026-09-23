@@ -1,4 +1,4 @@
-> **Synced from Hive.** This page is pulled from [hivecommons/hive@v4](https://github.com/hivecommons/hive/blob/v4/src/docs/adr/0006-planning-intelligence.md) during the docs build. Edit the canonical source in the Hive repository.
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0006-planning-intelligence.md) during the docs build. Edit the canonical source in the Hive repository.
 
 # ADR-0006: Planning intelligence with human review
 
@@ -11,11 +11,11 @@ to turn an epic into ordered, claimable work without letting an agent immediatel
 execute an unreviewed decomposition. The planning docs describe the flow:
 architect decomposition, a draft plan hidden from `Ready()`, a plan-review gate,
 and bounded stall replanning
-([planning intelligence](https://github.com/hivecommons/hive/blob/v4/src/docs/planning-intelligence.md)). The package code records
+([planning intelligence](https://github.com/hivecommons/hive/blob/v5/src/docs/planning-intelligence.md)). The package code records
 the same metadata conventions and review transitions
-([decompose](https://github.com/hivecommons/hive/blob/v4/src/pkg/planning/decompose.go),
-[plan review](https://github.com/hivecommons/hive/blob/v4/src/pkg/planning/plan_review.go),
-[stall replan](https://github.com/hivecommons/hive/blob/v4/src/pkg/planning/replan.go)).
+([decompose](https://github.com/hivecommons/hive/blob/v5/src/pkg/planning/decompose.go),
+[plan review](https://github.com/hivecommons/hive/blob/v5/src/pkg/planning/plan_review.go),
+[stall replan](https://github.com/hivecommons/hive/blob/v5/src/pkg/planning/replan.go)).
 
 ## Decision
 
