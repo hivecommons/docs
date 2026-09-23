@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { IBM_Plex_Sans, Fraunces, JetBrains_Mono } from "next/font/google";
 
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
@@ -10,10 +10,17 @@ import { ThemeProvider } from "next-themes";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "../globals.css";
 
-const inter = Inter({
+const inter = IBM_Plex_Sans({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["600"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -90,7 +97,7 @@ export default async function RootLayout({ children, params }: Props) {
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <GoogleAnalytics />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

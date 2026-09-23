@@ -94,7 +94,7 @@ export function EditPageLink({ filePath, projectId, variant = 'full' }: EditPage
         target="_blank"
         rel="noopener noreferrer"
         title="Edit this page on GitHub"
-        className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="p-2 rounded-md text-ink-3 dark:text-ink-3 hover:text-ink hover:text-honey hover:bg-bg-2 dark:hover:bg-bg-3 transition-colors"
       >
         <PencilIcon />
       </a>
@@ -103,12 +103,12 @@ export function EditPageLink({ filePath, projectId, variant = 'full' }: EditPage
 
   // Full variant (original) for bottom of page
   return (
-    <div className="mt-12 pt-6 border-t border-gray-200 dark:border-neutral-700">
+    <div className="mt-12 pt-6 border-t border-line">
       <a
         href={safeUrl.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-ink-2 dark:text-ink-3 hover:text-ink hover:text-honey transition-colors"
       >
         <PencilIcon />
         Edit this page on GitHub

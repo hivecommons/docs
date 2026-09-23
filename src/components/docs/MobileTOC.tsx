@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
+import { useState } from 'react';
 import Link from 'next/link';
 
 interface TOCItem {
@@ -14,8 +13,7 @@ interface MobileTOCProps {
   toc?: TOCItem[];
 }
 
-function TOCLink({ item, isDark, onClose }: { item: TOCItem; isDark: boolean; onClose: () => void }) {
-  const [isHovered, setIsHovered] = useState(false);
+function TOCLink({ item, onClose }: { item: TOCItem; onClose: () => void }) {
   const indent = (item.depth - 2) * 16;
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -32,19 +30,11 @@ function TOCLink({ item, isDark, onClose }: { item: TOCItem; isDark: boolean; on
   return (
     <Link
       href={`#${item.id}`}
-      className="block py-2 text-sm border-l-2 transition-colors"
+      className="block py-2 text-sm border-l-2 border-transparent text-ink-3 transition-colors hover:border-honey hover:text-ink"
       style={{
         paddingLeft: `${indent + 12}px`,
-        borderColor: isHovered 
-          ? (isDark ? '#374151' : '#2563eb')
-          : 'transparent',
-        color: isHovered
-          ? (isDark ? '#f3f4f6' : '#111827')
-          : '#6b7280',
       }}
       onClick={handleClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       suppressHydrationWarning
     >
       {item.value}
@@ -54,45 +44,21 @@ function TOCLink({ item, isDark, onClose }: { item: TOCItem; isDark: boolean; on
 
 export function MobileTOC({ toc }: MobileTOCProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [headerHovered, setHeaderHovered] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!toc || toc.length === 0) {
     return null;
   }
 
-  // Prevent hydration mismatch by using default light theme on server
-  const isDark = mounted && resolvedTheme === 'dark';
-
   return (
     <div 
-      className="xl:hidden mb-6 rounded-lg overflow-hidden border sticky top-16 z-10"
-      style={{
-        backgroundColor: isDark ? '#000000' : '#ffffff',
-        borderColor: isDark ? '#1f2937' : '#e5e7eb',
-      }}
+      className="xl:hidden mb-6 rounded-lg overflow-hidden border border-line sticky top-16 z-10 bg-bg-2"
       suppressHydrationWarning
     >
       {/* Accordion Header */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left transition-colors"
-        style={{
-          backgroundColor: headerHovered 
-            ? (isDark ? '#111827' : '#f3f4f6')
-            : (isDark ? '#000000' : '#ffffff'),
-          color: headerHovered
-            ? (isDark ? '#f3f4f6' : '#111827')
-            : (isDark ? '#9ca3af' : '#6b7280'),
-        }}
+        className="w-full px-4 py-3 flex items-center justify-between text-left transition-colors text-ink-2 hover:text-ink hover:bg-bg-3"
         suppressHydrationWarning
-        onMouseEnter={() => setHeaderHovered(true)}
-        onMouseLeave={() => setHeaderHovered(false)}
       >
         <div className="flex items-center gap-2">
           <svg 
@@ -140,16 +106,12 @@ export function MobileTOC({ toc }: MobileTOCProps) {
       >
         <nav 
           className="px-4 py-3 space-y-1"
-          style={{
-            backgroundColor: isDark ? '#000000' : '#ffffff',
-          }}
           suppressHydrationWarning
         >
           {toc.map((item) => (
             <TOCLink
               key={item.id}
               item={item}
-              isDark={isDark}
               onClose={() => setIsOpen(false)}
             />
           ))}
