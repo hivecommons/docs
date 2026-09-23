@@ -279,6 +279,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
               >
                 <Link
                   href={firstRoute}
+                  prefetch
                   onClick={() => { if (isCollapsed) toggleCollapse(itemKey); }}
                   className="flex-1 min-w-0 truncate hover:text-ink"
                 >
@@ -320,6 +321,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
           })() : (
             <Link
               href={item.route || '#'}
+              prefetch
               className={`
                 flex items-center gap-2 px-3 py-1.5 text-[13px] rounded-md transition-colors relative z-10 w-full
                 ${
@@ -407,6 +409,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
         >
           <Link
             href={href}
+            prefetch
             onClick={() => { if (!isExpanded) toggleCollapse(sectionKey); }}
             className="flex-1 min-w-0 truncate"
           >
@@ -438,6 +441,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
         >
           <Link
             href={href}
+            prefetch
             className="flex items-center gap-2 px-3 py-1.5 text-[13px] rounded-md transition-colors w-full font-normal text-ink-2  hover:text-ink hover:bg-bg-2 hover:bg-bg-2"
             style={{ paddingLeft: `${(depth + 1) * 16 + 12}px` }}
           >
@@ -478,6 +482,7 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
         >
           <Link
             href={LEGACY_OVERVIEW_HREF}
+            prefetch
             onClick={() => { if (!isExpanded) toggleCollapse(LEGACY_GROUP_KEY); }}
             className="flex-1 truncate"
           >

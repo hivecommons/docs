@@ -9,7 +9,7 @@ const intlMiddleware = createMiddleware({
   localePrefix: "always",
 });
 
-export default function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Redirect localized docs URLs to non-localized version
   // e.g., /es/docs/... -> /docs/...
   const docsPathMatch = request.nextUrl.pathname.match(/^\/([a-z]{2}(?:-[A-Z]{2})?|SC)\/docs\//);

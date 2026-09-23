@@ -243,6 +243,17 @@ describe('sanitizeHtmlForMdx — edge cases', () => {
     expect(result).toContain('<strong>bold</strong>')
   })
 
+  it('escapes shell-style placeholders that MDX would parse as JSX', () => {
+    const result = sanitizeHtmlForMdx('Run `tool <prompt>` against <owner>/<repo>.')
+    expect(result).toContain('&lt;prompt&gt;')
+    expect(result).toContain('&lt;owner&gt;/&lt;repo&gt;')
+  })
+
+  it('normalizes angle-bracket autolinks for MDX', () => {
+    const result = sanitizeHtmlForMdx('See <https://github.com/settings/copilot>.')
+    expect(result).toBe('See [https://github.com/settings/copilot](https://github.com/settings/copilot).')
+  })
+
   it('handles very long content without hanging (performance)', () => {
     const longContent = '<p>safe</p>'.repeat(1000)
     const start = Date.now()

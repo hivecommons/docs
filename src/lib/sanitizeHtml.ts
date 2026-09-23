@@ -53,6 +53,47 @@ function escapeAngle(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
+const MDX_SAFE_TEXT_TAGS = new Set([
+  'a',
+  'blockquote',
+  'br',
+  'code',
+  'details',
+  'div',
+  'em',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'hr',
+  'img',
+  'kbd',
+  'li',
+  'ol',
+  'p',
+  'pre',
+  'span',
+  'strong',
+  'summary',
+  'table',
+  'tbody',
+  'td',
+  'th',
+  'thead',
+  'tr',
+  'ul',
+])
+
+function escapeMdxAmbiguousAngles(content: string): string {
+  return content
+    .replace(/<((?:https?:\/\/|mailto:)[^>\s]+)>/g, '[$1]($1)')
+    .replace(/<\/?([A-Za-z][A-Za-z0-9_-]*)>/g, (match, tagName: string) => {
+      return MDX_SAFE_TEXT_TAGS.has(tagName.toLowerCase()) ? match : escapeAngle(match)
+    })
+}
+
 /**
  * Strip all security-critical patterns in a single pass, looping until the
  * output is stable.
@@ -242,6 +283,8 @@ export function sanitizeHtmlForMdx(content: string): string {
   // Remove <sub> and other problematic inline tags that may have issues
   sanitized = sanitized.replace(/<sub>/gi, '')
   sanitized = sanitized.replace(/<\/sub>/gi, '')
+
+  sanitized = escapeMdxAmbiguousAngles(sanitized)
 
   return sanitized
 }
