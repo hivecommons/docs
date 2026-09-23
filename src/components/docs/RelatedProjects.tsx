@@ -227,6 +227,7 @@ export function RelatedProjects({ variant = 'full', onCollapse, bannerActive = f
     if (pathname.startsWith('/docs/kubeflex')) return 'KubeFlex';
     if (pathname.startsWith('/docs/multi-plugin')) return 'Multi Plugin';
     if (pathname.startsWith('/docs/pluk')) return 'pluk';
+    if (pathname.startsWith('/docs/spektacular')) return 'Spektacular';
     if (pathname.startsWith('/docs/contributing')) return 'Contributing';
     if (pathname.startsWith('/docs/community')) return 'Community';
     if (pathname.startsWith('/docs/news')) return 'News';

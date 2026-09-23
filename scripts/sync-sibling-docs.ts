@@ -1,5 +1,5 @@
 /**
- * Sync hotshot, pluk, rationguard, and promptargs docs from their GitHub repos into docs/content/.
+ * Sync hotshot, pluk, rationguard, promptargs, and Spektacular docs from their GitHub repos into docs/content/.
  *
  * Same single-sourcing model as scripts/sync-hive-docs.ts: the repos own the
  * markdown; this script pulls it at build time (prebuild) so the site never
@@ -57,6 +57,17 @@ const PROJECTS: ProjectSync[] = [
     branch: process.env.PROMPTARGS_DOCS_REF || "main",
     files: [{ source: "README.md", target: "readme.md", required: true }],
   },
+  {
+    // Canonical site is https://spektacular.dev; the repo README is the doc source.
+    project: "spektacular",
+    owner: process.env.SIBLING_DOCS_OWNER || "hivecommons",
+    repo: "spektacular",
+    branch: process.env.SPEKTACULAR_DOCS_REF || "main",
+    files: [
+      { source: "README.md", target: "readme.md", required: true },
+      { source: "docs/knowledge-base.md", target: "knowledge-base.md" },
+    ],
+  },
 ];
 
 
@@ -79,6 +90,12 @@ function scrubLegacyBranding(content: string): string {
     .replace(/kubestellar\/hive/g, "hivecommons/hive")
     .replace(/kubestellar\/pluk/g, "hivecommons/pluk")
     .replace(/kubestellar\/hotshot/g, "hivecommons/hotshot")
+    // Spektacular transferred from jumppad-labs. Only rewrite repo sub-paths
+    // (releases, issues, blob): the Go module path is still
+    // github.com/jumppad-labs/spektacular and the Homebrew tap still lives
+    // under jumppad-labs, so `go install ...@latest` and `brew install` must
+    // keep their original targets.
+    .replace(/github\.com\/jumppad-labs\/spektacular\//g, "github.com/hivecommons/spektacular/")
     .replace(/kubestellar\.io/g, "hivecommons.dev")
     .replace(/KubeStellar/g, "Hive Commons")
     .replace(/Kubestellar/g, "Hive Commons")

@@ -18,6 +18,8 @@ export function getContentPath(projectId: ProjectId): string {
       return path.join(process.cwd(), 'docs', 'content', 'rationguard')
     case 'promptargs':
       return path.join(process.cwd(), 'docs', 'content', 'promptargs')
+    case 'spektacular':
+      return path.join(process.cwd(), 'docs', 'content', 'spektacular')
     case 'hive':
     default:
       return path.join(process.cwd(), 'docs', 'content', 'hive')
@@ -35,6 +37,8 @@ export function getBasePath(projectId: ProjectId): string {
       return 'docs/rationguard'
     case 'promptargs':
       return 'docs/promptargs'
+    case 'spektacular':
+      return 'docs/spektacular'
     case 'hive':
     default:
       return 'docs/hive'
@@ -147,6 +151,22 @@ const NAV_STRUCTURE_PROMPTARGS: Array<{ title: string; items: NavItem[] }> = [
   }
 ]
 
+// Spektacular Navigation Structure (canonical site: https://spektacular.dev)
+const NAV_STRUCTURE_SPEKTACULAR: Array<{ title: string; items: NavItem[] }> = [
+  {
+    title: 'Overview',
+    items: [
+      { 'Introduction': 'readme.md' },
+    ]
+  },
+  {
+    title: 'Guides',
+    items: [
+      { 'Knowledge base': 'knowledge-base.md' },
+    ]
+  }
+]
+
 // Get navigation structure for a project
 function getNavStructure(projectId: ProjectId): Array<{ title: string; items: NavItem[] }> {
   switch (projectId) {
@@ -158,6 +178,8 @@ function getNavStructure(projectId: ProjectId): Array<{ title: string; items: Na
       return NAV_STRUCTURE_RATIONGUARD
     case 'promptargs':
       return NAV_STRUCTURE_PROMPTARGS
+    case 'spektacular':
+      return NAV_STRUCTURE_SPEKTACULAR
     case 'hive':
     default:
       return NAV_STRUCTURE_HIVE

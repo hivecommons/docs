@@ -125,7 +125,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   })
 
   // --- Project-specific docs ---
-  const projectIds: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs']
+  const projectIds: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'spektacular']
 
   for (const projectId of projectIds) {
     const projectContentPath = path.join(contentRoot, PROJECTS[projectId].basePath)

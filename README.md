@@ -14,6 +14,7 @@ Official documentation site for [Hive Commons](https://hivecommons.dev), served 
 - **[pluk](https://github.com/hivecommons/pluk)** — pub-sub event streaming for AI agent tmux sessions
 - **[rationguard](https://github.com/hivecommons/rationguard)** — detect and rebut rationalization patterns in AI agent output
 - **[promptargs](https://github.com/hivecommons/promptargs)** — template expansion for AI prompts
+- **[Spektacular](https://github.com/hivecommons/spektacular)** — spec-driven development for AI coding agents (canonical site: [spektacular.dev](https://spektacular.dev))
 
 ## How content is sourced
 
@@ -22,7 +23,7 @@ at build time:
 
 - `scripts/sync-hive-docs.ts` pulls Hive docs from `hivecommons/hive` (`src/docs/`, branch `v5`;
   override with `HIVE_DOCS_OWNER` / `HIVE_DOCS_REPO` / `HIVE_DOCS_REF`).
-- `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, and promptargs docs from their repos.
+- `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, promptargs, and Spektacular docs from their repos.
 
 Edit the canonical source in the project repository — not the synced copies under
 `docs/content/`. If a sync source is unreachable at build time, the committed copies
