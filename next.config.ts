@@ -92,7 +92,7 @@ const nextConfig: NextConfig = {
 
 const configWithNextra = withNextra(nextConfig);
 
-// Note: Route-level exclusion is handled in src/middleware.ts (matcher excludes /docs)
+// Note: Route-level exclusion is handled in src/proxy.ts (matcher excludes /docs)
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 export default withNextIntl(configWithNextra);

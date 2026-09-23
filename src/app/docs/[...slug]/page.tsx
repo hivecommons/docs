@@ -12,6 +12,10 @@ import path from 'path'
 import { notFound } from 'next/navigation'
 
 const HIVE_DOCS_PATH = process.env.HIVE_DOCS_PATH
+const STATIC_PROJECTS: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'spektacular']
+
+export const dynamic = 'force-static'
+export const dynamicParams = false
 
 type Props = {
   params: Promise<{ slug: string[] }>
@@ -72,19 +76,6 @@ function readLocalFile(filePath: string, contentPath: string = docsContentPath):
       } catch {
         // File doesn't exist in the shared content root either
       }
-    }
-  }
-
-  // If not found in content directories, try repository root
-  const cwd = process.cwd()
-  const repoRootPath = path.join(cwd, filePath)
-  if (repoRootPath.startsWith(cwd + path.sep)) {
-    try {
-      if (fs.existsSync(repoRootPath)) {
-        return fs.readFileSync(repoRootPath, 'utf-8')
-      }
-    } catch {
-      // File doesn't exist in repository root
     }
   }
 
@@ -248,7 +239,14 @@ export default async function DocPage({ params }: Props) {
 }
 
 export async function generateStaticParams(): Promise<Array<{ slug: string[] }>> {
-  const allParams: Array<{ slug: string[] }> = []
+  const allParams = new Map<string, { slug: string[] }>()
+
+  function addParam(slug: string[]) {
+    const normalized = slug.filter(Boolean)
+    if (normalized.length > 0) {
+      allParams.set(normalized.join('/'), { slug: normalized })
+    }
+  }
   
   function collectParams(dir: string, prefix: string[] = []) {
     if (!fs.existsSync(dir)) return
@@ -259,12 +257,19 @@ export async function generateStaticParams(): Promise<Array<{ slug: string[] }>>
         collectParams(path.join(dir, entry.name), [...prefix, entry.name])
       } else if (entry.name.endsWith('.md') || entry.name.endsWith('.mdx')) {
         const slug = [...prefix, entry.name.replace(/\.mdx?$/, '')]
-        allParams.push({ slug })
+        addParam(slug)
       }
     }
   }
   
   collectParams(docsContentPath)
+
+  for (const projectId of STATIC_PROJECTS) {
+    const { routeMap } = buildPageMap(projectId)
+    for (const routeKey of Object.keys(routeMap)) {
+      addParam([projectId, ...routeKey.split('/')])
+    }
+  }
   
   // Also add Hive docs if available
   if (HIVE_DOCS_PATH && fs.existsSync(HIVE_DOCS_PATH)) {
@@ -272,9 +277,9 @@ export async function generateStaticParams(): Promise<Array<{ slug: string[] }>>
     for (const entry of hiveEntries) {
       if (!entry.isDirectory()) continue
       const route = entry.name
-      allParams.push({ slug: ['hive', ...route.split('/')] })
+      addParam(['hive', ...route.split('/')])
     }
   }
 
-  return allParams
+  return Array.from(allParams.values())
 }
