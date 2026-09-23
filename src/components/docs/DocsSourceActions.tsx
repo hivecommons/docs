@@ -71,21 +71,38 @@ type DocsSourceActionsProps = {
   projectId: ProjectId;
   pageTitle: string;
   variant?: "full" | "compact";
+  /** GitHub blob URL of the true source when it differs from the content path (synced pages). */
+  sourceUrl?: string;
 };
+
+// Convert a GitHub blob URL into the fork-based edit URL the buttons expect.
+export function editUrlFromSource(sourceUrl: string): string | null {
+  try {
+    const url = new URL(sourceUrl);
+    if (url.protocol !== "https:" || url.hostname !== "github.com" || !url.pathname.includes("/blob/")) {
+      return null;
+    }
+    url.pathname = url.pathname.replace("/blob/", "/edit/");
+    url.search = "?fork=true";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
 
 export function DocsSourceActions({
   filePath,
   projectId,
   pageTitle,
   variant = "full",
+  sourceUrl: syncedSourceUrl,
 }: DocsSourceActionsProps) {
   const { config } = useSharedConfig();
 
-  const editUrl = buildGitHubEditUrl(
-    filePath,
-    projectId,
-    config?.editBaseUrls
-  );
+  const editUrl =
+    (syncedSourceUrl ? editUrlFromSource(syncedSourceUrl) : null) ??
+    buildGitHubEditUrl(filePath, projectId, config?.editBaseUrls);
 
   if (!editUrl || !isValidGitHubEditUrl(editUrl)) return null;
 

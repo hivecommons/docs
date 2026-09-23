@@ -82,6 +82,25 @@ describe('Spektacular synced pages render', () => {
     )
   }
 
+  // The content path is flattened by the sync (docs/knowledge-base.md ->
+  // knowledge-base.md; tutorials come from spektacular-website), so the
+  // source/edit buttons must follow the banner's canonical URL, not the path.
+  it(
+    'points View Source / Compose a PR at the un-flattened upstream file',
+    async () => {
+      const kb = await renderDocsRoute(['spektacular', 'guides', 'knowledge-base'])
+      expect(kb).toContain('href="https://github.com/hivecommons/spektacular/blob/main/docs/knowledge-base.md"')
+      expect(kb).toContain('href="https://github.com/hivecommons/spektacular/edit/main/docs/knowledge-base.md?fork=true"')
+      expect(kb).not.toContain('/blob/main/knowledge-base.md"')
+
+      const tut = await renderDocsRoute(['spektacular', 'tutorials', 'getting-started'])
+      expect(tut).toContain(
+        'href="https://github.com/hivecommons/spektacular-website/blob/main/src/content/tutorials/getting-started.mdx"'
+      )
+    },
+    RENDER_TIMEOUT_MS
+  )
+
   it(
     'serves tutorial screenshots through the docs-image route',
     async () => {
