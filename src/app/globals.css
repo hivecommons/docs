@@ -142,6 +142,31 @@ html.dark body {
   color: var(--ink);
 }
 
+/* Subtle honeycomb watermark — same tile as the hivecommons.dev hero,
+   fixed to the viewport and faded toward the upper-right so body copy
+   stays clean. Painted on body itself so no wrapper can cover it. */
+:root {
+  --honeycomb-glow: #2a2113;
+  --honeycomb-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 1l27 15.5v31L28 63 1 47.5v-31zM28 34l27 15.5v31L28 96 1 80.5v-31z' fill='none' stroke='%23e0a33a' stroke-opacity='.07'/%3E%3C/svg%3E");
+  --page-backdrop:
+    radial-gradient(80% 70% at 75% 12%, transparent 10%, var(--bg) 100%),
+    radial-gradient(900px 520px at 78% 0%, var(--honeycomb-glow) 0%, transparent 62%),
+    var(--honeycomb-tile),
+    var(--bg);
+}
+html:not(.dark) {
+  --honeycomb-glow: #ecdcb4;
+  --honeycomb-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 1l27 15.5v31L28 63 1 47.5v-31zM28 34l27 15.5v31L28 96 1 80.5v-31z' fill='none' stroke='%23b8791a' stroke-opacity='.09'/%3E%3C/svg%3E");
+}
+body,
+html.dark body,
+html:not(.dark) body {
+  background: var(--page-backdrop);
+  background-size: auto, auto, 56px 97px, auto;
+  background-repeat: no-repeat, no-repeat, repeat, no-repeat;
+  background-attachment: fixed;
+}
+
 /* Ensure Nextra sidebar is visible in light mode */
 html:not(.dark) .nextra-docs-theme nav {
   background: var(--bg);
