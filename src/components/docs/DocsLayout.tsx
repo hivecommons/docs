@@ -24,11 +24,12 @@ interface DocsLayoutProps {
   children: ReactNode;
   toc?: TOCItem[];
   metadata?: Metadata;
+  sourceUrl?: string;
   filePath?: string;
   projectId?: ProjectId;
 }
 
-export function DocsLayout({ children, toc, metadata, filePath, projectId }: DocsLayoutProps) {
+export function DocsLayout({ children, toc, metadata, filePath, projectId, sourceUrl }: DocsLayoutProps) {
   const { toggleMenu } = useDocsMenu();
 
   return (
@@ -50,6 +51,7 @@ export function DocsLayout({ children, toc, metadata, filePath, projectId }: Doc
                   filePath={filePath}
                   projectId={projectId}
                   pageTitle={metadata?.title ?? 'Documentation'}
+                  sourceUrl={sourceUrl}
                 />
               </div>
             )}

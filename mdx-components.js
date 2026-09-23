@@ -5,9 +5,9 @@ export function useMDXComponents(components) {
   return {
     // Wrapper component that wraps the entire MDX content with DocsLayout
     // Sidebar is now in the Next.js layout (persists across navigations)
-    wrapper: ({ children, toc, metadata, sourceCode, pageMap: _pageMap, filePath, projectId, ...props }) => {
+    wrapper: ({ children, toc, metadata, sourceCode, pageMap: _pageMap, filePath, projectId, sourceUrl, ...props }) => {
       return (
-        <DocsLayout toc={toc} metadata={metadata} filePath={filePath} projectId={projectId}>
+        <DocsLayout toc={toc} metadata={metadata} filePath={filePath} projectId={projectId} sourceUrl={sourceUrl}>
           {children}
         </DocsLayout>
       );

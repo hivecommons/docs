@@ -96,6 +96,8 @@ type PageContent = {
   // Path of the resolved source file, relative to the content directory.
   // Used by the DocsLayout wrapper to build "edit this page" links.
   filePath: string
+  // Canonical GitHub blob URL from a synced page's banner, when present.
+  sourceUrl?: string
 }
 
 async function getPageContent(slug: string[], projectId?: ProjectId): Promise<PageContent | null> {
@@ -163,7 +165,19 @@ async function buildContent(slug: string[], projectId?: ProjectId): Promise<Page
   content = removeCommentPatterns(content)
   content = sanitizeHtmlForMdx(content)
 
-  return { content, filePath: page.filePath }
+  return { content, filePath: page.filePath, sourceUrl: syncedSourceUrl(page.content) }
+}
+
+// Synced sibling pages open with a banner written by scripts/sync-sibling-docs.ts
+// whose link is the file's true home (repo, branch and un-flattened path —
+// e.g. docs/knowledge-base.md, or an .mdx in a different repo). Read it back
+// so the source/edit buttons point there instead of guessing from the
+// flattened content path.
+const SYNCED_SOURCE_RE = /^> \*\*Synced from [^*]+\*\* This page is pulled from \[[^\]]+\]\((https:\/\/github\.com\/[^)\s]+\/blob\/[^)\s]+)\)/m
+
+export function syncedSourceUrl(content: string): string | undefined {
+  const m = SYNCED_SOURCE_RE.exec(content)
+  return m?.[1]
 }
 
 function getProjectFromSlug(slug: string[]): { projectId: ProjectId | undefined; docSlug: string[] } {
@@ -189,7 +203,7 @@ export default async function DocPage({ params }: Props) {
     notFound()
   }
 
-  const { content, filePath } = page
+  const { content, filePath, sourceUrl } = page
 
   // Extract the layout wrapper (DocsLayout: prose typography, table of
   // contents, edit-page actions) so it can be rendered explicitly around the
@@ -226,6 +240,7 @@ export default async function DocPage({ params }: Props) {
       metadata={evaluated?.metadata}
       filePath={filePath}
       projectId={projectId ?? 'hive'}
+      sourceUrl={sourceUrl}
     >
       {compilationFailed || !MDXContent ? <pre>{content}</pre> : <MDXContent />}
     </Wrapper>
