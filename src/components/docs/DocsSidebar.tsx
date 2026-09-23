@@ -541,17 +541,17 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
         {/* Scrollable navigation area */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           <nav className="px-3 pt-6 pb-6 w-full">
-            {/* Primary projects — active shows tree, others show link */}
+            {/* General sections — Community first, so visitors meet Hive Commons before any project */}
             <div className="space-y-1">
-              {PRIMARY_PROJECTS.map(proj => renderProject(proj))}
+              {generalSections.map(item => renderMenuItem(item))}
             </div>
 
             {/* Separator */}
             <div className="border-t border-line my-4" />
 
-            {/* General sections — Contributing, Community, News */}
+            {/* Primary projects — active shows tree, others show link */}
             <div className="space-y-1">
-              {generalSections.map(item => renderMenuItem(item))}
+              {PRIMARY_PROJECTS.map(proj => renderProject(proj))}
             </div>
           </nav>
         </div>
