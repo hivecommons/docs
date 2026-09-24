@@ -23,7 +23,7 @@ export const COMMUNITY_MEETINGS = {
   recordingsUrl: 'https://hivecommons.dev/tv',
   meetingUrl: 'https://teams.microsoft.com/meet/291288876243839?p=k1qddNZCd2ZLjHxXri',
   feedUrl: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCIA3fKJFv2nLoG6vKK65xLg',
-  youtubeChannelUrl: 'https://www.youtube.com/channel/UCIA3fKJFv2nLoG6vKK65xLg',
+  youtubeChannelUrl: 'https://hivecommons.dev/tv',
   youtubeChannelId: 'UCIA3fKJFv2nLoG6vKK65xLg',
   recordingTitlePattern: 'community meeting|community call|meeting recording',
   exceptions: [] as MeetingException[],

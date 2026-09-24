@@ -144,7 +144,7 @@ function RecordingCard({ recording, active, onPlay }: { recording: Recording; ac
         <h3>{title}</h3>
         <p>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(published)}</p>
         {recording.duration ? <p>{recording.duration}</p> : null}
-        <a href={recording.url} target="_blank" rel="noreferrer">Open on YouTube</a>
+        <a href={COMMUNITY_MEETINGS.recordingsUrl} target="_blank" rel="noreferrer">Watch on YouTube</a>
       </div>
     </article>
   )
@@ -225,7 +225,7 @@ export function MeetingsPage() {
             <p className="hc-meeting-kicker">Past recordings</p>
             <h2 id="recordings-heading">Watch without leaving the docs</h2>
           </div>
-          <a href={COMMUNITY_MEETINGS.recordingsUrl} target="_blank" rel="noreferrer">Hive Commons YouTube</a>
+          <a href={COMMUNITY_MEETINGS.recordingsUrl} target="_blank" rel="noreferrer">All recordings</a>
         </div>
 
         {recordings.length > 0 ? (
