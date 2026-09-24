@@ -2623,3 +2623,25 @@ aside::-webkit-scrollbar-thumb:hover, .nextra-sidebar-container nav::-webkit-scr
   background: color-mix(in srgb, var(--bg) 86%, transparent);
   backdrop-filter: blur(8px);
 }
+
+/* Integration logos on /docs/hive/integrations: uniform tiles readable in dark and light */
+img[src^="/integrations/"] {
+  display: inline-block;
+  width: 3rem;
+  height: 3rem;
+  margin: 0.25rem 0.5rem 0.25rem 0;
+  padding: 0.4rem;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 0.6rem;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  vertical-align: middle;
+}
+img[src$="akamai.svg"][src^="/integrations/"],
+img[src$="oracle.svg"][src^="/integrations/"],
+img[src$="cloudflare.svg"][src^="/integrations/"],
+img[src$="github-copilot.svg"][src^="/integrations/"],
+img[src$="bluehost.svg"][src^="/integrations/"] {
+  width: 9rem;
+  height: 3.5rem;
+}
