@@ -39,7 +39,7 @@ agents, and each is useful on its own.
 | Project | What it does | Docs |
 |---|---|---|
 | [**Hive**](https://github.com/hivecommons/hive) — flagship | A control layer for running governed fleets of AI coding agents against real repositories. | [Hive docs](/docs/hive/overview/introduction) |
-| [**Spektacular**](https://github.com/hivecommons/spektacular) — newest member | Spec-driven development for AI coding agents. A markdown spec becomes a reviewed plan and an agent-driven implementation, each step a resumable state machine. | [Spektacular docs](/docs/spektacular/overview/introduction) · [spektacular.dev](https://spektacular.dev) |
+| [**Spektacular (Spek)**](https://github.com/hivecommons/spektacular) — newest member | Spec-driven development for AI coding agents. A markdown spek becomes a reviewed plan and an agent-driven implementation, each step a resumable state machine. | [Spektacular docs](/docs/spektacular/overview/introduction) · [spektacular.dev](https://spektacular.dev) |
 | [**hotshot**](https://github.com/hivecommons/hotshot) | Screenshots that land directly in an AI coding assistant's terminal. | [hotshot docs](/docs/hotshot/overview/introduction) |
 | [**pluk**](https://github.com/hivecommons/pluk) | Structured event streaming for tmux sessions running AI coding agents. | [pluk docs](/docs/pluk/overview/introduction) |
 | [**promptargs**](https://github.com/hivecommons/promptargs) | Template expansion for prompts across Claude Code, Copilot, Goose, Bob, and others. | [promptargs docs](/docs/promptargs/overview/introduction) |
@@ -48,10 +48,10 @@ agents, and each is useful on its own.
 
 ### How the pieces fit
 
-Spektacular handles **one feature at a time**: spec → plan → implement, with
+Spek handles **one feature at a time**: spec → plan → implement, with
 a human review between each step. Hive is where that work is **scaled up** —
 it orchestrates fleets of agents across repositories with the governance and
-audit trail that running agents at that scale demands. A Spektacular workflow
+audit trail that running agents at that scale demands. A Spek workflow
 is the unit of work a fleet orchestrator schedules. hotshot, pluk, promptargs,
 rationguard and dibs sit alongside both, making the individual agent session
 more observable, more reproducible, and properly attributed.

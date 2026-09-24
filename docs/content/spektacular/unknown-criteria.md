@@ -14,17 +14,17 @@ sometimes I do not have a clear idea of what the criteria for the work are.
 
 Broadly I think most of the activities that I carry out when coding fall into 
 the following three categories:
-1. I know what the criteria for the work are, and I can write a specification for
+1. I know what the criteria for the work are, and I can write a spek for
    it.
 2. Small bugs or minor changes where I have a fair idea of the problem and the 
    solution.
 3. Something is wrong and I don't know what the problem is or what the solution is.
 
-In the first case, I can use the Spektacular workflow to write a specification
+In the first case, I can use the Spektacular (Spek) workflow to write a spek
 and then implement it. In the second case, vibe coding is probably appropriate, 
 and way quicker than writing a specification. In the third case, the temptation
 is to start working with the agent to investigate and fix the problem. However, 
-all of the detail around this work is not captured in a specification and plan
+all of the detail around this work is not captured in a spek and plan
 and so it may not adhere to the team's coding standards and practices, and the
 code that is produced may not be maintainable or testable. I am basically vibe
 coding my way to another problem.
@@ -32,8 +32,8 @@ coding my way to another problem.
 ## A bug in Spektacular
 
 Let's look at a concrete example. I was recently working on what I believed to be
-a bug in Spektacular when using the `new` mode to create specifications with
-the Bob agent. The way that Spektacular works is that internally the skills are 
+a bug in Spek when using the `new` mode to create specifications with
+the Bob agent. The way that Spek works is that internally the skills are 
 deliberately very simple: they only instruct the agent to do a single task.
 Further instructions are provided to the agent once it has completed the task.
 By following this approach, and using a state machine to control the flow of the
@@ -64,7 +64,7 @@ and if everything is valid, it returns the next prompt.
 What I saw was that Bob was trying to call the goto command, but with a
 completely incorrect step.
 
-Having an understanding of how Spektacular works, I did a little manual poking
+Having an understanding of how Spek works, I did a little manual poking
 through the codebase looking for any obvious problems, but I could not find
 anything. Next, I turned to my coding agent.
 
@@ -92,7 +92,7 @@ run: spec goto --data '{"step":"requirements"}'
 
 Now, experience and seeing the issue firsthand makes me think that this is
 probably what happened. The temptation is to just accept the fix and move on:
-this code change probably does not require a specification and a plan, and in
+this code change probably does not require a spek and a plan, and in
 reality, I could change the code myself in about 30 seconds. But experience
 also tells me that this is not the end of the story: my gut tells me that
 there is more than one error message like this in the codebase. So let's ask
@@ -117,21 +117,21 @@ Let's look at all errors across the entire codebase where an error is surfaced t
 ```
 
 The agent now goes away and does quite a bit more work, and the reality is
-that it finds that most of the errors surfaced by Spektacular are not very
+that it finds that most of the errors surfaced by Spek are not very
 helpful. It is also quite a bit of work that should be fixed with SDD, not
-just a quick fix. So, let's get the agent to write a full specification for
+just a quick fix. So, let's get the agent to write a full spek for
 this work; we can then review it and implement it.
 
 ```markdown
-We should write a specification using the spek-new skill that ensures all error
+We should write a spek using the spek-new skill that ensures all error
 messages emitted from the system are meaningful to an AI agent and which provide
 enough diagnostic information to allow it to find a solution.
 ```
 
-## Writing the specifications
+## Writing the speks
 
-The agent then uses the skill and creates a specification. Upon reviewing this
-specification, one of the Non-Goals actually surfaces something interesting,
+The agent then uses the skill and creates a spek. Upon reviewing this
+spek, one of the Non-Goals actually surfaces something interesting,
 something I had been thinking about myself.
 
 ```markdown
@@ -142,7 +142,7 @@ is out of scope; it is left for a separate, future spec.
 ```
 
 So, whilst there is context for all of this, let's get the agent to write a
-specification for what it thinks would be a useful debug or session logging
+spek for what it thinks would be a useful debug or session logging
 feature.
 
 ```markdown
@@ -151,25 +151,25 @@ should ensure that the output from the logging prioritises agent consumption
 over human consumption.
 ```
 
-We now have two new specifications that improve both the error logging and
-the diagnostic information that Spektacular produces, both of which will make
+We now have two new speks that improve both the error logging and
+the diagnostic information that Spek produces, both of which will make
 it easier to fix future problems.
 
-I can now share these specifications with the team to get their feedback before
+I can now share these speks with the team to get their feedback before
 I go ahead and implement them.
 
 ## Conclusion
 
 In this article, we have seen how we can work with the agent to investigate a
-problem and then use the agent to write a specification for the work that needs
+problem and then use the agent to write a spek for the work that needs
 to be completed. In this particular instance, starting with Spec Driven
 Development would not have been helpful, as I did not have a clear idea of the
-problem or enough information to write a specification. However, by using the
+problem or enough information to write a spek. However, by using the
 agent to investigate and determine scope and potential root cause, it then
-turns the activity of writing the specification into a trivial task of asking
+turns the activity of writing the spek into a trivial task of asking
 the agent to do it.
 
 Not all tasks require spec driven development, and spec driven development is
 not always the best starting approach; however, the workflow is flexible: you
 can always start ad hoc and end up with the quality and maintainability of a
-specification and plan.
+spek and plan.

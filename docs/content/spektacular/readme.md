@@ -4,53 +4,55 @@
 
 # Spektacular
 
-Agent-agnostic CLI tool for spec-driven development, providing skills and integrations for coding agents (Claude, Bob, Codex) to plan and implement work from a written spec.
+> Spektacular — Spek for short. The specs it produces are called speks.
+
+Agent-agnostic CLI tool for spec-driven development, providing skills and integrations for coding agents (Claude, Bob, Codex) to plan and implement work from a written spek.
 
 > **Status:** early development — see the [releases page](https://github.com/hivecommons/spektacular/releases) for the latest version.
 
 ## What is Spektacular?
 
-Spektacular is a self-contained Go binary that brings spec-driven development to AI coding agents. You write a markdown specification; Spektacular turns it into a reviewed implementation plan and then drives a coding agent to implement it — keeping your intent reviewable at every stage.
+Spek is a self-contained Go binary that brings spec-driven development to AI coding agents. You write a markdown spek; Spek turns it into a reviewed implementation plan and then drives a coding agent to implement it — keeping your intent reviewable at every stage.
 
 Its core competencies:
 
-- **Self-contained binary plus installed agent skills.** A single binary that, on `init`, installs the skills (and commands) your coding agent needs to run the Spektacular workflows.
-- **State-machine-driven workflow.** Spec, plan, and implement each run as a stepwise state machine. Spektacular hands the agent one per-step prompt at a time (`new` / `goto` / `steps`), so every stage is resumable — stop, inspect, edit, and resume without losing work.
+- **Self-contained binary plus installed agent skills.** A single binary that, on `init`, installs the skills (and commands) your coding agent needs to run the Spek workflows.
+- **State-machine-driven workflow.** Spec, plan, and implement each run as a stepwise state machine. Spek hands the agent one per-step prompt at a time (`new` / `goto` / `steps`), so every stage is resumable — stop, inspect, edit, and resume without losing work.
 - **Agent-agnostic, multi-agent support.** Works with claude, bob, and codex; pick the one your team already uses, or register your own.
 - **Project knowledge base.** A searchable, layered store of conventions, architecture, gotchas, and learnings that feeds context into planning.
-- **Project design documents.** The worked design a feature is built to (an API shape, a user-facing flow, a data format) kept wherever your team already keeps it and referenced by the spec that needs it, so specs stay readable and planning is bound to the design that was agreed.
+- **Project design documents.** The worked design a feature is built to (an API shape, a user-facing flow, a data format) kept wherever your team already keeps it and referenced by the spek that needs it, so speks stay readable and planning is bound to the design that was agreed.
 
 ## How It Works
 
-Spektacular follows a three-stage workflow — **spec → plan → implement** — each driven step by step by a state machine:
+Spek follows a three-stage workflow — **spec → plan → implement** — each driven step by step by a state machine:
 
-1. **Spec.** You write a markdown spec (requirements, constraints, acceptance criteria); `spec new` scaffolds one from a template.
+1. **Spec.** You write a markdown spek (requirements, constraints, acceptance criteria); `spec new` scaffolds one from a template.
 2. **Plan.** `plan new` explores your codebase, asks clarifying questions, and writes a detailed implementation plan — `plan.md`, `research.md`, and `context.md`.
 3. **Implement.** `implement new` drives the coding agent through each phase of the plan and validates the result against your acceptance criteria.
 
-Workflow progress can be inspected without reading Spektacular's state files directly. `spektacular spec status` and `spektacular plan status` keep reporting the single in-progress workflow. Passing an artifact name switches the commands to per-artifact status:
+Workflow progress can be inspected without reading Spek's state files directly. `spektacular spec status` and `spektacular plan status` keep reporting the single in-progress workflow. Passing an artifact name switches the commands to per-artifact status:
 
 ```bash
 spektacular spec status <name>
 spektacular plan status <name>
 ```
 
-Both take the bare artifact name with no extension (`000057_git-commit`, not `000057_git-commit.md`), the same name `state.json` records in `data.name`. That bare name is the stable key shared by convention across the spec file, the plan directory and the changelog record; it is the key to join on, and the addressing convention [#46](https://github.com/hivecommons/spektacular/issues/46) proposes for every verb. `plan status <name>` reports the plan's `plan.md` only, not the plan's other documents.
+Both take the bare artifact name with no extension (`20260922132517-a3f9c0de-git-commit`, not `20260922132517-a3f9c0de-git-commit.md`), the same name `state.json` records in `data.name`. The status payload also returns `artifact_id`; external orchestrators should use that field as the join key across spec, plan and changelog artifacts. For new timestamp-generated artifacts `artifact_id` is the timestamp plus random-suffix name. Older counter-prefixed names remain readable aliases during migration, but projects that still choose `spec.id_method: counter` must not treat the numeric counter prefix as globally unique across branches. `plan status <name>` reports the plan's `plan.md` only, not the plan's other documents.
 
-The named form returns JSON with the artifact kind, name, document status, workflow step when that artifact is currently in progress, completed steps, `created_at`, `closed_at`, and the `spec` / `plan` frontmatter cross-references (surfaced when present, but rarely populated today). Two timestamps are kept apart: `updated_at` is workflow activity and appears only while that artifact has the in-progress workflow, so its absence means nothing is live; `modified_at` is the store's modification time for the artifact and moves on any write, including a checkout or a reformat. Frontmatter dates are stored as `YYYY-MM-DD` and are emitted as RFC3339 midnight UTC timestamps. `spec file list` and `plan file list` carry `modified_at` per entry, so polling many artifacts is one list call.
+The named form returns JSON with the artifact kind, name, document status, workflow step when that artifact is currently in progress, completed steps, `created_at`, `closed_at`, and the `spec` / `plan` frontmatter cross-references (surfaced when present, but rarely populated today). Two timestamps are kept apart: `updated_at` is workflow activity and appears only while that artifact has the in-progress workflow, so its absence means nothing is live; `modified_at` is the store's modification time for the artifact and moves on any write, including a checkout or a reformat. Frontmatter dates are stored as `YYYY-MM-DD` and are emitted as RFC3339 midnight UTC timestamps. `spec file list` and `plan file list` carry `modified_at` per entry, so polling many artifacts is one list call. When `plan.strict_spec_changes` is true, `plan status <name>` reports `document_status: "stale"` and `current_step: "stale"` once the linked spec is modified after a final plan; `implement new` and subsequent implement steps refuse that plan until it is replanned and re-approved. With the default non-strict setting, a later spec edit does not invalidate an existing plan.
 
 For the full pipeline, see the [how-it-works documentation](https://spektacular.dev/how-it-works/).
 
 ## Install & getting started
 
-Spektacular is a single self-contained Go binary.
+Spek is a single self-contained Go binary.
 
 ```bash
 # Homebrew
-brew install jumppad-labs/homebrew-repo/spektacular
+brew install hivecommons/homebrew-repo/spektacular
 
 # Go 1.21+
-go install github.com/jumppad-labs/spektacular@latest
+go install github.com/hivecommons/spektacular@latest
 ```
 
 Or download a pre-built binary from the [releases page](https://github.com/hivecommons/spektacular/releases). See the [install docs](https://spektacular.dev/install/) for apt and other methods. You also need a supported coding agent CLI (claude, bob, or codex) installed and configured.
@@ -72,21 +74,21 @@ spektacular plan new --data '{"name":"<returned-spec-name>"}'
 spektacular implement new --data '{"name":"<plan-name>"}'
 ```
 
-Spec names are normalised and prefixed by the CLI, so use the returned `spec_name` and `spec_path` for follow-up commands rather than the name you passed.
+Spek names are normalised and prefixed by the CLI, so use the returned `spec_name` and `spec_path` for follow-up commands rather than the name you passed.
 
-Specs are plain markdown with a small set of structured sections (overview, requirements, constraints, acceptance criteria, and so on), and `spec new` scaffolds the template for you. For the full walkthrough and spec format, see the [getting-started tutorial](https://spektacular.dev/tutorials/getting-started) and the [how-it-works documentation](https://spektacular.dev/how-it-works/).
+Speks are plain markdown with a small set of structured sections (overview, requirements, constraints, acceptance criteria, and so on), and `spec new` scaffolds the template for you. For the full walkthrough and spek format, see the [getting-started tutorial](https://spektacular.dev/tutorials/getting-started) and the [how-it-works documentation](https://spektacular.dev/how-it-works/).
 
 ## Supported agents
 
-Spektacular ships with three coding-agent integrations. `spektacular init <agent>` runs the chosen agent's install step, writing its workflow skills (and, where the agent has no skill mechanism, command wrappers) into your project:
+Spek ships with three coding-agent integrations. `spektacular init <agent>` runs the chosen agent's install step, writing its workflow skills (and, where the agent has no skill mechanism, command wrappers) into your project:
 
-- **claude** — installs the workflow skills under `.claude/skills/` and ensures the project's `CLAUDE.md` imports `@AGENTS.md`, so the Spektacular agent rules take effect.
+- **claude** — installs the workflow skills under `.claude/skills/` and ensures the project's `CLAUDE.md` imports `@AGENTS.md`, so the Spek agent rules take effect.
 - **bob** — installs skills under `.bob/skills/` and command wrappers under `.bob/commands/`.
 - **codex** — installs skills under `.agents/skills/`.
 
 Each integration is deliberately small: an agent implements a narrow `Agent` interface — `Name()` (its CLI identifier) and `Install()` (which writes its workflow artefacts) — and registers itself with the agent package from an `init()` function. Adding a new agent means implementing those two methods and registering the type.
 
-Both the coding agent and the storage layer are pluggable behind defined Go interfaces — the `Agent` interface in `internal/agent` and the `Store` interface in `internal/store` (the read/write/search surface backing the spec, plan, and knowledge stores). Only the `file` store ships today. For the full interface signatures and how to add your own backend or agent, see the [extending documentation](https://spektacular.dev/extending/) and the [plugins overview](https://spektacular.dev/plugins/).
+Both the coding agent and the storage layer are pluggable behind defined Go interfaces — the `Agent` interface in `internal/agent` and the `Store` interface in `internal/store` (the read/write/search surface backing the spek, plan, and knowledge stores). Only the `file` store ships today. For the full interface signatures and how to add your own backend or agent, see the [extending documentation](https://spektacular.dev/extending/) and the [plugins overview](https://spektacular.dev/plugins/).
 
 ## Project Structure
 
@@ -108,7 +110,7 @@ Running `spektacular init <agent>` creates:
     └── decisions/           # looked-up: the reasoning behind choices
 ```
 
-Each knowledge category directory is scaffolded with a `README.md` describing what belongs in it. By default Spektacular reads `.spektacular/knowledge/` as this repo's own store, addressed by the name the project registered the repo under; the project can declare additional shared stores — for example a `team` directory or a machine-wide `global` one — under `knowledge.sources` (see [Configuration](#configuration)). See [Knowledge](#knowledge) for how it is organised and consumed.
+Each knowledge category directory is scaffolded with a `README.md` describing what belongs in it. By default Spek reads `.spektacular/knowledge/` as this repo's own store, addressed by the name the project registered the repo under; the project can declare additional shared stores — for example a `team` directory or a machine-wide `global` one — under `knowledge.sources` (see [Configuration](#configuration)). See [Knowledge](#knowledge) for how it is organised and consumed.
 
 ## Knowledge
 
@@ -163,13 +165,13 @@ Every subcommand accepts `--schema` to print its input/output JSON schema and ex
 
 ### Capturing knowledge
 
-When research surfaces a durable learning, gotcha, or convention worth keeping, the agent **proposes** the destination — the tier, the store name, and the path — along with the exact content, and waits for your explicit confirmation before writing; it never persists to a knowledge store unprompted. In a Spektacular-initialised repo, the `spek-knowledge` skill is the entry point for reading, contributing to, and updating the knowledge base in any session, and coding agents route what they would otherwise save to their own per-user memory into the project knowledge base instead, so captured knowledge lands in git and travels with the project.
+When research surfaces a durable learning, gotcha, or convention worth keeping, the agent **proposes** the destination — the tier, the store name, and the path — along with the exact content, and waits for your explicit confirmation before writing; it never persists to a knowledge store unprompted. In a Spek-initialised repo, the `spek-knowledge` skill is the entry point for reading, contributing to, and updating the knowledge base in any session, and coding agents route what they would otherwise save to their own per-user memory into the project knowledge base instead, so captured knowledge lands in git and travels with the project.
 
 ## Configuration
 
-Configuration is split across two files, and a colocated single-repo project simply holds both in the same `.spektacular/` directory. A repo's Spektacular files can also live apart from its code, in a folder that points at the code (see [Repo configuration](#repo-configuration-repoyaml) below).
+Configuration is split across two files, and a colocated single-repo project simply holds both in the same `.spektacular/` directory. A repo's Spek files can also live apart from its code, in a folder that points at the code (see [Repo configuration](#repo-configuration-repoyaml) below).
 
-- **`.spektacular/config.yaml` (project configuration).** The project's identity, the coding agent Spektacular drives, the registry of member repos with the location of each repo's Spektacular files, the central `spec`, `plan`, and `changelog` stores, and the design sources the project declares. Spektacular always runs against a project: running it in a directory with no `config.yaml` produces an explicit error pointing at `init` (there is no parent-directory search).
+- **`.spektacular/config.yaml` (project configuration).** The project's identity, the coding agent Spek drives, the registry of member repos with the location of each repo's Spek files, the central `spec`, `plan`, and `changelog` stores, and the design sources the project declares. Spek always runs against a project: running it in a directory with no `config.yaml` produces an explicit error pointing at `init` (there is no parent-directory search).
 - **`.spektacular/repo.yaml` (repo configuration).** A repo's own concerns only: what it is, where its code lives, its knowledge sources, and its changelog provider. It carries no pointer to any project, so one repo can belong to several projects at once.
 
 > **Breaking change**: earlier releases used a single `config.yaml` without a project `name`. Existing setups re-initialize with `spektacular init <agent>`: init backfills the name (from the directory basename, or `--name`), seeds the colocated repo's `repo.yaml`, and registers it in the new `repos` list.
@@ -184,15 +186,17 @@ name: my-project                    # required, slug-safe; namespaces changelog 
 source: git@example.com:org/my-project.git  # optional; the project's git address, recorded in derived changelog entries only
 command: spektacular
 agent: claude
+auto_commit: "off"                  # off | workflow | full: automatic git commits (local only)
 debug:
   enabled: false
 spec:
   provider: file
-  id_method: timestamp              # how new spec identifiers are generated
+  id_method: timestamp              # timestamp + random suffix; counter is legacy and branch-local
   config:
     directory: specs                # relative to the folder holding config.yaml
 plan:
   provider: file
+  strict_spec_changes: false        # true marks final plans stale after later spec edits
   config:
     directory: plans                # relative to the folder holding config.yaml
 changelog:
@@ -220,7 +224,7 @@ design:
         location: ../design/api     # relative to the folder holding config.yaml; may sit outside the project
 ```
 
-Each repo entry needs a slug-safe unique `name` and a `location`: the folder holding that repo's `repo.yaml` (`local` is still accepted and means the same thing). A relative location is resolved from the folder holding `config.yaml`, and nothing is appended to it, so the project's own footprint is `.` and a repo folder in the project is `../repos/<name>`. A repo is normally added through a guided flow: you are asked which repo to add, and its name, description, role and tags are each proposed for you from what the repo says about itself, one question at a time, with a plain-language confirmation before anything is written. Spektacular's files go inside the repo being added unless it cannot take them or you say otherwise, in which case they live in a folder under the project and the repo is left with only its code. An add can be started and finished while a spec or plan is already in progress. A caller that already knows every detail can still register a repo in a single command with `repo add`. Where the code lives is declared in the repo's own `repo.yaml` as `source`; the old `address` key is no longer read, and a config that still carries it fails to load with an error saying where the value now goes. `description`, `role`, and `tags` are optional metadata, also in `repo.yaml`, that cross-repo planning uses to attribute requirements to the right repo. Add to the registry with `spektacular repo new`, or `spektacular repo add` when every detail is already known, and inspect it with `spektacular repo list`; removal is a manual config edit. Cloned repos are never fetched or pulled automatically; a stale clone produces a warning only.
+Each repo entry needs a slug-safe unique `name` and a `location`: the folder holding that repo's `repo.yaml` (`local` is still accepted and means the same thing). A relative location is resolved from the folder holding `config.yaml`, and nothing is appended to it, so the project's own footprint is `.` and a repo folder in the project is `../repos/<name>`. A repo is normally added through a guided flow: you are asked which repo to add, and its name, description, role and tags are each proposed for you from what the repo says about itself, one question at a time, with a plain-language confirmation before anything is written. Spek's files go inside the repo being added unless it cannot take them or you say otherwise, in which case they live in a folder under the project and the repo is left with only its code. An add can be started and finished while a spec or plan is already in progress. A caller that already knows every detail can still register a repo in a single command with `repo add`. Where the code lives is declared in the repo's own `repo.yaml` as `source`; the old `address` key is no longer read, and a config that still carries it fails to load with an error saying where the value now goes. `description`, `role`, and `tags` are optional metadata, also in `repo.yaml`, that cross-repo planning uses to attribute requirements to the right repo. Add to the registry with `spektacular repo new`, or `spektacular repo add` when every detail is already known, and inspect it with `spektacular repo list`; removal is a manual config edit. Cloned repos are never fetched or pulled automatically; a stale clone produces a warning only.
 
 **Relative locations everywhere in `config.yaml` share one base: the folder holding `config.yaml`.** That covers a repos entry's `location`, a `knowledge.sources` entry's `config.location`, a `design.sources` entry's `config.location`, and the `spec`, `plan` and `changelog` store directories, so `..` is the project's own root and `../team-kb` a folder beside it. The store directories default to `specs`, `plans` and `changelog`, which land in `.spektacular/specs`, `.spektacular/plans` and `.spektacular/changelog`; a store directory outside the project is refused with the corrected value to write. An absolute location is used as written. A knowledge source that does not resolve to a directory fails fast, naming the store, the path it resolved to, and the base it resolved from; when the store is found where the pre-1.0 rule would have put it, the error also names the exact corrected value to write. A design source behaves the same way and fails fast with the same three facts, with one deliberate difference from the store directories: a design source's location is allowed to resolve outside the project, and is written back exactly as declared rather than re-expressed, because a design source points at a folder the team already keeps.
 
@@ -246,7 +250,7 @@ changelog:
     directory: changelog            # where this repo's derived entries land
 ```
 
-A repo's Spektacular files can sit inside its code, in a `.spektacular/` folder holding `repo.yaml` with a file source pointing at `..`, or in a folder of their own, for example one folder per repo under a project, with `source` pointing at a checkout on disk (absolute, relative to the folder holding `repo.yaml`, or using `${VAR}`) or at a git repository that Spektacular clones into `.spektacular/repos/<name>/` on first use. In the separate layout the code repository receives only code changes; knowledge and changelog entries land under the folder holding `repo.yaml`. `spektacular repo list` reports the resolved source as each repo's `root`. See [Multi-Repo Projects](https://spektacular.dev/projects/) for the layouts.
+A repo's Spek files can sit inside its code, in a `.spektacular/` folder holding `repo.yaml` with a file source pointing at `..`, or in a folder of their own, for example one folder per repo under a project, with `source` pointing at a checkout on disk (absolute, relative to the folder holding `repo.yaml`, or using `${VAR}`) or at a git repository that Spek clones into `.spektacular/repos/<name>/` on first use. In the separate layout the code repository receives only code changes; knowledge and changelog entries land under the folder holding `repo.yaml`. `spektacular repo list` reports the resolved source as each repo's `root`. See [Multi-Repo Projects](https://spektacular.dev/projects/) for the layouts.
 
 Knowledge aggregates across every registered repo's declared sources (in registry order) followed by the project-owned sources, so a repo's knowledge travels with it into every project that registers it. Changelog entries, central and derived per-repo, are namespaced under a folder named after the project (`<directory>/<project-name>/<id>_<slug>.md`), so multiple projects writing into one repo can never collide.
 
@@ -263,13 +267,13 @@ An upgrade brings `config.yaml` and every registered repo's `repo.yaml` present 
 
 ### Excluding paths (`.spektacular_ignore`)
 
-Any source root (a repo, or the project's own storage locations) may carry a `.spektacular_ignore` file using gitignore pattern syntax. Matching paths are excluded from Spektacular's own listing and search results, keeping build artifacts and dependency directories out of planning research, but a directly named path is never blocked, and agents' native file tools are unaffected.
+Any source root (a repo, or the project's own storage locations) may carry a `.spektacular_ignore` file using gitignore pattern syntax. Matching paths are excluded from Spek's own listing and search results, keeping build artifacts and dependency directories out of planning research, but a directly named path is never blocked, and agents' native file tools are unaffected.
 
 For the full reference (every key, the id-method semantics, name-normalisation rules, and `${VAR}` expansion) see the [configuration documentation](https://spektacular.dev/configuration/). For the concept of multi-repo projects, why the configuration is split this way, and how work is attributed across repos, see [Multi-Repo Projects](https://spektacular.dev/projects/).
 
 ## Testing
 
-Spektacular has two layers of tests: a fast Go unit suite, and an end-to-end [Harbor](https://harborframework.com/) harness that runs the workflows against real AI coding agents inside sandboxed Docker containers.
+Spek has two layers of tests: a fast Go unit suite, and an end-to-end [Harbor](https://harborframework.com/) harness that runs the workflows against real AI coding agents inside sandboxed Docker containers.
 
 ### Unit tests
 
@@ -355,7 +359,7 @@ tests/harbor/jobs/<timestamp>/
 
 The repo-workflow suite is the one whose assertions are about the conversation rather than the
 files: that only the repo itself is asked for cold, that every later question carries a proposed
-value, that the questions arrive one per exchange, and that none of Spektacular's internal
+value, that the questions arrive one per exchange, and that none of Spek's internal
 vocabulary reaches the user. Its rules are themselves checked by
 `tests/harbor/repo-workflow/tests/test_verifier_selfcheck.py`, which runs locally under plain
 pytest with no container and proves each rule fails on a transcript that breaks it:

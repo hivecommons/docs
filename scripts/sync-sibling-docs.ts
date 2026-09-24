@@ -138,6 +138,140 @@ export const PROJECTS: ProjectSync[] = [
   },
 ];
 
+
+
+// ---------------------------------------------------------------------------
+// Spek naming style
+// ---------------------------------------------------------------------------
+// Keep canonical command names, paths, and stage identifiers unchanged while the
+// docs site introduces the Spek nickname in rendered prose.
+export function introduceSpekStyle(project: string, target: string, content: string): string {
+  if (project !== "spektacular") return content;
+
+  const replacementsByTarget: Record<string, Array<[string, string]>> = {
+    "readme.md": [
+      ["# Spektacular\n\nAgent-agnostic CLI tool for spec-driven development, providing skills and integrations for coding agents (Claude, Bob, Codex) to plan and implement work from a written spec.", "# Spektacular\n\n> Spektacular — Spek for short. The specs it produces are called speks.\n\nAgent-agnostic CLI tool for spec-driven development, providing skills and integrations for coding agents (Claude, Bob, Codex) to plan and implement work from a written spek."],
+      ["## What is Spektacular?\n\nSpektacular is a self-contained Go binary", "## What is Spektacular?\n\nSpek is a self-contained Go binary"],
+      ["Spektacular turns it into", "Spek turns it into"],
+      ["You write a markdown spec (requirements", "You write a markdown spek (requirements"],
+      ["Spektacular is a single self-contained Go binary.", "Spek is a single self-contained Go binary."],
+      ["run the Spektacular workflows", "run the Spek workflows"],
+      ["Spec, plan, and implement each run", "Spec, plan, and implement each run"],
+      ["Spektacular hands the agent", "Spek hands the agent"],
+      ["referenced by the spec that needs it, so specs stay readable", "referenced by the spek that needs it, so speks stay readable"],
+      ["Spektacular follows a three-stage workflow", "Spek follows a three-stage workflow"],
+      ["You write a markdown specification; Spek turns it into", "You write a markdown spek; Spek turns it into"],
+      ["scaffolds one from a template", "scaffolds one from a template"],
+      ["reading Spektacular's state files", "reading Spek's state files"],
+      ["across the spec file, the plan directory and the changelog record", "across the spek file, the plan directory and the changelog record"],
+      ["Spec names are normalised", "Spek names are normalised"],
+      ["Specs are plain markdown", "Speks are plain markdown"],
+      ["full walkthrough and spec format", "full walkthrough and spek format"],
+      ["Spektacular ships with three", "Spek ships with three"],
+      ["so the Spektacular agent rules take effect", "so the Spek agent rules take effect"],
+      ["backing the spec, plan, and knowledge stores", "backing the spek, plan, and knowledge stores"],
+      ["By default Spektacular reads", "By default Spek reads"],
+      ["In a Spektacular-initialised repo", "In a Spek-initialised repo"],
+      ["A repo's Spektacular files", "A repo's Spek files"],
+      ["Spektacular always runs against a project", "Spek always runs against a project"],
+      ["Spektacular's files go inside", "Spek's files go inside"],
+      ["git repository that Spektacular clones", "git repository that Spek clones"],
+      ["coding agent Spektacular drives", "coding agent Spek drives"],
+      ["location of each repo's Spektacular files", "location of each repo's Spek files"],
+      ["the central `spec`, `plan`, and `changelog` stores", "the central `spec`, `plan`, and `changelog` stores"],
+      ["written by Spektacular", "written by Spektacular"],
+      ["new Spektacular", "new Spektacular"],
+      ["until the project is brought up to date", "until the project is brought up to date"],
+      ["older than the running Spektacular", "older than the running Spektacular"],
+      ["Settings written by a *newer* Spektacular", "Settings written by a *newer* Spektacular"],
+      ["Spektacular's own listing", "Spek's own listing"],
+      ["Spektacular has two layers", "Spek has two layers"],
+      ["none of Spektacular's internal", "none of Spek's internal"],
+    ],
+    "getting-started.md": [
+      ["_Take a feature from a rough idea to working code using a Spektacular spec,", "_Take a feature from a rough idea to working code using a Spektacular (Spek) spek,"],
+      ["In this tutorial you will see how Spektacular's", "In this tutorial you will see how Spek's"],
+      ["coding agent Spektacular supports", "coding agent Spek supports"],
+      ["## What is Spektacular\n\nSpektacular is a CLI", "## What is Spektacular\n\nSpek is a CLI"],
+      ["store your specs and knowledge base", "store your speks and knowledge base"],
+      ["# scaffold a new specification", "# scaffold a new specification"],
+      ["turn a spec into", "turn a spek into"],
+      ["agent state: the spec, the plan", "agent state: the spek, the plan"],
+      ["### Step 2: Install Spektacular\n\nSpektacular is a Go binary", "### Step 2: Install Spektacular\n\nSpek is a Go binary"],
+      ["Spektacular drives an external", "Spek drives an external"],
+      ["outside Spektacular before continuing", "outside Spek before continuing"],
+      ["use Spektacular with", "use Spek with"],
+      ["want Spektacular to\noperate on", "want Spek to\noperate on"],
+      ["so Spektacular knows", "so Spek knows"],
+      ["The specification in Spektacular\nserves", "The spek in Spek\nserves"],
+      ["The specification in the Spektacular workflow", "The spek in the Spek workflow"],
+      ["The content in these sections guides", "The content in these sections guides"],
+      ["the specification pays off", "the spek pays off"],
+      ["The spec also serves", "The spek also serves"],
+      ["Scaffold a new specification", "Scaffold a new spek"],
+      ["Spektacular will automatically create", "Spek will automatically create"],
+      ["Spektacular writes all temporary", "Spek writes all temporary"],
+      ["file name for the spec", "file name for the spek"],
+      ["The way Spektacular works", "The way Spek works"],
+      ["Spektacular invokes `codex`", "Spek invokes `codex`"],
+      ["Spektacular\ninvokes `codex`", "Spek\ninvokes `codex`"],
+      ["call the Spektacular CLI", "call the Spektacular CLI"],
+      ["creating the spec file", "creating the spek file"],
+      ["an empty spec will be created", "an empty spek will be created"],
+      ["sections of the spec", "sections of the spek"],
+      ["final specification or plan", "final spek or plan"],
+      ["current specification and the answers", "current spek and the answers"],
+      ["final section of the specification", "final section of the spek"],
+      ["verify the specification before writing", "verify the spek before writing"],
+      ["pass over the specification", "pass over the spek"],
+      ["the specification is well formed", "the spek is well formed"],
+      ["generate your full specification", "generate your full spek"],
+      ["judge the spec the", "judge the spek the"],
+      ["writing the spec to", "writing the spek to"],
+      ["Select the spec you just created", "Select the spek you just created"],
+      ["review the final specification", "review the final spek"],
+      ["When reviewing the specification", "When reviewing the spek"],
+      ["edit the spec directly", "edit the spek directly"],
+      ["Spektacular gives you", "Spek gives you"],
+      ["learn how Spektacular\nsupports", "learn how Spek\nsupports"],
+      ["Spektacular queries every store", "Spek queries every store"],
+      ["As with the specification", "As with the spek"],
+      ["name of the specification", "name of the spek"],
+      ["from the specification or the context", "from the spek or the context"],
+      ["retrieved from the specification and the context", "retrieved from the spek and the context"],
+      ["The spec defines no success metrics", "The spec defines no success metrics"],
+      ["using the Spec Driven Development workflow", "using the Spec Driven Development workflow"],
+      ["The specification and plan", "The spek and plan"],
+    ],
+    "unknown-criteria.md": [
+      ["In the first case, I can use the Spektacular workflow", "In the first case, I can use the Spektacular (Spek) workflow"],
+      ["a bug in Spektacular when", "a bug in Spek when"],
+      ["The way that Spektacular works", "The way that Spek works"],
+      ["how Spektacular works", "how Spek works"],
+      ["surfaced by Spektacular are", "surfaced by Spek are"],
+      ["full specification for\nthis work", "full spek for\nthis work"],
+      ["Writing the specifications", "Writing the speks"],
+      ["creates a specification", "creates a spek"],
+      ["this\nspecification", "this\nspek"],
+      ["write a\nspecification for", "write a\nspek for"],
+      ["two new specifications", "two new speks"],
+      ["diagnostic information that Spektacular produces", "diagnostic information that Spek produces"],
+      ["share these specifications", "share these speks"],
+      ["write a specification for the work", "write a spek for the work"],
+      ["a specification and a plan", "a spek and a plan"],
+      ["turns the activity of writing the specification", "turns the activity of writing the spek"],
+      ["write a specification", "write a spek"],
+      ["specification and plan", "spek and plan"],
+    ],
+  };
+
+  let result = content;
+  for (const [from, to] of replacementsByTarget[target] ?? []) {
+    result = result.replaceAll(from, to);
+  }
+  return result;
+}
+
 // ---------------------------------------------------------------------------
 // Brand scrub
 // ---------------------------------------------------------------------------
@@ -308,7 +442,7 @@ async function main() {
         continue;
       }
       const page = await renderPage(p, f, body, outDir);
-      const out = syncedHeader(p, f) + normalizeFences(scrubLegacyBranding(page));
+      const out = syncedHeader(p, f) + normalizeFences(scrubLegacyBranding(introduceSpekStyle(p.project, f.target, page)));
       fs.writeFileSync(path.join(outDir, f.target), out);
       console.log(`synced ${p.project}/${f.target} <- ${r.owner}/${r.repo}/${f.source}`);
     }

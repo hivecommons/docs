@@ -60,7 +60,7 @@ function integrationsJsonLd() {
       description: INTEGRATIONS_DESCRIPTION,
       url: 'https://docs.hivecommons.dev/docs/hive/integrations',
       about: INTEGRATION_NAMES.map((name) => ({ '@type': 'SoftwareApplication', name })),
-      keywords: INTEGRATION_NAMES.join(', '),
+      keywords: [...INTEGRATION_NAMES, 'Spektacular', 'Spek', 'speks'].join(', '),
       publisher: {
         '@type': 'Organization',
         name: 'Hive Commons',
@@ -76,7 +76,7 @@ function integrationsJsonLd() {
       license: 'https://www.apache.org/licenses/LICENSE-2.0',
       url: 'https://hive.hivecommons.dev/',
       codeRepository: 'https://github.com/hivecommons/hive',
-      keywords: INTEGRATION_NAMES.join(', '),
+      keywords: [...INTEGRATION_NAMES, 'Spektacular', 'Spek', 'speks'].join(', '),
       featureList: [
         'Drives supported agent CLI backends including Claude Code, GitHub Copilot CLI, Goose, OpenAI Codex CLI, IBM Bob, Gemini CLI and more.',
         'Routes inference through supported engines and gateways including vLLM, llm-d, LiteLLM, IBM watsonx.ai, OpenRouter, Anthropic, OpenAI and DeepSeek.',

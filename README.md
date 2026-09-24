@@ -15,7 +15,7 @@ Official documentation site for [Hive Commons](https://hivecommons.dev), served 
 - **[rationguard](https://github.com/hivecommons/rationguard)** — detect and rebut rationalization patterns in AI agent output
 - **[promptargs](https://github.com/hivecommons/promptargs)** — template expansion for AI prompts
 - **[dibs](https://github.com/hivecommons/dibs)** — claim ideas so contributors get credit when agents implement them
-- **[Spektacular](https://github.com/hivecommons/spektacular)** — spec-driven development for AI coding agents (canonical site: [spektacular.dev](https://spektacular.dev))
+- **[Spektacular (Spek)](https://github.com/hivecommons/spektacular)** — spec-driven development for AI coding agents (canonical site: [spektacular.dev](https://spektacular.dev))
 
 ## How content is sourced
 
