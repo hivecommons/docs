@@ -1,0 +1,32 @@
+name: Refresh meeting recordings
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 12 * * *'
+
+permissions:
+  contents: write
+
+env:
+  NETLIFY_BUILD_HOOK_URL: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.11.1'
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/update-meeting-recordings.ts
+      - name: Commit recording feed snapshot
+        uses: stefanzweifel/git-auto-commit-action@v6
+        with:
+          commit_message: 'docs: refresh community meeting recordings'
+          file_pattern: data/meeting-recordings.json
+      - name: Trigger Netlify rebuild
+        if: env.NETLIFY_BUILD_HOOK_URL != ''
+        run: curl --fail -sS -X POST "$NETLIFY_BUILD_HOOK_URL"

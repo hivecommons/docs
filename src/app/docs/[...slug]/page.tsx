@@ -7,6 +7,7 @@ import { sanitizeHtmlForMdx, removeCommentPatterns } from '@/lib/sanitizeHtml'
 import { rewriteRelativeImagePaths } from '@/lib/rewriteImagePaths'
 import { buildPageMap, docsContentPath, getContentPath, isGeneralSectionFile } from '../page-map'
 import { CURRENT_VERSION, type ProjectId } from '@/config/versions'
+import { MeetingsPage } from '@/components/community/MeetingsPage'
 import fs from 'fs'
 import path from 'path'
 import { notFound } from 'next/navigation'
@@ -206,6 +207,20 @@ export default async function DocPage({ params }: Props) {
     Mermaid,
     convertHtmlScriptsToJsxComments
   })
+
+  if (filePath === 'community/meetings.md') {
+    return (
+      <Wrapper
+        toc={[]}
+        metadata={{ title: 'Community meetings' }}
+        filePath={filePath}
+        projectId={projectId ?? 'hive'}
+        sourceUrl={sourceUrl}
+      >
+        <MeetingsPage />
+      </Wrapper>
+    )
+  }
 
   let evaluated: ReturnType<typeof evaluate> | null = null
   let compilationFailed = false

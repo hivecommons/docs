@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
       "font-src 'self' data:",
       "connect-src 'self' https://api.github.com https://www.google-analytics.com",
       "worker-src blob:",
-      "frame-src 'none'",
+      "frame-src https://www.youtube-nocookie.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

@@ -67,7 +67,7 @@ contributions. Hive Commons has applied for the
 
 - [Governance](https://github.com/hivecommons/.github/blob/main/GOVERNANCE.md) · [Maintainers](https://github.com/hivecommons/.github/blob/main/MAINTAINERS.md) · [Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md) · [Security policy](https://github.com/hivecommons/.github/blob/main/SECURITY.md)
 - **Mailing list:** [hivecommons-dev@googlegroups.com](https://groups.google.com/g/hivecommons-dev) — joining adds the community meeting to your calendar
-- **Community meeting:** every other Thursday, 10:00 AM ET — [agenda and notes](https://hivecommons.dev/agenda) · [recordings](https://hivecommons.dev/tv)
+- **Community meeting:** every other Thursday, 10:00 AM ET — [meeting page](/docs/community/meetings) · [agenda and notes](https://hivecommons.dev/agenda) · [recordings](https://hivecommons.dev/tv)
 - **Chat:** [Discord](https://hivecommons.dev/discord)
 - **Website:** [hivecommons.dev](https://hivecommons.dev)
 
