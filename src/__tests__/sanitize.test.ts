@@ -243,9 +243,9 @@ describe('sanitizeHtmlForMdx — edge cases', () => {
     expect(result).toContain('<strong>bold</strong>')
   })
 
-  it('escapes shell-style placeholders that MDX would parse as JSX', () => {
+  it('escapes shell-style placeholders in prose that MDX would parse as JSX, but not inside code', () => {
     const result = sanitizeHtmlForMdx('Run `tool <prompt>` against <owner>/<repo>.')
-    expect(result).toContain('&lt;prompt&gt;')
+    expect(result).toContain('`tool <prompt>`')
     expect(result).toContain('&lt;owner&gt;/&lt;repo&gt;')
   })
 
@@ -261,5 +261,45 @@ describe('sanitizeHtmlForMdx — edge cases', () => {
     const elapsed = Date.now() - start
     expect(result).toContain('<p>safe</p>')
     expect(elapsed).toBeLessThan(5000)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Angle-bracket placeholders inside code are literal, not escaped
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('sanitizeHtmlForMdx — code spans keep <placeholder> literal', () => {
+  it('leaves <name> untouched inside a fenced code block', () => {
+    const input = '1. Step:\n\n   ```bash\n   cd <repo>\n   spektacular spec status <name>\n   ```\n'
+    const result = sanitizeHtmlForMdx(input)
+    expect(result).toContain('cd <repo>')
+    expect(result).toContain('status <name>')
+    expect(result).not.toContain('&lt;repo&gt;')
+  })
+
+  it('leaves <name> untouched inside inline code', () => {
+    const result = sanitizeHtmlForMdx('Run `spektacular plan status <name>` first.')
+    expect(result).toContain('`spektacular plan status <name>`')
+  })
+
+  it('still escapes unknown tags in prose outside code', () => {
+    const result = sanitizeHtmlForMdx('Replace <repo> with your path.')
+    expect(result).toContain('&lt;repo&gt;')
+  })
+
+  it('falls back to escaping on a table row whose code span contains a pipe', () => {
+    const row = '| `muse` | Muse (`curl -fsSL https://x/install.sh | bash`). Use `muse exec "<prompt>"`. |'
+    const result = sanitizeHtmlForMdx(row)
+    expect(result).toContain('&lt;prompt&gt;')
+  })
+
+  it('keeps <name> literal in a table row whose code spans have no pipe', () => {
+    const result = sanitizeHtmlForMdx('| verb | `spektacular spec status <name>` |')
+    expect(result).toContain('status <name>`')
+  })
+
+  it('still strips script tags that appear inside a fence-like span', () => {
+    const result = sanitizeHtmlForMdx('```\n<script>alert(1)</script>\n```')
+    expect(result).not.toContain('<script>')
   })
 })
