@@ -18,8 +18,8 @@ Official documentation site for [Hive Commons](https://hivecommons.dev), served 
 
 ## How content is sourced
 
-Hive, hotshot, and pluk docs are **single-sourced from their repositories** and pulled
-at build time:
+Hive, hotshot, pluk, rationguard, promptargs, and Spektacular docs are
+**single-sourced from their repositories** and pulled at build time:
 
 - `scripts/sync-hive-docs.ts` pulls Hive docs from `hivecommons/hive` (`src/docs/`, branch `v5`;
   override with `HIVE_DOCS_OWNER` / `HIVE_DOCS_REPO` / `HIVE_DOCS_REF`).
