@@ -269,6 +269,11 @@ html:not(.dark) .nextra-docs-theme .nextra-sidebar-container {
   align-items: center;
 }
 
+.hc-meeting-id {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+
 .hc-meeting-actions a,
 .hc-meeting-sectionHead a,
 .hc-meeting-recordingBody a {
@@ -306,6 +311,37 @@ html:not(.dark) .nextra-docs-theme .nextra-sidebar-container {
   border-color: color-mix(in srgb, var(--honey) 55%, var(--line));
   color: var(--honey);
   font-weight: 700;
+}
+
+.hc-meeting-resources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-2) 78%, transparent);
+  padding: 0.7rem 0.9rem;
+}
+
+.hc-meeting-resources span {
+  color: var(--ink-2);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hc-meeting-resources a {
+  border-radius: 999px;
+  color: var(--honey);
+  font-weight: 700;
+  padding: 0.25rem 0.45rem;
+  text-decoration: none;
+}
+
+.hc-meeting-resources a:hover {
+  background: color-mix(in srgb, var(--honey) 12%, transparent);
 }
 
 .hc-meeting-grid {
@@ -440,13 +476,16 @@ html:not(.dark) .nextra-docs-theme .nextra-sidebar-container {
   }
 
   .hc-meeting-actions,
-  .hc-meeting-sectionHead {
+  .hc-meeting-sectionHead,
+  .hc-meeting-resources {
     align-items: stretch;
     flex-direction: column;
   }
 
   .hc-meeting-actions a,
-  .hc-meeting-sectionHead a {
+  .hc-meeting-sectionHead a,
+  .hc-meeting-resources a,
+  .hc-meeting-resources span {
     text-align: center;
   }
 }
