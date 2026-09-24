@@ -11,9 +11,54 @@ import { MeetingsPage } from '@/components/community/MeetingsPage'
 import fs from 'fs'
 import path from 'path'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 
 const HIVE_DOCS_PATH = process.env.HIVE_DOCS_PATH
 const STATIC_PROJECTS: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'spektacular']
+
+const INTEGRATIONS_DESCRIPTION =
+  'Supported Hive integrations: Claude Code, GitHub Copilot CLI, Codex, Gemini, vLLM, LiteLLM, llm-d, watsonx.ai and more.'
+
+const INTEGRATION_NAMES = [
+  'Claude Code',
+  'GitHub Copilot CLI',
+  'Goose',
+  'OpenAI Codex CLI',
+  'Pi',
+  'IBM Bob',
+  'Aider',
+  'Gemini CLI',
+  'Google Antigravity CLI',
+  'OpenCode',
+  'Kilo Code',
+  'Muse Code',
+  'Oh My Pi',
+  'vLLM',
+  'llm-d',
+  'LiteLLM',
+  'IBM watsonx.ai',
+  'OpenRouter',
+  'Anthropic',
+  'OpenAI',
+  'DeepSeek',
+]
+
+function integrationsJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: 'Supported agents & inference engines',
+    description: INTEGRATIONS_DESCRIPTION,
+    url: 'https://docs.hivecommons.dev/docs/hive/integrations',
+    about: INTEGRATION_NAMES.map((name) => ({ '@type': 'SoftwareApplication', name })),
+    keywords: INTEGRATION_NAMES.join(', '),
+    publisher: {
+      '@type': 'Organization',
+      name: 'Hive Commons',
+      url: 'https://hivecommons.dev/',
+    },
+  }
+}
 
 export const dynamic = 'force-static'
 export const dynamicParams = false
@@ -185,6 +230,31 @@ function getProjectFromSlug(slug: string[]): { projectId: ProjectId | undefined;
   return { projectId: undefined, docSlug: slug }
 }
 
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  if (slug.join('/') === 'hive/integrations') {
+    return {
+      title: 'Supported agents & inference engines',
+      description: INTEGRATIONS_DESCRIPTION,
+      alternates: { canonical: '/docs/hive/integrations' },
+      openGraph: {
+        type: 'article',
+        url: 'https://docs.hivecommons.dev/docs/hive/integrations',
+        title: 'Supported agents & inference engines',
+        description: INTEGRATIONS_DESCRIPTION,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'Supported agents & inference engines',
+        description: INTEGRATIONS_DESCRIPTION,
+      },
+      robots: { index: true, follow: true },
+    }
+  }
+  return {}
+}
+
 export default async function DocPage({ params }: Props) {
   const { slug } = await params
   const { projectId, docSlug } = getProjectFromSlug(slug)
@@ -240,6 +310,8 @@ export default async function DocPage({ params }: Props) {
 
   const MDXContent = evaluated?.default
 
+  const isIntegrationsPage = projectId === 'hive' && filePath === 'integrations.md'
+
   return (
     <Wrapper
       toc={evaluated?.toc ?? []}
@@ -248,6 +320,12 @@ export default async function DocPage({ params }: Props) {
       projectId={projectId ?? 'hive'}
       sourceUrl={sourceUrl}
     >
+      {isIntegrationsPage ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(integrationsJsonLd()) }}
+        />
+      ) : null}
       {compilationFailed || !MDXContent ? <pre>{content}</pre> : <MDXContent />}
     </Wrapper>
   )

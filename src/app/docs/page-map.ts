@@ -96,6 +96,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Introduction': 'readme.md' },
       { 'Getting Started': 'getting-started.md' },
       { 'Documentation Map': 'documentation-map.md' },
+      { 'Supported agents & inference engines': 'integrations.md' },
       { 'Architecture': 'architecture.md' },
       { 'Roadmap': 'roadmap.md' },
       { 'Landscape': 'landscape.md' },
