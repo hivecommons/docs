@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "prebuild": "(tsx scripts/sync-hive-docs.ts || echo \"hive docs sync unavailable - using committed content\") && (tsx scripts/sync-sibling-docs.ts || echo \"sibling docs sync unavailable - using committed content\") && tsx scripts/generate-shared-config.ts",
+    "prebuild": "(tsx scripts/update-meeting-recordings.ts || echo \"meeting recordings refresh unavailable - using committed data\") && (tsx scripts/sync-hive-docs.ts || echo \"hive docs sync unavailable - using committed content\") && (tsx scripts/sync-sibling-docs.ts || echo \"sibling docs sync unavailable - using committed content\") && tsx scripts/generate-shared-config.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint src/",

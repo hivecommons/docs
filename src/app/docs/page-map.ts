@@ -90,7 +90,17 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
     title: 'Overview',
     items: [
       { 'Introduction': 'readme.md' },
+      { 'Getting Started': 'getting-started.md' },
       { 'Architecture': 'architecture.md' },
+      { 'Roadmap': 'roadmap.md' },
+      { 'Landscape': 'landscape.md' },
+    ]
+  },
+  {
+    title: 'Getting started',
+    items: [
+      { 'Manual provisioning': 'manual-provisioning.md' },
+      { 'Network admin requirement': 'net-admin-requirement.md' },
     ]
   },
   {
@@ -99,7 +109,46 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Agent Definition YAML': 'agent-definition-yaml.md' },
       { 'Variable Substitution': 'variable-substitution.md' },
       { 'Governor': 'governor.md' },
+      { 'hivectl': 'hivectl.md' },
+      { 'Agent configuration': 'agent-configuration.md' },
+      { 'Contributor relay': 'contributor-relay.md' },
+      { 'Troubleshooting': 'troubleshooting.md' },
+      { 'Release channels': 'release-channels.md' },
+      { 'Backup and disaster recovery': 'backup-dr.md' },
       { 'Running on macOS': 'macos.md' },
+    ]
+  },
+  {
+    title: 'Security',
+    items: [
+      { 'Security model': 'security-model.md' },
+      { 'Security threat model': 'security-threat-model.md' },
+      { 'ACMM policy matrix': 'acmm-policy-matrix.md' },
+    ]
+  },
+  {
+    title: 'Reference',
+    items: [
+      { 'Architecture Decision Records': [
+        { 'ADR index': 'adr/readme.md' },
+        { '0001 Record architecture decisions': 'adr/0001-record-architecture-decisions.md' },
+        { '0002 MITM proxy network enforcement': 'adr/0002-mitm-proxy-network-enforcement.md' },
+        { '0003 ACMM autonomy levels': 'adr/0003-acmm-autonomy-levels.md' },
+        { '0004 Beads work ledger': 'adr/0004-beads-work-ledger.md' },
+        { '0005 Forge abstraction': 'adr/0005-forge-abstraction.md' },
+        { '0006 Planning intelligence': 'adr/0006-planning-intelligence.md' },
+        { '0007 Token mint': 'adr/0007-token-mint.md' },
+        { '0008 ioscan untrusted input': 'adr/0008-ioscan-untrusted-input.md' },
+        { '0009 Trajectory review': 'adr/0009-trajectory-review.md' },
+        { '0010 Escalation circuit breaker': 'adr/0010-escalation-circuit-breaker.md' },
+        { '0011 Knowledge system': 'adr/0011-knowledge-system.md' },
+        { '0012 Skill registry': 'adr/0012-skill-registry.md' },
+        { '0013 CEL triggers': 'adr/0013-cel-triggers.md' },
+        { '0014 Hub-spoke': 'adr/0014-hub-spoke.md' },
+        { '0015 CSP style-src scope': 'adr/0015-csp-style-src-scope.md' },
+        { '0016 CSP script-src scope': 'adr/0016-csp-script-src-scope.md' },
+        { '0017 Podman Quadlet lifecycle': 'adr/0017-podman-quadlet-lifecycle.md' },
+      ] },
     ]
   }
 ]
@@ -186,6 +235,7 @@ const NAV_STRUCTURE_GENERAL: Array<{ title: string; items: NavItem[] }> = [
     items: [
       { 'What is Hive Commons?': 'community/what-is-hive-commons.md' },
       { 'Join Hive Commons': 'community/join-hive-commons.md' },
+      { 'Community meetings': 'community/meetings.md' },
     ]
   }
 ]
@@ -262,10 +312,12 @@ export function buildPageMap(projectId: ProjectId = 'hive') {
             meta[title] = title
           } else if (allDocFiles.includes(value)) {
             processedFiles.add(value)
-            // const baseName = value.replace(/\.(md|mdx)$/i, '').split('/').pop()!
-            const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
             // Use /docs path for general sections, project path for everything else
             const isGeneralSection = value.startsWith('contributing/') || value.startsWith('community/') || value.startsWith('news/')
+            const baseName = value.replace(/\.(md|mdx)$/i, '').split('/').pop()!
+            const slug = isGeneralSection
+              ? baseName
+              : title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
             const basePathForRoute = isGeneralSection ? 'docs' : projectBasePath
             const route = `/${basePathForRoute}/${parentSlug ? parentSlug + '/' : ''}${slug}`
             routeMap[`${parentSlug ? parentSlug + '/' : ''}${slug}`] = value

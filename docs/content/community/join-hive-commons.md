@@ -57,4 +57,4 @@ Not ready to bring a whole project? You're still welcome:
 - **Join the conversation** on
   [hivecommons-dev@googlegroups.com](https://groups.google.com/g/hivecommons-dev),
   [Discord](https://hivecommons.dev/discord), or the biweekly
-  [community meeting](https://hivecommons.dev/agenda).
+  [community meeting](/docs/community/meetings).
