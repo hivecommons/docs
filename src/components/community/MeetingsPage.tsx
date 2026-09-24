@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import recordingsData from '../../../data/meeting-recordings.json'
 import { COMMUNITY_MEETINGS } from '@/config/community-meetings'
 import { getUpcomingOddIsoWeekMeetings, type UpcomingMeeting } from '@/lib/communityMeetingsSchedule'
@@ -16,6 +16,7 @@ type Recording = {
 }
 
 const UPCOMING_COUNT = 4
+const COUNTDOWN_REFRESH_MS = 60_000
 
 function formatMeetingDate(date: Date, dateStyle: Intl.DateTimeFormatOptions['dateStyle'] = 'full') {
   return new Intl.DateTimeFormat(undefined, {
@@ -42,6 +43,29 @@ function formatLocalDate(date: Date) {
   }).format(date)
 }
 
+function meetingEnd(date: Date) {
+  return new Date(date.getTime() + COMMUNITY_MEETINGS.durationMinutes * 60_000)
+}
+
+function formatCountdown(meeting: UpcomingMeeting | undefined, now: Date) {
+  if (!meeting) return 'Calculating next meeting'
+
+  const end = meetingEnd(meeting.date)
+  if (now >= meeting.date && now <= end) return 'Happening now'
+
+  const diffMs = meeting.date.getTime() - now.getTime()
+  if (diffMs <= 0) return 'Starting soon'
+
+  const totalMinutes = Math.ceil(diffMs / 60_000)
+  const days = Math.floor(totalMinutes / (60 * 24))
+  const hours = Math.floor((totalMinutes - days * 60 * 24) / 60)
+  const minutes = totalMinutes % 60
+
+  if (days > 0) return `in ${days} day${days === 1 ? '' : 's'} ${hours} h`
+  if (hours > 0) return `in ${hours} h ${minutes} min`
+  return `in ${minutes} min`
+}
+
 function calendarHref(date: Date) {
   const start = date.toISOString().replace(/[-:]|\.\d{3}/g, '')
   const end = new Date(date.getTime() + COMMUNITY_MEETINGS.durationMinutes * 60_000)
@@ -55,6 +79,47 @@ function calendarHref(date: Date) {
     details: `Agenda: ${COMMUNITY_MEETINGS.agendaUrl}\nGroup: ${COMMUNITY_MEETINGS.googleGroupUrl}\nJoin: ${COMMUNITY_MEETINGS.meetingUrl}`,
   })
   return `https://calendar.google.com/calendar/render?${params.toString()}`
+}
+
+function escapeIcsText(value: string) {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/\n/g, '\\n')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;')
+}
+
+function toIcsDate(date: Date) {
+  return date.toISOString().replace(/[-:]|\.\d{3}/g, '')
+}
+
+function icsDownloadHref(date: Date) {
+  const details = [
+    `Join: ${COMMUNITY_MEETINGS.meetingUrl}`,
+    `Agenda and notes: ${COMMUNITY_MEETINGS.agendaUrl}`,
+    `Get invites every meeting: ${COMMUNITY_MEETINGS.googleGroupUrl}`,
+  ].join('\n')
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Hive Commons//Docs Community Meetings//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${COMMUNITY_MEETINGS.title.replace(/\s+/g, '-').toLowerCase()}-${toIcsDate(date)}@docs.hivecommons.dev`,
+    `DTSTAMP:${toIcsDate(new Date())}`,
+    `DTSTART:${toIcsDate(date)}`,
+    `DTEND:${toIcsDate(meetingEnd(date))}`,
+    `SUMMARY:${escapeIcsText(COMMUNITY_MEETINGS.title)}`,
+    `DESCRIPTION:${escapeIcsText(details)}`,
+    `LOCATION:${escapeIcsText(COMMUNITY_MEETINGS.meetingUrl)}`,
+    `URL:${COMMUNITY_MEETINGS.meetingUrl}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n')
+
+  return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`
 }
 
 function RecordingCard({ recording, active, onPlay }: { recording: Recording; active: boolean; onPlay: () => void }) {
@@ -91,48 +156,80 @@ function RecordingCard({ recording, active, onPlay }: { recording: Recording; ac
 export function MeetingsPage() {
   const [activeVideo, setActiveVideo] = useState<string | null>(null)
   const [upcoming, setUpcoming] = useState<UpcomingMeeting[]>([])
+  const [now, setNow] = useState<Date | null>(null)
+
   useEffect(() => {
-    setUpcoming(getUpcomingOddIsoWeekMeetings(COMMUNITY_MEETINGS, UPCOMING_COUNT))
+    function refresh() {
+      const current = new Date()
+      setNow(current)
+      setUpcoming(getUpcomingOddIsoWeekMeetings(COMMUNITY_MEETINGS, UPCOMING_COUNT, current))
+    }
+
+    refresh()
+    const timer = window.setInterval(refresh, COUNTDOWN_REFRESH_MS)
+    return () => window.clearInterval(timer)
   }, [])
+
   const next = upcoming[0]
+  const countdown = now ? formatCountdown(next, now) : 'Calculating next meeting'
+  const icsHref = useMemo(() => next ? icsDownloadHref(next.date) : '#', [next])
   const recordings = (recordingsData.recordings as Recording[]).filter(recording =>
     new RegExp(COMMUNITY_MEETINGS.recordingTitlePattern, 'i').test(recording.title)
   )
 
   return (
     <div className="hc-meetings-page">
-      <section className="hc-meeting-hero">
-        <p className="hc-meeting-kicker">Bi-weekly community call</p>
-        <h2>Meet the people building Hive Commons.</h2>
-        <p>
-          The Hive Commons community meeting happens on {COMMUNITY_MEETINGS.weekday}s in odd-numbered ISO weeks at{' '}
-          {COMMUNITY_MEETINGS.timeLabel}. Join the Google group to receive calendar invites during the week of
-          the next meeting, then use the shared agenda to add topics or notes.
-        </p>
-        <div className="hc-meeting-actions">
-          <a className="hc-meeting-primary" href={COMMUNITY_MEETINGS.googleGroupUrl} target="_blank" rel="noreferrer">
-            Join hivecommons-dev for invites
-          </a>
-          <a href={COMMUNITY_MEETINGS.agendaUrl} target="_blank" rel="noreferrer">Agenda and notes</a>
-          <a href={COMMUNITY_MEETINGS.calendarWebUrl} target="_blank" rel="noreferrer">Public calendar</a>
-        </div>
-      </section>
-
-      <section className="hc-meeting-grid" aria-label="Meeting schedule">
-        <article className="hc-meeting-next">
+      <section className="hc-meeting-hero hc-meeting-nextHero" aria-label="Next community meeting">
+        <div className="hc-meeting-nextHeroMain">
           <p className="hc-meeting-kicker">Next meeting</p>
           {next ? (
             <>
               <h2>{formatMeetingDate(next.date)}</h2>
-              <p>In your local time: {formatLocalDate(next.date)}</p>
+              <p className="hc-meeting-localTime">In your local time: {formatLocalDate(next.date)}</p>
+              <p className="hc-meeting-countdown" aria-live="polite">{countdown}</p>
               <div className="hc-meeting-actions">
-                <a className="hc-meeting-primary" href={COMMUNITY_MEETINGS.inviteUrl} target="_blank" rel="noreferrer">Join meeting</a>
-                <a href={calendarHref(next.date)} target="_blank" rel="noreferrer">Add this date</a>
+                <a className="hc-meeting-primary hc-meeting-joinNow" href={COMMUNITY_MEETINGS.meetingUrl} target="_blank" rel="noreferrer">
+                  Join the meeting
+                </a>
+                <a href={icsHref} download={`hive-commons-community-meeting-${next.localDate}.ics`}>
+                  Download .ics
+                </a>
+                <a href={calendarHref(next.date)} target="_blank" rel="noreferrer">
+                  Google Calendar
+                </a>
               </div>
             </>
           ) : (
             <p>The next date is being calculated from the public calendar recurrence.</p>
           )}
+        </div>
+        <aside className="hc-meeting-nextHeroAside">
+          <h2>Meet the people building Hive Commons.</h2>
+          <p>
+            The community call happens on {COMMUNITY_MEETINGS.weekday}s in odd-numbered ISO weeks at{' '}
+            {COMMUNITY_MEETINGS.timeLabel}. You can join the video call directly, or subscribe to the group to
+            receive invites for every meeting.
+          </p>
+          <div className="hc-meeting-actions">
+            <a className="hc-meeting-secondary" href={COMMUNITY_MEETINGS.googleGroupUrl} target="_blank" rel="noreferrer">
+              Get invites every meeting — join the group
+            </a>
+            <a href={COMMUNITY_MEETINGS.agendaUrl} target="_blank" rel="noreferrer">Agenda and notes</a>
+          </div>
+        </aside>
+      </section>
+
+      <section className="hc-meeting-grid" aria-label="Meeting schedule">
+        <article className="hc-meeting-details">
+          <h2>Agenda and meeting notes</h2>
+          <p>
+            Add topics before the call, follow along live, and read notes from previous meetings in the shared
+            agenda document.
+          </p>
+          <div className="hc-meeting-actions">
+            <a href={COMMUNITY_MEETINGS.agendaUrl} target="_blank" rel="noreferrer">Open agenda and notes</a>
+            <a href={COMMUNITY_MEETINGS.calendarWebUrl} target="_blank" rel="noreferrer">Public calendar</a>
+          </div>
         </article>
 
         <article className="hc-meeting-upcoming">

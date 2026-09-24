@@ -7,6 +7,7 @@ export type MeetingScheduleConfig = {
   timeZone: string
   isoWeekday: number
   localTime: { hour: number; minute: number }
+  durationMinutes: number
   exceptions: MeetingException[]
 }
 
@@ -93,7 +94,8 @@ export function getUpcomingOddIsoWeekMeetings(
     const info = isoWeekInfo(localDate)
     if (info.isoWeekday === config.isoWeekday && info.week % 2 === 1 && !cancelled.has(localDate)) {
       const date = zonedTimeToDate(localDate, config.localTime.hour, config.localTime.minute, config.timeZone)
-      if (date.getTime() >= now.getTime() - 60_000) {
+      const end = date.getTime() + config.durationMinutes * 60_000
+      if (end >= now.getTime()) {
         upcoming.push({ date, localDate })
       }
     }

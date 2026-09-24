@@ -5,6 +5,7 @@ const config: MeetingScheduleConfig = {
   timeZone: 'America/New_York',
   isoWeekday: 4,
   localTime: { hour: 10, minute: 0 },
+  durationMinutes: 30,
   exceptions: [],
 }
 
@@ -31,5 +32,13 @@ describe('community meeting odd ISO week recurrence', () => {
       new Date('2026-12-30T15:00:00Z'),
     )
     expect(meetings.map(meeting => meeting.localDate)).toEqual(['2027-01-07', '2027-01-21'])
+  })
+
+  it('keeps the active meeting as next until the meeting window ends', () => {
+    const [during] = getUpcomingOddIsoWeekMeetings(config, 1, new Date('2026-09-24T14:15:00Z'))
+    const [after] = getUpcomingOddIsoWeekMeetings(config, 1, new Date('2026-09-24T14:31:00Z'))
+
+    expect(during.localDate).toBe('2026-09-24')
+    expect(after.localDate).toBe('2026-10-08')
   })
 })
