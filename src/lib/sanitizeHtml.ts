@@ -86,12 +86,39 @@ const MDX_SAFE_TEXT_TAGS = new Set([
   'ul',
 ])
 
+// Fenced code blocks and inline code spans are literal in MDX, so `<name>`
+// placeholders inside them must survive untouched; escaping them renders as
+// a visible `&lt;name&gt;` in the published page.
+const MARKDOWN_FENCE = /`{3,}[\s\S]*?`{3,}|~{3,}[\s\S]*?~{3,}/g
+const MARKDOWN_INLINE_CODE = /`[^`\n]*`/g
+const TABLE_ROW = /^\s*\|/
+const CODE_PLACEHOLDER = /\u0000MDX_CODE_(\d+)\u0000/g
+
+// GFM splits table cells on `|` even inside backticks, so on such a row the
+// code-span boundaries the regex sees are not the ones the parser will use.
+// Leave those rows to the escaping pass rather than protect the wrong span.
+function inlineCodeIsReliable(line: string): boolean {
+  if (!TABLE_ROW.test(line)) return true
+  return !(line.match(MARKDOWN_INLINE_CODE) ?? []).some(span => span.includes('|'))
+}
+
 function escapeMdxAmbiguousAngles(content: string): string {
-  return content
+  const codeSpans: string[] = []
+  const put = (match: string) => {
+    codeSpans.push(match)
+    return `\u0000MDX_CODE_${codeSpans.length - 1}\u0000`
+  }
+  const withPlaceholders = content
+    .replace(MARKDOWN_FENCE, put)
+    .split('\n')
+    .map(line => (inlineCodeIsReliable(line) ? line.replace(MARKDOWN_INLINE_CODE, put) : line))
+    .join('\n')
+  const escaped = withPlaceholders
     .replace(/<((?:https?:\/\/|mailto:)[^>\s]+)>/g, '[$1]($1)')
     .replace(/<\/?([A-Za-z][A-Za-z0-9_-]*)>/g, (match, tagName: string) => {
       return MDX_SAFE_TEXT_TAGS.has(tagName.toLowerCase()) ? match : escapeAngle(match)
     })
+  return escaped.replace(CODE_PLACEHOLDER, (_m, i) => codeSpans[Number(i)])
 }
 
 /**
