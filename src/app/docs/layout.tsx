@@ -26,9 +26,9 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 const SITE_URL = 'https://docs.hivecommons.dev'
-const SITE_TITLE = 'Hive Commons Docs - Autonomous AI Agent Fleets'
+const SITE_TITLE = 'Hive Commons Docs - AI Agent Collaboration Projects'
 const SITE_DESCRIPTION =
-  'Official documentation for the Hive Commons projects: Hive autonomous agent fleets, hotshot, and pluk.'
+  'Documentation for Hive Commons projects that help AI coding agents and maintainers work together: Hive, Spektacular, hotshot, pluk, promptargs, rationguard, and dibs.'
 
 export const metadata: Metadata = {
   title: {
