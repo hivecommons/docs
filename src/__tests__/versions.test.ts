@@ -116,6 +116,10 @@ describe('isVersionBranch', () => {
     expect(isVersionBranch('docs/1.2.3')).toBe(true)
   })
 
+  it('accepts configured Hive version branches', () => {
+    expect(isVersionBranch(PROJECTS.hive.versions.latest.branch)).toBe(true)
+  })
+
   it('rejects everything else', () => {
     expect(isVersionBranch('master')).toBe(false)
     expect(isVersionBranch('feature/docs')).toBe(false)

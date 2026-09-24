@@ -43,8 +43,21 @@ export interface ProjectConfig {
 const HIVE_VERSIONS: Record<string, VersionInfo> = {
   latest: {
     label: "v5 (Latest)",
-    branch: "main",
+    branch: "v5",
     isDefault: true,
+  },
+  v6: {
+    label: "v6 (Edge)",
+    branch: "v6",
+    isDefault: false,
+    isDev: true,
+    externalUrl: "https://github.com/hivecommons/hive/tree/v6/src/docs",
+  },
+  v4: {
+    label: "v4 (Frozen)",
+    branch: "v4",
+    isDefault: false,
+    externalUrl: "https://github.com/hivecommons/hive/tree/v4/src/docs",
   },
 }
 
@@ -197,6 +210,12 @@ export function getBranchForVersion(version: VersionKey): string {
 }
 
 export function getVersionFromBranch(branch: string): VersionKey | null {
+  for (const [key, value] of Object.entries(HIVE_VERSIONS)) {
+    if (value.branch === branch) {
+      return key as VersionKey
+    }
+  }
+
   // Check if branch matches docs/{version} pattern
   const match = branch.match(/^docs\/(.+)$/)
   if (match) {
@@ -226,7 +245,8 @@ export function getAllVersions(): Array<{ key: VersionKey } & VersionInfo> {
 
 // Helper to validate if a branch name follows version convention
 export function isVersionBranch(branch: string): boolean {
-  return branch === "main" || branch.startsWith("docs/")
+  return branch === "main" || branch.startsWith("docs/") ||
+    Object.values(HIVE_VERSIONS).some(version => version.branch === branch)
 }
 
 // Get the URL for a specific version (project-aware)
