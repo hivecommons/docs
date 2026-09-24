@@ -4,7 +4,7 @@
 
 # How to use Spektacular
 
-_Take a feature from a rough idea to working code using a Spektacular spec, the project knowledge base, and a plan-and-implement loop driven by your coding agent of choice._
+_Take a feature from a rough idea to working code using a Spektacular (Spek) spek, the project knowledge base, and a plan-and-implement loop driven by your coding agent of choice._
 
 AI coding agents are very good at producing code that looks right. The problem
 is that *looks right* and *is right for your codebase* are rarely the same
@@ -17,7 +17,7 @@ The common response is to iterate: prompt, review, correct, prompt again. This
 works, but it is slow, and it tends to surface the same mistakes repeatedly. The
 agent does not learn what your team already knows.
 
-In this tutorial you will see how Spektacular's Spec Driven Development workflow
+In this tutorial you will see how Spek's Spec Driven Development workflow
 improves this iterative process by taking a measured, planned approach to
 feature development.
 
@@ -26,29 +26,29 @@ datastore to an existing Go HTTP API as the example. The example itself does
 not matter much; what matters is the pattern, and the part of the pattern
 where most runs succeed or fail: providing the right context.
 
-The tutorial works with every coding agent Spektacular supports. Pick yours at
+The tutorial works with every coding agent Spek supports. Pick yours at
 the top of the page, and the agent-specific commands and screenshots will swap
 to match.
 
 ## What is Spektacular
 
-Spektacular is a CLI and a collection of skills that integrates with your coding
+Spek is a CLI and a collection of skills that integrates with your coding
 agent and drives Spec Driven Development end to end. It is agent-agnostic,
 shipping with adapters for Claude Code, Codex, and Bob, and it has a pluggable
-data layer so you can store your specs and knowledge base in whatever way works
+data layer so you can store your speks and knowledge base in whatever way works
 for you.
 
 There are three agent skills that do the real work:
 
 ```bash
 /spek-new        # scaffold a new specification
-/spek-plan       # turn a spec into a detailed implementation plan
+/spek-plan       # turn a spek into a detailed implementation plan
 /spek-implement  # drive the agent through the plan
 ```
 
 Each skill runs as a resumable state machine. You can stop in the middle of a
 run, edit a file, and pick the run back up. Nothing is hidden inside opaque
-agent state: the spec, the plan, the supporting research and context documents,
+agent state: the spek, the plan, the supporting research and context documents,
 and the project knowledge base all live on disk where you can read and edit
 them.
 
@@ -99,7 +99,7 @@ git checkout tutorial
 
 ### Step 2: Install Spektacular
 
-Spektacular is a Go binary. Install it from GitHub releases, Homebrew, or your
+Spek is a Go binary. Install it from GitHub releases, Homebrew, or your
 distribution's package manager. Pick whichever method fits your workflow from
 the [installation guide](https://spektacular.dev/install/).
 
@@ -111,7 +111,7 @@ spektacular --version
 
 ### Step 3: Install and configure your coding agent
 
-Spektacular drives an external coding agent. Install the one you picked at the
+Spek drives an external coding agent. Install the one you picked at the
 top of the page. The rest of the tutorial assumes it is on your `PATH`.
 
 **Claude Code**
@@ -134,9 +134,9 @@ bob --version
 
 **Codex**
 
-Install the Codex CLI and complete its first-run setup. Spektacular
+Install the Codex CLI and complete its first-run setup. Spek
 invokes `codex` non-interactively for each phase, so make sure the
-CLI succeeds outside Spektacular before continuing.
+CLI succeeds outside Spek before continuing.
 
 ```bash
 codex --version
@@ -144,12 +144,12 @@ codex --version
 
 ### Step 4: Initialise your project
 
-Every repository you want to use Spektacular with needs to be initialised.
+Every repository you want to use Spek with needs to be initialised.
 This installs the skills into your coding agent and configures the local
 knowledge base for the project.
 
-Run `spektacular init` from the root of the codebase you want Spektacular to
-operate on, passing your chosen agent's identifier so Spektacular knows which
+Run `spektacular init` from the root of the codebase you want Spek to
+operate on, passing your chosen agent's identifier so Spek knows which
 CLI to drive.
 
 **Claude Code**
@@ -192,7 +192,7 @@ Let's now look a little deeper at the specification.
 
 If you have worked with Product Requirement Documents (PRDs), you will be
 familiar with the process of translating business requirements into a technical
-specification that you can turn into code. The specification in Spektacular
+specification that you can turn into code. The spek in Spek
 serves the same purpose: it is a hint to the agent about what you want to
 build.
 
@@ -201,7 +201,7 @@ build, not *how* you want to build it. The *how* is the agent's job. The Spec
 Driven Development process guides the agent to produce code that satisfies your
 requirements and fits the way your system is already built.
 
-The specification in the Spektacular workflow is a markdown file with the
+The spek in the Spek workflow is a markdown file with the
 following sections:
 * Overview
 * Requirements
@@ -212,9 +212,9 @@ following sections:
 * Non-Goals 
 
 The content in these sections guides the agent when it creates the technical
-plan that is later implemented. Time invested in the specification pays off,
+plan that is later implemented. Time invested in the spek pays off,
 because the resulting plan is more likely to be correct and to contain the
-features you actually want. The spec also serves as living documentation, and it
+features you actually want. The spek also serves as living documentation, and it
 lets you collaborate with your team on the requirements before any code is
 written.
 
@@ -244,7 +244,7 @@ You will be prompted to enter the name of the feature that you want to build.
 
 For the tutorial we are going to use `SQLite migration` as the feature name.
 
-Spektacular will automatically create the file name for the spec and allocate an
+Spek will automatically create the file name for the spek and allocate an
 ID to it. This depends on the configuration for your project. The
 configuration for the example is stored at `.spektacular/config.yaml`; the
 following shows the config for the spec section. 
@@ -258,16 +258,16 @@ spec:
 ```
 
 When you enter the name SQLite migration into the prompt box, you will be
-prompted to run a command. The way Spektacular works is that the skill
+prompted to run a command. The way Spek works is that the skill
 prompts the agent to call the Spektacular CLI with the right arguments. This
-handles tasks like creating the spec file and enabling knowledge base
+handles tasks like creating the spek file and enabling knowledge base
 lookups. 
 
 ![spektacular command approval](images/tutorials/getting-started/approval-claude.png)
 
-Once you approve, an empty spec will be created in the folder
+Once you approve, an empty spek will be created in the folder
 `.spektacular/specs`, and the agent will then start to prompt you to complete
-the sections of the spec. 
+the sections of the spek. 
 
 ### Overview
 
@@ -298,8 +298,8 @@ Once you submit it, the agent will move on to the next section, which is the
 requirements.
 
 Your agent will probably ask you for permission to write to a temporary file.
-Spektacular writes all temporary content and context to disk before creating the
-final specification or plan. This makes the workflow resumable, and it also lets
+Spek writes all temporary content and context to disk before creating the
+final spek or plan. This makes the workflow resumable, and it also lets
 you see and edit the working copy.
 
 ### Requirements
@@ -498,25 +498,25 @@ limits the scope of the plan.
 ![spec non-goals](images/tutorials/getting-started/non-goals-bob.png)
 
 The skill tells the agent to suggest non-goals for you, based on the
-current specification and the answers you have already provided. In this
+current spek and the answers you have already provided. In this
 instance the non-goals are correct for our feature, so we can just use the
 suggested list. 
 
-That completes the final section of the specification. The next step is for the
-agent to verify the specification before writing it to the specs directory.
+That completes the final section of the spek. The next step is for the
+agent to verify the spek before writing it to the specs directory.
 
 ### Verification
 
 [Watch this section on YouTube (from 8:22)](https://youtu.be/ZRVa9gml_Bg?t=502)
 
-In the final step, the agent runs a pass over the specification to verify that it
+In the final step, the agent runs a pass over the spek to verify that it
 is complete and meets the requirements for a good specification.
 
-It does this in two ways. First, it checks that the specification is well formed.
+It does this in two ways. First, it checks that the spek is well formed.
 Second, a subagent is launched with only the finished document (not the
-working files, context, or conversation), which forces it to judge the spec the
+working files, context, or conversation), which forces it to judge the spek the
 way a third-party reviewer would. Any feedback from the subagent is passed back
-to the main agent, which can make final adjustments before writing the spec to
+to the main agent, which can make final adjustments before writing the spek to
 disk.
 
 **Claude Code**
@@ -527,9 +527,9 @@ disk.
 
 ![finished spec](images/tutorials/getting-started/finished-bob.png)
 
-The agent will now generate your full specification and write it to the defined
+The agent will now generate your full spek and write it to the defined
 specification store (in this case `.spektacular/specs/`). You can open the file
-and review the final specification. It should look something like this:
+and review the final spek. It should look something like this:
 
 ```markdown
 # Feature: 20260605141835-sqlite-migration
@@ -547,8 +547,8 @@ Today the monster and user records are kept in plain text files. This feature mo
 - The system must query the datastore on demand instead of loading all monster and user data into memory at startup.
 ```
 
-When reviewing the specification, you may find elements you want to change or
-add. You can either edit the spec directly, or chat with the agent and ask it to
+When reviewing the spek, you may find elements you want to change or
+add. You can either edit the spek directly, or chat with the agent and ask it to
 make the changes for you. 
 
 Before we move on to the next phase of Spec Driven Development, the plan phase,
@@ -579,7 +579,7 @@ As a developer, before you start coding, you assemble all of this information.
 It is often the difference between success and failure. So if the agent is going
 to act on your behalf, it needs the same context you do.
 
-Spektacular gives you two tiers to put that context in:
+Spek gives you two tiers to put that context in:
 * A repository's own knowledge, about that repository's code
 * The project's shared knowledge, for anything that spans repositories
 
@@ -712,7 +712,7 @@ func (h *Handler) GetMonster(w http.ResponseWriter, r *http.Request)
 As you can see, this code uses both conventions: Context Cancellation and Dependency Injection. This follows Go best practice and idioms. Should
 your team have a different approach, you can of course capture that in the knowledge base, and the agent will use it instead.
 
-Let's now look at the concept of a team knowledge base and learn how Spektacular
+Let's now look at the concept of a team knowledge base and learn how Spek
 supports multiple knowledge sources.
 
 ### Knowledge that spans repositories
@@ -748,7 +748,7 @@ knowledge:
     location: knowledge
 ```
 
-When the agent searches for context, Spektacular queries every store the request
+When the agent searches for context, Spek queries every store the request
 covers and aggregates the results, tagging each one with the tier and store it
 came from. Narrow a request with `--tier` and `--filter` when you only want
 particular stores. These results are passed back to the agent, which can use
@@ -764,7 +764,7 @@ The plan is the technical implementation blueprint of what the agent will
 produce. It provides enough detail to give you a firm idea of direction and
 enough context for the implementation itself.
 
-As with the specification, you create a plan using the `spek-plan` skill.
+As with the spek, you create a plan using the `spek-plan` skill.
 
 **Claude Code**
 
@@ -774,12 +774,12 @@ As with the specification, you create a plan using the `spek-plan` skill.
 
 ![plan start](images/tutorials/getting-started/plan-bob.png)
 
-The agent will then prompt you to enter the name of the specification you
-want to generate a plan for. Select the spec you just created, and the
+The agent will then prompt you to enter the name of the spek you
+want to generate a plan for. Select the spek you just created, and the
 agent will start to generate the plan using the configured context.
 
 During the planning process, the agent will ask you for clarification on any
-points it cannot infer from the specification or the context.
+points it cannot infer from the spek or the context.
 
 **Claude Code**
 
@@ -790,7 +790,7 @@ points it cannot infer from the specification or the context.
 ![plan questions](images/tutorials/getting-started/plan-question-bob.png)
 
 You will also be asked to confirm some architectural decisions the agent has
-retrieved from the specification and the context.
+retrieved from the spek and the context.
 
 **Claude Code**
 
@@ -876,4 +876,4 @@ stay the same regardless of which tool you use:
 - **Process**: spec, plan, refine, implement, with humans in the loop at every
   transition.
 
-In addition to producing better, more correct code, the process also produces a living record of the work that was done, and why. The specification and plan are both written down, and the implementation is reviewed and approved by a human at every step. This makes it easier to onboard new team members, to review past decisions, and to understand how the system works.
+In addition to producing better, more correct code, the process also produces a living record of the work that was done, and why. The spek and plan are both written down, and the implementation is reviewed and approved by a human at every step. This makes it easier to onboard new team members, to review past decisions, and to understand how the system works.

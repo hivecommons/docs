@@ -28,7 +28,7 @@ const jetbrainsMono = JetBrains_Mono({
 const SITE_URL = 'https://docs.hivecommons.dev'
 const SITE_TITLE = 'Hive Commons Docs - AI Agent Collaboration Projects'
 const SITE_DESCRIPTION =
-  'Documentation for Hive Commons projects that help AI coding agents and maintainers work together: Hive, Spektacular, hotshot, pluk, promptargs, rationguard, and dibs.'
+  'Documentation for Hive Commons projects that help AI coding agents and maintainers work together: Hive, Spektacular (Spek), hotshot, pluk, promptargs, rationguard, and dibs.'
 
 const INTEGRATION_NAMES = [
   'Claude Code',
@@ -53,6 +53,8 @@ const INTEGRATION_NAMES = [
   'OpenAI',
   'DeepSeek',
 ]
+
+const DOCS_KEYWORDS = [...INTEGRATION_NAMES, 'Spektacular', 'Spek', 'speks']
 
 const INFRA_SPONSORS = [
   { '@type': 'Organization', name: 'Akamai', url: 'https://www.linode.com/' },
@@ -80,6 +82,22 @@ const DOCS_JSON_LD = [
   },
   {
     '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Spektacular',
+    alternateName: 'Spek',
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Linux, macOS',
+    license: 'https://www.apache.org/licenses/LICENSE-2.0',
+    url: 'https://spektacular.dev/',
+    codeRepository: 'https://github.com/hivecommons/spektacular',
+    keywords: ['Spektacular', 'Spek', 'speks', 'spec-driven development', 'AI coding agents'].join(', '),
+    featureList: [
+      'Turns a markdown spek into a reviewed implementation plan.',
+      'Drives coding agents through resumable spec, plan, and implement workflows.',
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Hive Commons',
     url: 'https://hivecommons.dev/',
@@ -94,6 +112,7 @@ export const metadata: Metadata = {
     template: '%s | Hive Commons Docs',
   },
   description: SITE_DESCRIPTION,
+  keywords: DOCS_KEYWORDS,
   metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: '/docs',
