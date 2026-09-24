@@ -17,7 +17,7 @@ const HIVE_DOCS_PATH = process.env.HIVE_DOCS_PATH
 const STATIC_PROJECTS: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'spektacular']
 
 const INTEGRATIONS_DESCRIPTION =
-  'Supported Hive integrations: Claude Code, GitHub Copilot CLI, Codex, Gemini, vLLM, LiteLLM, llm-d, watsonx.ai and more.'
+  'Hive works with Claude Code, GitHub Copilot, Codex, Gemini, IBM Bob, Goose, vLLM, llm-d and more.'
 
 const INTEGRATION_NAMES = [
   'Claude Code',
@@ -44,20 +44,53 @@ const INTEGRATION_NAMES = [
 ]
 
 function integrationsJsonLd() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'TechArticle',
-    headline: 'Supported agents & inference engines',
-    description: INTEGRATIONS_DESCRIPTION,
-    url: 'https://docs.hivecommons.dev/docs/hive/integrations',
-    about: INTEGRATION_NAMES.map((name) => ({ '@type': 'SoftwareApplication', name })),
-    keywords: INTEGRATION_NAMES.join(', '),
-    publisher: {
+  const sponsors = [
+    { '@type': 'Organization', name: 'Akamai', url: 'https://www.linode.com/' },
+    { '@type': 'Organization', name: 'Oracle Cloud', url: 'https://www.oracle.com/cloud/cloud-native/kubernetes-engine/' },
+    { '@type': 'Organization', name: 'Cloudflare', url: 'https://www.cloudflare.com/' },
+    { '@type': 'Organization', name: 'GitHub Copilot', url: 'https://github.com/features/copilot' },
+    { '@type': 'Organization', name: 'Bluehost', url: 'https://www.bluehost.com/' },
+  ]
+
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'TechArticle',
+      headline: 'Supported agents & inference engines',
+      description: INTEGRATIONS_DESCRIPTION,
+      url: 'https://docs.hivecommons.dev/docs/hive/integrations',
+      about: INTEGRATION_NAMES.map((name) => ({ '@type': 'SoftwareApplication', name })),
+      keywords: INTEGRATION_NAMES.join(', '),
+      publisher: {
+        '@type': 'Organization',
+        name: 'Hive Commons',
+        url: 'https://hivecommons.dev/',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'Hive',
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'Linux, macOS',
+      license: 'https://www.apache.org/licenses/LICENSE-2.0',
+      url: 'https://hive.hivecommons.dev/',
+      codeRepository: 'https://github.com/hivecommons/hive',
+      keywords: INTEGRATION_NAMES.join(', '),
+      featureList: [
+        'Drives supported agent CLI backends including Claude Code, GitHub Copilot CLI, Goose, OpenAI Codex CLI, IBM Bob, Gemini CLI and more.',
+        'Routes inference through supported engines and gateways including vLLM, llm-d, LiteLLM, IBM watsonx.ai, OpenRouter, Anthropic, OpenAI and DeepSeek.',
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
       '@type': 'Organization',
       name: 'Hive Commons',
       url: 'https://hivecommons.dev/',
+      sponsor: sponsors,
+      funder: sponsors,
     },
-  }
+  ]
 }
 
 export const dynamic = 'force-static'
