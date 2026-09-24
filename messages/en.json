@@ -1,20 +1,20 @@
 {
   "heroSection": {
-    "line1": "Multi-Cluster",
-    "line2": "Kubernetes Operations",
+    "line1": "AI Agent",
+    "line2": "AI Agent Collaboration",
     "line3": "and Orchestration",
-    "subtitle": "Experience the future of multi-cluster Kubernetes. Hive is an AI-powered dashboard that manages all your clusters with natural language missions, real-time monitoring, and community-driven automation.",
+    "subtitle": "Experience the future of AI-agent collaboration. Hive is an AI-powered dashboard that manages all your clusters with natural language missions, real-time monitoring, and community-driven automation.",
     "terminalTitle": "hive-console",
     "terminalStatus": "READY",
-    "buttonInstall": "Try Console",
-    "buttonDocs": "Explore Console Docs",
+    "buttonInstall": "Explore Hive",
+    "buttonDocs": "Explore Hive Docs",
     "getStartedWith": "Get Started with",
     "immediateStart": "Less than a minute to get installed and started with your own Hive.",
     "consoleInstall": "Hive",
     "consoleInstallTime": "Sets up in less than a minute"
   },
   "footer": {
-    "description": "AI-powered multi-cluster Kubernetes dashboard. Manage all your clusters with natural language, real-time monitoring, and community-driven extensions.",
+    "description": "AI-powered AI-agent collaboration dashboard. Manage all your clusters with natural language, real-time monitoring, and community-driven extensions.",
     "docs": "Docs",
     "overview": "Overview",
     "userGuide": "User Guide",
@@ -102,19 +102,19 @@
   "aboutSection": {
     "title": "What is",
     "titleSpan": "Hive",
-    "subtitle": "An AI-powered multi-cluster Kubernetes dashboard that gives you unified visibility and control across all your clusters — installed in under a minute.",
+    "subtitle": "An AI-powered AI-agent collaboration dashboard that gives you unified visibility and control across all your clusters — installed in under a minute.",
     "card1Title": "AI-Powered Operations",
     "card1Description": "Use natural language AI Missions to manage your clusters. Ask questions, deploy workloads, and troubleshoot issues through an intelligent assistant that understands your infrastructure.",
-    "card2Title": "Unified Multi-Cluster Dashboard",
+    "card2Title": "Unified AI Agent Dashboard",
     "card2Description": "See all your Kubernetes clusters in a single pane of glass. Monitor resources, view logs, and manage workloads across any cluster — cloud, on-prem, or edge — from one interface.",
     "card3Title": "Extensible Marketplace",
-    "card3Description": "Customize your Console with dashboards, card presets, and themes from the community marketplace. Build and share your own extensions to tailor the experience to your needs.",
+    "card3Description": "Customize your agent workflow with dashboards, card presets, and themes from the community marketplace. Build and share your own extensions to tailor the experience to your needs.",
     "card4Title": "Using Lens?",
     "card4Description": "Everything Lens had. Plus everything it didn't.",
     "card4Details": "Hive goes beyond basic cluster management with AI, security, cost, and GitOps built in.",
     "card5Title": "Using Headlamp?",
     "card5Description": "Headlamp is a great Kubernetes dashboard.",
-    "card5Details": "Hive adds multi-cluster AI, GPU visibility, and built-in ops tools.",
+    "card5Details": "Hive adds AI-agent AI, GPU visibility, and built-in ops tools.",
     "card6Title": "Your Brand. Our Platform",
     "card6Description": "Give your CNCF project a production-ready Kubernetes dashboard in minutes.",
     "card6Details": "150+ cards, 30 dashboards, AI missions — all rebranded to your project.",
@@ -125,7 +125,7 @@
     "card8Description": "User Reviews and Tutorials",
     "card8Details": "See what actual Hive users have to say",
     "learnMore": "Learn more",
-    "appendix": "Hive plus Hive Commons-MCP form a new, standalone replacement for the functions of the legacy Hive Commons components. Information on those predecessors is included in the Legacy section of the documentation"
+    "appendix": "Hive plus Hive Commons tools form a new, standalone replacement for the functions of the legacy Hive Commons components. Information on those predecessors is included in the Legacy section of the documentation"
   },
   "contactSection": {
     "title": "Get",
@@ -197,7 +197,7 @@
     "card1Description": "Get up and running with Hive Commons in minutes using our streamlined installation guide with automated prerequisite checking and step-by-step deployment procedures.",
     "card1Button": "Start Quick Installation",
     "card2Title": "Explore Use Cases & Community",
-    "card2Description": "Discover multi-cluster workload management capabilities and connect with the community.",
+    "card2Description": "Discover AI-agent workload management capabilities and connect with the community.",
     "card2Button1": "Join Slack",
     "card2Button2": "GitHub",
     "card2Button3": "Projects",
@@ -213,7 +213,7 @@
   "howToUseSection": {
     "title": "How to Use",
     "titleSpan": "Hive Commons",
-    "subtitle": "Follow these 5 simple steps to get started with Hive Commons multi-cluster orchestration",
+    "subtitle": "Follow these 5 simple steps to get started with Hive Commons AI-agent orchestration",
     "step1Title": "Set Up Your Environment",
     "step1Description": "Install required tools and initialize core components",
     "step1DescriptionDesktop": "Install required tools and initialize core components including KubeFlex hosting cluster, ITS, WDS, and WECs.",
@@ -266,7 +266,7 @@
   "useCasesSection": {
     "title": "What You Can",
     "titleSpan": "Do",
-    "subtitle": "Discover how Hive simplifies multi-cluster Kubernetes operations.",
+    "subtitle": "Discover how Hive simplifies AI-agent collaboration operations.",
     "learnMore": "Learn more",
     "cases": {
       "edge": {
@@ -274,16 +274,16 @@
         "description": "Manage clusters using natural language. Deploy workloads, troubleshoot issues, and get intelligent recommendations — all through conversational AI.",
         "backContent": {
           "title": "Intelligent Cluster Management",
-          "description": "AI Missions let you interact with your clusters through natural language, powered by MCP and A2A protocols.",
+          "description": "AI Missions let you interact with your clusters through natural language, powered by governed automation workflows.",
           "features": [
             "Natural language cluster operations",
             "AI-powered troubleshooting and recommendations",
-            "MCP and A2A agent integration"
+            "governed AI agent integration"
           ]
         }
       },
       "compliance": {
-        "title": "Multi-Cluster Visibility",
+        "title": "AI Agent Visibility",
         "description": "Monitor all your Kubernetes clusters from a single dashboard. See resource usage, pod status, and cluster health at a glance across your entire fleet.",
         "backContent": {
           "title": "Unified Dashboard",
@@ -310,7 +310,7 @@
       },
       "dr": {
         "title": "Marketplace & Themes",
-        "description": "Extend your Console with community-built dashboards, card presets, and themes. Install from the marketplace or create and share your own customizations.",
+        "description": "Extend your workflow with community-built dashboards, card presets, and themes. Install from the marketplace or create and share your own customizations.",
         "backContent": {
           "title": "Community Extensions",
           "description": "The marketplace provides a growing library of extensions built by the community.",
@@ -335,14 +335,14 @@
         }
       },
       "performance": {
-        "title": "Agent & MCP Integration",
-        "description": "Connect AI agents to your clusters through the Model Context Protocol (MCP) and Agent-to-Agent (A2A) protocol for automated operations and intelligent orchestration.",
+        "title": "Agent integration",
+        "description": "Connect AI agents to your clusters through the governed automation workflows for automated operations and intelligent orchestration.",
         "backContent": {
           "title": "AI-Native Architecture",
-          "description": "Console is built from the ground up to work with AI agents and automation.",
+          "description": "Hive Commons tools are built from the ground up to work with AI agents and automation.",
           "features": [
-            "MCP server for AI tool integration",
-            "A2A protocol for agent collaboration",
+            "AI tool integration",
+            "agent collaboration workflows",
             "Extensible agent framework"
           ]
         }
@@ -426,7 +426,7 @@
     "coreKubectl": "kubectl",
     "coreKubectlDesc": "Kubernetes command-line tool",
     "coreKubeflex": "KubeFlex",
-    "coreKubeflexDesc": "Core component for multi-cluster management",
+    "coreKubeflexDesc": "Core component for AI-agent management",
     "coreOcm": "OCM CLI",
     "coreOcmDesc": "Open Cluster Management command line interface",
     "coreHelm": "Helm",
@@ -472,7 +472,7 @@
     "installProcessTitle": "Installation Process",
     "installProcess1": "Creates a local {platform} cluster",
     "installProcess2": "Installs Hive Commons core components",
-    "installProcess3": "Sets up multi-cluster management capabilities",
+    "installProcess3": "Sets up AI-agent management capabilities",
     "installProcess4": "Configures workload distribution",
     "installNextTitle": "Next Steps",
     "installNext1": "Verify installation",
@@ -489,7 +489,7 @@
     "faq3Q": "Do I need to install all prerequisites?",
     "faq3A": "For basic Hive Commons usage, you only need the Core prerequisites. Install Additional prerequisites if you want to run examples. Build prerequisites are only needed for development and building from source.",
     "faq4Q": "Can I use Hive Commons with existing Kubernetes clusters?",
-    "faq4A": "Yes! Hive Commons can manage existing Kubernetes clusters. You can connect your production clusters alongside local development clusters for unified multi-cluster management.",
+    "faq4A": "Yes! Hive Commons can manage existing Kubernetes clusters. You can connect your production clusters alongside local development clusters for unified AI-agent management.",
     "faq5Q": "What are the minimum system requirements?",
     "faq5A": "Hive Commons requires at least 4GB RAM and 2 CPU cores. You'll need Docker (v20.0+), kubectl (v1.27+), and either kind (v0.20+) or k3d for local clusters."
   },
@@ -552,7 +552,7 @@
           "benefits": "While this is an unpaid program, successful graduates receive a certificate of completion, a letter of recommendation, and are given priority consideration for any future paid mentorship programs like GSoC or LFX.",
           "description": "Interns for Open Source (IFoS) is a unique, unpaid internship program created by Hive Commons. It is designed for individuals who are passionate about open source and want to gain hands-on experience with a cutting-edge project.",
           "overview": "This 3-month program provides a direct pathway into the Hive Commons community. Participants work on meaningful projects and are mentored by our core developers.",
-          "eligibility": "We welcome applications from anyone with a strong interest in Kubernetes, multi-cluster orchestration, and open source. Basic knowledge of Go and container technologies is a plus.",
+          "eligibility": "We welcome applications from anyone with a strong interest in Kubernetes, AI-agent orchestration, and open source. Basic knowledge of Go and container technologies is a plus.",
           "timeline": "IFoS is a rolling program. Applications are accepted year-round, and internships start based on project availability and applicant schedules.",
           "structure": "Interns are paired with a mentor and integrated into one of our development teams. The program is flexible, allowing for part-time or full-time commitment.",
           "howToApply": "To apply, please send your resume and a brief statement of interest to our community email. We also encourage you to start contributing to our GitHub repository.",
@@ -601,37 +601,37 @@
       "console": {
         "name": "Hive",
         "fullName": "Hive",
-        "description": "An AI-powered, multi-cluster Kubernetes dashboard that adapts to how you work. Try it or install it locally in under a minute. It's multi-cluster from day one — OpenShift, EKS, GKE, kind, k3s, whatever you have in your kubeconfig shows up automatically."
+        "description": "An AI-powered, AI-agent collaboration dashboard that adapts to how you work. Try it or install it locally in under a minute. It's AI-agent from day one — OpenShift, EKS, GKE, kind, k3s, whatever you have in your kubeconfig shows up automatically."
       },
       "hive": {
         "name": "Hive Commons (Legacy)",
         "fullName": "Hive Commons (Legacy)",
-        "description": "The original multi-cluster Kubernetes orchestration engine. Now integrated into Hive for a unified experience."
+        "description": "The original AI-agent collaboration orchestration engine. Now integrated into Hive for a unified experience."
       },
       "hiveUI": {
         "name": "Hive Commons UI",
         "fullName": "Hive Commons UI",
-        "description": "A powerful web-based interface for managing multi-cluster Kubernetes orchestration with intuitive dashboards, real-time monitoring, and comprehensive controls for streamlined cluster management. Features advanced visualization tools, customizable workspaces, and intelligent alerts to optimize your multi-cluster operations."
+        "description": "A powerful web-based interface for managing AI-agent collaboration orchestration with intuitive dashboards, real-time monitoring, and comprehensive controls for streamlined cluster management. Features advanced visualization tools, customizable workspaces, and intelligent alerts to optimize your AI-agent operations."
       },
       "kubeflex": {
         "name": "KubeFlex",
         "fullName": "KubeFlex",
-        "description": "A flexible Kubernetes management platform providing comprehensive tools and resources for multi-cluster orchestration and workload distribution. Enables dynamic cluster provisioning, automated scaling, and intelligent resource allocation across heterogeneous environments. Simplifies complex deployment scenarios with policy-driven automation."
+        "description": "A flexible Kubernetes management platform providing comprehensive tools and resources for AI-agent orchestration and workload distribution. Enables dynamic cluster provisioning, automated scaling, and intelligent resource allocation across heterogeneous environments. Simplifies complex deployment scenarios with policy-driven automation."
       },
       "a2a": {
-        "name": "A2A",
-        "fullName": "A2A",
-        "description": "Application-to-Application communication platform enabling seamless connectivity within the Hive Commons ecosystem. Facilitates secure data exchange and real-time communication between distributed microservices. Provides advanced routing, load balancing, and service discovery capabilities for complex multi-cluster deployments."
+        "name": "Agent workflows",
+        "fullName": "Agent workflows",
+        "description": "Application-to-Application communication platform enabling seamless connectivity within the Hive Commons ecosystem. Facilitates secure data exchange and real-time communication between distributed microservices. Provides advanced routing, load balancing, and service discovery capabilities for complex AI-agent deployments."
       },
       "kubectlMulti": {
         "name": "kubectl-multi",
         "fullName": "kubectl-multi",
-        "description": "A comprehensive kubectl plugin for multi-cluster operations with Hive Commons. This plugin extends kubectl to work seamlessly across all Hive Commons managed clusters, providing unified views and operations while filtering out workflow staging clusters (WDS). Execute commands across multiple clusters simultaneously with intelligent output aggregation."
+        "description": "A comprehensive kubectl plugin for AI-agent operations with Hive Commons. This plugin extends kubectl to work seamlessly across all Hive Commons managed clusters, providing unified views and operations while filtering out workflow staging clusters (WDS). Execute commands across multiple clusters simultaneously with intelligent output aggregation."
       },
       "galaxyMarketplace": {
         "name": "Galaxy Marketplace",
         "fullName": "KS Galaxy Marketplace",
-        "description": "A centralized marketplace for Hive Commons extensions, plugins, and community-contributed tools and integrations. Discover, install, and manage third-party components to enhance your multi-cluster orchestration capabilities. Features automated compatibility checking, version management, and seamless integration with existing Hive Commons deployments."
+        "description": "A centralized marketplace for Hive Commons extensions, plugins, and community-contributed tools and integrations. Discover, install, and manage third-party components to enhance your AI-agent orchestration capabilities. Features automated compatibility checking, version management, and seamless integration with existing Hive Commons deployments."
       }
     }
   },
@@ -760,7 +760,7 @@
   "partnersPage": {
     "title": "Our",
     "titleSpan": "Partners",
-    "subtitle": "Collaborating with leading open source projects to enhance multi-cluster Kubernetes orchestration",
+    "subtitle": "Collaborating with leading open source projects to enhance AI-agent collaboration orchestration",
     "learnMore": "Learn More",
     "partners": {
       "argocd": {
@@ -784,11 +784,11 @@
     },
     "whyPartner": {
       "title": "Why Partner With Us",
-      "subtitle": "Join our ecosystem of innovative partners to shape the future of multi-cluster Kubernetes management",
+      "subtitle": "Join our ecosystem of innovative partners to shape the future of AI-agent collaboration management",
       "benefits": [
         {
           "title": "Innovation",
-          "description": "Collaborate on cutting-edge multi-cluster orchestration solutions"
+          "description": "Collaborate on cutting-edge AI-agent orchestration solutions"
         },
         {
           "title": "Community",
@@ -796,14 +796,14 @@
         },
         {
           "title": "Excellence",
-          "description": "Drive industry standards and best practices in Kubernetes orchestration"
+          "description": "Drive industry standards and best practices in AI agent collaboration"
         }
       ]
     },
     "partnershipOpportunities": {
       "title": "Become a Partner",
-      "subtitle": "Join forces with Hive Commons to drive innovation in multi-cluster Kubernetes orchestration and expand your reach in the cloud-native ecosystem.",
-      "description": "Our partnership program is designed to foster collaboration with technology providers, cloud platforms, and service integrators who share our vision of simplifying multi-cluster Kubernetes management. Together, we can deliver comprehensive solutions that empower enterprises to manage their distributed workloads seamlessly.",
+      "subtitle": "Join forces with Hive Commons to drive innovation in AI-agent collaboration orchestration and expand your reach in the cloud-native ecosystem.",
+      "description": "Our partnership program is designed to foster collaboration with technology providers, cloud platforms, and service integrators who share our vision of simplifying AI-agent collaboration management. Together, we can deliver comprehensive solutions that empower enterprises to manage their distributed workloads seamlessly.",
       "features": [
         "Technical integration support and engineering resources",
         "Joint go-to-market initiatives and co-marketing opportunities",
@@ -819,7 +819,7 @@
     "title": "Coming",
     "titleSpan": "Soon",
     "subtitle": "We're working on something amazing for the Hive community",
-    "description": "This exciting new feature is currently under development. Our team is crafting an exceptional experience that will enhance your multi-cluster Kubernetes orchestration journey.",
+    "description": "This exciting new feature is currently under development. Our team is crafting an exceptional experience that will enhance your AI-agent collaboration orchestration journey.",
     "statusBadge": "Under Development",
     "demoTitle": "See It In Action",
     "demoSubtitle": "Watch our marketplace demo to get a glimpse of what's coming",
@@ -971,7 +971,7 @@
     "clusters": {
       "kubeflexCore": {
         "name": "KubeFlex Core",
-        "description": "KubeFlex control plane managing multi-cluster operations"
+        "description": "Hive control layer for governed agent operations"
       },
       "edgeClusters": {
         "name": "Edge Clusters",
