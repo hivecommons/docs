@@ -118,6 +118,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'hivectl': 'hivectl.md' },
       { 'Agent configuration': 'agent-configuration.md' },
       { 'Contributor relay': 'contributor-relay.md' },
+      { 'Using Spektacular with Hive': 'spektacular-runs.md' },
       { 'Troubleshooting': 'troubleshooting.md' },
       { 'Release channels': 'release-channels.md' },
       { 'Backup and disaster recovery': 'backup-dr.md' },
