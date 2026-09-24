@@ -17,6 +17,12 @@ type Recording = {
 
 const UPCOMING_COUNT = 4
 const COUNTDOWN_REFRESH_MS = 60_000
+const RESOURCE_LINKS = [
+  { label: 'Group', href: COMMUNITY_MEETINGS.googleGroupUrl },
+  { label: 'Docs', href: COMMUNITY_MEETINGS.docsUrl },
+  { label: 'Code', href: COMMUNITY_MEETINGS.codeUrl },
+  { label: 'YouTube', href: COMMUNITY_MEETINGS.recordingsUrl },
+]
 
 function formatMeetingDate(date: Date, dateStyle: Intl.DateTimeFormatOptions['dateStyle'] = 'full') {
   return new Intl.DateTimeFormat(undefined, {
@@ -76,7 +82,13 @@ function calendarHref(date: Date) {
     text: COMMUNITY_MEETINGS.title,
     dates: `${start}/${end}`,
     ctz: COMMUNITY_MEETINGS.timeZone,
-    details: `Agenda: ${COMMUNITY_MEETINGS.agendaUrl}\nGroup: ${COMMUNITY_MEETINGS.googleGroupUrl}\nJoin: ${COMMUNITY_MEETINGS.meetingUrl}`,
+    location: COMMUNITY_MEETINGS.meetingUrl,
+    details: [
+      `Join on Microsoft Teams: ${COMMUNITY_MEETINGS.meetingUrl}`,
+      `Meeting ID: ${COMMUNITY_MEETINGS.meetingId}`,
+      `Agenda: ${COMMUNITY_MEETINGS.agendaUrl}`,
+      `Group: ${COMMUNITY_MEETINGS.googleGroupUrl}`,
+    ].join('\n'),
   })
   return `https://calendar.google.com/calendar/render?${params.toString()}`
 }
@@ -95,7 +107,8 @@ function toIcsDate(date: Date) {
 
 function icsDownloadHref(date: Date) {
   const details = [
-    `Join: ${COMMUNITY_MEETINGS.meetingUrl}`,
+    `Join on Microsoft Teams: ${COMMUNITY_MEETINGS.meetingUrl}`,
+    `Meeting ID: ${COMMUNITY_MEETINGS.meetingId}`,
     `Agenda and notes: ${COMMUNITY_MEETINGS.agendaUrl}`,
     `Get invites every meeting: ${COMMUNITY_MEETINGS.googleGroupUrl}`,
   ].join('\n')
@@ -191,6 +204,7 @@ export function MeetingsPage() {
                 <a className="hc-meeting-primary hc-meeting-joinNow" href={COMMUNITY_MEETINGS.meetingUrl} target="_blank" rel="noreferrer">
                   Join the meeting
                 </a>
+                <span className="hc-meeting-id">Microsoft Teams · Meeting ID {COMMUNITY_MEETINGS.meetingId}</span>
                 <a href={icsHref} download={`hive-commons-community-meeting-${next.localDate}.ics`}>
                   Download .ics
                 </a>
@@ -218,6 +232,13 @@ export function MeetingsPage() {
           </div>
         </aside>
       </section>
+
+      <nav className="hc-meeting-resources" aria-label="Community meeting resources">
+        <span>Resources</span>
+        {RESOURCE_LINKS.map(link => (
+          <a key={link.href} href={link.href} target="_blank" rel="noreferrer">{link.label}</a>
+        ))}
+      </nav>
 
       <section className="hc-meeting-grid" aria-label="Meeting schedule">
         <article className="hc-meeting-details">
