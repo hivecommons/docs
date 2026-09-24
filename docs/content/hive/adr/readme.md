@@ -55,3 +55,4 @@ What becomes easier, harder, safer, or riskier because of this decision?
 - [ADR-0015: Scope `style-src` as two directives and accept inline style attributes](/docs/hive/adr/0015-csp-style-src-scope)
 - [ADR-0016: Scope `script-src` as two directives, close the element half with hashes](/docs/hive/adr/0016-csp-script-src-scope)
 - [ADR-0017: Quadlet `.container`/`.pod` units as the Podman persistent lifecycle](/docs/hive/adr/0017-podman-quadlet-lifecycle)
+- [ADR-0018: Shared dashboard design tokens and component layer](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0018-dashboard-design-tokens.md)

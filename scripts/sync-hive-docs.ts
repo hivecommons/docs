@@ -14,6 +14,7 @@ const canonicalBase = `https://github.com/${owner}/${repo}/blob/${branch}/src/do
 
 const files: Array<{ source: string; target?: string }> = [
   { source: "README.md", target: "readme.md" },
+  { source: "documentation-map.md" },
   { source: "architecture.md" },
   { source: "security-threat-model.md" },
   { source: "roadmap.md" },

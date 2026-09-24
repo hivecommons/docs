@@ -830,7 +830,7 @@ A stage receipt includes the normal report envelope (`lane`, `kind`, `findings`,
 ## What to read next
 
 - **[Supervisor agent](https://github.com/hivecommons/hive/blob/v5/src/docs/supervisor.md)** — what the supervisor does, how it differs from the governor, when to enable it, `bead_role` semantics, and policy modes.
-- **[Documentation index](/docs/hive/readme)** — what hive is, setup, and the full topic-guide surface.
+- **[Documentation map](/docs/hive/documentation-map)** — setup and the full topic-guide surface.
 - **[Architecture](/docs/hive/architecture)** — process model, deterministic pipeline, governor loop, guardrails, and hub/spoke design.
 - **[Portable AgentDefinition format](https://github.com/hivecommons/hive/blob/v5/src/AGENT-DEFINITION.md)** — standalone YAML schema for agent imports, exports, and overlays.
 - **[AGENTS.md repo instructions](https://github.com/hivecommons/hive/blob/v5/src/docs/agents-md.md)** — the per-repo instruction file format Hive's parser understands. Injected into kicks once `project.checkouts_dir` gives Hive a checkout to read it from — see the page.
