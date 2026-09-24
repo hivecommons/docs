@@ -84,8 +84,9 @@ export default function Footer() {
                 />
               </div>
               <p className="text-ink-2 mb-4 sm:mb-6 leading-relaxed text-base sm:text-base">
-                AI-enabled multi-cluster management ecosystem featuring Console,
-                MCP server, and A2A agent for seamless Kubernetes orchestration.
+                Hive Commons is an open source home for projects that help AI coding
+                agents and maintainers work together with governance, auditability,
+                and accountability.
               </p>
             </div>
           </div>
@@ -136,38 +137,17 @@ export default function Footer() {
             <p className={`mb-4 sm:mb-6 leading-relaxed text-base sm:text-base ${
               isDark ? 'text-ink-2' : 'text-ink-2'
             }`}>
-              AI-enabled multi-cluster management ecosystem featuring Console,
-              MCP server, and A2A agent for seamless Kubernetes orchestration.
+              Hive Commons is an open source home for projects that help AI coding
+              agents and maintainers work together with governance, auditability,
+              and accountability.
             </p>
             <div className="flex space-x-3 sm:space-x-4">
               <a
                 href="https://github.com/hivecommons"
-                className="group relative w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300"
-                aria-label="X (Twitter)"
-              >
-                <svg
-                  className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 transition-all duration-300 ${
-                    isDark
-                      ? 'group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]'
-                      : 'group-hover:drop-shadow-[0_0_8px_rgba(0,0,0,0.3)]'
-                  }`}
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    className={`transition-colors duration-300 ${
-                      isDark
-                        ? 'text-ink-3 group-hover:text-ink'
-                        : 'text-ink-2 group-hover:text-ink'
-                    }`}
-                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://github.com/hivecommons"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group relative w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center transition-all duration-300"
-                aria-label="GitHub"
+                aria-label="Hive Commons on GitHub"
               >
                 <svg
                   className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 transition-all duration-300 ${
@@ -189,27 +169,11 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="https://github.com/hivecommons"
+                href="https://hivecommons.dev/tv"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group relative w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center transition-all duration-300"
-                aria-label="LinkedIn"
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(0,119,181,0.8)]"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    className={`transition-colors duration-300 ${
-                      isDark ? 'text-ink-3' : 'text-ink-2'
-                    } group-hover:text-[#0077B5]`}
-                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://github.com/hivecommons"
-                className="group relative w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center transition-all duration-300"
-                aria-label="YouTube"
+                aria-label="Hive Commons on YouTube"
               >
                 <svg
                   className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(255,0,0,0.8)]"
@@ -224,46 +188,63 @@ export default function Footer() {
                   />
                 </svg>
               </a>
+              <a
+                href="https://hivecommons.dev/discord"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center transition-all duration-300"
+                aria-label="Hive Commons Discord"
+              >
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(88,101,242,0.8)]"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    className={`transition-colors duration-300 ${
+                      isDark ? 'text-ink-3' : 'text-ink-2'
+                    } group-hover:text-[#5865F2]`}
+                    d="M20.317 4.37A19.791 19.791 0 0016.558 3c-.163.29-.35.682-.48.992a18.27 18.27 0 00-4.156 0A9.705 9.705 0 0011.442 3a19.736 19.736 0 00-3.76 1.372C5.305 7.94 4.658 11.42 4.98 14.85A19.9 19.9 0 009.58 17.2c.372-.51.704-1.05.988-1.616a12.933 12.933 0 01-1.558-.746c.13-.096.258-.195.382-.296 3.006 1.41 6.268 1.41 9.238 0 .125.101.253.2.383.296-.497.293-1.018.543-1.56.746.284.566.615 1.107.987 1.616a19.86 19.86 0 004.601-2.35c.378-3.975-.646-7.423-2.724-10.48zM10.61 12.74c-.902 0-1.64-.84-1.64-1.87 0-1.031.722-1.872 1.64-1.872.917 0 1.654.85 1.64 1.871 0 1.03-.723 1.87-1.64 1.87zm5.78 0c-.902 0-1.64-.84-1.64-1.87 0-1.031.722-1.872 1.64-1.872.917 0 1.654.85 1.64 1.871 0 1.03-.723 1.87-1.64 1.87z"
+                  />
+                </svg>
+              </a>
             </div>
           </div>
 
 
-          {/* Navigation Links Container - 3 columns on mobile */}
-          <div className="col-span-1 sm:col-span-3 lg:col-span-6 grid grid-cols-3 gap-4 sm:gap-4 lg:gap-8">
-            {/* Docs Links */}
+          {/* Navigation Links Container */}
+          <div className="col-span-1 sm:col-span-3 lg:col-span-6 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-4 lg:gap-8">
+            {/* Project Links */}
             <div>
               <h3 className={`text-sm sm:text-base md:text-lg font-semibold mb-2 sm:mb-4 ${
                 isDark ? 'text-ink' : 'text-ink'
               }`}>
-                Docs
+                Projects
               </h3>
               <ul className="space-y-1 sm:space-y-3">
                 <li>
                   <Link
-                    href="/docs/console/readme"
+                    href="/docs/hive/overview/introduction"
                     className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
                       isDark
                         ? 'text-ink-3 hover:text-ink'
                         : 'text-ink-2 hover:text-ink'
                     }`}
                   >
-                    Console
+                    Hive
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/docs/console/quick-start"
+                    href="/docs/hotshot/overview/introduction"
                     className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
                       isDark
                         ? 'text-ink-3 hover:text-ink'
                         : 'text-ink-2 hover:text-ink'
                     }`}
                   >
-                    Quick Start
+                    hotshot
                   </Link>
-                </li>
-                <li>
-                  
                 </li>
                 <li>
                   <Link
@@ -274,46 +255,182 @@ export default function Footer() {
                         : 'text-ink-2 hover:text-ink'
                     }`}
                   >
-                    MCP Server
+                    pluk
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/docs/rationguard/overview/introduction"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    rationguard
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/docs/promptargs/overview/introduction"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    promptargs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/docs/spektacular/overview/introduction"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    Spektacular
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/docs/dibs/overview/introduction"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    dibs
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Getting Started Links */}
+            {/* Get Started Links */}
             <div>
               <h3 className={`text-sm sm:text-base md:text-lg font-semibold mb-2 sm:mb-4 ${
                 isDark ? 'text-ink' : 'text-ink'
               }`}>
-                Getting Started
+                Get started
               </h3>
               <ul className="space-y-1 sm:space-y-3">
                 <li>
-                  
-                </li>
-                <li>
                   <Link
-                    href="/docs/contributing/contributor-ladder"
+                    href="/docs/hive/getting-started"
                     className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
                       isDark
                         ? 'text-ink-3 hover:text-ink'
                         : 'text-ink-2 hover:text-ink'
                     }`}
                   >
-                    Contributor Ladder
+                    Hive getting started
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/docs/contributing/overview"
+                    href="/docs/community/what-is-hive-commons"
                     className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
                       isDark
                         ? 'text-ink-3 hover:text-ink'
                         : 'text-ink-2 hover:text-ink'
                     }`}
                   >
-                    How to Contribute
+                    What is Hive Commons?
                   </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/docs/community/join-hive-commons"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    Join Hive Commons
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/hivecommons/.github/blob/main/CONTRIBUTING.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    Contributing
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Community Links */}
+            <div>
+              <h3 className={`text-sm sm:text-base md:text-lg font-semibold mb-2 sm:mb-4 ${
+                isDark ? 'text-ink' : 'text-ink'
+              }`}>
+                Community
+              </h3>
+              <ul className="space-y-1 sm:space-y-3">
+                <li>
+                  <Link
+                    href="/docs/community/meetings"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    Community meetings
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="https://hivecommons.dev/join"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    Mailing list
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://hivecommons.dev/discord"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    Discord
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://hivecommons.dev/tv"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    YouTube
+                  </a>
                 </li>
               </ul>
             </div>
@@ -328,7 +445,7 @@ export default function Footer() {
               <ul className="space-y-1 sm:space-y-3">
                 <li>
                   <a
-                    href="https://hivecommons.dev"
+                    href="https://hive.hivecommons.dev"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
@@ -355,28 +472,30 @@ export default function Footer() {
                   </a>
                 </li>
                 <li>
-                  <Link
-                    href="/docs/community/get-involved"
+                  <a
+                    href="https://hivecommons.dev"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
                       isDark
                         ? 'text-ink-3 hover:text-ink'
                         : 'text-ink-2 hover:text-ink'
                     }`}
                   >
-                    Community
-                  </Link>
+                    Website
+                  </a>
                 </li>
                 <li>
-                  <Link
-                    href="/docs/news/latest-news"
+                  <a
+                    href="mailto:security@hivecommons.dev"
                     className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
                       isDark
                         ? 'text-ink-3 hover:text-ink'
                         : 'text-ink-2 hover:text-ink'
                     }`}
                   >
-                    News
-                  </Link>
+                    Security
+                  </a>
                 </li>
               </ul>
             </div>
