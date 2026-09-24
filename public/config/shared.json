@@ -48,6 +48,13 @@
         "isDefault": true
       }
     },
+    "dibs": {
+      "latest": {
+        "label": "main (Latest)",
+        "branch": "main",
+        "isDefault": true
+      }
+    },
     "spektacular": {
       "latest": {
         "label": "main (Latest)",
@@ -80,6 +87,11 @@
     "promptargs": {
       "name": "promptargs",
       "basePath": "promptargs",
+      "currentVersion": "main"
+    },
+    "dibs": {
+      "name": "dibs",
+      "basePath": "dibs",
       "currentVersion": "main"
     },
     "spektacular": {
@@ -119,6 +131,12 @@
       "secondary": true
     },
     {
+      "title": "dibs",
+      "href": "/docs/dibs/overview/introduction",
+      "description": "Claim ideas so contributors get credit when agents implement them",
+      "secondary": true
+    },
+    {
       "title": "Spektacular",
       "href": "/docs/spektacular/overview/introduction",
       "description": "Spec-driven development for AI coding agents (canonical site: spektacular.dev)",
@@ -131,7 +149,8 @@
     "pluk": "https://github.com/hivecommons/pluk/edit/main",
     "rationguard": "https://github.com/hivecommons/rationguard/edit/main",
     "promptargs": "https://github.com/hivecommons/promptargs/edit/main",
-    "spektacular": "https://github.com/hivecommons/spektacular/edit/main"
+    "spektacular": "https://github.com/hivecommons/spektacular/edit/main",
+    "dibs": "https://github.com/hivecommons/dibs/edit/main"
   },
-  "updatedAt": "2026-09-24T01:19:21.087Z"
+  "updatedAt": "2026-09-24T11:55:47.068Z"
 }

@@ -1,5 +1,5 @@
 // Multi-project versions config for the Hive Commons docs site
-// Supports hive, hotshot, pluk, rationguard, promptargs, and spektacular with independent versioning
+// Supports hive, hotshot, pluk, rationguard, promptargs, dibs, and spektacular with independent versioning
 //
 // Versioning Strategy:
 // - Each project has its own version scheme
@@ -18,7 +18,7 @@ export const NETLIFY_SITE_NAME = "hivecommons-docs"
 export const PRODUCTION_URL = "https://docs.hivecommons.dev"
 
 // Project identifiers
-export type ProjectId = "hive" | "hotshot" | "pluk" | "rationguard" | "promptargs" | "spektacular"
+export type ProjectId = "hive" | "hotshot" | "pluk" | "rationguard" | "promptargs" | "dibs" | "spektacular"
 
 // Version info structure
 export interface VersionInfo {
@@ -97,6 +97,15 @@ const PROMPTARGS_VERSIONS: Record<string, VersionInfo> = {
   },
 }
 
+// dibs versions
+const DIBS_VERSIONS: Record<string, VersionInfo> = {
+  latest: {
+    label: "main (Latest)",
+    branch: "main",
+    isDefault: true,
+  },
+}
+
 // spektacular versions (canonical site: https://spektacular.dev)
 const SPEKTACULAR_VERSIONS: Record<string, VersionInfo> = {
   latest: {
@@ -148,6 +157,14 @@ export const PROJECTS: Record<ProjectId, ProjectConfig> = {
     contentPath: "docs/content/promptargs",
     versions: PROMPTARGS_VERSIONS,
   },
+  dibs: {
+    id: "dibs",
+    name: "dibs",
+    basePath: "dibs",
+    currentVersion: "main",
+    contentPath: "docs/content/dibs",
+    versions: DIBS_VERSIONS,
+  },
   spektacular: {
     id: "spektacular",
     name: "Spektacular",
@@ -171,6 +188,9 @@ export function getProjectFromPath(pathname: string): ProjectConfig {
   }
   if (pathname.startsWith("/docs/promptargs")) {
     return PROJECTS.promptargs
+  }
+  if (pathname.startsWith("/docs/dibs")) {
+    return PROJECTS.dibs
   }
   if (pathname.startsWith("/docs/spektacular")) {
     return PROJECTS.spektacular

@@ -81,6 +81,7 @@ export const PROJECT_FOR_NAV: Record<string, string> = {
   PLUK: "docs/pluk",
   RATIONGUARD: "docs/rationguard",
   PROMPTARGS: "docs/promptargs",
+  DIBS: "docs/dibs",
   SPEKTACULAR: "docs/spektacular",
   // Shared sections (Community, …) live under docs/content/<section>/ and
   // are served at /docs/<section>/<slug>.

@@ -1,5 +1,5 @@
 /**
- * Sync hotshot, pluk, rationguard, promptargs, and Spektacular docs from their GitHub repos into docs/content/.
+ * Sync hotshot, pluk, rationguard, promptargs, dibs, and Spektacular docs from their GitHub repos into docs/content/.
  *
  * Same single-sourcing model as scripts/sync-hive-docs.ts: the repos own the
  * markdown; this script pulls it at build time (prebuild) so the site never
@@ -95,6 +95,13 @@ export const PROJECTS: ProjectSync[] = [
     owner: SIBLING_OWNER,
     repo: "promptargs",
     branch: process.env.PROMPTARGS_DOCS_REF || "main",
+    files: [{ source: "README.md", target: "readme.md", required: true }],
+  },
+  {
+    project: "dibs",
+    owner: SIBLING_OWNER,
+    repo: "dibs",
+    branch: process.env.DIBS_DOCS_REF || "main",
     files: [{ source: "README.md", target: "readme.md", required: true }],
   },
   {

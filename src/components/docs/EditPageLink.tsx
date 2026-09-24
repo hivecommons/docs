@@ -11,6 +11,7 @@ const STATIC_EDIT_BASE_URLS: Record<ProjectId, string> = {
   pluk: 'https://github.com/hivecommons/pluk/edit/main',
   rationguard: 'https://github.com/hivecommons/rationguard/edit/main',
   promptargs: 'https://github.com/hivecommons/promptargs/edit/main',
+  dibs: 'https://github.com/hivecommons/dibs/edit/main',
   spektacular: 'https://github.com/hivecommons/spektacular/edit/main',
 };
 

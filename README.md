@@ -14,16 +14,17 @@ Official documentation site for [Hive Commons](https://hivecommons.dev), served 
 - **[pluk](https://github.com/hivecommons/pluk)** — pub-sub event streaming for AI agent tmux sessions
 - **[rationguard](https://github.com/hivecommons/rationguard)** — detect and rebut rationalization patterns in AI agent output
 - **[promptargs](https://github.com/hivecommons/promptargs)** — template expansion for AI prompts
+- **[dibs](https://github.com/hivecommons/dibs)** — claim ideas so contributors get credit when agents implement them
 - **[Spektacular](https://github.com/hivecommons/spektacular)** — spec-driven development for AI coding agents (canonical site: [spektacular.dev](https://spektacular.dev))
 
 ## How content is sourced
 
-Hive, hotshot, pluk, rationguard, promptargs, and Spektacular docs are
+Hive, hotshot, pluk, rationguard, promptargs, dibs, and Spektacular docs are
 **single-sourced from their repositories** and pulled at build time:
 
 - `scripts/sync-hive-docs.ts` pulls Hive docs from `hivecommons/hive` (`src/docs/`, branch `v5`;
   override with `HIVE_DOCS_OWNER` / `HIVE_DOCS_REPO` / `HIVE_DOCS_REF`).
-- `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, promptargs, and Spektacular docs from their repos.
+- `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, promptargs, dibs, and Spektacular docs from their repos.
   Spektacular also pulls its tutorials from `hivecommons/spektacular-website` (MDX, converted to Markdown by
   `scripts/mdx-to-markdown.ts`; override the ref with `SPEKTACULAR_WEBSITE_DOCS_REF`).
 
