@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { PROJECTS, rewriteLinks, scrubLegacyBranding, syncedHeader, type ProjectSync } from "./sync-sibling-docs";
 
-const SIBLING_PROJECTS = ["hotshot", "pluk", "rationguard", "promptargs", "spektacular"];
+const SIBLING_PROJECTS = ["hotshot", "pluk", "rationguard", "promptargs", "dibs", "spektacular"];
 
 function project(id: string): ProjectSync {
   const p = PROJECTS.find((x) => x.project === id);

@@ -13,7 +13,7 @@ import path from 'path'
 import { notFound } from 'next/navigation'
 
 const HIVE_DOCS_PATH = process.env.HIVE_DOCS_PATH
-const STATIC_PROJECTS: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'spektacular']
+const STATIC_PROJECTS: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'spektacular']
 
 export const dynamic = 'force-static'
 export const dynamicParams = false
@@ -173,7 +173,7 @@ export function syncedSourceUrl(content: string): string | undefined {
 }
 
 function getProjectFromSlug(slug: string[]): { projectId: ProjectId | undefined; docSlug: string[] } {
-  const knownProjects: string[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'spektacular']
+  const knownProjects: string[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'spektacular']
   
   if (slug.length > 0 && knownProjects.includes(slug[0])) {
     return {

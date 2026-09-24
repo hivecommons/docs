@@ -130,6 +130,7 @@ describe("PROJECT_FOR_NAV", () => {
     expect(PROJECT_FOR_NAV.PLUK).toBe("docs/pluk");
     expect(PROJECT_FOR_NAV.RATIONGUARD).toBe("docs/rationguard");
     expect(PROJECT_FOR_NAV.PROMPTARGS).toBe("docs/promptargs");
+    expect(PROJECT_FOR_NAV.DIBS).toBe("docs/dibs");
     expect(PROJECT_FOR_NAV.SPEKTACULAR).toBe("docs/spektacular");
   });
 });

@@ -27,6 +27,7 @@ describe('getProjectFromPath', () => {
     ['/docs/pluk', 'pluk'],
     ['/docs/rationguard/install', 'rationguard'],
     ['/docs/promptargs', 'promptargs'],
+    ['/docs/dibs', 'dibs'],
     ['/docs/spektacular/api', 'spektacular'],
   ] as const)('maps %s to project %s', (pathname, id) => {
     expect(getProjectFromPath(pathname).id).toBe(id)
