@@ -209,6 +209,49 @@ html:not(.dark) .nextra-docs-theme .nextra-sidebar-container {
   margin-top: 0;
 }
 
+.hc-meeting-nextHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+  gap: clamp(1rem, 4vw, 2rem);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  background:
+    radial-gradient(650px 320px at 18% 5%, color-mix(in srgb, var(--honey) 28%, transparent), transparent 70%),
+    linear-gradient(135deg, color-mix(in srgb, var(--honey) 17%, transparent), transparent 48%),
+    color-mix(in srgb, var(--bg-2) 92%, transparent);
+}
+
+.hc-meeting-nextHeroMain h2 {
+  max-width: 13ch;
+  font-size: clamp(2.25rem, 8vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.hc-meeting-nextHeroAside {
+  align-self: center;
+  border: 1px solid color-mix(in srgb, var(--honey) 38%, var(--line));
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--bg) 48%, transparent);
+  padding: clamp(1rem, 2vw, 1.25rem);
+}
+
+.hc-meeting-localTime {
+  color: var(--ink-2);
+  font-size: clamp(1rem, 2vw, 1.15rem);
+}
+
+.hc-meeting-countdown {
+  display: inline-flex;
+  margin: 0.25rem 0 1rem;
+  border: 1px solid color-mix(in srgb, var(--honey) 55%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--honey) 12%, transparent);
+  color: var(--honey);
+  font-size: clamp(1.1rem, 2.5vw, 1.55rem);
+  font-weight: 800;
+  padding: 0.45rem 0.8rem;
+}
+
 .hc-meeting-kicker {
   margin: 0 0 0.5rem;
   color: var(--honey);
@@ -252,6 +295,17 @@ html:not(.dark) .nextra-docs-theme .nextra-sidebar-container {
 .hc-meeting-actions .hc-meeting-primary:hover {
   background: var(--honey-deep);
   color: var(--honey-ink);
+}
+
+.hc-meeting-actions .hc-meeting-joinNow {
+  font-size: 1.05rem;
+  padding: 0.85rem 1.2rem;
+}
+
+.hc-meeting-actions .hc-meeting-secondary {
+  border-color: color-mix(in srgb, var(--honey) 55%, var(--line));
+  color: var(--honey);
+  font-weight: 700;
 }
 
 .hc-meeting-grid {
@@ -373,6 +427,14 @@ html:not(.dark) .nextra-docs-theme .nextra-sidebar-container {
 }
 
 @media (max-width: 760px) {
+  .hc-meeting-nextHero {
+    grid-template-columns: 1fr;
+  }
+
+  .hc-meeting-nextHeroMain h2 {
+    max-width: none;
+  }
+
   .hc-meeting-grid {
     grid-template-columns: 1fr;
   }
