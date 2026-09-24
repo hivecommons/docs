@@ -55,6 +55,6 @@ Not ready to bring a whole project? You're still welcome:
   [CONTRIBUTING.md](https://github.com/hivecommons/.github/blob/main/CONTRIBUTING.md)
   covers the contributor ladder.
 - **Join the conversation** on
-  [hivecommons-dev@googlegroups.com](https://groups.google.com/g/hivecommons-dev),
+  [hivecommons-dev@googlegroups.com](https://hivecommons.dev/join),
   [Discord](https://hivecommons.dev/discord), or the biweekly
   [community meeting](/docs/community/meetings).
