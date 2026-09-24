@@ -2645,3 +2645,19 @@ img[src$="bluehost.svg"][src^="/integrations/"] {
   width: 9rem;
   height: 3.5rem;
 }
+
+h2 > img[src^="/integrations/"] {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0.3rem;
+  margin: 0 0.6rem 0 0;
+  vertical-align: -0.35rem;
+}
+a[href^="#"] img[src^="/integrations/"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0.12rem;
+  margin: 0 0.45rem 0 0;
+  border-radius: 0.3rem;
+  vertical-align: -0.25rem;
+}
