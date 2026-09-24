@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import recordingsData from '../../../data/meeting-recordings.json'
 import { COMMUNITY_MEETINGS } from '@/config/community-meetings'
+import { getUpcomingOddIsoWeekMeetings, type UpcomingMeeting } from '@/lib/communityMeetingsSchedule'
 
 type Recording = {
   id: string
@@ -14,49 +15,7 @@ type Recording = {
   duration?: string
 }
 
-const DATE_PARTS = ['year', 'month', 'day', 'hour', 'minute', 'second'] as const
 const UPCOMING_COUNT = 4
-
-function getTimeZoneParts(date: Date, timeZone: string) {
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hour12: false,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-
-  const parts = Object.fromEntries(
-    formatter.formatToParts(date)
-      .filter(part => DATE_PARTS.includes(part.type as typeof DATE_PARTS[number]))
-      .map(part => [part.type, Number(part.value)])
-  ) as Record<typeof DATE_PARTS[number], number>
-
-  return { ...parts, hour: parts.hour === 24 ? 0 : parts.hour }
-}
-
-function zonedTimeToDate(date: string, hour: number, minute: number, timeZone: string) {
-  const [year, month, day] = date.split('-').map(Number)
-  let utc = Date.UTC(year, month - 1, day, hour, minute)
-
-  for (let i = 0; i < 3; i += 1) {
-    const parts = getTimeZoneParts(new Date(utc), timeZone)
-    const asUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second)
-    const wanted = Date.UTC(year, month - 1, day, hour, minute, 0)
-    utc += wanted - asUtc
-  }
-
-  return new Date(utc)
-}
-
-function addDays(date: string, days: number) {
-  const [year, month, day] = date.split('-').map(Number)
-  const next = new Date(Date.UTC(year, month - 1, day + days))
-  return next.toISOString().slice(0, 10)
-}
 
 function formatMeetingDate(date: Date, dateStyle: Intl.DateTimeFormatOptions['dateStyle'] = 'full') {
   return new Intl.DateTimeFormat(undefined, {
@@ -81,27 +40,6 @@ function formatLocalDate(date: Date) {
     minute: '2-digit',
     timeZoneName: 'short',
   }).format(date)
-}
-
-function getUpcomingMeetings(now = new Date()) {
-  const { anchorDate, cadenceDays, localTime, timeZone, exceptions } = COMMUNITY_MEETINGS
-  const cancelled = new Map(exceptions.map(item => [item.date, item.reason]))
-  const anchorStart = zonedTimeToDate(anchorDate, localTime.hour, localTime.minute, timeZone)
-  const daysSinceAnchor = Math.floor((now.getTime() - anchorStart.getTime()) / 86_400_000)
-  let index = Math.max(0, Math.floor(daysSinceAnchor / cadenceDays) - 1)
-  const upcoming: Array<{ date: Date; localDate: string; cancelledReason?: string }> = []
-
-  while (upcoming.length < UPCOMING_COUNT && index < 5000) {
-    const localDate = addDays(anchorDate, index * cadenceDays)
-    const date = zonedTimeToDate(localDate, localTime.hour, localTime.minute, timeZone)
-    const cancelledReason = cancelled.get(localDate)
-    if (date.getTime() >= now.getTime() - 60_000 && !cancelledReason) {
-      upcoming.push({ date, localDate })
-    }
-    index += 1
-  }
-
-  return upcoming
 }
 
 function calendarHref(date: Date) {
@@ -152,9 +90,9 @@ function RecordingCard({ recording, active, onPlay }: { recording: Recording; ac
 
 export function MeetingsPage() {
   const [activeVideo, setActiveVideo] = useState<string | null>(null)
-  const [upcoming, setUpcoming] = useState<ReturnType<typeof getUpcomingMeetings>>([])
+  const [upcoming, setUpcoming] = useState<UpcomingMeeting[]>([])
   useEffect(() => {
-    setUpcoming(getUpcomingMeetings())
+    setUpcoming(getUpcomingOddIsoWeekMeetings(COMMUNITY_MEETINGS, UPCOMING_COUNT))
   }, [])
   const next = upcoming[0]
   const recordings = (recordingsData.recordings as Recording[]).filter(recording =>
@@ -167,7 +105,7 @@ export function MeetingsPage() {
         <p className="hc-meeting-kicker">Bi-weekly community call</p>
         <h2>Meet the people building Hive Commons.</h2>
         <p>
-          The Hive Commons community meeting happens every other {COMMUNITY_MEETINGS.weekday} at{' '}
+          The Hive Commons community meeting happens on {COMMUNITY_MEETINGS.weekday}s in odd-numbered ISO weeks at{' '}
           {COMMUNITY_MEETINGS.timeLabel}. Join the Google group to receive calendar invites during the week of
           the next meeting, then use the shared agenda to add topics or notes.
         </p>
@@ -213,7 +151,7 @@ export function MeetingsPage() {
       <section className="hc-meeting-details">
         <h2>How it self-sustains</h2>
         <ul>
-          <li>Dates are computed in {COMMUNITY_MEETINGS.timeZone} from the public calendar recurrence, so DST stays correct.</li>
+          <li>Dates are computed in {COMMUNITY_MEETINGS.timeZone} as the meeting weekday in every odd-numbered ISO week, so DST stays correct.</li>
           <li>The source calendar is available as <a href={COMMUNITY_MEETINGS.calendarIcsUrl}>public iCal</a>.</li>
           <li>Recordings are refreshed from the Hive Commons YouTube channel feed and merged into committed JSON by a scheduled workflow.</li>
         </ul>
