@@ -18,7 +18,7 @@ export const COMMUNITY_MEETINGS = {
   calendarWebUrl: 'https://hivecommons.dev/calendar',
   inviteUrl: 'https://hivecommons.dev/meet',
   agendaUrl: 'https://hivecommons.dev/agenda',
-  googleGroupUrl: 'https://groups.google.com/g/hivecommons-dev',
+  googleGroupUrl: 'https://hivecommons.dev/join',
   joinUrl: 'https://hivecommons.dev/join',
   recordingsUrl: 'https://hivecommons.dev/tv',
   meetingUrl: 'https://teams.microsoft.com/meet/291288876243839?p=k1qddNZCd2ZLjHxXri',
