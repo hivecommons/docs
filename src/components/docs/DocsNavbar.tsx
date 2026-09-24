@@ -4,17 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
-// Inline LinkedIn SVG — lucide-react 1.x removed the Linkedin icon
-function LinkedinIcon({ className, ...props }: React.SVGProps<SVGSVGElement> & { className?: string }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-    </svg>
-  );
-}
 // import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { VERSIONS } from '@/config/versions'
-import { getLocalizedUrl, getBaseUrl } from "@/lib/url";
 import { VersionSelector } from './VersionSelector';
 
 type DropdownType = "contribute" | "community" | "language" | "github" | null;
@@ -224,7 +215,7 @@ export default function DocsNavbar() {
 
         <div className="hidden md:flex items-center gap-1.5">
           <a
-            href="https://hivecommons.dev"
+            href="https://hive.hivecommons.dev"
             target="_blank"
             rel="noopener noreferrer"
             className={`${buttonClasses} cursor-pointer relative hidden xl:flex`}
@@ -296,46 +287,49 @@ export default function DocsNavbar() {
                 onMouseLeave={handleMouseLeave}
               >
               <a
-                href={getLocalizedUrl("https://github.com/hivecommons")}
+                href="https://github.com/hivecommons/hive"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={dropdownItemClasses}
+              >
+                <svg className="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.300 24 12c0-6.627-5.373-12-12-12z" />
+                </svg>
+                Hive source
+              </a>
+              <a
+                href="https://github.com/hivecommons/hive/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
+                target="_blank"
+                rel="noopener noreferrer"
                 className={dropdownItemClasses}
               >
                 <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
                 </svg>
-                Join In
+                Good first issues
               </a>
-              
-              
-              
               <a
-                    href={`${getBaseUrl()}/en/ladder`}
-                    className={dropdownItemClasses}
-                  >
-                      <svg
-                        className="w-5 h-5 mr-2.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                        ></path>
-                      </svg>
-                    <span>Ladder</span>
+                href="https://github.com/hivecommons/hive/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={dropdownItemClasses}
+              >
+                <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                Open issues
               </a>
-
-              <Link
-                href="/docs/contributing/security/security-inc"
+              <a
+                href="https://github.com/hivecommons/hive/security/policy"
+                target="_blank"
+                rel="noopener noreferrer"
                 className={dropdownItemClasses}
               >
                 <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                Security
-              </Link>
+                Security policy
+              </a>
               </div>
             )}
           </div>
@@ -375,40 +369,44 @@ export default function DocsNavbar() {
               
               
               <Link
-                href="/docs/news/latest-news"
+                href="/docs/community/what-is-hive-commons"
                 className={dropdownItemClasses}
               >
                 <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                     d="M28.075 18.121v7.896c0 0.552-0.312 0.999-0.998 0.999-0.166 0-0.577-0.354-1.082-0.887v-21.194c0.505-0.533 0.916-0.887 1.082-0.887 0.748 0 0.998 0.447 0.998 0.998v8.096c1.353 0.038 2.613 1.135 2.613 2.489 0 1.355-1.26 2.452-2.613 2.49zM12.015 20.046c0.062 0 0-9.029 0-9.029 6.857 0 10.922-3.010 13.064-5.074v19.177c-2.142-2.063-6.207-5.074-13.064-5.074zM8.021 27.952l-1.997-7.927h-1.998c0 0-0.594-1.348-0.864-2.996-0.509 0-0.954 0-1.134 0-0.551 0-0.998-0.447-0.998-0.999v-0.998c0-0.552 0.447-0.999 0.998-0.999 0.18 0 0.625 0 1.134 0 0.271-1.648 0.864-2.995 0.864-2.995h6.99v8.987h-1.997l0.252 0.998h0.997l0.499 1.998h-0.994l1.243 4.931h-2.995z">
-                  </path>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 1010 10A10 10 0 0012 2z" />
                 </svg>
-                News and Reviews
+                What is Hive Commons?
+              </Link>
+              <Link
+                href="/docs/community/join-hive-commons"
+                className={dropdownItemClasses}
+              >
+                <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Join Hive Commons
               </Link>
               <a
-                href={`${getBaseUrl()}/en#contact`}
+                href="https://hivecommons.dev/discord/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className={dropdownItemClasses}
               >
                 <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-                Contact Us
+                Discord
               </a>
               <a
-                href="https://github.com/hivecommons"
-                className={dropdownItemClasses}
-              >
-                <LinkedinIcon className="w-5 h-5 mr-2.5" />
-                LinkedIn
-              </a>
-              <a
-                href={`${getBaseUrl()}/en/partners`}
+                href="https://hivecommons.dev/agenda/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className={dropdownItemClasses}
               >
                 <svg className="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Partners
+                Community meetings
               </a>
               </div>
             )}
@@ -436,7 +434,7 @@ export default function DocsNavbar() {
               onMouseEnter={handleDropdownMouseEnter}
             >
               <a
-                href="https://github.com/hivecommons/docs"
+                href="https://github.com/hivecommons/hive"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
@@ -471,7 +469,7 @@ export default function DocsNavbar() {
                 onMouseLeave={handleMouseLeave}
               >
               <a
-                href="https://github.com/hivecommons/docs"
+                href="https://github.com/hivecommons/hive"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`flex items-center justify-between px-3 py-2 text-sm transition-colors ${
@@ -484,7 +482,7 @@ export default function DocsNavbar() {
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
                   </svg>
-                  Star
+                  Hive source
                 </span>
                 <span className={`text-xs px-1.5 py-0.5 rounded ${
                   isDark ? 'bg-bg-3' : 'bg-bg-3'
@@ -493,7 +491,7 @@ export default function DocsNavbar() {
                 </span>
               </a>
               <a
-                href="https://github.com/hivecommons/docs/fork"
+                href="https://github.com/hivecommons/docs"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`flex items-center justify-between px-3 py-2 text-sm transition-colors ${
@@ -504,40 +502,13 @@ export default function DocsNavbar() {
               >
                 <span className="flex items-center gap-2">
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z"/>
+                    <path d="M1.75 2.5A1.75 1.75 0 013.5.75h6.586c.464 0 .909.184 1.237.513l2.414 2.414c.329.328.513.773.513 1.237V13.5a1.75 1.75 0 01-1.75 1.75h-9A1.75 1.75 0 011.75 13.5v-11zM3.5 2.25a.25.25 0 00-.25.25v11c0 .138.112.25.25.25h9a.25.25 0 00.25-.25V5.25h-2A1.75 1.75 0 019 3.5v-1.25H3.5z"/>
                   </svg>
-                  Fork
-                </span>
-                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                  isDark ? 'bg-bg-3' : 'bg-bg-3'
-                }`}>
-                  {githubStats.forks}
+                  Docs source
                 </span>
               </a>
               <a
-                href="https://github.com/hivecommons/docs/watchers"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`flex items-center justify-between px-3 py-2 text-sm transition-colors ${
-                  isDark
-                    ? 'text-ink-2 hover:bg-bg-3'
-                    : 'text-ink-2 hover:bg-bg-2'
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 2C5.454 2 1.73 5.11.458 9.09a1.5 1.5 0 000 1.82C1.73 14.89 5.454 18 10 18s8.27-3.11 9.542-7.09a1.5 1.5 0 000-1.82C18.27 5.11 14.546 2 10 2zm0 14c-3.866 0-7.09-2.61-8.13-6C2.91 6.61 6.134 4 10 4s7.09 2.61 8.13 6c-1.04 3.39-4.264 6-8.13 6zm0-8a2 2 0 110 4 2 2 0 010-4z" />
-                  </svg>
-                  Watch
-                </span>
-                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                  isDark ? 'bg-bg-3' : 'bg-bg-3'
-                }`}>
-                  {githubStats.watchers}
-                </span>
-              </a>
-              <a
-                href="https://github.com/hivecommons/docs/issues"
+                href="https://github.com/hivecommons/hivecommons.github.io"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`flex items-center justify-between px-3 py-2 text-sm transition-colors ${
@@ -548,10 +519,26 @@ export default function DocsNavbar() {
               >
                 <span className="flex items-center gap-2">
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z"/>
-                    <path d="M8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+                    <path d="M8 0a8 8 0 108 8A8.009 8.009 0 008 0zm6.5 8a6.47 6.47 0 01-.584 2.694H11.61A13.34 13.34 0 0011.875 8c0-.93-.093-1.832-.265-2.694h2.306A6.47 6.47 0 0114.5 8zM8 14.5c-.57 0-1.462-1.03-1.883-3.306h3.766C9.462 13.47 8.57 14.5 8 14.5zm-2.08-4.806A11.75 11.75 0 015.625 8c0-.59.102-1.162.295-1.694h4.16c.193.532.295 1.104.295 1.694 0 .59-.102 1.162-.295 1.694H5.92zM1.5 8c0-.963.213-1.876.584-2.694H4.39A13.34 13.34 0 004.125 8c0 .93.093 1.832.265 2.694H2.084A6.47 6.47 0 011.5 8zM8 1.5c.57 0 1.462 1.03 1.883 3.306H6.117C6.538 2.53 7.43 1.5 8 1.5z"/>
                   </svg>
-                  Create Issue
+                  Website source
+                </span>
+              </a>
+              <a
+                href="https://github.com/hivecommons"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center justify-between px-3 py-2 text-sm transition-colors ${
+                  isDark
+                    ? 'text-ink-2 hover:bg-bg-3'
+                    : 'text-ink-2 hover:bg-bg-2'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M2 2.5A2.5 2.5 0 014.5 0h7A2.5 2.5 0 0114 2.5v11a.5.5 0 01-.777.416L8 10.101l-5.223 3.815A.5.5 0 012 13.5v-11z"/>
+                  </svg>
+                  GitHub organization
                 </span>
               </a>
               </div>
@@ -781,7 +768,7 @@ export default function DocsNavbar() {
           isDark ? 'border-line bg-bg' : 'border-line bg-bg'
         }`}>
           <div className="px-4 py-3 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
-            <a href="https://hivecommons.dev" target="_blank" rel="noopener noreferrer" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+            <a href="https://hive.hivecommons.dev" target="_blank" rel="noopener noreferrer" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
                 ? 'text-ink-2 hover:bg-bg-3'
                 : 'text-ink-2 hover:bg-bg-2'
@@ -797,30 +784,37 @@ export default function DocsNavbar() {
             <div className={`text-sm font-medium uppercase px-2 py-1.5 mt-3 tracking-wider ${
               isDark ? 'text-ink-2' : 'text-ink-3'
             }`}>Contribute</div>
-            <a href={getLocalizedUrl("https://github.com/hivecommons")} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+            <a href="https://github.com/hivecommons/hive" target="_blank" rel="noopener noreferrer" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+              isDark
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
+            }`}>
+              <svg className="w-4 h-4 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.300 24 12c0-6.627-5.373-12-12-12z" />
+              </svg>
+              Hive source
+            </a>
+            <a href="https://github.com/hivecommons/hive/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" target="_blank" rel="noopener noreferrer" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
                 ? 'text-ink-2 hover:bg-bg-3'
                 : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
               </svg>
-              Join In
+              Good first issues
             </a>
-            
-            
-            
-            <a href={`${getBaseUrl()}/en/ladder`} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+            <a href="https://github.com/hivecommons/hive/issues" target="_blank" rel="noopener noreferrer" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
                 ? 'text-ink-2 hover:bg-bg-3'
                 : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
-              Ladder
+              Open issues
             </a>
-            <Link href="/docs/contributing/security/security-inc" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+            <a href="https://github.com/hivecommons/hive/security/policy" target="_blank" rel="noopener noreferrer" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
                 ? 'text-ink-2 hover:bg-bg-3'
                 : 'text-ink-2 hover:bg-bg-2'
@@ -828,42 +822,51 @@ export default function DocsNavbar() {
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              Security
-            </Link>
+              Security policy
+            </a>
             
             <div className={`text-sm font-medium uppercase px-2 py-1.5 mt-3 tracking-wider ${
               isDark ? 'text-ink-2' : 'text-ink-3'
             }`}>Community</div>
-            
-            
-{/* --- REMOVED LADDER LINK FROM HERE --- */}
-            <a href={`${getBaseUrl()}/en#contact`} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+            <Link href="/docs/community/what-is-hive-commons" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
                 ? 'text-ink-2 hover:bg-bg-3'
                 : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 1010 10A10 10 0 0012 2z" />
               </svg>
-              Contact Us
-            </a>
-            <a href="https://github.com/hivecommons" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-              isDark
-                ? 'text-ink-2 hover:bg-bg-3'
-                : 'text-ink-2 hover:bg-bg-2'
-            }`}>
-              <LinkedinIcon className="w-4 h-4 mr-3" />
-              LinkedIn
-            </a>
-            <a href={`${getBaseUrl()}/en/partners`} className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+              What is Hive Commons?
+            </Link>
+            <Link href="/docs/community/join-hive-commons" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
               isDark
                 ? 'text-ink-2 hover:bg-bg-3'
                 : 'text-ink-2 hover:bg-bg-2'
             }`}>
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
-              Partners
+              Join Hive Commons
+            </Link>
+            <a href="https://hivecommons.dev/discord/" target="_blank" rel="noopener noreferrer" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+              isDark
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
+            }`}>
+              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              Discord
+            </a>
+            <a href="https://hivecommons.dev/agenda/" target="_blank" rel="noopener noreferrer" className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+              isDark
+                ? 'text-ink-2 hover:bg-bg-3'
+                : 'text-ink-2 hover:bg-bg-2'
+            }`}>
+              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Community meetings
             </a>
 
             {/* Version selector - mobile */}
@@ -877,7 +880,7 @@ export default function DocsNavbar() {
               isDark ? 'border-line' : 'border-line'
             }`}>
               <a
-                href="https://github.com/hivecommons/docs"
+                href="https://github.com/hivecommons/hive"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
@@ -889,7 +892,7 @@ export default function DocsNavbar() {
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.300 24 12c0-6.627-5.373-12-12-12z" />
                 </svg>
-                View on GitHub
+                Hive source
                 <span className={`ml-auto text-xs px-2 py-0.5 rounded ${
                   isDark ? 'bg-bg-3' : 'bg-bg-3'
                 }`}>
