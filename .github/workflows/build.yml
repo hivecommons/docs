@@ -32,6 +32,9 @@ jobs:
       - name: Lint site
         run: npm run lint
 
+      - name: Test site
+        run: npm test
+
       - name: Build site
         run: npm run build
         env:
