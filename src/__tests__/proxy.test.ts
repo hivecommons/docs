@@ -44,6 +44,22 @@ describe('proxy', () => {
     expect(proxy(request('/zh-TW/docs/readme')).headers.get('location')).toBe('https://docs.hivecommons.dev/docs/readme')
   })
 
+
+  it('redirects region-qualified docs locales to canonical docs paths', () => {
+    const response = proxy(request('/pt-BR/docs/hive/setup'))
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe('https://docs.hivecommons.dev/docs/hive/setup')
+  })
+
+  it('does not treat three-letter prefixes as localized docs URLs', () => {
+    const response = proxy(request('/abc/docs/page'))
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('x-middleware-rewrite')).toBe('https://docs.hivecommons.dev/en/abc/docs/page')
+    expect(response.headers.get('location')).toBeNull()
+  })
+
   it('keeps non-doc localized pages in the i18n middleware flow', () => {
     const response = proxy(request('/es/community'))
 
