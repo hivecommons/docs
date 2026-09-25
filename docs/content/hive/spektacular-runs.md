@@ -31,8 +31,13 @@ enforces that.
 1. **A Hive v6 hub** running at ACMM L3 or higher (you need agents that can
    claim work). See [Getting Started](/docs/hive/getting-started).
 2. **The `spektacular` binary reachable by the hub process.**
-   Spek is **not** baked into the Hive image. Install it where the hub
-   runs, or mount it in:
+   The Hive images (hub, spoke and contributor) now **ship a pinned,
+   checksum-verified Spek release** — hosted hives have nothing to
+   install. The detected version shows up under **Settings → Extensions →
+   Spektacular**, in the Health tab, and in `GET /api/status`
+   (`spektacular.present` / `spektacular.version`).
+
+   Only a hub running *outside* the image needs a local install:
 
    ```bash
    # Go
@@ -41,8 +46,8 @@ enforces that.
    brew install jumppad-labs/homebrew-repo/spektacular
    ```
 
-   For a containerised hub, bind-mount the binary and point
-   `runs.spektacular.binary` at it (see below).
+   To override the shipped binary, point `runs.spektacular.binary` (or the
+   Extensions card's *Binary* field) at your own path.
 3. **The target repository initialised for Spek** with the same agent
    backend your contributors use:
 
@@ -55,15 +60,31 @@ enforces that.
    This installs the spec/plan/implement skills your agents will invoke and
    creates the `.spektacular/` project. Commit it: Hive contributors clone the
    repo and need the skills present.
-4. **The hub's working directory must resolve the Spek project.** The
-   runner executes `spektacular <spec|plan> status <name>` from the hub
-   process's current directory with no `--dir` flag. Either start the hub from
-   a checkout that carries the `.spektacular/` project, or register the repo
-   in a Spek `config.yaml` at the hub's cwd (`repos:` list). If the
-   status call answers `artifact_not_found` for a name your agent just wrote,
-   this is the first thing to check.
+4. **A resolvable checkout per repo.** The runner executes
+   `spektacular <spec|plan> status <name>` from the checkout or worktree it
+   resolves **for the run's repository** — it never relies on the hub
+   process's own working directory, so one hub can serve several Spek
+   projects. If no checkout can be resolved for a run, the runner parks that
+   run with a `no repo workdir resolved` error instead of guessing; making
+   the repo's worktree available is the fix.
 
 ## Enable it
+
+### Hosted hives: no config file needed
+
+Hosted (spoke) users have no `config.yaml`. Everything below is switchable
+from **Settings → Extensions → Spektacular** on the dashboard: on/off, binary
+path, poll interval, max stage retries, the spec/plan/implement checkpoints
+(relaxing `implement` still needs ACMM L5+), triage (enabled, spec/fix
+labels, minimum body chars, clarify comment) and the `run_stages` work-source
+flag, plus the detected binary version. The former **Features →
+Long-running runs** toggle lives on this card now; the underlying API keys
+(`PUT /api/config/governor/features`: `spektacularEnabled`,
+`spektacularBinary`, `spektacularPollS`, `maxStageRetries`, `runStages`,
+`triageEnabled`, `checkpointSpecEnabled`, …) are unchanged. The runner is
+wired at boot, so **restart the hub** after flipping the enable toggle.
+
+### Config-file hives
 
 Add to the hub's `config.yaml`:
 
@@ -85,11 +106,8 @@ governor:
     run_stages: true            # offer pending spec/plan/implement stages to agents
 ```
 
-`runs.spektacular.enabled` and `binary` are also exposed in the Governor
-dialog under **Features → Long-running runs** and via
-`PUT /api/config/governor/features` (`spektacularEnabled`,
-`spektacularBinary`). The runner is wired at boot, so **restart the hub** after
-changing the toggle.
+`runs.spektacular.enabled` and the rest of the block are the same settings
+the Extensions card writes; use whichever fits how you run the hub.
 
 `run_stages: true` is what makes the `spec`, `plan` and `implement` stages
 appear in the contribute queue as claimable work items. Without it the runner
@@ -97,7 +115,24 @@ can poll, but no agent is ever offered a stage.
 
 ## Starting a run
 
-There are two ways an issue becomes a run.
+There are four ways an issue becomes a run.
+
+### Start it from the dashboard
+
+Issue rows and campaign detail carry a **Start spec run** action (owner
+role). It creates the first `spec` stage lease directly — the same path as
+the `run/spec` label, no label round-trip through GitHub. The API form is
+`POST /api/runs/spec` with `{"target": "owner/repo#123"}`.
+
+### Start it from chat
+
+```
+!runs spec <owner/repo#n>
+```
+
+kicks off a spec run from the chat panel. The rest of the family — `!runs
+list`, `!runs status <key>`, `!runs <key> more`, `!runs approve <key>`,
+`!runs reject <key> <reason>` — watches and gates runs from the same place.
 
 ### Label it
 
@@ -155,7 +190,9 @@ curl -fsS -H "Authorization: Bearer $HIVE_TOKEN" "$HIVE_URL/api/runs" | jq
 curl -fsS -H "Authorization: Bearer $HIVE_TOKEN" "$HIVE_URL/api/runs/owner%2Frepo%23123" | jq '.stages'
 ```
 
-The Runs card on the dashboard and `!runs` in chat show the same data.
+The Runs card on the dashboard shows the same data — artifact name,
+`document_status`, current step, and a "Powered by Spektacular" credit — and
+`!runs` in chat mirrors it.
 
 ## Retries, escalation and stale plans
 
@@ -182,7 +219,8 @@ The Runs card on the dashboard and `!runs` in chat show the same data.
 | --- | --- |
 | Hub log: `[spektacular] stage runner installed` never appears | `runs.spektacular.enabled` is false or the hub was not restarted |
 | Stage leases exist but no agent claims them | `governor.work_source.run_stages` is not `true` |
-| `artifact_not_found` for a name the agent wrote | Hub cwd does not resolve the Spek project (prerequisite 4), or the name was passed with `.md` / a path — always the bare `000057_name` |
+| `artifact_not_found` for a name the agent wrote | The resolved repo checkout doesn't carry the artifact (wrong branch/worktree), or the name was passed with `.md` / a path — always the bare `000057_name` |
+| Run parked with `no repo workdir resolved` | The runner could not resolve a checkout/worktree for the run's repository (prerequisite 4) |
 | `unknown flag: --json` | Wrong Spek version; no verb takes `--json`, output is already JSON |
 | Plan reaches `final` but stays parked, `import error` in log | Plan has neither `tasks.json` nor a parseable `- [T1] …` list; `plan export` is not yet in your Spek build |
 | `implement` never appears | The imported plan epic is still a DRAFT — approve it |
@@ -193,11 +231,10 @@ The Runs card on the dashboard and `!runs` in chat show the same data.
 - `spektacular plan export --format json` is an upstream request
   ([spektacular#50](https://github.com/hivecommons/spektacular/issues/50));
   until it ships, Hive uses the `tasks.json` / `plan.md` fallback.
-- The runner has no per-repo working directory; one hub serving several
-  Spek projects depends on a `config.yaml` `repos:` list at the hub's
-  cwd.
-- Spek is not shipped in the Hive image; installing or mounting it is
-  the operator's job.
+- Campaigns cannot yet be *created* as a Spektacular run from the campaign
+  flow itself; start the run from the issue (label, dashboard action or
+  `!runs spec`) instead
+  ([hive#8737](https://github.com/hivecommons/hive/issues/8737)).
 - The in-tree acceptance test (`just runs-e2e-v6`) exercises a **fake**
   `spektacular` CLI. Run a real spek/plan on a scratch repo before turning the
   runner on for a repo you care about.
@@ -207,4 +244,5 @@ The Runs card on the dashboard and `!runs` in chat show the same data.
 - [Spektacular stage runner](https://github.com/hivecommons/hive/blob/v6/src/docs/spektacular.md) — the full contract, receipt shape and fake-CLI scenarios
 - [Runs](https://github.com/hivecommons/hive/blob/v6/src/docs/runs.md) — `/api/runs`, checkpoint policy, acceptance tests
 - [Work sources](https://github.com/hivecommons/hive/blob/v6/src/docs/work-sources.md) — `run_stages: true` and the `<repo>!<runKey>:<stage>` key
+- [Pointing external extensions at Hive](https://github.com/hivecommons/hive/blob/v6/src/docs/contributor-relay.md#pointing-external-extensions-at-hive) — the relay URL, registration token and capability each external tool (Flue, Crustify/Wavefront, generic relays) needs
 - [Spektacular (Spek) README](/docs/spektacular/readme) and [How to use Spek](/docs/spektacular/getting-started) — the CLI itself
