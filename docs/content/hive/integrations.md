@@ -155,3 +155,36 @@ Hive supports agent CLIs, inference engines, and OpenAI-compatible model gateway
 ![Akamai (Linode) infrastructure provider](/integrations/akamai.svg) ![Oracle Cloud (OKE) infrastructure provider](/integrations/oracle.svg) ![Cloudflare DNS edge and tunnels provider](/integrations/cloudflare.svg) ![GitHub Copilot AI inference supporter](/integrations/github-copilot.svg) ![Bluehost domain hosting provider](/integrations/bluehost.svg)
 
 Hive Commons thanks [Akamai (Linode)](https://www.linode.com/) and [Oracle Cloud (OKE)](https://www.oracle.com/cloud/cloud-native/kubernetes-engine/) for Kubernetes infrastructure donated through the CNCF, [Cloudflare](https://www.cloudflare.com/) for DNS, edge and tunnels, [GitHub Copilot](https://github.com/features/copilot) for AI inference donated to CNCF projects through the CNCF, and [Bluehost](https://www.bluehost.com/) for domain hosting.
+
+## Source control, work sources, and sign-in
+
+The product landing page groups runtime integrations separately from the agent
+CLI and inference list above. Current shipped surfaces are:
+
+- **Source control:** GitHub and GitHub Enterprise are the production GitHub App
+  path. The forge-neutral adapter layer includes GitLab and Gitea / Forgejo
+  issue and change-request flows as those paths graduate.
+- **Work sources:** GitHub Issues (default), GitHub Projects, Linear, Jira
+  Cloud, Jira Data Center / Server (`deployment: datacenter`), Spektacular run
+  stages, and Wavefront migration graphs.
+- **Sign-in:** Microsoft, GitHub, IBM, Google, and other OIDC providers by hub
+  configuration.
+
+Jira Data Center / Server support uses Jira REST API v2, preserves context-path
+base URLs, and supports Personal Access Token bearer auth or basic auth fallback.
+Custom CA and TLS trust settings are still in progress and are not listed as
+shipped stable functionality.
+
+## Recent Hive platform additions
+
+- **Swarm mode:** per-repository swarms with idle-unlock, themes, Discord
+  announcements, and `/api/leaderboard/swarm`.
+- **The Commons:** contributors can subscribe to multiple hives, rank them, and
+  choose `ranked`, `spread`, or `neediest` routing; `hivectl hives web` opens a
+  local management UI.
+- **Teams and achievements:** distro / OS / agent team leaderboards are exposed
+  at `/api/leaderboard/teams`, and Achievements 2.0 adds Solo, Dual, Fireteam,
+  and Raid tiers plus the local-model track.
+- **Edge-only v6:** admin MCP (`/api/admin/mcp`, `cmd/hive-admin-mcp`) and the
+  dashboard Extensions tab for Spektacular are on the v6 edge branch until that
+  line is promoted.
