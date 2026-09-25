@@ -25,6 +25,7 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "agent-configuration.md" },
   { source: "hivectl.md" },
   { source: "manual-provisioning.md" },
+  { source: "work-sources.md" },
   { source: "getting-started.md" },
   { source: "net-admin-requirement.md" },
   { source: "release-channels.md" },

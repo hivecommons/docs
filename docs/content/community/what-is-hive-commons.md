@@ -62,7 +62,9 @@ Every repository in the organization is Apache 2.0 licensed, requires DCO
 sign-off on every commit, and follows the CNCF Code of Conduct. Hive is
 maintained by a Maintainer Committee spanning multiple organizations, with a
 documented contributor ladder and explicit governance for AI-agent
-contributions. Hive Commons has applied for the
+contributions. The Commons lets contributors subscribe to multiple hives, rank
+where their compute should go, and route work by `ranked`, `spread`, or
+`neediest` strategies. Hive Commons has applied for the
 [CNCF Sandbox](https://github.com/cncf/sandbox/issues/516).
 
 - [Governance](https://github.com/hivecommons/.github/blob/main/GOVERNANCE.md) · [Maintainers](https://github.com/hivecommons/.github/blob/main/MAINTAINERS.md) · [Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md) · [Security policy](https://github.com/hivecommons/.github/blob/main/SECURITY.md)
