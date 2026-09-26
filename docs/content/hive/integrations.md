@@ -93,6 +93,13 @@ Hive supports agent CLIs, inference engines, and OpenAI-compatible model gateway
 - **Hive config:** `backend: omp`
 - **Official link:** [Oh My Pi](https://github.com/can1357/oh-my-pi)
 
+## Flue [#flue]
+
+- **Owner:** Flue / withastro
+- **What Hive does:** runs a report-only external-execution binding pilot through `pkg/extwork` and the Flue adapter. The binding admits, observes, and verifies external workflow receipts without publication credentials; it is linked only when Hive is built with the `extwork_flue` build tag.
+- **Hive config:** `runs.external.flue` (**pilot**, default off)
+- **Official link:** [Flue](https://github.com/withastro/flue); [Hive Flue example](https://github.com/hivecommons/hive/tree/v5/examples/flue); [external workflow admission design](https://github.com/hivecommons/hive/blob/v5/src/docs/design/external-workflow-admission.md)
+
 ## ![vLLM inference engine](/integrations/vllm.png) vLLM [#vllm]
 
 - **Owner:** vLLM project
@@ -158,6 +165,13 @@ TypeSafe AI is a Hive Commons partner.
 - **Hive config:** `backend: deepseek`
 - **Official link:** [DeepSeek](https://www.deepseek.com/)
 
+## Crustify / Wavefront [#crustify-wavefront]
+
+- **Owner:** Crustify / Wavefront projects
+- **What Hive does:** adds the Wavefront work source to list ready nodes from C/C++→Rust migration graphs as run-stage work items. Wavefront remains authoritative for graph dependency closure, cycles, waves, and batching; Hive records receipts when nodes complete and leaves publication out of scope.
+- **Hive config:** `governor.work_source.wavefront` (**default disabled**)
+- **Official link:** [Crustify](https://github.com/crustify-rs/crustify); [Wavefront](https://github.com/crustify-rs/wavefront); [Hive work-source docs](/docs/hive/work-sources#wavefront-migration-graph-wavefrontenabled-true)
+
 ## Infrastructure thanks
 
 
@@ -175,7 +189,7 @@ CLI and inference list above. Current shipped surfaces are:
   issue and change-request flows as those paths graduate.
 - **Work sources:** GitHub Issues (default), GitHub Projects, Linear, Jira
   Cloud, Jira Data Center / Server (`deployment: datacenter`), Spektacular run
-  stages, and Wavefront migration graphs.
+  stages, and Crustify / Wavefront migration graphs.
 - **Sign-in:** Microsoft, GitHub, IBM, Google, and other OIDC providers by hub
   configuration.
 

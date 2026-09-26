@@ -39,6 +39,9 @@ const INTEGRATION_NAMES = [
   'IBM watsonx.ai',
   'OpenRouter',
   'Jev',
+  'Flue',
+  'Crustify',
+  'Wavefront',
   'Anthropic',
   'OpenAI',
   'DeepSeek',
@@ -85,6 +88,7 @@ function integrationsJsonLd() {
         'Drives supported agent CLI backends including Claude Code, GitHub Copilot CLI, Goose, OpenAI Codex CLI, IBM Bob, Gemini CLI and more.',
         'Routes inference through supported engines and gateways including vLLM, llm-d, LiteLLM, IBM watsonx.ai, OpenRouter, Anthropic, OpenAI and DeepSeek.',
         'Supports Jev by TypeSafe AI as a Hive v6 optional advisory smart-classifier backend.',
+        'Admits report-only external execution through the Flue pilot and ready C/C++ to Rust migration graph nodes through Crustify/Wavefront.',
       ],
     },
     {
