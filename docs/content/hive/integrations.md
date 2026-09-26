@@ -1,6 +1,6 @@
 # Supported agents & inference engines
 
-Hive supports agent CLIs, inference engines, and OpenAI-compatible model gateways by backend ID. These are supported software integrations; inclusion does not imply endorsement or a partnership.
+Hive supports agent CLIs, inference engines, and OpenAI-compatible model gateways by backend ID. These are supported software integrations; inclusion does not imply endorsement or a partnership unless marked Partner. TypeSafe AI is a Hive Commons partner.
 
 ## ![Claude Code by Anthropic](/integrations/claude.svg) Claude Code [#claude-code]
 
@@ -127,6 +127,15 @@ Hive supports agent CLIs, inference engines, and OpenAI-compatible model gateway
 - **What Hive does:** uses OpenRouter as a named model gateway for OpenAI-compatible routing when configured by an operator.
 - **Hive config:** `backend: openrouter`
 - **Official link:** [OpenRouter](https://openrouter.ai/)
+
+## ![Jev by TypeSafe AI](/integrations/typesafe.png) Jev [#jev]
+
+- **Owner:** TypeSafe AI — **Partner**
+- **What Hive does:** in Hive v6, uses Jev as an optional advisory smart classifier (`classifier.backend: jev`) that measures disagreement with deterministic keyword rules and suggests rules for approval in **Settings → Smart classifier**. It does not change routing. Jev returns typed choice, score, and probability answers with confidence, and bills input tokens only. Per-agent `jev_mode` is planned.
+- **Hive config:** `classifier.backend: jev` with OpenRouter connected or `JEV_API_KEY` for TypeSafe AI. OpenRouter model ID: `typesafe/jev-1.13`.
+- **Official link:** [Jev System One docs](https://docs.typesafe.ai/concepts/system-one); [TypeSafe AI API](https://docs.typesafe.ai/api); [TypeSafe AI](https://typesafe.ai/)
+
+TypeSafe AI is a Hive Commons partner.
 
 ## ![Anthropic model provider](/integrations/anthropic.svg) Anthropic [#anthropic]
 
