@@ -38,6 +38,7 @@ const INTEGRATION_NAMES = [
   'LiteLLM',
   'IBM watsonx.ai',
   'OpenRouter',
+  'Jev',
   'Anthropic',
   'OpenAI',
   'DeepSeek',
@@ -59,8 +60,11 @@ function integrationsJsonLd() {
       headline: 'Supported agents & inference engines',
       description: INTEGRATIONS_DESCRIPTION,
       url: 'https://docs.hivecommons.dev/docs/hive/integrations',
-      about: INTEGRATION_NAMES.map((name) => ({ '@type': 'SoftwareApplication', name })),
-      keywords: [...INTEGRATION_NAMES, 'Spektacular', 'Spek', 'speks'].join(', '),
+      about: [
+        ...INTEGRATION_NAMES.map((name) => ({ '@type': 'SoftwareApplication', name })),
+        { '@type': 'Organization', name: 'TypeSafe AI', url: 'https://typesafe.ai/' },
+      ],
+      keywords: [...INTEGRATION_NAMES, 'TypeSafe AI', 'Spektacular', 'Spek', 'speks'].join(', '),
       publisher: {
         '@type': 'Organization',
         name: 'Hive Commons',
@@ -76,10 +80,11 @@ function integrationsJsonLd() {
       license: 'https://www.apache.org/licenses/LICENSE-2.0',
       url: 'https://hive.hivecommons.dev/',
       codeRepository: 'https://github.com/hivecommons/hive',
-      keywords: [...INTEGRATION_NAMES, 'Spektacular', 'Spek', 'speks'].join(', '),
+      keywords: [...INTEGRATION_NAMES, 'TypeSafe AI', 'Spektacular', 'Spek', 'speks'].join(', '),
       featureList: [
         'Drives supported agent CLI backends including Claude Code, GitHub Copilot CLI, Goose, OpenAI Codex CLI, IBM Bob, Gemini CLI and more.',
         'Routes inference through supported engines and gateways including vLLM, llm-d, LiteLLM, IBM watsonx.ai, OpenRouter, Anthropic, OpenAI and DeepSeek.',
+        'Supports Jev by TypeSafe AI as a Hive v6 optional advisory smart-classifier backend.',
       ],
     },
     {

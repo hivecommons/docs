@@ -49,12 +49,13 @@ const INTEGRATION_NAMES = [
   'LiteLLM',
   'IBM watsonx.ai',
   'OpenRouter',
+  'Jev',
   'Anthropic',
   'OpenAI',
   'DeepSeek',
 ]
 
-const DOCS_KEYWORDS = [...INTEGRATION_NAMES, 'Spektacular', 'Spek', 'speks']
+const DOCS_KEYWORDS = [...INTEGRATION_NAMES, 'TypeSafe AI', 'Spektacular', 'Spek', 'speks']
 
 const INFRA_SPONSORS = [
   { '@type': 'Organization', name: 'Akamai', url: 'https://www.linode.com/' },
@@ -74,10 +75,11 @@ const DOCS_JSON_LD = [
     license: 'https://www.apache.org/licenses/LICENSE-2.0',
     url: 'https://hive.hivecommons.dev/',
     codeRepository: 'https://github.com/hivecommons/hive',
-    keywords: INTEGRATION_NAMES.join(', '),
+    keywords: DOCS_KEYWORDS.join(', '),
     featureList: [
       'Drives supported agent CLI backends including Claude Code, GitHub Copilot CLI, Goose, OpenAI Codex CLI, IBM Bob, Gemini CLI and more.',
       'Routes inference through supported engines and gateways including vLLM, llm-d, LiteLLM, IBM watsonx.ai, OpenRouter, Anthropic, OpenAI and DeepSeek.',
+      'Supports Jev by TypeSafe AI as a Hive v6 optional advisory smart-classifier backend.',
     ],
   },
   {
