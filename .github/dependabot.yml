@@ -13,6 +13,15 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "chore(deps)"
+    groups:
+      # react and react-dom must be the exact same version or react-dom
+      # throws at import time; keep the whole family in one PR (issue #87).
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
     ignore:
       # TypeScript 7 (native compiler) breaks tsc on sibling repos (pluk,
       # promptargs, rationguard); land TS majors via a deliberate migration PR.
