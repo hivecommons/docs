@@ -2,6 +2,9 @@
   "name": "docs",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.19"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "prebuild": "(tsx scripts/update-meeting-recordings.ts || echo \"meeting recordings refresh unavailable - using committed data\") && (tsx scripts/sync-hive-docs.ts || echo \"hive docs sync unavailable - using committed content\") && (tsx scripts/sync-sibling-docs.ts || echo \"sibling docs sync unavailable - using committed content\") && tsx scripts/generate-shared-config.ts",

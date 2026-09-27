@@ -29,12 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint site
-        run: npm run lint
-
-      - name: Test site
-        run: npm test
-
+      # Lint and unit tests are gated by typecheck.yml and vitest.yml
+      # respectively (vitest.yml additionally enforces coverage
+      # thresholds); running them again here just duplicates those jobs.
       - name: Build site
         run: npm run build
         env:
