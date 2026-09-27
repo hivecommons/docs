@@ -13,6 +13,11 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      # TypeScript 7 (native compiler) breaks tsc on sibling repos (pluk,
+      # promptargs, rationguard); land TS majors via a deliberate migration PR.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
