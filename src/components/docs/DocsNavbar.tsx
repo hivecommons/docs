@@ -7,12 +7,19 @@ import { useTheme } from "next-themes";
 // import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { VersionSelector } from './VersionSelector';
 import { useGithubStats } from "@/components/navbar/useGithubStats";
+import { useHoverDropdown } from "@/components/navbar/useHoverDropdown";
 
-type DropdownType = "contribute" | "community" | "language" | "github" | null;
+type DropdownName = "contribute" | "community" | "language" | "github";
 
 export default function DocsNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<DropdownType>(null);
+  const {
+    openDropdown,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleDropdownMouseEnter,
+    closeDropdown,
+  } = useHoverDropdown<DropdownName>();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Array<{
@@ -24,7 +31,6 @@ export default function DocsNavbar() {
     matchType: string;
   }>>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const commandPaletteRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,7 +56,7 @@ export default function DocsNavbar() {
           setSearchResults([]);
           setSelectedIndex(0);
         } else {
-          setOpenDropdown(null);
+          closeDropdown();
         }
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -76,28 +82,7 @@ export default function DocsNavbar() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isSearchOpen, searchResults, selectedIndex]);
-
-  const handleMouseEnter = (dropdown: DropdownType) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    setOpenDropdown(dropdown);
-  };
-
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setOpenDropdown(null);
-    }, 150);
-  };
-
-  const handleDropdownMouseEnter = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  };
+  }, [isSearchOpen, searchResults, selectedIndex, closeDropdown]);
 
   const isDark = resolvedTheme === 'dark';
   const [isSearching, setIsSearching] = useState(false);

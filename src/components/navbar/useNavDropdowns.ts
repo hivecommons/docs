@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { DROPDOWN_HIDE_DELAY_MS } from "./useHoverDropdown";
 
 export interface DropdownState {
   isDropdownOpen: boolean;
@@ -85,7 +86,7 @@ export function useNavDropdowns() {
           setIsContributeOpen(false);
           setIsCommunityOpen(false);
           setIsGithubOpen(false);
-        }, 300);
+        }, DROPDOWN_HIDE_DELAY_MS);
       };
 
       container.addEventListener("mouseenter", showMenu);
@@ -194,7 +195,7 @@ export function useNavDropdowns() {
             isLangHovered = false;
             setIsDropdownOpen(false);
           }
-        }, 300);
+        }, DROPDOWN_HIDE_DELAY_MS);
       };
 
       const closeLangSwitcher = () => {
