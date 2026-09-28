@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 // import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { VERSIONS } from '@/config/versions'
 import { VersionSelector } from './VersionSelector';
+import { useGithubStats } from "@/components/navbar/useGithubStats";
 
 type DropdownType = "contribute" | "community" | "language" | "github" | null;
 
@@ -30,12 +31,7 @@ export default function DocsNavbar() {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  // Fallback values shown until shields.io responds.
-  const [githubStats, setGithubStats] = useState({
-    stars: "30",
-    forks: "25",
-    watchers: "1",
-  });
+  const githubStats = useGithubStats();
 
   // const searchParams = useSearchParams()
   // const pathname = usePathname()
@@ -45,39 +41,6 @@ export default function DocsNavbar() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  // Fetch stats via shields.io JSON endpoints — no rate-limit issues unlike api.github.com
-  useEffect(() => {
-    const REPO = "hivecommons/hive";
-    const SHIELDS_BASE = "https://img.shields.io/github";
-    const endpoints: Array<{ key: keyof typeof githubStats; metric: string }> = [
-      { key: "stars", metric: "stars" },
-      { key: "forks", metric: "forks" },
-      { key: "watchers", metric: "watchers" },
-    ];
-
-    const fetchStats = async () => {
-      const results = await Promise.allSettled(
-        endpoints.map(async ({ key, metric }) => {
-          const res = await fetch(`${SHIELDS_BASE}/${metric}/${REPO}.json`);
-          if (!res.ok) return { key, value: null };
-          const data = await res.json();
-          return { key, value: data.value as string };
-        })
-      );
-
-      setGithubStats(prev => {
-        const next = { ...prev };
-        for (const r of results) {
-          if (r.status === "fulfilled" && r.value.value) {
-            next[r.value.key] = r.value.value;
-          }
-        }
-        return next;
-      });
-    };
-    fetchStats();
   }, []);
 
   useEffect(() => {
