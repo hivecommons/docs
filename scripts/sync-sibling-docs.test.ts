@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PROJECTS, rewriteLinks, scrubLegacyBranding, syncedHeader, type ProjectSync } from "./sync-sibling-docs";
+import { PROJECTS, rewriteLinks, syncedHeader, type ProjectSync } from "./sync-sibling-docs";
 
 const SIBLING_PROJECTS = ["hotshot", "pluk", "rationguard", "promptargs", "dibs", "spektacular"];
 
@@ -80,19 +80,5 @@ describe("rewriteLinks", () => {
   it("leaves absolute and anchor links alone", () => {
     const src = "[a](https://x.y) [b](#c) [d](/docs/hive)";
     expect(rewriteLinks(src, spek)).toBe(src);
-  });
-});
-
-describe("scrubLegacyBranding", () => {
-  it("rewrites transferred jumppad-labs repo sub-paths but not the Go module path", () => {
-    expect(scrubLegacyBranding("https://github.com/jumppad-labs/spektacular/releases")).toBe(
-      "https://github.com/hivecommons/spektacular/releases"
-    );
-    expect(scrubLegacyBranding("go install github.com/jumppad-labs/spektacular@latest")).toBe(
-      "go install github.com/jumppad-labs/spektacular@latest"
-    );
-    expect(scrubLegacyBranding("https://github.com/jumppad-labs/tutorial-spektacular-how-to")).toBe(
-      "https://github.com/jumppad-labs/tutorial-spektacular-how-to"
-    );
   });
 });

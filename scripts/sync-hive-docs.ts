@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { normalizeFences } from "./markdown-fences";
+import { scrubLegacyBranding } from "./scrub-legacy-branding";
 
 // Post-migration the canonical hive repo is hivecommons/hive; until the code
 // transfer lands the docs stay in hivecommons/hive. Override with HIVE_DOCS_OWNER.
@@ -57,27 +58,6 @@ const files: Array<{ source: string; target?: string }> = [
 // ---------------------------------------------------------------------------
 // Brand scrub
 // ---------------------------------------------------------------------------
-// The source repos predate the Hive Commons migration and still carry
-// KubeStellar-era identifiers. Rewrite them until the upstream repos are
-// scrubbed, so the published site never shows the old branding.
-function scrubLegacyBranding(content: string): string {
-  return content
-    .replace(/io\.kubestellar\.hive\./g, "io.hivecommons.hive.")
-    .replace(/hive\\?\.kubestellar\\?\.io/g, (m) =>
-      m.includes("\\") ? "hive\\.hivecommons\\.dev" : "hive.hivecommons.dev")
-    .replace(/examples\/kubestellar-fixer\.md/g, "examples/hivecommons-fixer.md")
-    .replace(/examples\/kubestellar\//g, "examples/hivecommons/")
-    .replace(/@kubestellar\//g, "@hivecommons/")
-    .replace(/github\.com\/kubestellar\/hive/g, "github.com/hivecommons/hive")
-    .replace(/github\.com\/kubestellar/g, "github.com/hivecommons")
-    .replace(/kubestellar\/hive/g, "hivecommons/hive")
-    .replace(/kubestellar\/pluk/g, "hivecommons/pluk")
-    .replace(/kubestellar\/hotshot/g, "hivecommons/hotshot")
-    .replace(/kubestellar\.io/g, "hivecommons.dev")
-    .replace(/KubeStellar/g, "Hive Commons")
-    .replace(/Kubestellar/g, "Hive Commons")
-    .replace(/kubestellar/g, "hivecommons");
-}
 
 function canonicalHeader(source: string): string {
   const canonical = `${canonicalBase}/${source}`;
