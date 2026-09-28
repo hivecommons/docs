@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 // import { useSearchParams, usePathname, useRouter } from 'next/navigation'
-import { VERSIONS } from '@/config/versions'
 import { VersionSelector } from './VersionSelector';
 import { useGithubStats } from "@/components/navbar/useGithubStats";
 
@@ -37,7 +36,6 @@ export default function DocsNavbar() {
   // const pathname = usePathname()
   // const router = useRouter()
   // Note: Version label is now handled by VersionSelector component
-  void VERSIONS; // Keep import for reference
 
   useEffect(() => {
     setMounted(true);
