@@ -8,9 +8,6 @@ on:
 permissions:
   contents: read
 
-env:
-  NETLIFY_BUILD_HOOK_URL: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
-
 jobs:
   refresh:
     permissions:
@@ -22,7 +19,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npx tsx scripts/update-meeting-recordings.ts
       - name: Commit recording feed snapshot
         uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
@@ -31,4 +28,6 @@ jobs:
           file_pattern: data/meeting-recordings.json
       - name: Trigger Netlify rebuild
         if: env.NETLIFY_BUILD_HOOK_URL != ''
+        env:
+          NETLIFY_BUILD_HOOK_URL: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
         run: curl --fail -sS -X POST "$NETLIFY_BUILD_HOOK_URL"
