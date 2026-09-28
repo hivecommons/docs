@@ -5,6 +5,7 @@ const DATA_PATH = path.join(process.cwd(), 'data', 'meeting-recordings.json')
 const FEED_URL = 'https://www.youtube.com/feeds/videos.xml?channel_id=UCIA3fKJFv2nLoG6vKK65xLg'
 const CHANNEL_ID = 'UCIA3fKJFv2nLoG6vKK65xLg'
 const TITLE_RE = /community meeting|community call|meeting recording/i
+const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/
 
 type Recording = {
   id: string
@@ -35,12 +36,28 @@ function attr(input: string, tag: string, name: string): string | undefined {
 }
 
 function decodeXml(input = ''): string {
+  // Decode &amp; LAST: decoding it first would fully decode double-encoded
+  // content (&amp;lt; -> &lt; -> <), reintroducing escaped markup.
   return input
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+}
+
+// Accept only https URLs on an expected host; anything else is dropped so a
+// malformed/spoofed feed entry cannot persist an arbitrary URL into the
+// committed snapshot (consumed by iframe/img/href sinks in MeetingsPage).
+function safeHttpsUrl(raw: string | undefined, isAllowedHost: (host: string) => boolean): string | undefined {
+  if (!raw) return undefined
+  try {
+    const url = new URL(raw)
+    if (url.protocol === 'https:' && isAllowedHost(url.hostname)) return url.href
+  } catch {
+    // not a URL — fall through to undefined
+  }
+  return undefined
 }
 
 function parseFeed(xml: string): Recording[] {
@@ -48,15 +65,21 @@ function parseFeed(xml: string): Recording[] {
   return entries.flatMap(entry => {
     const id = textBetween(entry, 'yt:videoId')
     const title = decodeXml(textBetween(entry, 'title'))
-    if (!id || !title || !TITLE_RE.test(title)) return []
+    // id is interpolated raw into an embed iframe src — enforce the exact
+    // YouTube video-id shape and drop anything else.
+    if (!id || !VIDEO_ID_RE.test(id) || !title || !TITLE_RE.test(title)) return []
 
     return [{
       id,
       title,
       publishedAt: textBetween(entry, 'published') ?? '',
       updatedAt: textBetween(entry, 'updated'),
-      url: attr(entry, 'link', 'href') ?? `https://www.youtube.com/watch?v=${id}`,
-      thumbnail: attr(entry, 'media:thumbnail', 'url')?.replace('https://i1.ytimg.com/', 'https://i.ytimg.com/') ?? `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+      url: safeHttpsUrl(attr(entry, 'link', 'href'), host => host === 'www.youtube.com' || host === 'youtube.com' || host === 'youtu.be')
+        ?? `https://www.youtube.com/watch?v=${id}`,
+      thumbnail: safeHttpsUrl(
+        attr(entry, 'media:thumbnail', 'url')?.replace('https://i1.ytimg.com/', 'https://i.ytimg.com/'),
+        host => host === 'i.ytimg.com' || host.endsWith('.ytimg.com')
+      ) ?? `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
       description: decodeXml(textBetween(entry, 'media:description')),
     }]
   })

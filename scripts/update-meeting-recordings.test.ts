@@ -62,11 +62,11 @@ describe("update-meeting-recordings", () => {
         channelId: "old-channel",
         recordings: [
           {
-            id: "old1",
+            id: "oldvid00001",
             title: "Community Meeting #1",
             publishedAt: "2026-01-01T00:00:00Z",
             url: "https://example.test/old",
-            thumbnail: "https://i.ytimg.com/vi/old1/hqdefault.jpg",
+            thumbnail: "https://i.ytimg.com/vi/oldvid00001/hqdefault.jpg",
             duration: "PT30M",
           },
         ],
@@ -77,12 +77,12 @@ describe("update-meeting-recordings", () => {
         ok: true,
         text: async () => \`<feed>
           <entry>
-            <yt:videoId>new1</yt:videoId>
+            <yt:videoId>newvid00001</yt:videoId>
             <title>Hive Commons Community Call &amp; demo</title>
             <published>2026-02-01T00:00:00Z</published>
             <updated>2026-02-02T00:00:00Z</updated>
-            <link href="https://youtu.be/new1" />
-            <media:thumbnail url="https://i1.ytimg.com/vi/new1/hqdefault.jpg" />
+            <link href="https://youtu.be/newvid00001" />
+            <media:thumbnail url="https://i1.ytimg.com/vi/newvid00001/hqdefault.jpg" />
             <media:description>News &amp; notes</media:description>
           </entry>
           <entry><yt:videoId>skip</yt:videoId><title>Unrelated demo</title></entry>
@@ -97,12 +97,12 @@ describe("update-meeting-recordings", () => {
     expect(data.source).toContain("youtube.com/feeds/videos.xml");
     expect(data.channelId).toBe("UCIA3fKJFv2nLoG6vKK65xLg");
     expect(data.recordings.map((r: { id: string }) => r.id)).toEqual([
-      "new1",
-      "old1",
+      "newvid00001",
+      "oldvid00001",
     ]);
     expect(data.recordings[0]).toMatchObject({
       title: "Hive Commons Community Call & demo",
-      thumbnail: "https://i.ytimg.com/vi/new1/hqdefault.jpg",
+      thumbnail: "https://i.ytimg.com/vi/newvid00001/hqdefault.jpg",
       description: "News & notes",
     });
     expect(data.recordings[1].duration).toBe("PT30M");
@@ -136,5 +136,80 @@ describe("update-meeting-recordings", () => {
     expect(result.status).toBe(0);
     expect(result.stderr).toContain("meeting recordings feed unavailable");
     expect(readData()).toEqual(existing);
+  });
+
+  it("drops entries with malformed video ids and rejects non-YouTube urls", () => {
+    fs.writeFileSync(
+      path.join(caseDir, "data", "meeting-recordings.json"),
+      JSON.stringify({
+        updatedAt: "2026-01-01T00:00:00.000Z",
+        source:
+          "https://www.youtube.com/feeds/videos.xml?channel_id=UCIA3fKJFv2nLoG6vKK65xLg",
+        channelId: "UCIA3fKJFv2nLoG6vKK65xLg",
+        recordings: [],
+      })
+    );
+    const preload = writeFeedStub(`
+      globalThis.fetch = async () => ({
+        ok: true,
+        text: async () => \`<feed>
+          <entry>
+            <yt:videoId>../evilpath</yt:videoId>
+            <title>Community meeting bad id</title>
+            <published>2026-02-01T00:00:00Z</published>
+          </entry>
+          <entry>
+            <yt:videoId>goodvid0001</yt:videoId>
+            <title>Community meeting bad urls</title>
+            <published>2026-02-01T00:00:00Z</published>
+            <link href="javascript:alert(1)" />
+            <media:thumbnail url="https://evil.example/vi/goodvid0001/hqdefault.jpg" />
+          </entry>
+        </feed>\`,
+      });
+    `);
+
+    const result = runUpdate(preload);
+    expect(result.status).toBe(0);
+    const data = readData();
+    expect(data.recordings).toHaveLength(1);
+    expect(data.recordings[0]).toMatchObject({
+      id: "goodvid0001",
+      url: "https://www.youtube.com/watch?v=goodvid0001",
+      thumbnail: "https://i.ytimg.com/vi/goodvid0001/hqdefault.jpg",
+    });
+  });
+
+  it("does not double-decode entities in titles and descriptions", () => {
+    fs.writeFileSync(
+      path.join(caseDir, "data", "meeting-recordings.json"),
+      JSON.stringify({
+        updatedAt: "2026-01-01T00:00:00.000Z",
+        source:
+          "https://www.youtube.com/feeds/videos.xml?channel_id=UCIA3fKJFv2nLoG6vKK65xLg",
+        channelId: "UCIA3fKJFv2nLoG6vKK65xLg",
+        recordings: [],
+      })
+    );
+    const preload = writeFeedStub(`
+      globalThis.fetch = async () => ({
+        ok: true,
+        text: async () => \`<feed>
+          <entry>
+            <yt:videoId>encvideo001</yt:videoId>
+            <title>Community meeting &amp;lt;demo&amp;gt;</title>
+            <published>2026-02-01T00:00:00Z</published>
+            <media:description>a &amp;amp; b</media:description>
+          </entry>
+        </feed>\`,
+      });
+    `);
+
+    const result = runUpdate(preload);
+    expect(result.status).toBe(0);
+    const data = readData();
+    // Double-encoded input must decode exactly one level, never to raw markup.
+    expect(data.recordings[0].title).toBe("Community meeting &lt;demo&gt;");
+    expect(data.recordings[0].description).toBe("a &amp; b");
   });
 });
