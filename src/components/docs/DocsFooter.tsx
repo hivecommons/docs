@@ -58,7 +58,7 @@ export default function Footer() {
       window.removeEventListener("scroll", toggleButton);
       backToTopButton.removeEventListener("click", handleClick);
     };
-  }, []);
+  }, [mounted]);
 
   // Prevent hydration mismatch by rendering dark theme until mounted
   if (!mounted) {
