@@ -27,6 +27,9 @@ Hive, hotshot, pluk, rationguard, promptargs, dibs, and Spektacular docs are
 - `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, promptargs, dibs, and Spektacular docs from their repos.
   Spektacular also pulls its tutorials from `hivecommons/spektacular-website` (MDX, converted to Markdown by
   `scripts/mdx-to-markdown.ts`; override the ref with `SPEKTACULAR_WEBSITE_DOCS_REF`).
+  Override the org for all sibling repos with `SIBLING_DOCS_OWNER` (default `hivecommons`), or the
+  branch/ref for an individual project with `HOTSHOT_DOCS_REF`, `PLUK_DOCS_REF`,
+  `RATIONGUARD_DOCS_REF`, `PROMPTARGS_DOCS_REF`, `DIBS_DOCS_REF`, or `SPEKTACULAR_DOCS_REF`.
 
 Edit the canonical source in the project repository — not the synced copies under
 `docs/content/`. If a sync source is unreachable at build time, the committed copies
