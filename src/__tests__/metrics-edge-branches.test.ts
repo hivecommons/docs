@@ -67,15 +67,18 @@ describe("metrics — out-of-range status + negative-duration clamps", () => {
     )
   })
 
-  it("records method label verbatim (contract: caller controls method cardinality)", async () => {
-    // Existing suite only ever passes "GET". Lock down that method is
-    // passed through unmodified — otherwise instrumentation of POST
-    // endpoints later would silently lose data if a regression
-    // upper-cased or normalized method.
+  it("normalizes standard method labels and buckets custom methods as OTHER", async () => {
     recordApiRequest("search", "POST", 201, 8)
+    recordApiRequest("search", "CUSTOM-ONE", 201, 8)
+    recordApiRequest("search", "CUSTOM-TWO", 201, 8)
+    recordApiRequest("search", "get", 200, 8)
 
     const text = await metricsRegistry.metrics()
-    expect(text).toMatch(/method="POST"/)
+    expect(text).toContain('method="POST"')
+    expect(text).toContain('method="GET"')
+    expect(text).toContain('method="OTHER"')
+    expect(text).not.toContain('method="CUSTOM-ONE"')
+    expect(text).not.toContain('method="CUSTOM-TWO"')
     expect(text).toContain('status_class="2xx"')
   })
 })

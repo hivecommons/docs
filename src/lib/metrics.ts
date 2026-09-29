@@ -8,15 +8,27 @@
  * backend is confirmed for this repo, so nothing leaves the process.
  *
  * Cardinality safety: `route` is restricted to the fixed `ApiRoute` union
- * below (one label value per known route handler) and `status_class` is
- * one of "2xx"/"3xx"/"4xx"/"5xx". Neither label is ever populated from
- * user input (query strings, path segments, headers), so the label
- * cardinality is bounded by the number of routes we instrument.
+ * below (one label value per known route handler), `method` is normalized
+ * to a fixed set of standard methods plus "OTHER", and `status_class` is
+ * one of "2xx"/"3xx"/"4xx"/"5xx"/"other". Label cardinality is therefore
+ * bounded independently of request input.
  */
 import { Counter, Histogram, Registry } from "prom-client"
 
 export const ApiRoutes = ["search", "docs-image"] as const
 export type ApiRoute = (typeof ApiRoutes)[number]
+
+const HTTP_METHODS = new Set([
+  "CONNECT",
+  "DELETE",
+  "GET",
+  "HEAD",
+  "OPTIONS",
+  "PATCH",
+  "POST",
+  "PUT",
+  "TRACE",
+])
 
 export const metricsRegistry = new Registry()
 
@@ -43,6 +55,11 @@ function statusClass(status: number): "2xx" | "3xx" | "4xx" | "5xx" | "other" {
   return "other"
 }
 
+function methodLabel(method: string): string {
+  const normalizedMethod = method.toUpperCase()
+  return HTTP_METHODS.has(normalizedMethod) ? normalizedMethod : "OTHER"
+}
+
 /** Records one completed request. `durationMs` comes from a monotonic timer at the call site. */
 export function recordApiRequest(
   route: ApiRoute,
@@ -50,10 +67,14 @@ export function recordApiRequest(
   status: number,
   durationMs: number
 ) {
-  const labels = { route, method, status_class: statusClass(status) }
+  const labels = {
+    route,
+    method: methodLabel(method),
+    status_class: statusClass(status),
+  }
   httpRequestsTotal.inc(labels)
   httpRequestDurationSeconds.observe(
-    { route, method },
+    { route, method: labels.method },
     Math.max(0, durationMs) / 1000
   )
 }
