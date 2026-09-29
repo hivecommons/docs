@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "src/**"
+      - "netlify/**"
       - "*.ts"
       - "*.tsx"
       - "tsconfig.json"
@@ -16,6 +17,7 @@ on:
     branches: [main]
     paths:
       - "src/**"
+      - "netlify/**"
       - "*.ts"
       - "*.tsx"
       - "tsconfig.json"
