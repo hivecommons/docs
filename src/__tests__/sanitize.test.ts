@@ -303,3 +303,66 @@ describe('sanitizeHtmlForMdx — code spans keep <placeholder> literal', () => {
     expect(result).not.toContain('<script>')
   })
 })
+
+describe('URL scheme neutralization in href/src attributes', () => {
+  it('rewrites javascript: hrefs to an inert fragment', () => {
+    const result = sanitizeHtmlForMdx('<a href="javascript:alert(document.cookie)">click me</a>')
+    expect(result).toBe('<a href="#">click me</a>')
+  })
+
+  it('is case-insensitive on the scheme', () => {
+    const result = sanitizeHtmlForMdx('<a href="JaVaScRiPt:alert(1)">x</a>')
+    expect(result).toBe('<a href="#">x</a>')
+  })
+
+  it('rewrites data: and vbscript: URLs', () => {
+    expect(sanitizeHtmlForMdx('<a href="vbscript:msgbox(1)">x</a>')).toBe('<a href="#">x</a>')
+    expect(sanitizeHtmlForMdx('<a href="data:text/html;base64,PHNjcmlwdD4=">x</a>')).toBe('<a href="#">x</a>')
+  })
+
+  it('catches whitespace- and control-character-obfuscated schemes', () => {
+    expect(sanitizeHtmlForMdx('<a href="java\tscript:alert(1)">x</a>')).toBe('<a href="#">x</a>')
+    expect(sanitizeHtmlForMdx('<a href=" javascript:alert(1)">x</a>')).toBe('<a href="#">x</a>')
+    expect(sanitizeHtmlForMdx('<a href="jav&#x0A;ascript:alert(1)">x</a>')).toBe('<a href="#">x</a>')
+  })
+
+  it('catches character-reference-encoded schemes', () => {
+    expect(sanitizeHtmlForMdx('<a href="&#106;avascript:alert(1)">x</a>')).toBe('<a href="#">x</a>')
+    expect(sanitizeHtmlForMdx('<a href="&#x6A;avascript:alert(1)">x</a>')).toBe('<a href="#">x</a>')
+    expect(sanitizeHtmlForMdx('<a href="javascript&colon;alert(1)">x</a>')).toBe('<a href="#">x</a>')
+  })
+
+  it('neutralizes disallowed schemes flowing into contributor cards', () => {
+    const table = '<table><tr><td><a href="javascript:alert(1)"><img src="https://avatars.githubusercontent.com/u/1"/><br/><sub><b>Mallory</b></sub></a></td></tr></table>'
+    const result = sanitizeHtmlForMdx(table)
+    expect(result).not.toContain('javascript:')
+    expect(result).toContain('href="#"')
+  })
+
+  it('keeps http, https, mailto, relative, fragment and scheme-relative URLs', () => {
+    expect(sanitizeHtmlForMdx('<a href="https://example.com/a?b=c#d">x</a>')).toContain('href="https://example.com/a?b=c#d"')
+    expect(sanitizeHtmlForMdx('<a href="http://example.com">x</a>')).toContain('href="http://example.com"')
+    expect(sanitizeHtmlForMdx('<a href="mailto:team@example.com">x</a>')).toContain('href="mailto:team@example.com"')
+    expect(sanitizeHtmlForMdx('<a href="/docs/hive/overview">x</a>')).toContain('href="/docs/hive/overview"')
+    expect(sanitizeHtmlForMdx('<a href="../sibling.md">x</a>')).toContain('href="../sibling.md"')
+    expect(sanitizeHtmlForMdx('<a href="#section">x</a>')).toContain('href="#section"')
+    expect(sanitizeHtmlForMdx('<a href="//example.com/x">x</a>')).toContain('href="//example.com/x"')
+  })
+
+  it('leaves img src URLs with allowed schemes untouched', () => {
+    const result = sanitizeHtmlForMdx('<img src="https://raw.githubusercontent.com/o/r/main/a.png" alt="a" />')
+    expect(result).toContain('src="https://raw.githubusercontent.com/o/r/main/a.png"')
+  })
+
+  it('does not rewrite URLs inside code fences or inline code', () => {
+    const fenced = sanitizeHtmlForMdx('```\n<a href="ftp://example.com">x</a>\n```')
+    expect(fenced).toContain('ftp://example.com')
+    const inline = sanitizeHtmlForMdx('use `<a href="file:///etc">x</a>` here')
+    expect(inline).toContain('file:///etc')
+  })
+
+  it('treats out-of-range character references as hostile', () => {
+    const result = sanitizeHtmlForMdx('<a href="&#x110000;javascript:alert(1)">x</a>')
+    expect(result).toContain('href="#"')
+  })
+})

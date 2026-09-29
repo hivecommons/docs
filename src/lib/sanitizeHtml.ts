@@ -102,6 +102,61 @@ function inlineCodeIsReliable(line: string): boolean {
   return !(line.match(MARKDOWN_INLINE_CODE) ?? []).some(span => span.includes('|'))
 }
 
+// Allowed URL schemes for href/src attribute values. Scheme-relative,
+// path-relative and fragment URLs (no scheme at all) are always allowed.
+const ALLOWED_URL_SCHEMES = new Set(['http', 'https', 'mailto'])
+const URL_ATTR = /(\s(?:href|src)\s*=\s*)("[^"]*"|'[^']*')/gi
+const URL_PLACEHOLDER = /\u0000MDX_URL_(\d+)\u0000/g
+
+// Decide whether an href/src attribute value resolves to an allowed scheme.
+// The value is normalized first — numeric character references and named
+// entities that can encode a scheme separator are decoded, and control/space
+// characters (which browsers strip from scheme parsing) are removed — so
+// obfuscated forms like `java\tscript:` or `&#106;avascript:` cannot slip an
+// executable scheme past the check.
+function urlAttrValueIsAllowed(raw: string): boolean {
+  let value = raw
+  try {
+    value = value
+      .replace(/&#x([0-9a-f]+);?/gi, (_m, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+      .replace(/&#(\d+);?/g, (_m, dec: string) => String.fromCodePoint(Number(dec)))
+  } catch {
+    return false // out-of-range character reference — treat as hostile
+  }
+  value = value
+    .replace(/&colon;/gi, ':')
+    .replace(/&tab;/gi, '\t')
+    .replace(/&newline;/gi, '\n')
+    // Strip characters browsers ignore when parsing a scheme
+    .replace(/[\u0000-\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u205f\u3000]/g, '')
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(value)
+  if (!scheme) return true // relative, fragment or scheme-relative URL
+  return ALLOWED_URL_SCHEMES.has(scheme[1].toLowerCase())
+}
+
+// Rewrite href/src attributes whose value carries a disallowed scheme
+// (javascript:, data:, vbscript:, …) to an inert fragment. Code fences and
+// inline code spans are placeholder-protected so documentation examples
+// remain untouched.
+function neutralizeDangerousUrlAttributes(content: string): string {
+  const codeSpans: string[] = []
+  const put = (match: string) => {
+    codeSpans.push(match)
+    return `\u0000MDX_URL_${codeSpans.length - 1}\u0000`
+  }
+  const withPlaceholders = content
+    .replace(MARKDOWN_FENCE, put)
+    .split('\n')
+    .map(line => (inlineCodeIsReliable(line) ? line.replace(MARKDOWN_INLINE_CODE, put) : line))
+    .join('\n')
+  const rewritten = withPlaceholders.replace(URL_ATTR, (match, prefix: string, quoted: string) => {
+    const quote = quoted[0]
+    const value = quoted.slice(1, -1)
+    return urlAttrValueIsAllowed(value) ? match : `${prefix}${quote}#${quote}`
+  })
+  return rewritten.replace(URL_PLACEHOLDER, (_m, i) => codeSpans[Number(i)])
+}
+
 function escapeMdxAmbiguousAngles(content: string): string {
   const codeSpans: string[] = []
   const put = (match: string) => {
@@ -292,6 +347,9 @@ export function sanitizeHtmlForMdx(content: string): string {
   // removal reconstructs a pattern that an earlier removal already finished
   // processing (e.g. iframe or script fragments reassembling dangerous tags).
   sanitized = stripDangerousPatterns(sanitized)
+
+  // Rewrite href/src attributes with disallowed URL schemes to inert fragments
+  sanitized = neutralizeDangerousUrlAttributes(sanitized)
 
   // Remove <meta>, <link>, <base> tags
   sanitized = sanitized.replace(/<meta\b[^>]*\/?>/gi, '')
