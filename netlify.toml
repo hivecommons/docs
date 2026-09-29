@@ -13,8 +13,10 @@
 
 # Netlify Functions. nps.mts is the NPS relay for standalone hives
 # (hivecommons/hive#9619); its logic and operator setup live in
-# netlify/nps-relay/relay.ts. Required site env vars: NPS_RELAY_INSTALL_TOKENS
-# and NPS_RELAY_HUB_SECRET_SHA256 (the relay refuses requests without them).
+# netlify/nps-relay/relay.ts. Hives self-register Ed25519 keys, so there is
+# no per-hive setting. The only site env var is NPS_RELAY_HUB_SECRET_SHA256
+# (without it the hub pull routes answer 503; hive registration and
+# submissions work without any configuration, bounded by rate limits).
 [functions]
   directory = "netlify/functions"
 

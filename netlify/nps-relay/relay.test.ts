@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, generateKeyPairSync, randomBytes, sign, type KeyObject } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -6,17 +6,35 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   ACK_PATH,
   ENTRY_PREFIX,
+  HEADER_INSTALL_ID,
+  HEADER_NONCE,
+  HEADER_SIGNATURE,
+  HEADER_TIMESTAMP,
+  INSTALL_PREFIX,
   MAX_ENTRIES,
   MAX_FEEDBACK_CHARS,
+  MAX_NONCES_PER_INSTALL,
   MAX_PER_INSTALL_PER_WINDOW,
   MAX_PULL_BATCH,
+  MAX_REGISTER_BODY_BYTES,
+  MAX_REGISTRATIONS_PER_DAY,
+  MAX_REGISTRATIONS_PER_IP_PER_WINDOW,
   MAX_SUBMIT_BODY_BYTES,
+  NONCE_PREFIX,
   PENDING_PATH,
+  PURPOSE_REGISTER,
+  PURPOSE_SUBMIT,
   RATE_WINDOW_MS,
+  REGISTER_DAY_PREFIX,
+  REGISTER_PATH,
   RELAY_BASE_PATH,
+  SIGNATURE_MAX_SKEW_MS,
+  UNKNOWN_INSTALL_CODE,
   handleRelayRequest,
-  matchInstallToken,
-  parseInstallTokens,
+  signingInput,
+  validateRegistration,
+  verifyEd25519,
+  type InstallRecord,
   type RelayDeps,
   type RelayEntry,
   type RelayStore,
@@ -24,10 +42,10 @@ import {
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ORIGIN = 'https://relay.test'
-const INSTALL_TOKEN = 'install-token-for-tests'
-const OTHER_TOKEN = 'not-on-the-allowlist'
 const HUB_SECRET = 'hub-pull-secret-for-tests'
 const T0 = Date.UTC(2026, 8, 29, 12, 0, 0)
+const MS_PER_SECOND = 1000
+const NONCE_BYTES = 16
 
 function sha256(value: string): string {
   return createHash('sha256').update(value, 'utf8').digest('hex')
@@ -63,29 +81,86 @@ class MemoryStore implements RelayStore {
   }
 }
 
+/** A test hive: an install id plus an Ed25519 keypair. */
+interface Hive {
+  installId: string
+  publicKey: string
+  privateKey: KeyObject
+}
+
+let uuidCounter = 0
+function newHive(): Hive {
+  const { publicKey, privateKey } = generateKeyPairSync('ed25519')
+  const der = publicKey.export({ format: 'der', type: 'spki' })
+  uuidCounter++
+  return {
+    installId: `00000000-0000-4000-8000-${String(uuidCounter).padStart(12, '0')}`,
+    // The raw 32-byte key is the tail of the SPKI DER encoding.
+    publicKey: der.subarray(der.length - 32).toString('base64'),
+    privateKey,
+  }
+}
+
 let store: MemoryStore
 let now: number
+let hive: Hive
 
 function deps(overrides: Partial<RelayDeps> = {}): RelayDeps {
   return {
     store,
-    env: {
-      installTokens: `acme-lab:${sha256(INSTALL_TOKEN)}`,
-      hubSecretHash: sha256(HUB_SECRET),
-    },
+    env: { hubSecretHash: sha256(HUB_SECRET) },
     clientIp: '203.0.113.7',
     now: () => now,
     ...overrides,
   }
 }
 
-function submit(body: unknown, token: string | null = INSTALL_TOKEN): Request {
-  const headers: Record<string, string> = { 'content-type': 'application/json' }
-  if (token) headers.authorization = `Bearer ${token}`
+interface SignOptions {
+  signer?: Hive
+  /** Install id placed in the header (defaults to the signer's). */
+  headerInstallId?: string
+  timestampMs?: number
+  nonce?: string
+  /** Sign these bytes instead of the body actually sent. */
+  signedBody?: string
+  purpose?: string
+  omit?: string
+}
+
+function signedHeaders(body: string, purpose: string, opts: SignOptions = {}): Record<string, string> {
+  const signer = opts.signer ?? hive
+  const installId = opts.headerInstallId ?? signer.installId
+  const ts = String(Math.floor((opts.timestampMs ?? now) / MS_PER_SECOND))
+  const nonce = opts.nonce ?? randomBytes(NONCE_BYTES).toString('hex')
+  const message = signingInput(opts.purpose ?? purpose, installId, ts, nonce, Buffer.from(opts.signedBody ?? body, 'utf8'))
+  const headers: Record<string, string> = {
+    'content-type': 'application/json',
+    [HEADER_INSTALL_ID]: installId,
+    [HEADER_TIMESTAMP]: ts,
+    [HEADER_NONCE]: nonce,
+    [HEADER_SIGNATURE]: sign(null, message, signer.privateKey).toString('base64'),
+  }
+  if (opts.omit) delete headers[opts.omit]
+  return headers
+}
+
+function register(target: Hive = hive, opts: SignOptions = {}, bodyOverride?: unknown): Request {
+  const body = JSON.stringify(
+    bodyOverride ?? { install_id: target.installId, public_key: target.publicKey, hive_version: 'abc1234' },
+  )
+  return new Request(ORIGIN + REGISTER_PATH, {
+    method: 'POST',
+    headers: signedHeaders(body, PURPOSE_REGISTER, { signer: target, ...opts }),
+    body,
+  })
+}
+
+function submit(body: unknown, opts: SignOptions = {}): Request {
+  const raw = typeof body === 'string' ? body : JSON.stringify(body)
   return new Request(ORIGIN + RELAY_BASE_PATH, {
     method: 'POST',
-    headers,
-    body: typeof body === 'string' ? body : JSON.stringify(body),
+    headers: signedHeaders(raw, PURPOSE_SUBMIT, opts),
+    body: raw,
   })
 }
 
@@ -101,40 +176,142 @@ function ack(ids: unknown, token: string | null = HUB_SECRET): Request {
   return new Request(ORIGIN + ACK_PATH, { method: 'POST', headers, body: JSON.stringify({ ids }) })
 }
 
+async function registerOk(target: Hive = hive, ip = '198.18.0.1'): Promise<void> {
+  const res = await handleRelayRequest(register(target), deps({ clientIp: ip }))
+  expect(res.status).toBe(201)
+}
+
 const GOOD = { hive_id: 'solo-hive', score: 4, feedback: 'works well', dashboard_version: 'abc1234' }
 
 beforeEach(() => {
   store = new MemoryStore()
   now = T0
+  hive = newHive()
 })
 
-describe('install token allowlist', () => {
-  it('parses label:hash entries and ignores malformed ones', () => {
-    const hash = sha256(INSTALL_TOKEN)
-    const parsed = parseInstallTokens(`acme:${hash}, bad-entry\nno-hash:\n:${hash}\nshort:abc123\nupper:${hash.toUpperCase()}`)
-    expect(parsed).toEqual([
-      { label: 'acme', hash },
-      { label: 'upper', hash },
-    ])
-    expect(parseInstallTokens(undefined)).toEqual([])
+describe('signing contract', () => {
+  it('matches the byte string the hive signs (src/pkg/dashboard/nps_relay.go)', () => {
+    const got = signingInput(
+      PURPOSE_SUBMIT,
+      '11111111-2222-4333-8444-555555555555',
+      '1790000000',
+      '00112233445566778899aabbccddeeff',
+      Buffer.from('{}', 'utf8'),
+    ).toString('utf8')
+    expect(got).toBe(
+      'hive-nps-relay-v1\nsubmit\n11111111-2222-4333-8444-555555555555\n1790000000\n' +
+        '00112233445566778899aabbccddeeff\n44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',
+    )
   })
 
-  it('matches only the hash of a listed token', () => {
-    const raw = `acme:${sha256(INSTALL_TOKEN)}`
-    expect(matchInstallToken(INSTALL_TOKEN, raw)).toBe('acme')
-    expect(matchInstallToken(OTHER_TOKEN, raw)).toBeNull()
-    // The hash itself is not a valid token.
-    expect(matchInstallToken(sha256(INSTALL_TOKEN), raw)).toBeNull()
+  it('verifies a real Ed25519 signature and rejects anything malformed', () => {
+    const msg = Buffer.from('hello', 'utf8')
+    const sig = sign(null, msg, hive.privateKey).toString('base64')
+    expect(verifyEd25519(hive.publicKey, msg, sig)).toBe(true)
+    expect(verifyEd25519(hive.publicKey, Buffer.from('hellO', 'utf8'), sig)).toBe(false)
+    expect(verifyEd25519(newHive().publicKey, msg, sig)).toBe(false)
+    expect(verifyEd25519('not base64!', msg, sig)).toBe(false)
+    expect(verifyEd25519(hive.publicKey, msg, 'AAAA')).toBe(false)
+    expect(verifyEd25519(Buffer.alloc(31).toString('base64'), msg, sig)).toBe(false)
+  })
+})
+
+describe('POST /api/nps/register', () => {
+  it('registers a new install with no operator configuration', async () => {
+    const res = await handleRelayRequest(register(), deps({ env: {} }))
+    expect(res.status).toBe(201)
+    const rec = store.data.get(`${INSTALL_PREFIX}${hive.installId}`) as InstallRecord
+    expect(rec).toMatchObject({ public_key: hive.publicKey, hive_version: 'abc1234', registered_at: new Date(T0).toISOString() })
+    // The client IP is stored only as a hash.
+    expect([...store.data.keys()].some((k) => k.includes('203.0.113.7'))).toBe(false)
+  })
+
+  it('is idempotent for the same install id and key, without consuming quota', async () => {
+    await registerOk()
+    const writes = store.writes
+    for (let i = 0; i < MAX_REGISTRATIONS_PER_IP_PER_WINDOW + 1; i++) {
+      const res = await handleRelayRequest(register(), deps({ clientIp: '198.18.0.1' }))
+      expect(res.status).toBe(200)
+      expect(await res.json()).toEqual({ ok: true, registered: false })
+    }
+    expect(store.writes).toBe(writes)
+  })
+
+  it('rejects a different key for an existing install id (no takeover)', async () => {
+    await registerOk()
+    const attacker = { ...newHive(), installId: hive.installId }
+    const res = await handleRelayRequest(register(attacker), deps({ clientIp: '198.51.100.9' }))
+    expect(res.status).toBe(409)
+    expect((store.data.get(`${INSTALL_PREFIX}${hive.installId}`) as InstallRecord).public_key).toBe(hive.publicKey)
+  })
+
+  it('requires proof of possession of the registered key', async () => {
+    const other = newHive()
+    // Body registers hive's key, but the request is signed by another key.
+    const body = { install_id: hive.installId, public_key: hive.publicKey }
+    const forged = register(hive, { signer: other, headerInstallId: hive.installId }, body)
+    expect((await handleRelayRequest(forged, deps())).status).toBe(401)
+    // Header install id must match the body's.
+    const mismatch = register(hive, { headerInstallId: other.installId })
+    expect((await handleRelayRequest(mismatch, deps())).status).toBe(401)
+    // Missing signature, stale timestamp.
+    expect((await handleRelayRequest(register(hive, { omit: HEADER_SIGNATURE }), deps())).status).toBe(401)
+    const stale = register(hive, { timestampMs: T0 - SIGNATURE_MAX_SKEW_MS - MS_PER_SECOND })
+    expect((await handleRelayRequest(stale, deps())).status).toBe(401)
+    // A submit-purpose signature cannot register.
+    expect((await handleRelayRequest(register(hive, { purpose: PURPOSE_SUBMIT }), deps())).status).toBe(401)
+    expect(store.writes).toBe(0)
+  })
+
+  it('validates the registration body', async () => {
+    expect(validateRegistration({ install_id: 'NOT-A-UUID', public_key: hive.publicKey }).ok).toBe(false)
+    expect(validateRegistration({ install_id: hive.installId.toUpperCase(), public_key: hive.publicKey }).ok).toBe(false)
+    expect(validateRegistration({ install_id: hive.installId, public_key: 'AAAA' }).ok).toBe(false)
+    expect(validateRegistration({ install_id: hive.installId, public_key: 42 }).ok).toBe(false)
+    expect(validateRegistration([hive.installId]).ok).toBe(false)
+    const res = await handleRelayRequest(register(hive, {}, { install_id: hive.installId, public_key: 'short' }), deps())
+    expect(res.status).toBe(400)
+    const huge = register(hive, {}, { install_id: hive.installId, public_key: hive.publicKey, pad: 'x'.repeat(MAX_REGISTER_BODY_BYTES) })
+    expect((await handleRelayRequest(huge, deps())).status).toBe(413)
+    expect(store.writes).toBe(0)
+  })
+
+  it('rate limits new registrations per IP per 24h', async () => {
+    for (let i = 0; i < MAX_REGISTRATIONS_PER_IP_PER_WINDOW; i++) {
+      expect((await handleRelayRequest(register(newHive()), deps())).status).toBe(201)
+    }
+    const extra = newHive()
+    expect((await handleRelayRequest(register(extra), deps())).status).toBe(429)
+    expect(store.data.has(`${INSTALL_PREFIX}${extra.installId}`)).toBe(false)
+    // Another IP is not affected; the first IP recovers after the window.
+    expect((await handleRelayRequest(register(extra), deps({ clientIp: '198.51.100.3' }))).status).toBe(201)
+    now = T0 + RATE_WINDOW_MS
+    expect((await handleRelayRequest(register(newHive()), deps())).status).toBe(201)
+  })
+
+  it('caps new registrations per day globally', async () => {
+    const dayKey = `${REGISTER_DAY_PREFIX}${new Date(T0).toISOString().slice(0, 10)}`
+    store.data.set(dayKey, { count: MAX_REGISTRATIONS_PER_DAY - 1 })
+    expect((await handleRelayRequest(register(), deps({ clientIp: '198.51.100.1' }))).status).toBe(201)
+    const late = newHive()
+    expect((await handleRelayRequest(register(late), deps({ clientIp: '198.51.100.2' }))).status).toBe(429)
+    expect(store.data.has(`${INSTALL_PREFIX}${late.installId}`)).toBe(false)
+    // An already-registered install can still re-register idempotently.
+    expect((await handleRelayRequest(register(), deps())).status).toBe(200)
   })
 })
 
 describe('POST /api/nps (submit)', () => {
-  it('stores a valid submission with the install label', async () => {
-    const res = await handleRelayRequest(submit(GOOD), deps())
+  beforeEach(async () => {
+    await registerOk()
+  })
+
+  it('stores a signed submission with its install id, with no operator configuration', async () => {
+    const res = await handleRelayRequest(submit(GOOD), deps({ env: {} }))
     expect(res.status).toBe(201)
     const [entry] = store.entries()
     expect(entry).toMatchObject({
-      install_id: 'acme-lab',
+      install_id: hive.installId,
       hive_id: 'solo-hive',
       score: 4,
       feedback: 'works well',
@@ -142,36 +319,83 @@ describe('POST /api/nps (submit)', () => {
       timestamp: new Date(T0).toISOString(),
     })
     expect(entry.id).toMatch(/^\d{13}-[0-9a-f-]{36}$/)
-    // The client IP is stored only as a hash.
     expect([...store.data.keys()].some((k) => k.includes('203.0.113.7'))).toBe(false)
   })
 
-  it('rejects a missing or unknown token without writing anything', async () => {
-    for (const token of [null, OTHER_TOKEN]) {
-      const res = await handleRelayRequest(submit(GOOD, token), deps())
+  it('rejects missing or bad signatures without writing anything', async () => {
+    const before = store.writes
+    const cases: Request[] = [
+      submit(GOOD, { omit: HEADER_SIGNATURE }),
+      submit(GOOD, { omit: HEADER_NONCE }),
+      submit(GOOD, { omit: HEADER_TIMESTAMP }),
+      submit(GOOD, { omit: HEADER_INSTALL_ID }),
+      // Signed by a key that is not the one registered for this install.
+      submit(GOOD, { signer: newHive(), headerInstallId: hive.installId }),
+      // Body tampered after signing.
+      submit(GOOD, { signedBody: JSON.stringify({ ...GOOD, score: 1 }) }),
+      // A register-purpose signature cannot submit.
+      submit(GOOD, { purpose: PURPOSE_REGISTER }),
+      // Malformed nonce.
+      submit(GOOD, { nonce: 'xyz' }),
+    ]
+    for (const req of cases) {
+      const res = await handleRelayRequest(req, deps())
       expect(res.status).toBe(401)
     }
-    expect(store.writes).toBe(0)
+    expect(store.writes).toBe(before)
+    expect(store.entries()).toHaveLength(0)
   })
 
-  it('refuses all submissions when no tokens are configured', async () => {
-    const res = await handleRelayRequest(submit(GOOD), deps({ env: { hubSecretHash: sha256(HUB_SECRET) } }))
-    expect(res.status).toBe(503)
-    expect(store.writes).toBe(0)
+  it('answers unknown_install for an unregistered install id so the hive re-registers', async () => {
+    const stranger = newHive()
+    const before = store.writes
+    const res = await handleRelayRequest(submit(GOOD, { signer: stranger }), deps())
+    expect(res.status).toBe(401)
+    expect(await res.json()).toMatchObject({ code: UNKNOWN_INSTALL_CODE })
+    expect(store.writes).toBe(before)
+
+    // After re-registering, the same install submits fine.
+    await registerOk(stranger, '198.18.0.2')
+    expect((await handleRelayRequest(submit(GOOD, { signer: stranger }), deps({ clientIp: '198.51.100.4' }))).status).toBe(201)
+  })
+
+  it('rejects timestamps outside the window', async () => {
+    const stale = submit(GOOD, { timestampMs: T0 - SIGNATURE_MAX_SKEW_MS - MS_PER_SECOND })
+    const future = submit(GOOD, { timestampMs: T0 + SIGNATURE_MAX_SKEW_MS + MS_PER_SECOND })
+    expect((await handleRelayRequest(stale, deps())).status).toBe(401)
+    expect((await handleRelayRequest(future, deps())).status).toBe(401)
+    const edge = submit(GOOD, { timestampMs: T0 - SIGNATURE_MAX_SKEW_MS + MS_PER_SECOND })
+    expect((await handleRelayRequest(edge, deps())).status).toBe(201)
+  })
+
+  it('rejects a replayed nonce, even from another IP', async () => {
+    const nonce = 'a'.repeat(32)
+    expect((await handleRelayRequest(submit(GOOD, { nonce }), deps())).status).toBe(201)
+    const replay = await handleRelayRequest(submit(GOOD, { nonce }), deps({ clientIp: '198.51.100.5' }))
+    expect(replay.status).toBe(401)
+    expect(store.entries()).toHaveLength(1)
+    expect(store.data.has(`${NONCE_PREFIX}${hive.installId}`)).toBe(true)
+  })
+
+  it('bounds the live nonces kept per install', async () => {
+    const seen = Array.from({ length: MAX_NONCES_PER_INSTALL }, (_, i) => ({ n: String(i).padStart(32, '0'), t: T0 }))
+    store.data.set(`${NONCE_PREFIX}${hive.installId}`, { seen })
+    expect((await handleRelayRequest(submit(GOOD), deps())).status).toBe(429)
+    // Once they age out, the install can submit again.
+    now = T0 + 2 * SIGNATURE_MAX_SKEW_MS
+    expect((await handleRelayRequest(submit(GOOD), deps())).status).toBe(201)
   })
 
   it('rate limits one submission per IP per 24h', async () => {
     expect((await handleRelayRequest(submit(GOOD), deps())).status).toBe(201)
     expect((await handleRelayRequest(submit(GOOD), deps())).status).toBe(429)
-    // Another IP is not affected.
     expect((await handleRelayRequest(submit(GOOD), deps({ clientIp: '198.51.100.1' }))).status).toBe(201)
-    // The first IP may submit again once the window has passed.
     now = T0 + RATE_WINDOW_MS
     expect((await handleRelayRequest(submit(GOOD), deps())).status).toBe(201)
     expect(store.entries()).toHaveLength(3)
   })
 
-  it('caps submissions per install token across IPs', async () => {
+  it('caps submissions per install across IPs', async () => {
     for (let i = 0; i < MAX_PER_INSTALL_PER_WINDOW; i++) {
       const res = await handleRelayRequest(submit(GOOD), deps({ clientIp: `198.51.100.${i}` }))
       expect(res.status).toBe(201)
@@ -192,7 +416,7 @@ describe('POST /api/nps (submit)', () => {
     })
     const req = new Request(ORIGIN + RELAY_BASE_PATH, {
       method: 'POST',
-      headers: { authorization: `Bearer ${INSTALL_TOKEN}` },
+      headers: signedHeaders('', PURPOSE_SUBMIT),
       body: stream,
       duplex: 'half',
     } as RequestInit & { duplex: 'half' })
@@ -247,18 +471,26 @@ describe('POST /api/nps (submit)', () => {
 })
 
 describe('no public read path', () => {
-  it('refuses GET and OPTIONS on the submit route', async () => {
+  beforeEach(async () => {
+    await registerOk()
+  })
+
+  it('refuses GET and OPTIONS on the submit and register routes', async () => {
     await handleRelayRequest(submit(GOOD), deps())
-    for (const method of ['GET', 'OPTIONS', 'PUT', 'DELETE']) {
-      const res = await handleRelayRequest(new Request(ORIGIN + RELAY_BASE_PATH, { method }), deps())
-      expect(res.status).toBe(405)
-      expect(await res.text()).not.toContain('works well')
+    for (const route of [RELAY_BASE_PATH, REGISTER_PATH]) {
+      for (const method of ['GET', 'OPTIONS', 'PUT', 'DELETE']) {
+        const res = await handleRelayRequest(new Request(ORIGIN + route, { method }), deps())
+        expect(res.status).toBe(405)
+        const text = await res.text()
+        expect(text).not.toContain('works well')
+        expect(text).not.toContain(hive.publicKey)
+      }
     }
   })
 
   it('refuses the hub routes without the hub secret', async () => {
     await handleRelayRequest(submit(GOOD), deps())
-    for (const token of [null, INSTALL_TOKEN, OTHER_TOKEN]) {
+    for (const token of [null, 'not-the-secret', hive.publicKey]) {
       const res = await handleRelayRequest(pending(token), deps())
       expect(res.status).toBe(401)
       expect(await res.text()).not.toContain('works well')
@@ -267,10 +499,13 @@ describe('no public read path', () => {
     expect(store.entries()).toHaveLength(1)
   })
 
-  it('refuses the hub routes when no hub secret is configured', async () => {
-    const noHub = deps({ env: { installTokens: `acme-lab:${sha256(INSTALL_TOKEN)}` } })
+  it('answers 503 on hub routes only when no hub secret is configured', async () => {
+    const noHub = deps({ env: {} })
     expect((await handleRelayRequest(pending(), noHub)).status).toBe(503)
     expect((await handleRelayRequest(ack([]), noHub)).status).toBe(503)
+    // Hives are unaffected by the missing hub secret.
+    expect((await handleRelayRequest(submit(GOOD), noHub)).status).toBe(201)
+    expect((await handleRelayRequest(register(newHive()), noHub)).status).toBe(201)
   })
 
   it('404s any other path', async () => {
@@ -280,21 +515,29 @@ describe('no public read path', () => {
 })
 
 describe('hub pull and ack', () => {
+  beforeEach(async () => {
+    await registerOk()
+  })
+
   async function seed(count: number): Promise<void> {
     for (let i = 0; i < count; i++) {
       now = T0 + i
-      const res = await handleRelayRequest(submit({ ...GOOD, score: (i % 4) + 1 }), deps({ clientIp: `10.0.${i >> 8}.${i & 255}` }))
+      const res = await handleRelayRequest(
+        submit({ ...GOOD, score: (i % 4) + 1 }),
+        deps({ clientIp: `10.0.${i >> 8}.${i & 255}` }),
+      )
       expect(res.status).toBe(201)
     }
   }
 
-  it('returns entries oldest first, honoring the limit', async () => {
+  it('returns entries oldest first, honoring the limit, with install ids', async () => {
     await seed(3)
     const res = await handleRelayRequest(pending(HUB_SECRET, '?limit=2'), deps())
     expect(res.status).toBe(200)
     expect(res.headers.get('cache-control')).toBe('no-store')
     const { entries } = (await res.json()) as { entries: RelayEntry[] }
     expect(entries.map((e) => e.score)).toEqual([1, 2])
+    expect(entries.every((e) => e.install_id === hive.installId)).toBe(true)
     expect(entries[0].timestamp < entries[1].timestamp).toBe(true)
   })
 
@@ -309,6 +552,13 @@ describe('hub pull and ack', () => {
     expect(entries).toHaveLength(MAX_PULL_BATCH)
   })
 
+  it('never exposes registered keys or nonces through a pull', async () => {
+    await seed(1)
+    const text = await (await handleRelayRequest(pending(), deps())).text()
+    expect(text).not.toContain(hive.publicKey)
+    expect(text).not.toContain('registered_at')
+  })
+
   it('acks delete exactly the listed well-formed ids and are idempotent', async () => {
     await seed(3)
     const { entries } = (await (await handleRelayRequest(pending(), deps())).json()) as { entries: RelayEntry[] }
@@ -318,9 +568,10 @@ describe('hub pull and ack', () => {
     expect(await res.json()).toEqual({ deleted: 2 })
     expect(store.entries().map((e) => e.id)).toEqual([entries[2].id])
 
-    // Re-acking the same ids (a retried ack) is harmless.
     expect((await handleRelayRequest(ack([first.id, second.id]), deps())).status).toBe(200)
     expect(store.entries()).toHaveLength(1)
+    // Acks never touch registrations.
+    expect(store.data.has(`${INSTALL_PREFIX}${hive.installId}`)).toBe(true)
   })
 
   it('rejects an ack that is not a bounded id list', async () => {
@@ -331,11 +582,13 @@ describe('hub pull and ack', () => {
 })
 
 describe('Netlify function wiring', () => {
-  it('routes exactly the relay paths', () => {
+  it('routes exactly the relay paths and reads only the hub secret env var', () => {
     const fn = readFileSync(path.join(HERE, '..', 'functions', 'nps.mts'), 'utf8')
-    for (const p of [RELAY_BASE_PATH, PENDING_PATH, ACK_PATH]) {
+    for (const p of [RELAY_BASE_PATH, REGISTER_PATH, PENDING_PATH, ACK_PATH]) {
       expect(fn).toContain(`'${p}'`)
     }
     expect(fn).toContain('handleRelayRequest')
+    expect(fn).toContain('HUB_SECRET_HASH_ENV')
+    expect(fn).not.toContain('INSTALL_TOKENS')
   })
 })
