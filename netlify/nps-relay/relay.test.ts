@@ -265,7 +265,10 @@ describe('POST /api/nps/register', () => {
 
   it('validates the registration body', async () => {
     expect(validateRegistration({ install_id: 'NOT-A-UUID', public_key: hive.publicKey }).ok).toBe(false)
-    expect(validateRegistration({ install_id: hive.installId.toUpperCase(), public_key: hive.publicKey }).ok).toBe(false)
+    // The fixture ids are all digits, so upper-casing them is a no-op; use an
+    // id with hex letters to prove an uppercase UUID is rejected.
+    expect(validateRegistration({ install_id: 'ABCDEF00-0000-4000-8000-00000000000A', public_key: hive.publicKey }).ok).toBe(false)
+    expect(validateRegistration({ install_id: 'abcdef00-0000-4000-8000-00000000000a', public_key: hive.publicKey }).ok).toBe(true)
     expect(validateRegistration({ install_id: hive.installId, public_key: 'AAAA' }).ok).toBe(false)
     expect(validateRegistration({ install_id: hive.installId, public_key: 42 }).ok).toBe(false)
     expect(validateRegistration([hive.installId]).ok).toBe(false)
