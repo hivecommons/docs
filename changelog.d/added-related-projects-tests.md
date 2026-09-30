@@ -1,0 +1,1 @@
+- Add behavior tests for the RelatedProjects sidebar component (pathname highlighting, branch-deploy URLs, legacy menu tree).
