@@ -1,0 +1,1 @@
+- Remove dead EditPageLink.tsx component and test; functionality is covered by DocsSourceAction.
