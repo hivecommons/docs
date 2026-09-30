@@ -75,6 +75,7 @@ export const PROJECTS: ProjectSync[] = [
       { source: "README.md", target: "readme.md", required: true },
       { source: "linux/README.md", target: "linux.md" },
       { source: "windows/README.md", target: "windows.md" },
+      { source: "ROADMAP.md", target: "roadmap.md" },
     ],
   },
   {
@@ -82,7 +83,10 @@ export const PROJECTS: ProjectSync[] = [
     owner: SIBLING_OWNER,
     repo: "pluk",
     branch: process.env.PLUK_DOCS_REF || "main",
-    files: [{ source: "README.md", target: "readme.md", required: true }],
+    files: [
+      { source: "README.md", target: "readme.md", required: true },
+      { source: "ROADMAP.md", target: "roadmap.md" },
+    ],
   },
   {
     project: "rationguard",

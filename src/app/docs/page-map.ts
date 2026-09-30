@@ -166,6 +166,7 @@ const NAV_STRUCTURE_HOTSHOT: Array<{ title: string; items: NavItem[] }> = [
     title: 'Overview',
     items: [
       { 'Introduction': 'readme.md' },
+      { 'Roadmap': 'roadmap.md' },
     ]
   },
   {
@@ -183,6 +184,7 @@ const NAV_STRUCTURE_PLUK: Array<{ title: string; items: NavItem[] }> = [
     title: 'Overview',
     items: [
       { 'Introduction': 'readme.md' },
+      { 'Roadmap': 'roadmap.md' },
     ]
   }
 ]
