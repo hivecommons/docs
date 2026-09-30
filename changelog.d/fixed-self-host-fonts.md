@@ -1,0 +1,1 @@
+- Self-host IBM Plex Sans, Fraunces and JetBrains Mono via `next/font/local` instead of `next/font/google`, removing the build-time fetch to fonts.googleapis.com that was causing intermittent Build workflow failures.
