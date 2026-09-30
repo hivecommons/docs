@@ -2,27 +2,28 @@ import type { Metadata } from 'next'
 import { DocsNavbar, DocsFooter } from '@/components/docs/index'
 import { DocsProvider } from '@/components/docs/DocsProvider'
 import { MobileOverlay } from '@/components/docs/MobileOverlay'
-import { IBM_Plex_Sans, Fraunces, JetBrains_Mono } from "next/font/google"
+import localFont from "next/font/local"
 import { Suspense } from 'react'
 import { ThemeProvider } from "next-themes"
 import "../globals.css"
 
-const inter = IBM_Plex_Sans({
+// Self-hosted fonts (see src/fonts) to avoid fetching from fonts.googleapis.com at build time.
+const inter = localFont({
+  src: [
+    { path: "../../fonts/ibm-plex-sans-400-600-normal.woff2", weight: "400 600", style: "normal" },
+    { path: "../../fonts/ibm-plex-sans-400-600-italic.woff2", weight: "400 600", style: "italic" },
+  ],
   variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
 })
 
-const fraunces = Fraunces({
+const fraunces = localFont({
+  src: [{ path: "../../fonts/fraunces-600.woff2", weight: "600", style: "normal" }],
   variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["600"],
 })
 
-const jetbrainsMono = JetBrains_Mono({
+const jetbrainsMono = localFont({
+  src: [{ path: "../../fonts/jetbrains-mono-100-800.woff2", weight: "100 800", style: "normal" }],
   variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
 })
 
 const SITE_URL = 'https://docs.hivecommons.dev'
