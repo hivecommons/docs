@@ -46,6 +46,22 @@ The site is Next.js + Nextra, deployed on Netlify (site `hivecommons-docs`).
 Navigation is defined in `src/app/docs/page-map.ts`; project registry in
 `src/config/versions.ts`.
 
+## Observability
+
+The site exposes per-instance API metrics via `/api/metrics` in Prometheus text format.
+The endpoint serves bounded, in-process counters and histograms for the `search` and
+`docs-image` API handlers only (not static assets or page traffic).
+
+**Scope and durability:** The registry is process-local with no configured exporter or
+backend. On Netlify, instances are ephemeral, so the `/api/metrics` snapshot is not
+durable or site-wide. It is suitable only for immediate, per-instance instrumentation
+during development or local testing.
+
+**Site-wide telemetry:** If persistent, aggregated request telemetry is needed, use a
+deployment-supported collection path — for example, Netlify's platform-native traffic
+analytics, or an explicitly operator-configured scraper/aggregator that polls `/api/metrics`
+across instances and persists data to a central observability backend.
+
 ## Contributing
 
 PRs welcome. Sign your commits (DCO): `git commit -s`.
