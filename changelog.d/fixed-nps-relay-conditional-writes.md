@@ -1,0 +1,1 @@
+- Bump `@netlify/blobs` to 10.x and make the NPS relay update its rate-limit, nonce and install records with conditional (ETag-guarded) writes, so concurrent requests are bounded by the same caps as sequential ones.
