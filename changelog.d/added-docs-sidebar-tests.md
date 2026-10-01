@@ -1,0 +1,1 @@
+- Add behavior tests for the DocsSidebar component (mount-time collapse state, folder and project row toggles, scroll offset throttling).
