@@ -1,0 +1,1 @@
+- Remove the unreachable Legacy Components group from DocsSidebar (empty project list, uncalled renderer, dangling /docs/legacy-components link).
