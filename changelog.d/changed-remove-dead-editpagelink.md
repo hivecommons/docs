@@ -1,0 +1,1 @@
+- Remove dead `EditPageLink.tsx` and its test, which duplicated security-sensitive URL-validation and path-sanitization logic already live in `DocsSourceActions.tsx`.
