@@ -1,0 +1,1 @@
+- Bump `dompurify` to 3.4.16 and `brace-expansion` to 2.1.7 in the lockfile via `overrides`, picking up the latest patch releases for both.
