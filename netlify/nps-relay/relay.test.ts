@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   ACK_PATH,
+  CAS_MAX_ATTEMPTS,
   ENTRY_PREFIX,
   HEADER_INSTALL_ID,
   HEADER_NONCE,
@@ -15,6 +16,7 @@ import {
   MAX_FEEDBACK_CHARS,
   MAX_NONCES_PER_INSTALL,
   MAX_PER_INSTALL_PER_WINDOW,
+  MAX_PER_IP_PER_WINDOW,
   MAX_PULL_BATCH,
   MAX_REGISTER_BODY_BYTES,
   MAX_REGISTRATIONS_PER_DAY,
@@ -34,10 +36,12 @@ import {
   signingInput,
   validateRegistration,
   verifyEd25519,
+  type ConditionalSetOptions,
   type InstallRecord,
   type RelayDeps,
   type RelayEntry,
   type RelayStore,
+  type WriteOutcome,
 } from './relay'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -51,22 +55,43 @@ function sha256(value: string): string {
   return createHash('sha256').update(value, 'utf8').digest('hex')
 }
 
-/** In-memory stand-in for the Netlify Blobs store. */
+/**
+ * In-memory stand-in for the Netlify Blobs store, including its ETag-based
+ * conditional writes. Every awaited call yields to the event loop so that
+ * concurrent handler invocations interleave the way separate function
+ * instances would.
+ */
 class MemoryStore implements RelayStore {
   data = new Map<string, unknown>()
+  etags = new Map<string, string>()
   writes = 0
+  private version = 0
 
   async get(key: string): Promise<unknown> {
+    await new Promise((r) => setImmediate(r))
     return this.data.has(key) ? JSON.parse(JSON.stringify(this.data.get(key))) : null
   }
 
-  async setJSON(key: string, value: unknown): Promise<void> {
+  async getWithMetadata(key: string): Promise<{ data: unknown; etag?: string } | null> {
+    const data = await this.get(key)
+    if (data === null) return null
+    return { data, etag: this.etags.get(key) }
+  }
+
+  async setJSON(key: string, value: unknown, options?: ConditionalSetOptions): Promise<WriteOutcome> {
+    await new Promise((r) => setImmediate(r))
+    if (options?.onlyIfNew && this.data.has(key)) return { modified: false }
+    if (options?.onlyIfMatch !== undefined && this.etags.get(key) !== options.onlyIfMatch) return { modified: false }
     this.writes++
+    const etag = `"v${++this.version}"`
     this.data.set(key, JSON.parse(JSON.stringify(value)))
+    this.etags.set(key, etag)
+    return { modified: true, etag }
   }
 
   async delete(key: string): Promise<void> {
     this.data.delete(key)
+    this.etags.delete(key)
   }
 
   async list({ prefix }: { prefix: string }): Promise<{ blobs: Array<{ key: string }> }> {
@@ -581,6 +606,101 @@ describe('hub pull and ack', () => {
     expect((await handleRelayRequest(ack('nope'), deps())).status).toBe(400)
     const tooMany = Array.from({ length: MAX_PULL_BATCH + 1 }, (_, i) => String(i))
     expect((await handleRelayRequest(ack(tooMany), deps())).status).toBe(400)
+  })
+})
+
+describe('concurrent requests', () => {
+  // Each test fires a burst of requests without awaiting between them, so
+  // every handler reads the same pre-burst records: the race an attacker
+  // creates by sending many requests at once to parallel function instances.
+  function statuses(responses: Response[]): Record<number, number> {
+    return responses.reduce<Record<number, number>>((acc, r) => ({ ...acc, [r.status]: (acc[r.status] ?? 0) + 1 }), {})
+  }
+
+  it('holds the per-IP submission cap under a concurrent burst', async () => {
+    await registerOk()
+    const burst = 8
+    const responses = await Promise.all(Array.from({ length: burst }, () => handleRelayRequest(submit(GOOD), deps())))
+    expect(statuses(responses)[201]).toBe(MAX_PER_IP_PER_WINDOW)
+    expect(statuses(responses)[429]).toBe(burst - MAX_PER_IP_PER_WINDOW)
+    expect(store.entries()).toHaveLength(MAX_PER_IP_PER_WINDOW)
+  })
+
+  it('holds the per-install submission cap under a concurrent burst from many IPs', async () => {
+    await registerOk()
+    const burst = MAX_PER_INSTALL_PER_WINDOW + 6
+    const responses = await Promise.all(
+      Array.from({ length: burst }, (_, i) => handleRelayRequest(submit(GOOD), deps({ clientIp: `198.51.100.${i}` }))),
+    )
+    // Losers of the compare-and-swap fail closed, so a lockstep burst may
+    // admit fewer than the cap; it must never admit more.
+    const accepted = statuses(responses)[201] ?? 0
+    expect(accepted).toBeGreaterThan(0)
+    expect(accepted).toBeLessThanOrEqual(MAX_PER_INSTALL_PER_WINDOW)
+    expect(statuses(responses)[429]).toBe(burst - accepted)
+    expect(store.entries()).toHaveLength(accepted)
+  })
+
+  it('stores a replayed request at most once even when the copies race', async () => {
+    await registerOk()
+    const nonce = 'b'.repeat(32)
+    const responses = await Promise.all(
+      Array.from({ length: 6 }, (_, i) => handleRelayRequest(submit(GOOD, { nonce }), deps({ clientIp: `198.51.100.${i}` }))),
+    )
+    expect(statuses(responses)[201]).toBe(1)
+    expect(statuses(responses)[401]).toBe(5)
+    expect(store.entries()).toHaveLength(1)
+  })
+
+  it('holds the per-IP and per-day registration caps under a concurrent burst', async () => {
+    const burst = MAX_REGISTRATIONS_PER_IP_PER_WINDOW + 5
+    const responses = await Promise.all(Array.from({ length: burst }, () => handleRelayRequest(register(newHive()), deps())))
+    expect(statuses(responses)[201]).toBe(MAX_REGISTRATIONS_PER_IP_PER_WINDOW)
+    expect([...store.data.keys()].filter((k) => k.startsWith(INSTALL_PREFIX))).toHaveLength(MAX_REGISTRATIONS_PER_IP_PER_WINDOW)
+
+    const dayKey = `${REGISTER_DAY_PREFIX}${new Date(T0).toISOString().slice(0, 10)}`
+    expect((store.data.get(dayKey) as { count: number }).count).toBe(MAX_REGISTRATIONS_PER_IP_PER_WINDOW)
+    store.data.set(dayKey, { count: MAX_REGISTRATIONS_PER_DAY - 1 })
+    const dayBurst = await Promise.all(
+      Array.from({ length: 5 }, (_, i) => handleRelayRequest(register(newHive()), deps({ clientIp: `192.0.2.${i}` }))),
+    )
+    expect(statuses(dayBurst)[201]).toBe(1)
+    expect((store.data.get(dayKey) as { count: number }).count).toBe(MAX_REGISTRATIONS_PER_DAY)
+  })
+
+  it('binds a raced install id to exactly one key', async () => {
+    const a = newHive()
+    const b = { ...newHive(), installId: a.installId }
+    const [ra, rb] = await Promise.all([
+      handleRelayRequest(register(a), deps({ clientIp: '198.51.100.1' })),
+      handleRelayRequest(register(b), deps({ clientIp: '198.51.100.2' })),
+    ])
+    expect([ra.status, rb.status].sort()).toEqual([201, 409])
+    const bound = (store.data.get(`${INSTALL_PREFIX}${a.installId}`) as InstallRecord).public_key
+    expect(bound).toBe(ra.status === 201 ? a.publicKey : b.publicKey)
+  })
+
+  it('fails closed when a record stays contended past the retry budget', async () => {
+    await registerOk()
+    let attempts = 0
+    const contended: RelayStore = {
+      ...store,
+      get: (k) => store.get(k),
+      getWithMetadata: (k) => store.getWithMetadata(k),
+      delete: (k) => store.delete(k),
+      list: (o) => store.list(o),
+      setJSON: async (k, v, o) => {
+        if (k.startsWith(NONCE_PREFIX)) {
+          attempts++
+          return { modified: false }
+        }
+        return store.setJSON(k, v, o)
+      },
+    }
+    const res = await handleRelayRequest(submit(GOOD), deps({ store: contended }))
+    expect(res.status).toBe(429)
+    expect(attempts).toBe(CAS_MAX_ATTEMPTS)
+    expect(store.entries()).toHaveLength(0)
   })
 })
 
