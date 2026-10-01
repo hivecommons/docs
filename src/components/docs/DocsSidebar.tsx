@@ -40,14 +40,8 @@ const PRIMARY_PROJECTS = [
   { id: 'spektacular', label: 'Spektacular', href: '/docs/spektacular/overview/introduction' },
 ] as const;
 
-// No legacy projects on the Hive Commons docs site.
-const LEGACY_PROJECTS: ReadonlyArray<{ id: string; label: string; href: string }> = [];
-
-const ALL_PROJECTS = [...PRIMARY_PROJECTS, ...LEGACY_PROJECTS] as const;
-
 // Key prefix for project-level collapse state (avoids collision with nav item keys)
 const PROJECT_KEY_PREFIX = '__project_';
-const LEGACY_GROUP_KEY = '__legacy';
 const GENERAL_SECTION_PATH_REGEX = new RegExp(
   `^/docs/(${GENERAL_SECTION_SLUGS.join('|')})(/|$)`,
 );
@@ -76,8 +70,6 @@ function getFirstChildRoute(item: MenuItem): string | undefined {
   }
   return undefined;
 }
-
-const LEGACY_OVERVIEW_HREF = '/docs/legacy-components';
 
 export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps) {
   const pathname = usePathname();
@@ -152,17 +144,11 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
     const activeProjectId = projectId || 'hive';
 
     // Keep non-active project sections collapsed by default
-    for (const proj of ALL_PROJECTS) {
+    for (const proj of PRIMARY_PROJECTS) {
       const isProjectLink = currentPath === '/docs/introduction' || proj.id !== activeProjectId;
       if (isProjectLink) {
         initialCollapsed.add(`${PROJECT_KEY_PREFIX}${proj.id}`);
       }
-    }
-
-    // Collapse legacy group if active project is not a legacy project
-    const legacyIds = LEGACY_PROJECTS.map(p => p.id) as readonly string[];
-    if (!legacyIds.includes(activeProjectId)) {
-      initialCollapsed.add(LEGACY_GROUP_KEY);
     }
 
     // For the active project, find the path to the active page and collapse non-active folders
@@ -225,18 +211,6 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
 
     setCollapsed(initialCollapsed);
   }, [pageMap, projectId, navInitialized, setCollapsed]);
-
-  // Keep legacy group collapsed while browsing general sections
-  useEffect(() => {
-    if (!GENERAL_SECTION_PATH_REGEX.test(pathname)) return;
-
-    setCollapsed(prev => {
-      if (prev.has(LEGACY_GROUP_KEY)) return prev;
-      const next = new Set(prev);
-      next.add(LEGACY_GROUP_KEY);
-      return next;
-    });
-  }, [pathname, setCollapsed]);
 
   const toggleCollapse = (itemKey: string) => {
     toggleNavCollapsed(itemKey);
@@ -461,62 +435,6 @@ export function DocsSidebar({ pageMap, className, projectId }: DocsSidebarProps)
       return renderActiveProjectTree(proj.id, proj.label, depth);
     }
     return renderProjectLink(proj.id, proj.label, proj.href, depth);
-  };
-
-  // Render the Legacy group with sub-projects
-  const renderLegacyGroup = () => {
-    const isExpanded = !collapsed.has(LEGACY_GROUP_KEY);
-    // Don't highlight Legacy Components when viewing docs guide or general sections
-    const isGeneralSectionPath = GENERAL_SECTION_PATH_REGEX.test(pathname);
-    const isActiveLegacy = !isDocsGuide && !isGeneralSectionPath && LEGACY_PROJECTS.some(p => p.id === projectId);
-
-    return (
-      <div className="relative pt-1">
-        <div
-          className={`
-            flex items-center gap-0 px-3 py-2 text-[13px] rounded-md transition-colors w-full font-semibold
-            ${isActiveLegacy
-              ? 'text-honey bg-bg-3'
-              : 'text-ink-3  hover:bg-bg-2 hover:bg-bg-2'
-            }
-          `}
-        >
-          <Link
-            href={LEGACY_OVERVIEW_HREF}
-            prefetch
-            onClick={() => { if (!isExpanded) toggleCollapse(LEGACY_GROUP_KEY); }}
-            className="flex-1 truncate"
-          >
-            Legacy Components
-          </Link>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleCollapse(LEGACY_GROUP_KEY);
-            }}
-            className="ks-sidebar-chevron ml-auto shrink-0 p-0.5 rounded hover:bg-bg-3 transition-colors"
-            aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
-          >
-            {isExpanded ? (
-              <ChevronDown className="w-3 h-3" />
-            ) : (
-              <ChevronRight className="w-3 h-3" />
-            )}
-          </button>
-        </div>
-
-        <div
-          className={`
-            relative overflow-hidden transition-all duration-300 ease-in-out
-            ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}
-          `}
-        >
-          {LEGACY_PROJECTS.map(proj => renderProject(proj, 1))}
-        </div>
-      </div>
-    );
   };
 
   // Render full sidebar (expanded state)
