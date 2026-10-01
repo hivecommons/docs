@@ -1,0 +1,1 @@
+- Add end-to-end tests for `scripts/sync-sibling-docs.ts` `main()` (required/optional page handling, link rewriting, `*_DOCS_REF` overrides, MDX asset copying and traversal guard) and unit tests for `introduceSpekStyle`.
