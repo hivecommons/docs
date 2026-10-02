@@ -35,3 +35,16 @@ Then open the local URL printed by Next.js, usually
 <http://localhost:3000>. For a production-style preview, run
 `npm run build` followed by `npm run start`.
 
+## Code review requirements
+
+A PR merges once it passes the CI gates defined in `.github/workflows/` — Build,
+Internal Links, Markdown Lint, TypeScript & Lint Check, and Vitest — and every
+commit is DCO-signed (`git commit -s`).
+
+The PR template's Security Considerations checklist is scoped to this repo's
+actual security-sensitive surface: the Netlify serverless function in
+`netlify/nps-relay/` (the NPS relay — see the `[functions]` comment in
+`netlify.toml`), and dependency bumps (`npm audit`, Dependabot PRs). This repo
+has no Dockerfiles or Kubernetes manifests, so those checklist items do not
+apply here — leave them unchecked as the template instructs.
+
