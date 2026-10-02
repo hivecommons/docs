@@ -1,0 +1,1 @@
+- Add tests for the docs root layout's site-wide `metadata` export (canonical, Open Graph/Twitter parity, robots, keywords) and the schema.org JSON-LD graph it embeds (Hive, Spektacular, Hive Commons sponsors).
