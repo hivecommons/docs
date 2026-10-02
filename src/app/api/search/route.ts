@@ -67,19 +67,49 @@ function extractTitle(md: string, fallback: string): string {
   return m ? m[1].trim() : fallback
 }
 
-function routeKeyToUrl(routeKey: string): string {
-  return routeKey ? `/${basePath}/${routeKey}` : `/${basePath}`
+// `isProjectFile` is true when the content was resolved from the hive
+// project's own directory (docs/content/hive/...) rather than the shared
+// general-section root (docs/content/...), so the URL needs the `/hive`
+// segment that the real docs route (src/app/docs/[...slug]/page.tsx) adds
+// for project pages.
+function routeKeyToUrl(routeKey: string, isProjectFile: boolean): string {
+  const prefix = isProjectFile ? `${basePath}/hive` : basePath
+  return routeKey ? `/${prefix}/${routeKey}` : `/${prefix}`
 }
 
-function readLocalFile(filePath: string): string | null {
-  const fullPath = path.join(docsContentPath, filePath)
+interface LocalFile {
+  content: string
+  isProjectFile: boolean
+}
+
+// buildPageMap() (called with no projectId below) defaults to the hive
+// project, whose routeMap values are paths relative to docs/content/hive/,
+// not the shared docs/content/ root. Reading only from docsContentPath (the
+// previous behavior) silently failed existsSync for every hive-specific page
+// — e.g. release-channels.md — so none of that content ever reached the
+// search index, while shared general-section pages (community/, etc., which
+// do live directly under docs/content/) kept matching. Try the shared root
+// first, then the hive project root, mirroring the fallback in
+// getPageContent() in src/app/docs/[...slug]/page.tsx.
+function readLocalFile(filePath: string): LocalFile | null {
+  const sharedPath = path.join(docsContentPath, filePath)
   try {
-    if (fs.existsSync(fullPath)) {
-      return fs.readFileSync(fullPath, 'utf-8')
+    if (fs.existsSync(sharedPath)) {
+      return { content: fs.readFileSync(sharedPath, 'utf-8'), isProjectFile: false }
     }
   } catch {
-    // File doesn't exist
+    // File doesn't exist under the shared root
   }
+
+  const projectPath = path.join(docsContentPath, 'hive', filePath)
+  try {
+    if (fs.existsSync(projectPath)) {
+      return { content: fs.readFileSync(projectPath, 'utf-8'), isProjectFile: true }
+    }
+  } catch {
+    // File doesn't exist under the hive project root either
+  }
+
   return null
 }
 
@@ -107,8 +137,9 @@ export async function GET(request: NextRequest) {
     const results: SearchResult[] = []
 
     for (const [routeKey, filePath] of entries) {
-      const raw = readLocalFile(filePath)
-      if (!raw) continue
+      const file = readLocalFile(filePath)
+      if (!file) continue
+      const { content: raw, isProjectFile } = file
 
       const preprocessed = convertHtmlScriptsToJsxComments(raw)
       const text = toPlainText(preprocessed)
@@ -159,7 +190,7 @@ export async function GET(request: NextRequest) {
 
       results.push({
         title,
-        url: routeKeyToUrl(routeKey),
+        url: routeKeyToUrl(routeKey, isProjectFile),
         category,
         content: text.slice(0, 500),
         snippet,

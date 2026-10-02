@@ -249,6 +249,19 @@ describe('sanitizeHtmlForMdx — edge cases', () => {
     expect(result).toContain('&lt;owner&gt;/&lt;repo&gt;')
   })
 
+  it('escapes multi-word placeholders in prose that look like a JSX opening tag with an attribute', () => {
+    // A bare `<branch tip>` (no attributes regex previously required an
+    // immediate `>` after the tag name) reached the MDX compiler unescaped
+    // and was parsed as an unclosed JSX element, failing compilation.
+    const result = sanitizeHtmlForMdx('Upgrade available \u2192 <branch tip> while running.')
+    expect(result).toContain('&lt;branch tip&gt;')
+  })
+
+  it('preserves safe tags that carry real attributes', () => {
+    const result = sanitizeHtmlForMdx('<a href="https://example.com">link</a>')
+    expect(result).toBe('<a href="https://example.com">link</a>')
+  })
+
   it('normalizes angle-bracket autolinks for MDX', () => {
     const result = sanitizeHtmlForMdx('See <https://github.com/settings/copilot>.')
     expect(result).toBe('See [https://github.com/settings/copilot](https://github.com/settings/copilot).')
