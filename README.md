@@ -62,6 +62,16 @@ deployment-supported collection path — for example, Netlify's platform-native 
 analytics, or an explicitly operator-configured scraper/aggregator that polls `/api/metrics`
 across instances and persists data to a central observability backend.
 
+**Readiness check:** `/api/healthz` reports whether the instance can actually serve
+docs content. It verifies that the local docs content tree (`docsContentPath` in
+`src/app/docs/page-map.ts`) exists, is a directory, and is non-empty — the dependency
+every page render and `/api/search` read from at request time. It returns
+`{"status": "ok"}` with HTTP 200 when that check passes, or
+`{"status": "unhealthy", "reason": "<cause>"}` with HTTP 503 otherwise (for example a
+bad build, a failed volume mount, or an incomplete version-branch checkout). This
+guards against an instance returning 200 on its normal routes while actually serving
+broken or empty documentation.
+
 ## Contributing
 
 PRs welcome. Sign your commits (DCO): `git commit -s`.
