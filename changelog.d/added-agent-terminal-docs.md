@@ -1,0 +1,1 @@
+- Add a "The agent Terminal window" page documenting how to copy and paste from the dashboard's browser terminal (hivecommons/hive#9941).
