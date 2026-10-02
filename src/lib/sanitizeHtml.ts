@@ -168,9 +168,15 @@ function escapeMdxAmbiguousAngles(content: string): string {
     .split('\n')
     .map(line => (inlineCodeIsReliable(line) ? line.replace(MARKDOWN_INLINE_CODE, put) : line))
     .join('\n')
+  // The tag-name group is followed by an optional `\s[^<>]*` run so that
+  // placeholders with embedded spaces or attribute-like text (e.g. the prose
+  // `<branch tip>`) are recognized too — not just bare `<word>` forms. Without
+  // this, such a placeholder reaches the MDX/JSX parser unescaped, which reads
+  // it as an opening JSX element with a shorthand boolean attribute and fails
+  // to compile when no matching closing tag follows.
   const escaped = withPlaceholders
     .replace(/<((?:https?:\/\/|mailto:)[^>\s]+)>/g, '[$1]($1)')
-    .replace(/<\/?([A-Za-z][A-Za-z0-9_-]*)>/g, (match, tagName: string) => {
+    .replace(/<\/?([A-Za-z][A-Za-z0-9_-]*)(?:\s[^<>]*)?>/g, (match, tagName: string) => {
       return MDX_SAFE_TEXT_TAGS.has(tagName.toLowerCase()) ? match : escapeAngle(match)
     })
   return escaped.replace(CODE_PLACEHOLDER, (_m, i) => codeSpans[Number(i)])
