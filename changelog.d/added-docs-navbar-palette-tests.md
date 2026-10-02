@@ -1,0 +1,1 @@
+- Add behavior tests for the DocsNavbar command palette (Ctrl/⌘K toggle, arrow-key and Enter result navigation, debounce, blank-query reset, API error recovery, backdrop/Escape teardown) and the shared `useHoverDropdown` hover-menu lifecycle.
