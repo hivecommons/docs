@@ -1,0 +1,1 @@
+- Add an OpenSSF Scorecard workflow (SARIF upload, published results) and an `npm audit --omit=dev --audit-level=high` workflow that runs on PRs, pushes to main and weekly.
