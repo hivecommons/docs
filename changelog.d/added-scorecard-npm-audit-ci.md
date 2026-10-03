@@ -1,1 +1,1 @@
-- Add an OpenSSF Scorecard workflow (SARIF upload, published results) and an `npm audit --omit=dev --audit-level=high` workflow that runs on PRs, pushes to main and weekly.
+- Add an OpenSSF Scorecard workflow (SARIF upload, published results) and an npm audit workflow that runs on PRs, pushes to main and weekly. The audit gate (`scripts/npm-audit-gate.ts`) fails on high/critical production advisories unless they are acknowledged with a reason and expiry in `.github/npm-audit-exceptions.json`.

@@ -1,0 +1,8 @@
+[
+  {
+    "id": "GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "reason": "Transitive via nextra -> fast-glob -> micromatch -> braces; vulnerable range is `*` (no patched release). Build-time glob matching only; the docs site does not evaluate user-supplied glob patterns.",
+    "expires": "2026-12-31"
+  }
+]

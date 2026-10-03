@@ -46,4 +46,4 @@ deno.lock
 
 # git worktrees — prevent accidental commits that create broken gitlinks
 *-worktree
-*-worktree/
+*-worktree/npm-audit.json
