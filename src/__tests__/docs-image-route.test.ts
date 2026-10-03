@@ -5,8 +5,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
  *
  * This endpoint serves images from docs/content and MUST reject any
  * path that could escape the docs/content directory (CWE-22 path
- * traversal). It also derives the Content-Type from the file
- * extension via a whitelist, defaulting to application/octet-stream.
+ * traversal). It only serves extensions on its image allowlist (anything
+ * else is 404) and sandboxes SVG responses with a per-response CSP.
  *
  * We mock 'fs' so tests are hermetic and never touch the filesystem.
  */
@@ -132,17 +132,33 @@ describe('/api/docs-image/[...path] — successful lookups', () => {
     expect(res.headers.get('Content-Type')).toBe(mime)
   })
 
-  it('falls back to application/octet-stream for unknown extensions', async () => {
-    const res = await call(['file.TXT'])
-    // Extension is lowercased then looked up — '.txt' is not in the whitelist
+  it('serves SVG with a sandboxing CSP so inline script cannot run', async () => {
+    const res = await call(['icon.svg'])
     expect(res.status).toBe(200)
-    expect(res.headers.get('Content-Type')).toBe('application/octet-stream')
+    expect(res.headers.get('Content-Type')).toBe('image/svg+xml')
+    expect(res.headers.get('Content-Security-Policy')).toBe(
+      "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+    )
+    expect(res.headers.get('Content-Disposition')).toBe('inline')
   })
 
-  it('falls back to application/octet-stream when there is no extension', async () => {
+  it('does not attach the SVG CSP to raster images', async () => {
+    const res = await call(['diagram.png'])
+    expect(res.headers.has('Content-Security-Policy')).toBe(false)
+    expect(res.headers.has('Content-Disposition')).toBe(false)
+  })
+
+  it('returns 404 for unknown extensions even when the file exists', async () => {
+    const res = await call(['file.TXT'])
+    // Extension is lowercased then looked up — '.txt' is not in the allowlist
+    expect(res.status).toBe(404)
+    expect(res.body).toBe('Not Found')
+  })
+
+  it('returns 404 when there is no extension even when the file exists', async () => {
     const res = await call(['no-extension'])
-    expect(res.status).toBe(200)
-    expect(res.headers.get('Content-Type')).toBe('application/octet-stream')
+    expect(res.status).toBe(404)
+    expect(res.body).toBe('Not Found')
   })
 })
 
