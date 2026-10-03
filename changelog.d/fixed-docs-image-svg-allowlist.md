@@ -1,0 +1,1 @@
+- The `/docs-images` route now serves only its image extension allowlist (other files under `docs/content` return 404) and attaches a sandboxing Content-Security-Policy to SVG responses.

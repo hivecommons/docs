@@ -16,6 +16,9 @@ const MIME_TYPES: Record<string, string> = {
   '.ico': 'image/x-icon',
 }
 
+/** Per-response CSP for SVG: no scripts, opaque origin when opened directly. */
+const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -40,22 +43,35 @@ export async function GET(
       return new NextResponse('Forbidden', { status })
     }
 
+    // Only known image types are served; anything else under docs/content
+    // (page sources, config) is not reachable through this route.
+    const ext = path.extname(fullPath).toLowerCase()
+    const mimeType = MIME_TYPES[ext]
+    if (!mimeType) {
+      status = 404
+      return new NextResponse('Not Found', { status })
+    }
+
     if (!fs.existsSync(fullPath)) {
       status = 404
       return new NextResponse('Not Found', { status })
     }
 
-    const ext = path.extname(fullPath).toLowerCase()
-    const mimeType = MIME_TYPES[ext] || 'application/octet-stream'
-
     const fileBuffer = fs.readFileSync(fullPath)
 
-    return new NextResponse(fileBuffer, {
-      headers: {
-        'Content-Type': mimeType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
-    })
+    const headers: Record<string, string> = {
+      'Content-Type': mimeType,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    }
+    if (mimeType === 'image/svg+xml') {
+      // SVG can carry inline script. The site-wide CSP allows 'unsafe-inline',
+      // so sandbox the document when it is navigated to directly; <img>
+      // rendering is unaffected.
+      headers['Content-Security-Policy'] = SVG_CSP
+      headers['Content-Disposition'] = 'inline'
+    }
+
+    return new NextResponse(fileBuffer, { headers })
   } catch (error) {
     status = 500
     logger.error('docs-image request failed', {
