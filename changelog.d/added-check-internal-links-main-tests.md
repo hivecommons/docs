@@ -1,0 +1,1 @@
+- Add end-to-end tests for `scripts/check-internal-links.ts` `main()` (flat route collection, nav-alias registration with content-root fallback, inline/reference link resolution, asset/anchor skipping, broken-link report and exit code).
