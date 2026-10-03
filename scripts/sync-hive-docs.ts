@@ -34,6 +34,11 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "security-model.md" },
   { source: "troubleshooting.md" },
   { source: "backup-restore.md", target: "backup-dr.md" },
+  // Third-party integration guide (hivecommons/hive#10171).
+  { source: "integration-guide.md" },
+  { source: "integrations/work-source-providers.md" },
+  { source: "integrations/clanker-flue.md" },
+  { source: "integrations/spektacular.md" },
   { source: "adr/README.md", target: "adr/readme.md" },
   { source: "adr/0001-record-architecture-decisions.md" },
   { source: "adr/0002-mitm-proxy-network-enforcement.md" },

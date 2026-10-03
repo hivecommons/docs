@@ -127,6 +127,15 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
     ]
   },
   {
+    title: 'Integrating with Hive',
+    items: [
+      { 'Integration guide': 'integration-guide.md' },
+      { 'Work-source providers': 'integrations/work-source-providers.md' },
+      { 'Clanker (Flue-style) interface': 'integrations/clanker-flue.md' },
+      { 'Spektacular project inception': 'integrations/spektacular.md' },
+    ]
+  },
+  {
     title: 'Security',
     items: [
       { 'Security model': 'security-model.md' },

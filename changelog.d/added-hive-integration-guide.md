@@ -1,0 +1,1 @@
+- Publish Hive's third-party Integration guide (work-source providers, Clanker/Flue-style interface, Spektacular project inception) under a new "Integrating with Hive" nav section, synced from `hivecommons/hive` `src/docs/`.
