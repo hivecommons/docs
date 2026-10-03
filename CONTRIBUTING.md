@@ -20,10 +20,16 @@ npm ci
 npm run lint:md      # markdownlint for docs content
 npm run type-check    # TypeScript without emitting files
 npm test              # Vitest unit tests
+npx vitest run --coverage   # what CI runs: tests plus the coverage gate
 npm run check-links   # internal docs links
 npm run lint          # ESLint for src/
 npm run build         # production build and doc-sync scripts
 ```
+
+The Vitest workflow runs `npx vitest run --coverage`, which fails if coverage
+falls below the thresholds in `vitest.config.ts` (lines, functions, branches,
+statements) across `src/`, `scripts/` and `netlify/`. Add tests alongside new
+code in those directories.
 
 To preview the docs locally while editing, run:
 
