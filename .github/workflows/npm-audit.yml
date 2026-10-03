@@ -1,0 +1,44 @@
+name: npm audit
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "41 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-audit-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  audit:
+    name: Audit production dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `npm audit` exits non-zero whenever any advisory exists; capture the
+      # JSON and let the gate decide, so advisories with no patched release can
+      # be acknowledged in .github/npm-audit-exceptions.json (with an expiry).
+      - name: Run npm audit
+        run: npm audit --omit=dev --json > npm-audit.json || true
+
+      - name: Audit production dependencies
+        run: npx tsx scripts/npm-audit-gate.ts npm-audit.json --level=high
