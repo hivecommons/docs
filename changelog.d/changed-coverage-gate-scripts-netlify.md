@@ -1,0 +1,1 @@
+- Bring `scripts/` and `netlify/` into the Vitest coverage gate and ratchet the thresholds (lines 68→78, functions 65→79, branches 54→74, statements 67→77) to match measured coverage.

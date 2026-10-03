@@ -22,13 +22,18 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.d.ts'],
+      // scripts/ (prebuild sync + link checks) and netlify/ (NPS relay) ship
+      // alongside src/ and have their own suites; keep them inside the gate so
+      // a regression there cannot pass unnoticed.
+      include: ['src/**/*.{ts,tsx}', 'scripts/**/*.ts', 'netlify/**/*.{ts,mts}'],
+      exclude: ['**/*.test.ts', '**/*.test.tsx', '**/*.d.ts'],
+      // Ratchet: raise these as coverage grows; never lower without a reason
+      // in the PR. Measured at the last ratchet: 80.3 / 81.7 / 76.5 / 79.3.
       thresholds: {
-        lines: 68,
-        functions: 65,
-        branches: 54,
-        statements: 67,
+        lines: 78,
+        functions: 79,
+        branches: 74,
+        statements: 77,
       },
     },
   },
