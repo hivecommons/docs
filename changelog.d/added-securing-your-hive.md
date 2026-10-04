@@ -1,0 +1,1 @@
+- Publish Hive's first-time operator security guide under Security, synced from `hivecommons/hive@v5`, and keep links to it from the Introduction and Security model pages on the documentation site.

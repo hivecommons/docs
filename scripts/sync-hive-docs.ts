@@ -32,6 +32,7 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "release-channels.md" },
   { source: "contributor-relay.md" },
   { source: "security-model.md" },
+  { source: "securing-your-hive.md" },
   { source: "troubleshooting.md" },
   { source: "backup-restore.md", target: "backup-dr.md" },
   // Third-party integration guide (hivecommons/hive#10171).

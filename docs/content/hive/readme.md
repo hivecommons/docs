@@ -36,7 +36,14 @@ Start with [Zero to Automation: Getting Started with Hive](/docs/hive/getting-st
 - [Architecture](/docs/hive/architecture)
 - [Getting started](/docs/hive/getting-started)
 - [Operator reference](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference.md)
+- [Maintainer commands](https://github.com/hivecommons/hive/blob/v5/src/docs/maintainer-commands.md) — slash commands for un-parking
+  issues, requesting help, confirming fixes, reopening issues, and using label
+  or assignment helpers.
+- [Release channels](/docs/hive/release-channels) — what `stable`, `candidate`, and `edge` each mean and what to expect from them.
 - [Security model](/docs/hive/security-model)
+- [Data collection and telemetry](https://github.com/hivecommons/hive/blob/v5/src/docs/telemetry.md)
+- [Securing your hive: a first-time operator's guide](/docs/hive/securing-your-hive)
+- [Community and support](https://github.com/hivecommons/hive/blob/v5/src/docs/community.md)
 - [Documentation map](/docs/hive/documentation-map)
 
 Current docs target branch `v5`; use the [documentation map](/docs/hive/documentation-map) for v2 → v4 and v4 → v5 migration pointers.

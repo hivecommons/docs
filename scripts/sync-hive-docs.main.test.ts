@@ -175,6 +175,10 @@ describe("sync-hive-docs main()", () => {
       "Edit the canonical source in the Hive repository.\n\n# README.md\n"
     );
 
+    const securityGuide = readOut("securing-your-hive.md");
+    expect(securityGuide).toContain("/blob/v5/src/docs/securing-your-hive.md)");
+    expect(securityGuide).toContain("# securing-your-hive.md\n");
+
     const backup = readOut("backup-dr.md");
     expect(backup).toContain("/blob/v5/src/docs/backup-restore.md)");
     expect(backup).toContain("# backup-restore.md\n");
