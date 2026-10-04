@@ -1,0 +1,1 @@
+- Add tests for the localized root layout `src/app/[locale]/layout.tsx` (per-locale metadata/canonical/Open Graph locale mapping, unknown-locale 404 guard, `<html lang>`, font variables, provider stack).
