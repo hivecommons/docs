@@ -1,0 +1,1 @@
+- Run the `scripts/sync-sibling-docs.ts` `main()` tests in process instead of spawning `tsx`, so the v8 coverage gate sees `main()`, `copyAssets()` and `renderPage()` (40% → 100% lines); add converter-note and image-dedupe cases; ratchet coverage thresholds to 82 / 82 / 77 / 81.
