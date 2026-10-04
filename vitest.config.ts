@@ -28,12 +28,12 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}', 'scripts/**/*.ts', 'netlify/**/*.{ts,mts}'],
       exclude: ['**/*.test.ts', '**/*.test.tsx', '**/*.d.ts'],
       // Ratchet: raise these as coverage grows; never lower without a reason
-      // in the PR. Measured at the last ratchet: 80.3 / 81.7 / 76.5 / 79.3.
+      // in the PR. Measured at the last ratchet: 85.2 / 84.8 / 79.6 / 84.2.
       thresholds: {
-        lines: 78,
-        functions: 79,
-        branches: 74,
-        statements: 77,
+        lines: 82,
+        functions: 82,
+        branches: 77,
+        statements: 81,
       },
     },
   },
