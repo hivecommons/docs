@@ -1,0 +1,1 @@
+- Docs pages now strip MDX JavaScript nodes (top-level `import`/`export`, `{expressions}`, JSX attribute expressions) from content before compiling it, so markdown synced from other repositories can no longer run code in the build.
