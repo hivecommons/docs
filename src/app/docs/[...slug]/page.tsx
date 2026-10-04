@@ -5,6 +5,7 @@ import { useMDXComponents as getMDXComponents } from '../../../../mdx-components
 import { convertHtmlScriptsToJsxComments } from '@/lib/transformMdx'
 import { sanitizeHtmlForMdx, removeCommentPatterns } from '@/lib/sanitizeHtml'
 import { rewriteRelativeImagePaths } from '@/lib/rewriteImagePaths'
+import { remarkStripMdxJs } from '@/lib/remarkStripMdxJs'
 import { buildPageMap, docsContentPath, getContentPath, isGeneralSectionFile } from '../page-map'
 import { CURRENT_VERSION, type ProjectId } from '@/config/versions'
 import { MeetingsPage } from '@/components/community/MeetingsPage'
@@ -339,7 +340,10 @@ export default async function DocPage({ params }: Props) {
   try {
     const compiled = await compileMdx(content, {
       mdxOptions: {
-        remarkPlugins: [],
+        // Content is synced from other repositories; never let it ship
+        // JavaScript (ESM, {expressions}, JSX attribute expressions) into
+        // the component that evaluate() runs below.
+        remarkPlugins: [remarkStripMdxJs],
         rehypePlugins: []
       }
     })
