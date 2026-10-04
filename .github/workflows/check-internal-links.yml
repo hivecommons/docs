@@ -13,7 +13,10 @@ on:
     paths:
       - "docs/content/**"
       - "scripts/sync-hive-docs.ts"
+      - "scripts/markdown-fences.ts"
+      - "scripts/scrub-legacy-branding.ts"
       - "scripts/check-internal-links.ts"
+      - "scripts/check-internal-links-helpers.ts"
       - "src/app/docs/page-map.ts"
       - "src/app/docs/**"
       - "src/config/versions.ts"
@@ -22,7 +25,10 @@ on:
     paths:
       - "docs/content/**"
       - "scripts/sync-hive-docs.ts"
+      - "scripts/markdown-fences.ts"
+      - "scripts/scrub-legacy-branding.ts"
       - "scripts/check-internal-links.ts"
+      - "scripts/check-internal-links-helpers.ts"
       - "src/app/docs/page-map.ts"
       - "src/app/docs/**"
       - "src/config/versions.ts"
