@@ -51,6 +51,19 @@ describe("buildPageMap('hive') — getNavStructure switch arm", () => {
     expect(titles).toContain('Operations')
   })
 
+  it('publishes the operator security guide in the Security section', () => {
+    const { pageMap, routeMap, filePaths } = buildPageMap('hive') as unknown as BuildResult
+    const security = pageMap.find((node) => node.name === 'Security')
+    expect(flatten(security?.children || [])).toContainEqual(expect.objectContaining({
+      kind: 'MdxPage',
+      name: 'Securing your hive',
+      route: '/docs/hive/security/securing-your-hive',
+    }))
+    expect(routeMap['security/securing-your-hive']).toBe('securing-your-hive.md')
+    expect(routeMap['securing-your-hive']).toBe('securing-your-hive.md')
+    expect(filePaths).toContain('securing-your-hive.md')
+  })
+
   it('registers hive-specific pages such as architecture.md and governor.md', () => {
     const { routeMap, filePaths } = buildPageMap('hive') as unknown as BuildResult
     expect(filePaths).toContain('architecture.md')

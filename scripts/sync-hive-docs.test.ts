@@ -21,6 +21,15 @@ describe("rewriteLinkTarget — Case 1: in-tree synced docs -> site route", () =
     );
   });
 
+  it.each([README, "src/docs/security-model.md"])(
+    "keeps the operator security guide link internal from %s",
+    source => {
+      expect(rewriteLinkTarget("securing-your-hive.md", source)).toBe(
+        "/docs/hive/securing-your-hive"
+      );
+    }
+  );
+
   it("rewrites a synced ADR sibling from adr/README.md to its adr/ route", () => {
     expect(
       rewriteLinkTarget("0001-record-architecture-decisions.md", ADR_README)

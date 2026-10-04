@@ -138,6 +138,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
   {
     title: 'Security',
     items: [
+      { 'Securing your hive': 'securing-your-hive.md' },
       { 'Security model': 'security-model.md' },
       { 'Security threat model': 'security-threat-model.md' },
       { 'ACMM policy matrix': 'acmm-policy-matrix.md' },
