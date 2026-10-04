@@ -1,0 +1,1 @@
+- Add end-to-end tests for `scripts/sync-hive-docs.ts` `main()` (canonical header, `target` renames and nested output dirs, link rewriting + legacy-branding scrub + fence normalisation, `HIVE_DOCS_*` overrides, fetch-failure exit).
