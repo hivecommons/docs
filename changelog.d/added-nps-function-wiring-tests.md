@@ -1,0 +1,1 @@
+- Add in-process tests for the Netlify NPS relay entry point `netlify/functions/nps.mts` (route list, strong-consistency store, hub-secret env var, client-IP precedence for rate limiting).
