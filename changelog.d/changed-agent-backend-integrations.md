@@ -1,0 +1,1 @@
+- Refresh the Hive integrations page with current backend support tiers, OpenHands, inference gateways, and related ecosystem positioning.

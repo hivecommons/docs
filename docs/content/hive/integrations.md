@@ -1,179 +1,94 @@
 # Supported agents & inference engines
 
-Hive supports agent CLIs, inference engines, and OpenAI-compatible model gateways by backend ID. These are supported software integrations; inclusion does not imply endorsement or a partnership unless marked Partner. TypeSafe AI is a Hive Commons partner.
+Hive supports agent CLIs, inference engines, and OpenAI-compatible model gateways by backend ID. These are software integrations; inclusion does not imply endorsement or a partnership unless marked **Partner**. Support tiers follow Hive's backend acceptance bar: T1 runs unattended in headless pods, T2 has Hive-wired local confinement or deny-listing, and T3 is experimental / opt-in for unconfined local use.
 
-## ![Claude Code by Anthropic](/integrations/claude.svg) Claude Code [#claude-code]
+## Agent CLI backends by support tier
 
-- **Owner:** Anthropic
-- **What Hive does:** launches Claude Code as an agentic CLI, applies Hive's prompt, permissions, audit, and queue controls, and records the configured model with the agent.
-- **Hive config:** `backend: claude`
-- **Official link:** [Claude Code](https://www.anthropic.com/claude-code)
+### T1 core — headless pod path
 
-## ![GitHub Copilot CLI by GitHub](/integrations/githubcopilot.svg) GitHub Copilot CLI [#github-copilot-cli]
+These backends are wired for unattended headless operation on the pod path.
 
-- **Owner:** GitHub
-- **What Hive does:** launches Copilot CLI for unattended agent work with Hive-managed repository scope, permissions, and audit trails.
-- **Hive config:** `backend: copilot`
-- **Official link:** [GitHub Copilot CLI reference](https://docs.github.com/copilot/reference/copilot-cli-reference)
+| Backend | Integration | Hive config | Notes |
+| --- | --- | --- | --- |
+| ![Claude Code by Anthropic](/integrations/claude.svg) Claude Code | Anthropic agent CLI | `backend: claude` | Core CLI path with Hive prompt, permissions, audit, queue controls, and model recording. |
+| ![LiteLLM by BerriAI](/integrations/litellm.png) Claude Code via LiteLLM | Claude Code pointed at a LiteLLM proxy | `backend: litellm` | Uses `ANTHROPIC_BASE_URL` / Hive LiteLLM settings; inherits Claude Code's local confinement posture. |
+| ![GitHub Copilot CLI by GitHub](/integrations/githubcopilot.svg) GitHub Copilot CLI | GitHub agent CLI | `backend: copilot` | Hive manages repository scope, permissions, and audit trails for Copilot-driven work. |
+| ![OpenAI Codex CLI by OpenAI](/integrations/openai.svg) OpenAI Codex CLI | OpenAI agent CLI | `backend: codex` | Passes Hive-selected model and reasoning-effort settings where supported. |
+| ![Goose by Block / AAIF](/integrations/goose.png) Goose | Block / Agentic AI Foundation agent CLI | `backend: goose` | T1 on the pod path; local mode remains experimental because Hive cannot wire a local OS sandbox for Goose. |
 
-## ![Goose by Block](/integrations/goose.png) Goose [#goose]
+### T2 supported — confined or deny-listed local path
 
-- **Owner:** Block
-- **What Hive does:** launches Goose as an agent CLI and delivers Hive prompts and kicks through the Goose runtime.
-- **Hive config:** `backend: goose`
-- **Official link:** [Goose](https://block.github.io/goose/)
+These backends have a Hive-wired local confinement floor: an OS sandbox or an enforced deny-list for host-state commands.
 
-## ![OpenAI Codex CLI by OpenAI](/integrations/openai.svg) OpenAI Codex CLI [#openai-codex-cli]
+| Backend | Integration | Hive config | Notes |
+| --- | --- | --- | --- |
+| ![Claude Code by Anthropic](/integrations/claude.svg) Claude Code / LiteLLM | Anthropic CLI, optionally through LiteLLM | `backend: claude` / `litellm` | Uses Claude Code's native sandbox locally; LiteLLM keeps the same posture. |
+| ![OpenAI Codex CLI by OpenAI](/integrations/openai.svg) OpenAI Codex CLI | OpenAI agent CLI | `backend: codex` | Hive narrows local workspace access with Codex sandbox flags. |
+| ![GitHub Copilot CLI by GitHub](/integrations/githubcopilot.svg) GitHub Copilot CLI | GitHub agent CLI | `backend: copilot` | Hive uses Copilot sandboxing and explicit repository scope. |
+| ![Muse Code by Meta](/integrations/meta.svg) Muse Code | Meta agent CLI | `backend: muse` | Supported when installed by the operator and launched with Hive's local controls. |
+| ![OpenCode agent CLI](/integrations/opencode.svg) OpenCode | OpenCode terminal coding agent | `backend: opencode` | Hive wires a host-state command deny-list rather than claiming OS confinement. |
 
-- **Owner:** OpenAI
-- **What Hive does:** launches Codex CLI for agent tasks and passes Hive's selected model and reasoning-effort settings where supported.
-- **Hive config:** `backend: codex`
-- **Official link:** [OpenAI Codex CLI](https://github.com/openai/codex)
+### T3 experimental — explicit opt-in for unconfined local use
 
-## ![Pi by Earendil Works](/integrations/pi.png) Pi [#pi]
+These backends are available but are experimental where Hive cannot wire local confinement. Local launch requires each backend's explicit `HIVE_<BACKEND>_DANGEROUSLY_RUN_UNCONFINED=1` opt-in; container mode remains preferred.
 
-- **Owner:** Earendil Works
-- **What Hive does:** launches the Pi coding-agent CLI as a long-running interactive backend and sends Hive kicks when the CLI is ready.
-- **Hive config:** `backend: pi`
-- **Official link:** [Pi](https://pi.dev/)
+| Backend | Integration | Hive config | Notes |
+| --- | --- | --- | --- |
+| ![Goose by Block / AAIF](/integrations/goose.png) Goose (local) | Block / Agentic AI Foundation agent CLI | `backend: goose` | Experimental on contributor-local mode only; T1 on the pod path. |
+| ![Google Antigravity CLI by Google](/integrations/google.svg) Google Antigravity CLI | Google agent CLI | `backend: agy` | Hive manages unattended mode and reasoning effort; local confinement is not wired. |
+| ![IBM Bob by IBM](/integrations/ibm.svg) IBM Bob | IBM watsonx Code Assistant CLI / bobshell | `backend: bob` | Separate from the watsonx.ai inference gateway; headless use requires API-key auth. |
+| ![Pi by Earendil Works](/integrations/pi.png) Pi | pi-coding-agent CLI | `backend: pi` | Long-running interactive backend with Hive kicks when ready. |
+| ![Aider open source coding agent](/integrations/aider.png) Aider | Aider CLI | `backend: aider` | Uses provider credentials and Hive-provided repository context. |
+| ![Kilo Code agent CLI](/integrations/kilo.png) Kilo Code | Kilo Code CLI | `backend: kilo` | Experimental local path; containerized operation is preferred. |
+| Oh My Pi | Oh My Pi CLI | `backend: omp` | Hub-agent method and experimental contributor-local backend. |
+| ![OpenHands agent CLI](/integrations/openhands.svg) OpenHands | OpenHands CLI, headless-only | `backend: openhands` | **New / experimental.** Added on the OpenHands backend branch and treated as T3 until it proves confinement and credential criteria. |
 
-## ![IBM Bob by IBM](/integrations/ibm.svg) IBM Bob [#ibm-bob]
+### Go-side only backend
 
-- **Owner:** IBM
-- **What Hive does:** launches the IBM Bob / bobshell CLI with Hive-managed headless authentication, approval, and workspace trust settings.
-- **Hive config:** `backend: bob`
-- **Official link:** [IBM watsonx Code Assistant](https://www.ibm.com/products/watsonx-code-assistant)
+| Backend | Integration | Hive config | Notes |
+| --- | --- | --- | --- |
+| ![Gemini CLI by Google](/integrations/googlegemini.svg) Gemini CLI | Google Gemini CLI | `backend: gemini` | Go-side manager launch only today; it has no contributor-relay wiring, so local-path support tiers do not apply until that is added. |
 
-## ![Aider open source coding agent](/integrations/aider.png) Aider [#aider]
+## Inference gateways and engines
 
-- **Owner:** Aider open source project
-- **What Hive does:** launches Aider as an agent CLI and can apply Hive's per-agent prompts, repository context, and audit controls.
-- **Hive config:** `backend: aider`
-- **Official link:** [Aider](https://aider.chat/)
+Gateway backends are not agent binaries. Hive routes Claude-style agent calls through an OpenAI-compatible translation path to these endpoints, so CLI support tiers do not apply.
 
-## ![Gemini CLI by Google](/integrations/googlegemini.svg) Gemini CLI [#gemini-cli]
+| Gateway | Hive config | What Hive does |
+| --- | --- | --- |
+| ![vLLM inference engine](/integrations/vllm.png) vLLM | `backend: vllm` | Routes inference to a vLLM OpenAI-compatible endpoint for self-hosted models. |
+| ![llm-d inference engine](/integrations/llm-d.png) llm-d | `backend: llm-d` | Routes inference to distributed Kubernetes model serving. |
+| ![LiteLLM by BerriAI](/integrations/litellm.png) LiteLLM | `backend: litellm` / gateway route | Centralizes model routing and keys behind a LiteLLM endpoint. |
+| ![IBM watsonx.ai by IBM](/integrations/ibm.svg) IBM watsonx.ai | `backend: watsonx` | Uses watsonx.ai's OpenAI-compatible gateway and IBM project / token settings. |
+| ![OpenRouter model gateway](/integrations/openrouter.svg) OpenRouter | `backend: openrouter` | Uses OpenRouter as a named gateway with operator-selected model IDs. |
+| Custom OpenAI-compatible | `kind: custom` route | Lets operators point Hive at any compatible `/v1/chat/completions` endpoint. |
 
-- **Owner:** Google
-- **What Hive does:** launches Gemini CLI for operators whose Google access still supports that CLI and treats it as an agentic backend.
-- **Hive config:** `backend: gemini`
-- **Official link:** [Gemini CLI](https://github.com/google-gemini/gemini-cli)
+## Model providers and classifiers
 
-## ![Google Antigravity CLI by Google](/integrations/google.svg) Google Antigravity CLI [#google-antigravity-cli]
-
-- **Owner:** Google
-- **What Hive does:** launches the Antigravity CLI (`agy`) as Google's current Hive-supported agent CLI, with Hive managing unattended mode and reasoning effort.
-- **Hive config:** `backend: agy`
-- **Official link:** [Google Antigravity CLI](https://github.com/google-antigravity/antigravity-cli)
-
-## ![OpenCode agent CLI](/integrations/opencode.svg) OpenCode [#opencode]
-
-- **Owner:** OpenCode project
-- **What Hive does:** launches OpenCode as a supported terminal coding-agent backend and routes Hive prompts to it.
-- **Hive config:** `backend: opencode`
-- **Official link:** [OpenCode docs](https://opencode.ai/docs/)
-
-## ![Kilo Code agent CLI](/integrations/kilo.png) Kilo Code [#kilo-code]
-
-- **Owner:** Kilo
-- **What Hive does:** launches Kilo Code as a supported agentic CLI backend for Hive-managed work.
-- **Hive config:** `backend: kilo`
-- **Official link:** [Kilo CLI](https://kilo.ai/cli)
-
-## ![Muse Code by Meta](/integrations/meta.svg) Muse Code [#muse-code]
-
-- **Owner:** Meta
-- **What Hive does:** launches Muse Code as a supported CLI backend when installed by the operator.
-- **Hive config:** `backend: muse`
-- **Official link:** [Muse Code docs](https://musecodes.io/docs/)
-
-## Oh My Pi
-
-- **Owner:** can1357
-- **What Hive does:** launches Oh My Pi through the `omp` backend and passes Hive's selected model and approval behavior.
-- **Hive config:** `backend: omp`
-- **Official link:** [Oh My Pi](https://github.com/can1357/oh-my-pi)
-
-## Flue [#flue]
-
-- **Owner:** Flue / withastro
-- **What Hive does:** runs a report-only external-execution binding pilot through `pkg/extwork` and the Flue adapter. The binding admits, observes, and verifies external workflow receipts without publication credentials; it is linked only when Hive is built with the `extwork_flue` build tag.
-- **Hive config:** `runs.external.flue` (**pilot**, default off)
-- **Official link:** [Flue](https://github.com/withastro/flue); [Hive Flue example](https://github.com/hivecommons/hive/tree/v5/examples/flue); [external workflow admission design](https://github.com/hivecommons/hive/blob/v5/src/docs/design/external-workflow-admission.md)
-
-## ![vLLM inference engine](/integrations/vllm.png) vLLM [#vllm]
-
-- **Owner:** vLLM project
-- **What Hive does:** routes inference through a vLLM-compatible OpenAI API endpoint while Hive drives agent turns and audit metadata.
-- **Hive config:** `backend: vllm`
-- **Official link:** [vLLM](https://www.vllm.ai/)
-
-## ![llm-d inference engine](/integrations/llm-d.png) llm-d [#llm-d]
-
-- **Owner:** llm-d project
-- **What Hive does:** routes inference through an llm-d OpenAI-compatible endpoint for self-hosted model serving.
-- **Hive config:** `backend: llm-d`
-- **Official link:** [llm-d](https://llm-d.ai/)
-
-## ![LiteLLM by BerriAI](/integrations/litellm.png) LiteLLM [#litellm]
-
-- **Owner:** BerriAI
-- **What Hive does:** routes model calls through LiteLLM as an OpenAI-compatible proxy for centrally managed models and keys.
-- **Hive config:** `backend: litellm`
-- **Official link:** [LiteLLM](https://www.litellm.ai/)
-
-## ![IBM watsonx.ai by IBM](/integrations/ibm.svg) IBM watsonx.ai [#ibm-watsonx-ai]
-
-- **Owner:** IBM
-- **What Hive does:** routes model calls through watsonx.ai's OpenAI-compatible gateway and handles the IBM project and token settings required by Hive configuration.
-- **Hive config:** `backend: watsonx`
-- **Official link:** [IBM watsonx.ai](https://www.ibm.com/products/watsonx-ai)
-
-## ![OpenRouter model gateway](/integrations/openrouter.svg) OpenRouter [#openrouter]
-
-- **Owner:** OpenRouter
-- **What Hive does:** uses OpenRouter as a named model gateway for OpenAI-compatible routing when configured by an operator.
-- **Hive config:** `backend: openrouter`
-- **Official link:** [OpenRouter](https://openrouter.ai/)
-
-## ![Jev by TypeSafe AI](/integrations/typesafe.png) Jev [#jev]
-
-- **Owner:** TypeSafe AI — **Partner**
-- **What Hive does:** in Hive v6, uses Jev as an optional advisory smart classifier (`classifier.backend: jev`) that measures disagreement with deterministic keyword rules and suggests rules for approval in **Settings → Smart classifier**. It does not change routing. Jev returns typed choice, score, and probability answers with confidence, and bills input tokens only. Per-agent `jev_mode` is planned.
-- **Hive config:** `classifier.backend: jev` with OpenRouter connected or `JEV_API_KEY` for TypeSafe AI. OpenRouter model ID: `typesafe/jev-1.13`.
-- **Official link:** [Jev System One docs](https://docs.typesafe.ai/concepts/system-one); [TypeSafe AI API](https://docs.typesafe.ai/api); [TypeSafe AI](https://typesafe.ai/)
+| Integration | Hive config | Notes |
+| --- | --- | --- |
+| ![Jev by TypeSafe AI](/integrations/typesafe.png) Jev | `classifier.backend: jev` | TypeSafe AI — **Partner**. Optional v6 advisory smart classifier. |
+| ![Anthropic model provider](/integrations/anthropic.svg) Anthropic | `backend: anthropic` | Provider surfaced through the configured CLI or gateway. |
+| ![OpenAI model provider](/integrations/openai.svg) OpenAI | `backend: openai` | Provider surfaced through Codex, gateway routes, or compatible proxies. |
+| ![DeepSeek model provider](/integrations/deepseek.svg) DeepSeek | `backend: deepseek` | Provider surfaced through a configured OpenAI-compatible gateway such as LiteLLM. |
 
 TypeSafe AI is a Hive Commons partner.
 
-## ![Anthropic model provider](/integrations/anthropic.svg) Anthropic [#anthropic]
+## Planning, work sources, and related ecosystem
 
-- **Owner:** Anthropic
-- **What Hive does:** records and routes Anthropic-backed models through the configured CLI or gateway while preserving Hive audit metadata.
-- **Hive config:** `backend: anthropic`
-- **Official link:** [Anthropic](https://www.anthropic.com/)
+Hive sits in a broader agentic-maintenance ecosystem. These projects are either integrated today, tracked as related work, or useful context for operators comparing orchestration approaches.
 
-## ![OpenAI model provider](/integrations/openai.svg) OpenAI [#openai]
-
-- **Owner:** OpenAI
-- **What Hive does:** records and routes OpenAI-backed models through the configured CLI or gateway while preserving Hive audit metadata.
-- **Hive config:** `backend: openai`
-- **Official link:** [OpenAI](https://openai.com/)
-
-## ![DeepSeek model provider](/integrations/deepseek.svg) DeepSeek [#deepseek]
-
-- **Owner:** DeepSeek
-- **What Hive does:** routes DeepSeek-backed models through a configured OpenAI-compatible gateway such as LiteLLM.
-- **Hive config:** `backend: deepseek`
-- **Official link:** [DeepSeek](https://www.deepseek.com/)
-
-## Crustify / Wavefront [#crustify-wavefront]
-
-- **Owner:** Crustify / Wavefront projects
-- **What Hive does:** adds the Wavefront work source to list ready nodes from C/C++→Rust migration graphs as run-stage work items. Wavefront remains authoritative for graph dependency closure, cycles, waves, and batching; Hive records receipts when nodes complete and leaves publication out of scope.
-- **Hive config:** `governor.work_source.wavefront` (**default disabled**)
-- **Official link:** [Crustify](https://github.com/crustify-rs/crustify); [Wavefront](https://github.com/crustify-rs/wavefront); [Hive work-source docs](/docs/hive/work-sources#wavefront-migration-graph-wavefrontenabled-true)
+| Project | Relationship |
+| --- | --- |
+| [Spektacular (Spek)](https://github.com/hivecommons/spektacular) | Creates speks and reviewed run plans for Hive long-running work. |
+| [Flue](https://github.com/withastro/flue) | Report-only external-execution binding pilot through `pkg/extwork` when built with `extwork_flue`. |
+| [Crustify](https://github.com/crustify-rs/crustify) / [Wavefront](https://github.com/crustify-rs/wavefront) | Work-source path for C/C++ to Rust migration graphs. |
+| [GitHub Agentic Workflows / gh-aw](https://github.com/hivecommons/hive/issues/10625) | Related workflow orchestration effort tracked for ecosystem positioning. |
+| [OpenAI Symphony](https://github.com/hivecommons/hive/issues/10626) | Related OpenAI multi-agent / orchestration work tracked for positioning. |
+| [Goose / Agentic AI Foundation](https://github.com/hivecommons/hive/issues/10627) | Goose is a Hive backend and an AAIF ecosystem project. |
+| [OpenHands](https://github.com/OpenHands/OpenHands) | New experimental Hive CLI backend, headless-only at the time of listing. |
+| [vibe-kanban](https://github.com/BloopAI/vibe-kanban) | Related agent-work coordination UI to watch alongside Hive's fleet dashboard and work-source model. |
 
 ## Infrastructure thanks
-
 
 ![Akamai (Linode) infrastructure provider](/integrations/akamai.svg) ![Oracle Cloud (OKE) infrastructure provider](/integrations/oracle.svg) ![Cloudflare DNS edge and tunnels provider](/integrations/cloudflare.svg) ![GitHub Copilot AI inference supporter](/integrations/github-copilot.svg) ![Bluehost domain hosting provider](/integrations/bluehost.svg)
 
@@ -181,33 +96,17 @@ Hive Commons thanks [Akamai (Linode)](https://www.linode.com/) and [Oracle Cloud
 
 ## Source control, work sources, and sign-in
 
-The product landing page groups runtime integrations separately from the agent
-CLI and inference list above. Current shipped surfaces are:
+The product landing page groups runtime integrations separately from the agent CLI and inference list above. Current shipped surfaces are:
 
-- **Source control:** GitHub and GitHub Enterprise are the production GitHub App
-  path. The forge-neutral adapter layer includes GitLab and Gitea / Forgejo
-  issue and change-request flows as those paths graduate.
-- **Work sources:** GitHub Issues (default), GitHub Projects, Linear, Jira
-  Cloud, Jira Data Center / Server (`deployment: datacenter`), Spektacular run
-  stages, and Crustify / Wavefront migration graphs.
-- **Sign-in:** Microsoft, GitHub, IBM, Google, and other OIDC providers by hub
-  configuration.
+- **Source control:** GitHub and GitHub Enterprise are the production GitHub App path. The forge-neutral adapter layer includes GitLab and Gitea / Forgejo issue and change-request flows as those paths graduate.
+- **Work sources:** GitHub Issues (default), GitHub Projects, Linear, Jira Cloud, Jira Data Center / Server (`deployment: datacenter`), Spektacular run stages, and Crustify / Wavefront migration graphs.
+- **Sign-in:** Microsoft, GitHub, IBM, Google, and other OIDC providers by hub configuration.
 
-Jira Data Center / Server support uses Jira REST API v2, preserves context-path
-base URLs, and supports Personal Access Token bearer auth or basic auth fallback.
-Custom CA and TLS trust settings are still in progress and are not listed as
-shipped stable functionality.
+Jira Data Center / Server support uses Jira REST API v2, preserves context-path base URLs, and supports Personal Access Token bearer auth or basic auth fallback. Custom CA and TLS trust settings are still in progress and are not listed as shipped stable functionality.
 
 ## Recent Hive platform additions
 
-- **Swarm mode:** per-repository swarms with idle-unlock, themes, Discord
-  announcements, and `/api/leaderboard/swarm`.
-- **The Commons:** contributors can subscribe to multiple hives, rank them, and
-  choose `ranked`, `spread`, or `neediest` routing; `hivectl hives web` opens a
-  local management UI.
-- **Teams and achievements:** distro / OS / agent team leaderboards are exposed
-  at `/api/leaderboard/teams`, and Achievements 2.0 adds Solo, Dual, Fireteam,
-  and Raid tiers plus the local-model track.
-- **Edge-only v6:** admin MCP (`/api/admin/mcp`, `cmd/hive-admin-mcp`) and the
-  dashboard Extensions tab for Spektacular are on the v6 edge branch until that
-  line is promoted.
+- **Swarm mode:** per-repository swarms with idle-unlock, themes, Discord announcements, and `/api/leaderboard/swarm`.
+- **The Commons:** contributors can subscribe to multiple hives, rank them, and choose `ranked`, `spread`, or `neediest` routing; `hivectl hives web` opens a local management UI.
+- **Teams and achievements:** distro / OS / agent team leaderboards are exposed at `/api/leaderboard/teams`, and Achievements 2.0 adds Solo, Dual, Fireteam, and Raid tiers plus the local-model track.
+- **Edge-only v6:** admin MCP (`/api/admin/mcp`, `cmd/hive-admin-mcp`) and the dashboard Extensions tab for Spektacular are on the v6 edge branch until that line is promoted.
