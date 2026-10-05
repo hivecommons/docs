@@ -23,6 +23,8 @@ const files: Array<{ source: string; target?: string }> = [
   // Operations pages — single-sourced from hive src/docs (previously hand-copied
   // into docs/content/hive and prone to drift; migrated to auto-sync).
   { source: "acmm-policy-matrix.md" },
+  // ACMM Level 6 operating guide (hivecommons/hive#10516, #10517).
+  { source: "running-at-level-6.md" },
   { source: "agent-configuration.md" },
   { source: "hivectl.md" },
   { source: "manual-provisioning.md" },
