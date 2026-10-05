@@ -35,6 +35,7 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "securing-your-hive.md" },
   { source: "troubleshooting.md" },
   { source: "backup-restore.md", target: "backup-dr.md" },
+  { source: "env-vars.md" },
   // Third-party integration guide (hivecommons/hive#10171).
   { source: "integration-guide.md" },
   { source: "integrations/work-source-providers.md" },
@@ -60,6 +61,7 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "adr/0017-podman-quadlet-lifecycle.md" },
 ];
 
+const localHiveDocs: Array<{ source: string; target?: string }> = [{ source: "public-knowledge-mcp.md" }];
 
 // ---------------------------------------------------------------------------
 // Brand scrub
@@ -115,7 +117,7 @@ const syncedRepoPaths = new Set(files.map(f => `src/docs/${f.source}`));
 // e.g. `src/docs/README.md` -> `/docs/hive/readme`,
 //      `src/docs/adr/0001-...md` -> `/docs/hive/adr/0001-...`.
 const repoPathToSiteRoute = new Map<string, string>();
-for (const f of files) {
+for (const f of [...files, ...localHiveDocs]) {
   const repoPath = `src/docs/${f.source}`;
   const target = f.target || f.source;
   const targetNoExt = target.replace(/\.mdx?$/i, "");
@@ -126,7 +128,7 @@ for (const f of files) {
 // `README.md` is intentionally excluded because it is ambiguous (root README vs
 // adr/README); those are only ever matched by exact path.
 const basenameToSiteRoute = new Map<string, string>();
-for (const f of files) {
+for (const f of [...files, ...localHiveDocs]) {
   const base = f.source.split("/").pop()!;
   if (base.toLowerCase() === "readme.md") continue;
   const target = f.target || f.source;
@@ -217,6 +219,14 @@ function rewriteLinks(content: string, sourceRepoPath: string): string {
 // Exported for unit testing (see scripts/sync-hive-docs.test.ts).
 export { rewriteLinkTarget, rewriteLinks };
 
+function applyLocalHiveOverlays(content: string, source: string): string {
+  if (source !== "adr/0011-knowledge-system.md") {
+    return content;
+  }
+
+  return `${content.trimEnd()}\n\n## Operator access\n\nFor the anonymous, read-only way to let external agents consult public operational facts, see [Public knowledge MCP endpoint](/docs/hive/public-knowledge-mcp).\n`;
+}
+
 async function fetchText(url: string): Promise<string> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -237,7 +247,8 @@ async function main() {
     }
     const content = await fetchText(sourceURL);
     // Rewrite GitHub-relative links so they resolve on the docs site.
-    const rewritten = rewriteLinks(content, `src/docs/${file.source}`);
+    const overlaid = applyLocalHiveOverlays(content, file.source);
+    const rewritten = rewriteLinks(overlaid, `src/docs/${file.source}`);
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
     fs.writeFileSync(
       targetPath,

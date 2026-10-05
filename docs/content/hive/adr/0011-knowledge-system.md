@@ -43,3 +43,7 @@ letting community and org knowledge flow down. The trade-off is a deliberately
 simple retrieval model: hashed term-frequency vectors and tag/graph edges are
 portable and inspectable, but lower quality than model embeddings, and stale or
 incorrect facts still need curation rather than blind injection.
+
+## Operator access
+
+For the anonymous, read-only way to let external agents consult public operational facts, see [Public knowledge MCP endpoint](/docs/hive/public-knowledge-mcp).

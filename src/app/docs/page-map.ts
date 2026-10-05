@@ -130,6 +130,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
     title: 'Integrating with Hive',
     items: [
       { 'Integration guide': 'integration-guide.md' },
+      { 'Public knowledge MCP endpoint': 'public-knowledge-mcp.md' },
       { 'Work-source providers': 'integrations/work-source-providers.md' },
       { 'Clanker (Flue-style) interface': 'integrations/clanker-flue.md' },
       { 'Spektacular project inception': 'integrations/spektacular.md' },
@@ -167,6 +168,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
         { '0016 CSP script-src scope': 'adr/0016-csp-script-src-scope.md' },
         { '0017 Podman Quadlet lifecycle': 'adr/0017-podman-quadlet-lifecycle.md' },
       ] },
+      { 'Environment variable reference': 'env-vars.md' },
     ]
   }
 ]
