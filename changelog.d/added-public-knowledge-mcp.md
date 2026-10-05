@@ -1,0 +1,1 @@
+- Document Hive's public, read-only Knowledge MCP endpoint and publish the Hive environment variable reference in site navigation.

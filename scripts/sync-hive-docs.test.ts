@@ -58,11 +58,15 @@ describe("rewriteLinkTarget — Case 2: escapes / unsynced -> absolute GitHub UR
     );
   });
 
-  it("sends an in-tree-but-UNSYNCED doc to GitHub (not synced by the script)", () => {
-    // env-vars.md exists in hive src/docs but is not on the sync allow-list,
-    // so links to it resolve to a GitHub blob URL rather than a site route.
+  it("routes the environment variable reference internally now that it is synced", () => {
     expect(rewriteLinkTarget("env-vars.md", README)).toBe(
-      "https://github.com/hivecommons/hive/blob/v5/src/docs/env-vars.md"
+      "/docs/hive/env-vars"
+    );
+  });
+
+  it("routes links to local Hive docs overlays internally", () => {
+    expect(rewriteLinkTarget("public-knowledge-mcp.md", README)).toBe(
+      "/docs/hive/public-knowledge-mcp"
     );
   });
 
