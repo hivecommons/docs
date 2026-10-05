@@ -12,8 +12,8 @@ human, and governance is enforced in code rather than in prose.
 
 Hive is a control layer for running governed fleets of AI coding agents.
 Agents pick up issues, open pull requests, review code, repair CI, and answer
-contributors — under a six-level maturity model (ACMM, the AI-native
-Capability Maturity Model) that decides exactly what they may do and enforces
+contributors — under a six-level maturity model (ACMM, the AI Codebase
+Maturity Model) that decides exactly what they may do and enforces
 it with matching least-privilege GitHub token scopes.
 
 - **Hub and spokes.** A single Go binary that runs as a Kubernetes workload, a
