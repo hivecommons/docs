@@ -64,9 +64,9 @@ function getFirstChildRoute(item: MenuItem): string | undefined {
   if (!item.children) return undefined;
   for (const child of item.children) {
     if (child.kind === 'Meta' || child.kind === 'Separator') continue;
-    if (child.route && child.route !== '#') return child.route;
-    const nested = getFirstChildRoute(child);
+    const nested = child.children ? getFirstChildRoute(child) : undefined;
     if (nested) return nested;
+    if (child.route && child.route !== '#') return child.route;
   }
   return undefined;
 }

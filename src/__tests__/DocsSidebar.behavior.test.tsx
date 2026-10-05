@@ -232,6 +232,7 @@ describe("DocsSidebar folder rows", () => {
           { name: "Placeholder", route: "#" },
           {
             name: "Inner",
+            route: "/docs/hive/deep/inner",
             children: [{ name: "Leaf", route: "/docs/hive/deep/inner/leaf" }],
           },
         ],
