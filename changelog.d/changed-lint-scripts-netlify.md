@@ -1,0 +1,1 @@
+- Run ESLint over `scripts/` and `netlify/` as well as `src/` (`npm run lint`), parse `.mts` files with the TypeScript parser, and allow `console` output in those CLI/serverless entry points (#218).

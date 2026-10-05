@@ -13,7 +13,7 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ["**/*.{js,jsx,ts,tsx}"],
+    files: ["**/*.{js,jsx,ts,tsx,mts}"],
     languageOptions: {
       parser: typescriptEslintParser,
       parserOptions: {
@@ -118,6 +118,14 @@ export default [
       "jsx-a11y/alt-text": "warn",
       "jsx-a11y/click-events-have-key-events": "warn",
       "jsx-a11y/no-static-element-interactions": "warn",
+    },
+  },
+  {
+    // Build/sync scripts and the Netlify function are CLI and serverless
+    // entry points: console.log is their output channel, not a leftover.
+    files: ["scripts/**/*.{js,ts}", "netlify/**/*.{js,ts,mts}"],
+    rules: {
+      "no-console": "off",
     },
   },
 ];
