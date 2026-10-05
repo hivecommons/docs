@@ -41,7 +41,7 @@ These backends are available but are experimental where Hive cannot wire local c
 | ![Aider open source coding agent](/integrations/aider.png) Aider | Aider CLI | `backend: aider` | Uses provider credentials and Hive-provided repository context. |
 | ![Kilo Code agent CLI](/integrations/kilo.png) Kilo Code | Kilo Code CLI | `backend: kilo` | Experimental local path; containerized operation is preferred. |
 | Oh My Pi | Oh My Pi CLI | `backend: omp` | Hub-agent method and experimental contributor-local backend. |
-| ![OpenHands agent CLI](/integrations/openhands.svg) OpenHands | OpenHands CLI, headless-only | `backend: openhands` | **New / experimental.** Added on the OpenHands backend branch and treated as T3 until it proves confinement and credential criteria. |
+| ![OpenHands agent CLI](/integrations/openhands.svg) OpenHands | OpenHands CLI, headless-only | `backend: openhands` | **New / experimental** ([hive#10634](https://github.com/hivecommons/hive/pull/10634)). Contributor relay only, headless mode only; T3 refusal-gated locally (`HIVE_OPENHANDS_DANGEROUSLY_RUN_UNCONFINED=1`) because the bare CLI has no sandbox Hive can wire. Not in the contributor image or the K8s headless allowlist. |
 
 ### Go-side only backend
 
@@ -86,7 +86,7 @@ Hive sits in a broader agentic-maintenance ecosystem. These projects are either 
 | [OpenAI Symphony](https://github.com/hivecommons/hive/issues/10626) | Related OpenAI multi-agent / orchestration work tracked for positioning. |
 | [Goose / Agentic AI Foundation](https://github.com/hivecommons/hive/issues/10627) | Goose is a Hive backend and an AAIF ecosystem project. |
 | [OpenHands](https://github.com/OpenHands/OpenHands) | New experimental Hive CLI backend, headless-only at the time of listing. |
-| [vibe-kanban](https://github.com/BloopAI/vibe-kanban) | Related agent-work coordination UI to watch alongside Hive's fleet dashboard and work-source model. |
+| [vibe-kanban](https://github.com/BloopAI/vibe-kanban) | Local kanban UI for coding-agent CLIs; a report-only Hive queue → board bridge is proposed in [hive#10641](https://github.com/hivecommons/hive/issues/10641). |
 
 ## Infrastructure thanks
 
