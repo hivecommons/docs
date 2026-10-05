@@ -124,6 +124,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Release channels': 'release-channels.md' },
       { 'Backup and disaster recovery': 'backup-dr.md' },
       { 'Running on macOS': 'macos.md' },
+      { 'Running at ACMM Level 6': 'running-at-level-6.md' },
     ]
   },
   {
@@ -143,7 +144,6 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Security model': 'security-model.md' },
       { 'Security threat model': 'security-threat-model.md' },
       { 'ACMM policy matrix': 'acmm-policy-matrix.md' },
-      { 'Running at ACMM Level 6': 'running-at-level-6.md' },
     ]
   },
   {
