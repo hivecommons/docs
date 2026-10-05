@@ -267,6 +267,19 @@ Agent **identity** is derived from the connection's owning UID (`/proc/net/tcp`
 repo outside the configured set. Only `api.github.com` is inspected; `github.com`
 (OAuth, git smart-HTTP) is tunneled opaquely.
 
+### Structural dependency ratchets
+
+Some guardrails are intentionally mechanical ratchets rather than immediate
+decomposition work. `internal/testutil/sleep_ratchet_test.go` prevents fixed
+test sleeps from regrowing, and
+`internal/testutil/dashboard_import_ratchet_test.go` does the same for
+`pkg/dashboard` coupling: it scans the top-level dashboard package's non-test Go
+files, collapses internal imports to `github.com/hivecommons/hive/pkg/<x>`, and
+compares them to `internal/testutil/dashboard_import_allowlist.txt`. New
+top-level `pkg/` dependencies must route through an existing seam or be added to
+the allowlist with PR justification, while stale allowlist entries must be
+removed so the dependency surface only shrinks.
+
 ---
 
 ## 6. ACMM — controlling agent autonomy
@@ -281,8 +294,8 @@ flowchart LR
     L2["L2 Advisory<br/>observe + report"]
     L3["L3 Quality-Gated<br/>quality opens PRs"]
     L4["L4 Security-Aware<br/>more agents file/PR"]
-    L5["L5 Semi-Autonomous<br/>all PRs, hold-gated"]
-    L6["L6 Fully Autonomous<br/>auto-merge on green"]
+    L5["L5 Semi-Autonomous<br/>all PRs, hold gated"]
+    L6["L6 Fully Autonomous<br/>auto-merge switches on"]
     L1 --> L2 --> L3 --> L4 --> L5 --> L6
 ```
 
@@ -290,10 +303,10 @@ flowchart LR
 |-------|------|------------------|
 | L1 | Inception (Assisted) | Advisory beads + project inception only |
 | L2 | Advisory (Instructed) | Observe and report findings as beads; no GitHub writes |
-| L3 | Quality-Gated (Measured) | `quality` opens hold-gated PRs about testing gaps, coverage, and CI health; others advisory. This measurement foundation is what earns automation at higher levels |
-| L4 | Security-Aware (Adaptive) | All agents file issues (bugs, docs, workflows, vulns); still no PRs |
-| L5 | Semi-Autonomous (Semi-Automated) | All agents open PRs — every PR carries a `hold` label for human review |
-| L6 | Fully Autonomous | Agents open PRs and **auto-merge on green CI**; no hold required |
+| L3 | Quality-Gated (Measured) | `quality` opens PRs gated by literal `hold` about testing gaps, coverage, and CI health; others advisory. This measurement foundation is what earns automation at higher levels |
+| L4 | Security-Aware (Adaptive) | All agents file issues; quality, ci-maintainer, and sec-check can open PRs gated by literal `hold` |
+| L5 | Semi-Autonomous (Semi-Automated) | All agents open PRs — every PR carries literal `hold` for human review |
+| L6 | Fully Autonomous | Agents open PRs and **auto-merge on green CI**; switching to L6 enables auto-merge for every active repo, owners may toggle repos afterward, non-outreach PRs have no level hold, outreach PRs remain held |
 
 `supervisor` is always advisory. The full matrix is in
 [`acmm-policy-matrix.md`](/docs/hive/acmm-policy-matrix).
