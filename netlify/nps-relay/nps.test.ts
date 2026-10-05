@@ -7,12 +7,12 @@ const { getStore, handleRelayRequest } = vi.hoisted(() => ({
 
 vi.mock("@netlify/blobs", () => ({ getStore }));
 
-vi.mock("../nps-relay/relay", async importOriginal => {
-  const actual = await importOriginal<typeof import("../nps-relay/relay")>();
+vi.mock("./relay", async importOriginal => {
+  const actual = await importOriginal<typeof import("./relay")>();
   return { ...actual, handleRelayRequest };
 });
 
-import handler, { config } from "./nps.mjs";
+import handler, { config } from "../functions/nps.mjs";
 import {
   ACK_PATH,
   HUB_SECRET_HASH_ENV,
@@ -21,7 +21,7 @@ import {
   RELAY_BASE_PATH,
   STORE_NAME,
   type RelayDeps,
-} from "../nps-relay/relay";
+} from "./relay";
 
 const ORIGIN = "https://relay.test";
 const CONTEXT_IP = "203.0.113.7";
