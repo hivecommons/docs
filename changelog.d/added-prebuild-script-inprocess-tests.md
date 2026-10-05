@@ -1,0 +1,1 @@
+- Add in-process tests for the prebuild scripts `scripts/generate-shared-config.ts` and `scripts/update-meeting-recordings.ts` so coverage attributes them (previously only exercised through a spawned `tsx` child), and ratchet the Vitest coverage thresholds.
