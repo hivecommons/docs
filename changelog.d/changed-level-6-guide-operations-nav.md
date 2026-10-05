@@ -1,0 +1,1 @@
+- Move the Level 6 operating guide from the Security to the Operations section of the Hive docs navigation, completing the publication of the operator's guide.
