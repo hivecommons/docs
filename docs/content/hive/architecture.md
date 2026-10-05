@@ -271,7 +271,7 @@ repo outside the configured set. Only `api.github.com` is inspected; `github.com
 
 ## 6. ACMM — controlling agent autonomy
 
-The **AI-native Capability Maturity Model** is the single dial an operator turns.
+The **AI Codebase Maturity Model** is the single dial an operator turns.
 The level maps deterministically to per-agent modes via `DefaultAgentMode`, which
 in turn sets the guardrails in §5. Raising the level is always a human decision.
 
