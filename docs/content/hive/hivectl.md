@@ -127,6 +127,7 @@ hivectl agent prompt get quality --raw
 hivectl agent prompt set quality --file quality.md
 hivectl agent model-set quality claude-sonnet-4-6
 hivectl agent backend-set quality claude
+hivectl agent jev-mode-set scanner assist                  # Jev typed-decision tool: off | assist
 hivectl agent pipeline-set quality --file pipeline.yaml   # map of step: bool
 ```
 
@@ -545,6 +546,9 @@ implementation of the profiles file here.
 |---|---|
 | `j` / `k`, `↓` / `↑` | Move the cursor |
 | `enter` | Make the selected hive active — the same effect as `hivectl hives use` |
+| `[` / `]` | Move the selected hive up or down in The Commons rank |
+| `s` | Cycle the relay routing strategy: `ranked` → `spread` → `neediest` |
+| `e` | Enable/disable new work for the selected hive, retaining its credentials |
 | `a` | Add a hive: a two-field form (name, hub URL), then the registration POST |
 | `d` | Remove the selected hive — asks you to type its name, as the CLI does |
 | `r` | Rename the selected hive |
@@ -560,12 +564,12 @@ Opening the overlay migrates a legacy positional `contributor.env` exactly as
 the first `hivectl hives` command would, and leaves that file byte-identical
 until something actually changes. Every mutation then writes `profiles.yml`
 first and regenerates `contributor.env` from it, so the relay keeps reading the
-variables it always has. **`enter` can move a running relay without a restart**
-— like the CLI, it reorders the projection and then signals the relay recorded in
-`contributor-relay.pid` (or its docker/podman container) to reload it. Work
-already in flight stays with the hub that assigned it; the next solicitation
-goes to the newly active hive. If no relay is running, the next relay start
-uses the new active hive first.
+variables it always has, plus `HIVE_COMMONS_STRATEGY`. **`enter`, `[`/`]` and
+`s` can move a running relay without a restart** — like the CLI, they rewrite
+the projection and then signal the relay recorded in `contributor-relay.pid`
+(or its docker/podman container) to reload it. Work already in flight stays with
+the hub that assigned it; the next solicitation uses the new rank/strategy. If
+no relay is running, the next relay start uses the saved Commons settings.
 
 Two safety properties carry over from the CLI, unchanged:
 
@@ -676,10 +680,17 @@ repository PAT or long-lived secret.
 hivectl hives list                                            # active hive marked *
 hivectl hives list --check -o json                            # also probe each hub
 hivectl hives add acme --hub wss://acme.hive.hivecommons.dev/contribute
+hivectl hives reissue acme                                    # rotate one saved profile
+hivectl hives reissue acme --hub wss://acme.hive.hivecommons.dev/contribute
 hivectl hives use acme
 hivectl hives export acme --out acme.hive-profile
 hivectl hives import acme.hive-profile --name acme-laptop
 hivectl hives session acme --label review
+hivectl hives move acme up                                    # rank order
+hivectl hives strategy spread                                 # ranked|spread|neediest
+hivectl hives disable acme                                    # pause new work, keep credentials
+hivectl hives enable acme                                     # resume without registering again
+hivectl hives web                                             # loopback web UI for The Commons
 hivectl hives rename acme acme-prod
 hivectl hives remove acme                                     # confirm, or --yes
 ```
@@ -692,6 +703,7 @@ it reads and writes your own contributor credentials, so `--server` and
 ```yaml
 version: 1
 active: acme
+commons_strategy: ranked
 profiles:
     - name: acme
       hub: wss://acme.hive.hivecommons.dev/contribute
@@ -704,9 +716,11 @@ profiles:
 `~/.config/hive/contributor.env` becomes a **generated projection** of that
 file. The relay, `src/compose-contributor.yaml` and `just contribute-k8s` keep
 reading the same `HIVE_HUB` / `HIVE_REGISTRATION_TOKEN` / `CONTRIBUTOR_ID`
-lists they always have; the active hive is written first in each, which is the
-hub the relay solicits from at startup (`activeHubIndex` 0 in
-`bin/contributor-relay.js`). Keys the projection does not own —
+lists they always have; the active/top-ranked hive is written first in each,
+which is the hub the relay solicits from at startup (`activeHubIndex` 0 in
+`bin/contributor-relay.js`). `HIVE_COMMONS_STRATEGY` is written alongside the
+lists so the long-running relay can choose its next hive between tasks. Keys the
+projection does not own —
 `CONTRIBUTOR_USERNAME`, `AGENT_BACKEND`, `HIVE_LITELLM_ENDPOINT` — are carried
 across rather than dropped, and the previous file is kept at
 `contributor.env.bak`.
@@ -725,14 +739,45 @@ Notes:
 
 - **The same list is in the TUI.** `just contribute-tui` (or `hivectl tui --hives`) opens the
   [Hives overlay](#hives-switching-the-hive-you-contribute-to): the same rows,
-  with `enter` to switch and `a`/`d`/`r` to add, remove and rename. It calls
-  these same functions, so either surface leaves the files in the same state.
-- **`use` switches a running relay.** It reorders the projection, then signals
-  the relay advertised in `contributor-relay.pid` (or its recorded
-  docker/podman container) to reload `contributor.env`. The task currently in
-  flight finishes on the hub that assigned it; the next solicitation goes to
-  the newly active hive. If no relay is running, the next relay start uses the
-  new active hive first.
+  with `enter` to switch, `[`/`]` to rank, `s` to cycle the strategy, `e` to enable/disable and
+  `a`/`d`/`r` to add, remove and rename. It calls these same functions, so
+  either surface leaves the files in the same state.
+- **Disable instead of removing a hive to pause it.** `hivectl hives disable <name>`
+  (or `just contribute-hives disable <name>`) preserves its URL, registration token,
+  contributor ID and rank. `enable <name>` restores eligibility without registration
+  or token rotation. Existing profiles default to enabled. Disabled profiles remain
+  visible in the CLI/TUI but are excluded from new work under **every** strategy;
+  selecting one as active does not re-enable it. Disable every other hive to focus
+  exclusively on one, even when it has no jobs. Changes signal the running relay
+  to reload immediately, without interrupting work on its original hive. With all
+  profiles disabled, the relay reports why it is idle and waits for an enable.
+  The generated `HIVE_HUB_DISABLED` boolean list follows the same profile ordering
+  as the hub/token/contributor-ID lists; disabled entries are not removed from
+  any credential list. Upgrade the relay together with `hivectl`: older relays
+  do not understand this local routing control.
+- **The Commons strategies choose only between tasks.** `ranked` (the default)
+  asks the highest-ranked hive first and falls through only when it reports no
+  work; `spread` uses rank-weighted rotation with occasional mixing so lower
+  ranked hives still receive some of your daily allotment; `neediest` polls
+  each hub's `/api/contribute/status` and prefers queued actionable work,
+  lightly boosted by idle contributor capacity when the hub reports
+  `active_contributors` and `total_registered`. The existing contributor quota
+  guard still runs before an offered task is accepted, so a local
+  daily/subscription cap can hold the relay regardless of which hive The
+  Commons picked.
+- **The Commons web UI is local-only.** `hivectl hives web` prints a
+  tokenized `http://127.0.0.1:<port>/` URL, serves only on loopback, and backs
+  the page with the same `profiles.yml` / generated `contributor.env` store as
+  the CLI and TUI. The page can subscribe (register) a hive, unsubscribe, drag
+  rows or use ↑/↓ to rank them, and choose `ranked`, `spread` or `neediest`.
+  The API and HTML never return registration tokens; the printed URL carries a
+  short-lived local UI token and should not be shared.
+- **`use`, `move` and `strategy` switch a running relay.** They regenerate the
+  projection, then signal the relay advertised in `contributor-relay.pid` (or
+  its recorded docker/podman container) to reload `contributor.env`. The task
+  currently in flight finishes on the hub that assigned it; the next
+  solicitation goes to the newly selected hive. If no relay is running, the next
+  relay start uses the saved Commons settings.
 - **Last seen is local relay state.** `hives list` reads
   `~/.config/hive/hubs-seen.json`, written by the relay after `auth_ok` and
   successful heartbeats at most once a minute. A `-` means this machine has not
@@ -742,10 +787,23 @@ Notes:
   `gh` login or the backend CLI preflight, so a first-time machine still wants
   `just contribute-setup <backend>`. No bearer credential is sent to the hub.
 - **Already registered elsewhere?** The register endpoint is unauthenticated,
-  so the hub will never hand an existing contributor's token back. Add the
-  credential you already hold instead:
+  so the hub will never hand an existing contributor's token back. On a
+  profile-store machine, rotate and save only that one profile with
+  `hivectl hives reissue acme --hub <url>` (or omit `--hub` when `acme`
+  already exists locally). If you want to keep the old machine working, use
+  `hivectl hives export` on the holding machine and `hivectl hives import` on
+  the new one. Add the credential you already hold instead only when you have
+  the token and contributor id in hand:
   `printf '%s' "$TOKEN" | hivectl hives add acme --hub <url> --token-stdin --contributor-id <id>`,
-  or move the identity with `just contribute-move`.
+  `just contribute-move` is unsafe with profiles because it rewrites
+  `contributor.env` behind `profiles.yml`; the next profile-store command
+  regenerates `contributor.env` from `profiles.yml`.
+- **`reissue` rotates exactly one hive token.** It calls the hub's
+  authenticated `/api/contribute/reissue-token` endpoint using your local `gh`
+  token, replaces only the named profile's registration token in
+  `profiles.yml`, and regenerates `contributor.env` through the profile store.
+  If the hub says this GitHub account is not registered, run
+  `hivectl hives add <name> --hub <url>` instead.
 - **Moving a profile to another machine:** `hivectl hives export <name> --out
   <file>` writes one passphrase-encrypted bundle. On the other machine,
   `hivectl hives import <file> [--name <new-name>]` decrypts, validates and

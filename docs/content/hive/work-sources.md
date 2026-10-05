@@ -48,7 +48,7 @@ currently working is not offered again, and `implement` is listed only once the
 run's imported plan is approved. The hive binary wires that accessor during
 dashboard boot; if the accessor is unavailable, the additive source fails
 closed by listing no run stages. The Spektacular (Spek) stage runner that advances the
-lease is described in [spektacular.md](https://github.com/hivecommons/hive/blob/v5/src/docs/spektacular.md).
+lease is described in [spektacular.md](/docs/hive/integrations/spektacular).
 
 ## Wavefront migration graph (`wavefront.enabled: true`)
 
@@ -79,6 +79,11 @@ byte-identical to a hive that has never heard of the block. Exactly one of
 is re-read on every governor cycle, so a plan Wavefront republishes is picked
 up without a restart. `receipts_dir` is optional; empty keeps receipts in
 memory for the life of the process.
+
+Dashboard owners can configure the same `wavefront` block from **Settings →
+Governor → Work Source → Wavefront (Crustify) migration graph** instead of
+hand-editing `hive.yaml`; the URL source expects a plain unauthenticated JSON
+document, matching the YAML-only configuration.
 
 **Graph document.** A JSON object with a `graph` name, a `revision`, and a
 `nodes` list. Each node has `id`, `title`, an optional `kind`, an optional
@@ -233,8 +238,7 @@ that include the instance context path, such as
 ([Atlassian Jira Data Center REST API reference](https://docs.atlassian.com/software/jira/docs/api/REST/9.14.0/)).
 Atlassian's server examples use `/rest/api/2/...` endpoints for issues and
 searches ([Jira REST API examples](https://developer.atlassian.com/server/jira/platform/jira-rest-api-examples/)).
-Data Center PATs are available in Jira Core/Software 8.14+ and are sent as
-bearer tokens ([Using Personal Access Tokens](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html)).
+Data Center PATs are available in Jira Core/Software 8.14+ and are sent with Jira Data Center's bearer-token HTTP authentication ([Using Personal Access Tokens](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html)).
 Jira Cloud rich text comments/descriptions use ADF JSON
 ([Atlassian Document Format](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/));
 Data Center accepts plain text / wiki-markup string bodies.
@@ -266,6 +270,10 @@ governor:
       # Or, for older instances without PATs:
       # username: hive-bot
       # password: ${JIRA_DATACENTER_PASSWORD}
+      # ca_bundle: ${JIRA_DATACENTER_CA_BUNDLE}    # optional PEM, appended to system roots
+      # insecure_skip_verify: false                # optional, unsafe; testing only
+      # client_cert: ${JIRA_DATACENTER_CLIENT_CERT} # optional mTLS PEM
+      # client_key: ${JIRA_DATACENTER_CLIENT_KEY}   # optional mTLS PEM key
       project_keys: [ENG, OPS]
       repo: your-org/default-repo
       hold_labels: [hold, blocked]
@@ -281,6 +289,10 @@ Config fields (`JiraSourceConfig`, `pkg/config/config.go`):
 | `username` | `Username` | DC basic auth only | Jira Data Center username when using basic auth. |
 | `api_token` | `APIToken` | Cloud yes; DC preferred | Cloud API token (Basic password) or Data Center Personal Access Token (Bearer). |
 | `password` | `Password` | DC basic auth only | Jira Data Center password, used only when `api_token` is empty. Prefer PATs where supported. |
+| `ca_bundle` | `CABundle` | No | Data Center only. PEM CA certificate bundle appended to system trust roots. May be a `${ENV}` reference or pasted PEM; dashboard responses expose only `ca_bundle_set`. |
+| `insecure_skip_verify` | `InsecureSkipVerify` | No | Data Center only. Disables server certificate and hostname verification. Default `false`; use only for testing. The dashboard warns loudly and the adapter logs a warning whenever this client is built. |
+| `client_cert` | `ClientCert` | No | Data Center only. Optional PEM client certificate for mTLS; set with `client_key`. Dashboard responses expose only `client_cert_set`. |
+| `client_key` | `ClientKey` | No | Data Center only. Optional PEM private key for mTLS; set with `client_cert`. Dashboard responses expose only `client_key_set`. |
 | `project_keys` | `ProjectKeys` | No¹ | Project keys to enumerate, e.g. `["ENG","OPS"]`. Used to build the default JQL when `jql` is empty. |
 | `jql` | `JQL` | No | Full JQL override. When empty, the adapter builds `project in (<keys>) AND statusCategory != Done AND issuetype != Epic`. |
 | `repo` | `Repo` | Yes in practice | GitHub `owner/name` repo agents clone to work these issues; every returned `Issue.Repo` is set to this single value — Jira source config maps to exactly one repo, unlike Linear's per-team repo map. |
@@ -298,6 +310,15 @@ password. Jira Data Center sends the PAT as bearer-token HTTP auth when
 Supply secrets via `${JIRA_API_TOKEN}` / `${JIRA_DATACENTER_PAT}` /
 `${JIRA_DATACENTER_PASSWORD}` environment-variable substitution in `hive.yaml`
 — never inline literal credentials in committed config.
+
+**TLS for Data Center.** If Jira is signed by an internal CA, set
+`ca_bundle` to a PEM bundle (or `${JIRA_DATACENTER_CA_BUNDLE}`) and Hive
+appends those roots to the system trust store. mTLS is optional: provide both
+`client_cert` and `client_key` as PEM values or environment references. The
+dashboard's Work Source tab shows these Data Center-only fields as write-only
+set/unset indicators. `insecure_skip_verify` remains off by default; when
+enabled it bypasses TLS verification, should be limited to testing, and emits a
+warning every time the Jira client is built.
 
 **Data model differences.** Cloud users expose `accountId` and rich-text
 description/comment bodies as ADF JSON. Data Center commonly exposes users by

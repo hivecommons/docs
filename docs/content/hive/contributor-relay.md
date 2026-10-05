@@ -4,6 +4,8 @@
 
 ClankeR lets a contributor lend their local AI CLI subscription to a hive. A contributor runs a small relay process on their machine; the hive assigns it real work — issues from the project's queue — and the contributor's agent executes each task locally with the CLI and model of their choice, reporting completion/PR metadata back over a WebSocket.
 
+For labels that make work eligible or ineligible for contributors, see [Hive Labels and Control Signals](https://github.com/hivecommons/hive/blob/v5/src/docs/labels-and-control-signals.md). For help getting to your first PR, [Join our Discord](https://hivecommons.dev/discord).
+
 The relay turns a hive from a fixed set of resident agents into an elastic swarm: the admin curates *what* is offered (which repos, which labels, which models are acceptable), and contributors decide *how* it gets done (their CLI, their model, their compute, their tokens). The relay connects to `/api/contribute/ws`, receives one task at a time, runs the selected CLI in the contributor's environment, and reports the result back.
 
 ## How it fits together
@@ -28,6 +30,11 @@ sequenceDiagram
 
 ## Basic setup
 
+For a homelab service with accounts independent of the host, use the
+[published-image Compose example](https://github.com/hivecommons/hive/blob/v5/src/examples/contributor-isolated/README.md).
+It keeps GitHub, Codex, Hive configuration and work in a named volume and
+requires no host GitHub or provider CLI installation.
+
 From a checkout of this repository:
 
 ```bash
@@ -46,8 +53,8 @@ Management). The dashboard shows those links on Onboarding and Operations, and
 the hub includes them in `auth_ok` so the relay prints them once when it
 connects. Use it for contributor docs, Discord/Slack invites, or a maintainer
 issue queue. Discord `https://discord.com/channels/<server>/<channel>` URLs only
-work for people already in that server; use a `https://discord.gg/...` invite if
-new contributors need to join.
+work for people already in that server; use `https://hivecommons.dev/discord` if
+new contributors need to join the Hive Commons Discord.
 
 `contribute-hive` starts the relay in one of two modes:
 
@@ -116,7 +123,10 @@ Important environment variables:
 | --- | --- | --- |
 | `HIVE_HUB` | value from `contributor.env`, else public hub default | WebSocket hub(s) to subscribe to. Use comma-separated URLs for multi-hub mode. Direct Compose reads the registered value from the mounted config file. |
 | `HIVE_REGISTRATION_TOKEN` | value from `contributor.env` | Registration token(s), positional with `HIVE_HUB` when multiple hubs are listed. Required; run `just contribute-setup` first. |
-| `AGENT_BACKEND` | `claude` | CLI/backend to run (`claude`, `copilot`, `goose`, `bob`, `codex`, `pi`, `aider`, `litellm`, `agy`, `opencode`, `kilo`, `muse`, `omp`, depending on image support and credentials). `omp` is interactive-only: Hive starts normal `omp --model <id>` in the prepared tmux cwd and passes no fabricated permission flags. It has no verified local confinement mechanism, so local mode refuses it without `HIVE_OMP_DANGEROUSLY_RUN_UNCONFINED=1`; container mode is the supported boundary. `agy` has the same confinement limit. `opencode`, `kilo`, and `muse` only run headless (`CONTRIBUTOR_MODE=headless`) — hive has no interactive-tmux wiring for them. |
+| `HIVE_COMMONS_STRATEGY` | `ranked` | Multi-hive routing strategy for The Commons. `ranked` solicits the first subscribed hive and falls through only when it has no work; `spread` rotates with rank weights and periodic mixing; `neediest` scores each hub's `/api/contribute/status` by `actionable_items` with a small boost for idle contributor capacity (`total_registered - active_contributors`) when those fields are present. The relay evaluates this only when it is ready for another task, never while a lease is in flight. |
+| `HIVE_COMMONS_SPREAD_MIX_EVERY` | `7` | In `spread`, every N completed/failed tasks the next hive is chosen randomly from the weighted rank cycle instead of by cursor. Set `0` to disable mixing. |
+| `HIVE_COMMONS_NEEDIEST_REFRESH_MS` | `60000` | In `neediest`, how often to refresh each subscribed hub's `/api/contribute/status` cache. Set `0` to rely on auth-time/manual refreshes only. |
+| `AGENT_BACKEND` | `claude` | CLI/backend to run (`claude`, `copilot`, `goose`, `bob`, `codex`, `pi`, `aider`, `litellm`, `agy`, `opencode`, `kilo`, `muse`, `omp`, `openhands`, depending on image support and credentials). `omp` is interactive-only: Hive starts normal `omp --model <id>` in the prepared tmux cwd and passes no fabricated permission flags. It has no verified local confinement mechanism, so local mode refuses it without `HIVE_OMP_DANGEROUSLY_RUN_UNCONFINED=1`; container mode is the supported boundary. `agy` has the same confinement limit. `opencode`, `kilo`, `muse`, and `openhands` only run headless (`CONTRIBUTOR_MODE=headless`) — hive has no interactive-tmux wiring for them. |
 | `AGENT_MODEL` | unset (backend default) | Optional model override passed to the contributor agent (e.g. `claude-sonnet-4-6`, `gpt-4o`, `gemini-2.5-pro`). Declared to the hive when the relay connects. |
 | `AGENT_REASONING_EFFORT` | unset | Reasoning effort override. Consumed by `codex` (`-c model_reasoning_effort`), by `agy` (`--effort low\|medium\|high`, required whenever a model is set, else agy ignores the model), by `muse` (`--reasoning-effort none\|minimal\|low\|medium\|high\|xhigh\|max\|ultra`, applied with or without a model; a value outside that set is dropped rather than passed, because muse exits 2 on it), and by `claude` (`--effort low\|medium\|high\|xhigh\|max`, applied with or without a model; a value outside that set is dropped the same way, and unset leaves Claude Code at its own default - [#8377](https://github.com/hivecommons/hive/issues/8377)). Ignored by other backends, including inference routes such as `litellm` that drive the claude binary. |
 | `HIVE_CONTRIBUTOR_KNOWLEDGE_EXPORT_MAX_FACTS` | `80` | Maximum entries in the `/api/knowledge/export` response when it is fetched with a contributor registration token. Owner/API-token exports remain full; contributor startup context receives a bounded summary with a truncation marker and should fetch more specific entries on demand with `hive knowledge` or the Hive MCP knowledge tool. |
@@ -124,7 +134,9 @@ Important environment variables:
 | `CONTRIBUTOR_MODE` | `interactive` | `interactive` keeps a tmux/TTY session. `headless` is for one-shot/no-TTY task delivery. |
 | `HIVE_AGENT_SESSION` | `contributor` | tmux session name for interactive mode. |
 | `HIVE_SESSION` | backend name (`AGENT_BACKEND`) | Optional session label for running multiple relays under one GitHub account (see [Running multiple backends under one account](#running-multiple-backends-under-one-account)). Relays with distinct labels get independent session-scoped identities (`ContributorID#session`) on the hub, so their task leases, assignment cooldowns, failure streaks, and ownership fences do not collide. Auth, trust tier, model admission, and rate-limit accounting stay per-account. Sanitized on the hub: only `[A-Za-z0-9._-]` survive, capped at 32 bytes; a label that sanitizes to empty counts as unset. Set it to the **empty string** to opt out — the relay then declares no session and keeps the bare per-account identity (the historical single-session behavior). |
-| `HIVE_CONTRIBUTOR_QUOTA_GUARD` | `ask` | Contributor-local subscription quota guard mode. `ask` and `pause` hold new work when a normalized quota window is at or below the configured reserve; `off` is the explicit launch-time opt-out for this relay session. Headless/no-response sessions wait safely rather than spending the last quota headroom. The guard can only act when a reading source is available — either `HIVE_CONTRIBUTOR_QUOTA_READING_FILE` / `HIVE_CONTRIBUTOR_QUOTA_READING_JSON`, or, for a **supported subscription backend** (`claude`, `pi`, `codex`, `agy`, `gemini`), the reading the Go rotation probers publish — into `HIVE_CONTRIBUTOR_QUOTA_POOL_DIR` when that is set, otherwise the per-install derived pool directory, so publishing is default-on (hivecommons/hive#6967, hivecommons/hive#6987). The publisher no longer requires provider rotation to be enabled: when `governor.rotation.enabled` is false (the default), the spoke runs a publish-only prober loop that publishes readings without rotating anything, so any host running `hive` gets a publisher. A host running **only** the relay (no local `hive` process) still has no publisher and stays on this guard's no-source behaviour. With none of those it has nothing to read, logs that it is not guarding anything, and admits work. |
+| `HIVE_CONTRIBUTOR_TEAM_METADATA` | unset | Opt in to the lightweight team-structure metadata used by `/api/leaderboard/teams` and the Leaderboard tab's team leagues. When set to `1`, `true`, `yes`, or `on`, the relay sends only distro/OS family (`/etc/os-release` ID, NAME, VERSION_ID, ID_LIKE on Linux), kernel release (`uname -r`), and agent backend. It never sends hostnames, local usernames, IPs, or hardware IDs. |
+| `HIVE_TEAM_OS_FAMILY` / `HIVE_TEAM_OS_ID` / `HIVE_TEAM_OS_NAME` / `HIVE_TEAM_OS_VERSION_ID` / `HIVE_TEAM_OS_ID_LIKE` / `HIVE_TEAM_KERNEL_RELEASE` / `HIVE_TEAM_AGENT_BACKEND` | auto-detected when team metadata is enabled | Optional overrides for the opt-in team declaration. Use these when a container should represent the host distro, a WSL relay should declare Windows/WSL, or an operator wants to join a cultural team without exposing exact release text. |
+| `HIVE_CONTRIBUTOR_QUOTA_GUARD` | `ask` | Contributor-local subscription quota guard mode. `ask` and `pause` hold new work when a normalized quota window is at or below the configured reserve; `off` is the explicit launch-time opt-out for this relay session. Headless/no-response sessions wait safely rather than spending the last quota headroom. The guard can only act when a reading source is available — either `HIVE_CONTRIBUTOR_QUOTA_READING_FILE` / `HIVE_CONTRIBUTOR_QUOTA_READING_JSON`, or, for a **supported subscription backend** (`claude`, `pi`, `codex`, `agy`, `gemini`), the reading the Go rotation probers publish — into `HIVE_CONTRIBUTOR_QUOTA_POOL_DIR` when that is set, otherwise the per-install derived pool directory, so publishing is default-on (hivecommons/hive#6967, hivecommons/hive#6987). The publisher no longer requires provider rotation to be enabled: when `governor.rotation.enabled` is false (the default), the spoke runs a publish-only prober loop that publishes readings without rotating anything, so any host running `hive` gets a publisher. A host running **only** the relay (no local `hive` process) gets its publisher from the standalone contributor launch paths instead (`hive-quota-publisher`, hivecommons/hive#10299, below); with that opted out or unavailable it stays on this guard's no-source behaviour. With none of those it has nothing to read, logs that it is not guarding anything, and admits work. |
 | `HIVE_CONTRIBUTOR_QUOTA_MIN_REMAINING_PCT` | `20` | Default remaining-percentage reserve for every quota window, **including kinds this build does not recognize** — an exhausted unfamiliar window holds work rather than being skipped, because providers add window kinds over time (`weekly_scoped` was one). A *healthy* unrecognized window still admits. Valid range is `0`–`100`; invalid values fail relay startup with a message naming the bad variable. The reserve reduces the chance of consuming paid/extra usage but cannot guarantee a task will finish within a provider window. |
 | `HIVE_CONTRIBUTOR_QUOTA_SHORT_MIN_REMAINING_PCT` | unset | Optional short-window reserve override for normalized `session`/`five_hour` quota windows; inherits `HIVE_CONTRIBUTOR_QUOTA_MIN_REMAINING_PCT` when unset. |
 | `HIVE_CONTRIBUTOR_QUOTA_WEEKLY_MIN_REMAINING_PCT` | unset | Optional weekly reserve override for normalized `weekly` and `weekly_scoped` quota windows; inherits `HIVE_CONTRIBUTOR_QUOTA_MIN_REMAINING_PCT` when unset. |
@@ -134,6 +146,7 @@ Important environment variables:
 | `HIVE_CONTRIBUTOR_QUOTA_RETRY_MS` | `60000` | How often a guarded relay re-reads the quota and re-advertises `ready` once every effective reserve is clear. Must be a positive integer of milliseconds. An explicit contributor pause outranks a recovered reading. |
 | `HIVE_CONTRIBUTOR_QUOTA_POOL_DIR` | derived per-install | Directory for the cross-process quota-pool store (hivecommons/hive#6953) **and** the automatically-published quota reading (hivecommons/hive#6967). When set, relays that resolve to the same pool key share one guard state through atomically-written files: a peer relay holding an in-flight task reserves the pool so a second relay on the same account cannot independently oversubscribe the reserve, and this is the directory the out-of-band `just contribute-quota …` controls write overrides into. It is also where the Go rotation probers publish a normalized reading (`<poolKey>.reading.json`, written temp-file-plus-rename so a reader never sees a torn file): a **supported** subscription backend then reads its guard reading from here without any hand-configuration. **Publishing is default-on (hivecommons/hive#6987):** when this is unset, the publisher and relay derive the same per-install directory (`$XDG_CONFIG_HOME` or the platform user-config dir, joined with `hive/contributor-quota`), so a default install of a supported backend gets a reading with no env var — setting this only overrides the location, or points a shared pool at a common path. With an **explicit** dir, a not-yet-landed or torn reading **holds** (the operator declared a publisher for the pool); with the **derived default** dir, a *present* reading is evaluated (a torn/`unknown` one still holds — fail-closed), a *missing* one holds when a fresh `<poolKey>.publisher.json` presence marker declares a live publisher for the pool (hivecommons/hive#6987 condition (b)), and only a missing reading with no fresh marker falls through to `unprovisioned`/admit, so a host with genuinely no publisher is never stranded holding forever. The cross-process store proper stays opt-in on an explicit dir. |
 | `HIVE_CONTRIBUTOR_QUOTA_POOL_ACCOUNT` | unset | Account component of the pool key. It is **hashed** into an opaque 16-hex key and never logged raw (privacy). Two relays with the same value share one pool; unset keys the pool off the backend name alone (same-backend relays on one host share, which can only under-subscribe the true account pool, never over-subscribe). |
+| `HIVE_CONTRIBUTOR_QUOTA_PUBLISH` | on | Opt-out for the standalone contributor quota publisher (hivecommons/hive#10299). The contributor image entrypoint and `just contribute-hive <cli> local` start `hive-quota-publisher` beside the relay, so a standalone contributor feeds its own guard with no custom reading program and no local `hive` server. `0`, `false`, `off` or `no` launches without it; anything else (including unset) publishes. The publisher also stands down by itself with the guard `off`, with an explicitly configured `HIVE_CONTRIBUTOR_QUOTA_READING_FILE`/`_JSON` (it never competes with an operator-declared source), and on a backend the guard does not support — see "How the reading reaches the guard". |
 | `HIVE_CONTRIBUTOR_QUOTA_SESSION_ID` | `HIVE_SESSION` then `pid-<pid>` | Stable id for this relay session. A `disable-session` override targets it, and a session opt-out expires when the process exits (a new process gets a new id, so a stale opt-out never authorizes a later run). Never an account identifier. |
 | `HIVE_CODEX_SANDBOX_MODE` | probed (see note) | Codex `--sandbox` value. Left unset, hive resolves it at launch instead of hard-coding one: `workspace-write` everywhere it can work, and `danger-full-access` **only** inside the contributor container when that container blocks the unprivileged user namespace `workspace-write`'s bubblewrap needs (#6653). Setting this pins one value and skips the probe. |
 | `HIVE_CODEX_APPROVALS_REVIEWER` | `auto_review` | Codex reviewer for boundary requests. The default prevents Hive-delivered work from waiting on an interactive operator while retaining `workspace-write`; set `user` only for an intentionally attended contributor. Set it to the **empty string** to omit the `-c approvals_reviewer=` key entirely — the escape hatch if a Codex release rejects that config key at startup. Doing so keeps the sandbox posture; it is not the same as the dangerous bypass. |
@@ -147,6 +160,7 @@ Important environment variables:
 | `HIVE_PI_DANGEROUSLY_RUN_UNCONFINED` | unset | **Required** for `just contribute-hive pi local` to launch at all. pi ships with no sandbox by default; directory confinement exists only via a third-party extension hive does not depend on. |
 | `HIVE_AIDER_DANGEROUSLY_RUN_UNCONFINED` | unset | **Required** for `just contribute-hive aider local` to launch at all. aider has no sandbox or OS isolation option of any kind. |
 | `HIVE_KILO_DANGEROUSLY_RUN_UNCONFINED` | unset | **Required** for `just contribute-hive kilo local` to launch at all. kilo's `--auto` is an unattended auto-approve flag, not a boundary; kilo has no verified sandbox, filesystem allowlist, or command deny-list hive can wire. |
+| `HIVE_OPENHANDS_DANGEROUSLY_RUN_UNCONFINED` | unset | **Required** for `just contribute-hive openhands local` to launch at all. The bare `openhands` CLI runs the agent on the host with no sandbox; `--always-approve` is approval, not a boundary, and its Docker sandbox is reachable only through `openhands serve`, not the headless one-shot path. |
 | `HIVE_OMP_DANGEROUSLY_RUN_UNCONFINED` | unset | **Required** for `just contribute-hive omp local` to launch at all. OMP has no sandbox, filesystem allowlist, or command deny-list Hive can wire; local mode refuses to launch without this. |
 
 ### Where each backend reads its instructions
@@ -168,6 +182,7 @@ mode fixed for Goose in [#2393](https://github.com/hivecommons/hive/issues/2393)
 | `agy` | `CLAUDE.md` |
 | `opencode` | `AGENTS.md`, `CLAUDE.md` |
 | `kilo` | `AGENTS.md`, `CLAUDE.md` |
+| `openhands` | `AGENTS.md`, `CLAUDE.md` |
 | `muse` | `AGENTS.md`, `CLAUDE.md` |
 | `omp` | `AGENTS.md`, `CLAUDE.md` |
 | anything else | `CLAUDE.md` only — the `*` fallback |
@@ -218,7 +233,7 @@ OS-enforced — Seatbelt/bubblewrap/ProcessContainer depending on platform),
 gated on the installed CLI actually supporting the flag; opencode gets a
 command-name deny-list via its own `permission.bash` config (a floor, not a
 filesystem boundary — opencode has no OS sandbox); goose, agy, bob, pi, aider,
-kilo, and omp have no confinement mechanism this repo can wire at all, and local
+kilo, omp, and openhands have no confinement mechanism this repo can wire at all, and local
 mode for them **refuses to launch** unless the operator sets that backend's own
 `HIVE_<BACKEND>_DANGEROUSLY_RUN_UNCONFINED=1`. See
 [sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md)'s per-backend confinement matrix
@@ -274,6 +289,7 @@ The relay speaks to whatever backend you set up — pass it to `contribute-setup
 | `kilo` | Headless-only: `kilo run "<prompt>" --auto`; set `KILO_AUTH_CONTENT` / `KILO_CONFIG_CONTENT` or `KILO_API_KEY` (optional `KILO_ORG_ID`). Hive forwards only those values and never mounts a Kilo home/config directory. `--auto` is approval, not a sandbox. |
 | `muse` | Muse Code (`curl -fsSL https://dev.meta.ai/install.sh | bash`). Headless-only: `muse exec "<prompt>"` is its documented non-interactive sub-command. Auth is `META_API_KEY` (which muse says always takes priority) or `~/.config/muse/auth.json` written by `muse login` / `muse auth set --api-key-stdin`. Set `AGENT_MODEL` to a catalog id from `GET https://api.meta.ai/v1/models`, queried **from the machine that will run muse** — the catalog is caller-dependent (a workstation and an AWS container saw different model sets for the same key on 2026-09-08), and an id the caller cannot see fails at task time. **muse brings its own OS sandbox** (bubblewrap/seccomp on Linux, seatbelt on macOS), on by default — hive narrows it rather than refusing local launch. Installed in both images, pinned by version and per-arch SHA-256 from muse's release manifest. |
 | `omp` | Oh My Pi — **interactive-only**: Hive starts ordinary `omp --model <id>` in the prepared tmux cwd, with no fabricated permission flags; there is no headless wiring for it. Sign in once on the host (run `omp`, complete its provider setup, quit): container mode stages an allowlist of `~/.omp/agent` — only the selected provider's credential rows — into the container ([#7678](https://github.com/hivecommons/hive/issues/7678)), and the contributor image ships a pinned, checksummed `omp` ([#7661](https://github.com/hivecommons/hive/issues/7661)) so `just contribute-hive omp` runs without an `omp` on the host. No verified local confinement mechanism, so local mode refuses without `HIVE_OMP_DANGEROUSLY_RUN_UNCONFINED=1`; container mode is the supported boundary. Full setup notes: [docs/backend-setup.md](https://github.com/hivecommons/hive/blob/v5/docs/backend-setup.md) |
+| `openhands` | OpenHands CLI (`uv tool install openhands --python 3.12`; PyPI `openhands`, MIT). Headless-only: `openhands --headless -t "<prompt>" --always-approve --override-with-envs`. Auth is `LLM_API_KEY` (plus `LLM_BASE_URL` for an OpenAI-compatible gateway) or the `~/.openhands/settings.json` an interactive first run writes; `AGENT_MODEL=provider/model` (any litellm id) is forwarded as `LLM_MODEL` — the CLI has no `--model` flag and ignores `LLM_*` without `--override-with-envs`. No sandbox on this path, so local mode refuses without `HIVE_OPENHANDS_DANGEROUSLY_RUN_UNCONFINED=1`; not shipped in the contributor image (needs Python 3.12). Upstream has marked the CLI repo as no longer actively maintained in favour of Agent Canvas — T3 experimental. Full setup notes: [docs/backend-setup.md](https://github.com/hivecommons/hive/blob/v5/docs/backend-setup.md) |
 
 ## Running multiple backends under one account
 
@@ -327,8 +343,24 @@ The guard evaluates a reading; something has to produce it. The Go rotation prob
 
 **Publishing is default-on for supported backends (hivecommons/hive#6987, satisfying #6967 criterion 1).** The pool directory no longer has to be hand-configured. When `HIVE_CONTRIBUTOR_QUOTA_POOL_DIR` is unset, both the Go publisher (`rotation.DefaultContributorPoolDir`) and the JS relay (`defaultContributorPoolDir`) derive the same per-install directory: `$XDG_CONFIG_HOME` (honoured explicitly first, exactly as the hivectl session cache does, because Go's `os.UserConfigDir` ignores it on darwin) or the platform user-config dir, joined with `hive/contributor-quota`. The two derivations must stay byte-for-byte identical or the publisher writes where the relay never reads — the same parity the shared pool-key vectors pin (`TestDefaultContributorPoolDir_XDGParity` on the Go side, `#6987 defaultContributorPoolDir matches Go under XDG_CONFIG_HOME` on the JS side). An explicit `HIVE_CONTRIBUTOR_QUOTA_POOL_DIR` still overrides the location.
 
-Two safety properties are deliberate:
+**A standalone contributor publishes its own readings (hivecommons/hive#10299).** The paragraphs above describe a host running `hive`. The standard standalone contributor launch paths run no `hive` process, so until #10299 they had no publisher at all: the guard reported that it was not guarding anything and admitted work unless the contributor maintained a custom reading program. They now start `hive-quota-publisher`, a small publish-only command that probes the contributor's **own** backend with the contributor's **own** credentials and writes the same pool-keyed `<poolKey>.reading.json` and `<poolKey>.publisher.json` the server-mode publisher writes — the same `pkg/rotation` provider readers, the same normalization, the same atomic write, the same bounded five-minute poll with provider-error backoff. No hub deployment, no local Hive server and no custom schema conversion are involved.
 
+| Launch path | What starts the publisher |
+| --- | --- |
+| `just contribute-hive <cli>` (container, the default) | `bin/contributor-agent.sh`, the image entrypoint, next to the relay |
+| The isolated Compose example (`src/compose-contributor.yaml`) | the same entrypoint — it runs the same image |
+| `just contribute-hive <cli> local` | the recipe itself: an installed `hive-quota-publisher` if there is one, otherwise a build from this checkout when a Go toolchain is present |
+
+The publisher **starts and stops with the contributor**, so a stopped contributor leaves no process refreshing its pool's presence marker. It stands down, says why on stderr and exits 0 — never blocking the launch — in four cases:
+
+- `HIVE_CONTRIBUTOR_QUOTA_PUBLISH` is `0`/`false`/`off`/`no`: the explicit opt-out. Anything else (including unset) publishes.
+- `HIVE_CONTRIBUTOR_QUOTA_GUARD=off`: nothing would read the reading, so nothing is probed.
+- `HIVE_CONTRIBUTOR_QUOTA_READING_FILE` or `_JSON` is set: the operator has declared where readings come from, and a second publisher would compete with it for the same pool.
+- The backend is not one of the guard-supported subscription backends (`claude`, `pi`, `codex`, `agy`, `gemini`, `kiro`): it is named as unsupported at startup rather than left waiting for a reading that can never be produced.
+
+In local mode a host with neither an installed binary nor a Go toolchain keeps the previous no-publisher behaviour and prints a note pointing here; nothing about the guard's own semantics changes in that case.
+
+Two safety properties are deliberate:
 - **A failed probe never publishes a healthy reading.** A probe error is published as `state: unknown`, which the guard *holds* on — it is never turned into "plenty of headroom". Publishing an admit off a measurement that failed would be exactly the fail-open this guard exists to prevent. One deliberate exception in the publish-only manager (below): a probe that failed because the CLI is **not installed** publishes *nothing* — nothing is written, so the relay evaluates exactly what it would with no publisher, the unprovisioned admit. That is not a fail-open: an absent CLI cannot spend quota on that host, while a published `unknown` would hold a pool the host can never provision. Under operator-configured rotation, `not_installed` keeps publishing as `unknown` — there the provider was named explicitly, so it is real signal.
 - **The `unprovisioned` admit flips to a hold only on POSITIVE evidence of a publisher (hivecommons/hive#6987, condition (b)), and the remaining divergence is recorded on purpose.** #6987's title paired "make publishing default-on" with "flip `unprovisioned` to a hold". The flip is gated on the guard being able to distinguish "a publisher is expected here but has not written yet" from "nothing will ever write here" — flipping blind would strand every host with no route, the exact fleet-wide stop #6951's ruling avoided. Both previously-recorded conditions are now implemented. **Condition (a)**: the publisher no longer depends on `governor.rotation.enabled` — when rotation is disabled, `src/cmd/hive/main.go` starts a publish-only manager (`rotation.NewContributorReadingPublisher`) that probes the guard-supported providers and publishes readings without enabling failover. **Condition (b)**: the publisher writes a per-pool **presence marker** (`<poolKey>.publisher.json`, `rotation.ContributorPublisherMarkerPath`) when its probe loop starts and refreshes it atomically with every published reading; the relay judges it purely by mtime (a torn or unparsable marker can never strand a host) against the same TTL as reading staleness. A probe that fails because the CLI is **not installed** publishes nothing and *removes* the marker — an absent CLI cannot spend quota, and either a published `unknown` or a leftover marker would strand that pool on a hold. Under operator-configured rotation, `not_installed` keeps publishing `unknown` and keeps its marker — there the provider was named explicitly, so it is real signal. So the two dirs now behave like this:
   - With an **explicit** `HIVE_CONTRIBUTOR_QUOTA_POOL_DIR`, the operator has declared a publisher feeds this pool, so "no reading yet" (or a torn file) is `unknown` and **holds** while the publisher catches up — the opt-in flip #6967 already shipped for the configured case.
@@ -430,6 +462,7 @@ Positional lists have no names, and one hand-edit that drops a field transposes 
 ```bash
 hivectl hives list                                        # which hives, and which one is active
 hivectl hives add hive-b --hub wss://hive-b.example.com/contribute
+hivectl hives reissue hive-b                              # rotate only hive-b's saved token
 hivectl hives use hive-b                                  # make it the hub the relay starts on
 hivectl hives rename hive-b staging
 hivectl hives remove staging                              # asks you to type the name
@@ -445,7 +478,7 @@ The same list is available in the terminal UI: `just contribute-tui` (or `hivect
 
 From a fresh checkout, `just contribute-tui` and `just contribute-hives` share `bin/hivectl-bootstrap.sh`: they first honor `HIVECTL`, then `./bin/hivectl`, user/system installs, and `PATH`; when none is present, they extract `hivectl` from the Hive image into `./bin/hivectl`. The checkout records the image digest beside the binary and refreshes when the digest changes, refusing to run an unverifiable stale copy if Podman cannot inspect or pull the image.
 
-See [hivectl.md](/docs/hive/hivectl#hives--named-profiles-for-the-hives-you-contribute-to) for the full command reference, including adding a hive whose token you already hold (`--token-stdin`).
+See [hivectl.md](/docs/hive/hivectl#hives--named-profiles-for-the-hives-you-contribute-to) for the full command reference, including adding a hive whose token you already hold (`--token-stdin`) and reissuing one saved hive token through the profile store (`hivectl hives reissue <name> --hub <url>`).
 
 ## Moving the relay to another machine
 
@@ -469,7 +502,26 @@ The bundle is passphrase-encrypted and contains one profile: hub URL, contributo
 
 Use this when you want to switch back and forth, or to try the VM before committing to it. The cost is that the credential now exists in two places: remove the imported profile or the old profile once you no longer want both machines able to connect as the same contributor id.
 
-### Option 2 — reissue the credential (`just contribute-move`)
+### Option 2 — reissue the credential
+
+If this machine uses named profiles (`~/.config/hive/profiles.yml` exists),
+reissue through `hivectl` so the profile store remains the source of truth:
+
+```bash
+hivectl hives reissue acme --hub wss://hive.example.com/contribute
+# if acme already exists locally with its hub saved:
+hivectl hives reissue acme
+```
+
+`hivectl hives reissue` calls `POST /api/contribute/reissue-token` with your
+GitHub token from `gh auth token`, replaces only that named profile's
+registration token in `profiles.yml`, and then regenerates `contributor.env`
+with the existing projection code. Other profile tokens are left untouched. If
+the hub says the GitHub account is not registered, run
+`hivectl hives add <name> --hub <url>` instead.
+
+The legacy `just contribute-move` path is for positional `contributor.env`
+setups without profiles:
 
 ```bash
 export HIVE_HUB=wss://hive.example.com/contribute
@@ -477,6 +529,12 @@ just contribute-move claude
 ```
 
 `contribute-move` does everything `contribute-setup` does — backend preflight, `gh auth`, `gh-auth.env`, CLI config staging — except that instead of registering it calls `POST /api/contribute/reissue-token`, which authenticates with your GitHub token and therefore *can* prove you own the identity. It then writes `contributor.env` for you.
+
+When `profiles.yml` exists, `contribute-move` aborts unless
+`HIVE_FORCE_MOVE=1` is set. Forcing it is unsafe with profiles because it
+rewrites `contributor.env` behind `profiles.yml`; the next `hivectl hives`
+mutation regenerates `contributor.env` from `profiles.yml` and can restore the
+old token.
 
 **This rotates the credential.** Reissuing overwrites the stored hash, so a relay still running on the old machine stops authenticating the moment this succeeds. That is the point when you are moving off a machine you no longer want holding the token — but it means this is not the way to switch back and forth.
 
@@ -571,9 +629,11 @@ After a contributor completes an issue, the hub keeps that issue out of the queu
 
 ### Queue hold and priority
 
-The **Operations** tab also includes a public-safe **Most effective models** panel. It reads the same aggregate PR rework data as the Governor PRs-by-model view plus the contributor task-run log, then ranks model + CLI pairs for `7d`, `30d`, or `all` by visible measures: merged PRs, first-pass merge rate, average review rounds, average fix attempts, verified-PR run rate, failure rate, and completed-without-PR (“nothing to ship”) rate. Rows below `HIVE_CONTRIBUTE_EFFECTIVE_MODELS_MIN_PRS` merged PRs (default `5`) are shown under “Not enough data yet” instead of being ranked, and the response is aggregate-only: no contributor usernames, pane output, tokens, or per-contributor breakdowns.
+The **Operations** tab also includes a public-safe, collapsible **Most effective models** panel. It reads the same aggregate PR rework data as the Governor PRs-by-model view plus the contributor task-run log, then ranks model + CLI pairs for `7d`, `30d`, or `all` by visible measures: merged PRs, first-pass merge rate, average review rounds, average fix attempts, verified-PR run rate, failure rate, and completed-without-PR (“nothing to ship”) rate. Rows below `HIVE_CONTRIBUTE_EFFECTIVE_MODELS_MIN_PRS` merged PRs (default `5`) are shown under “Not enough data yet” instead of being ranked, and the response is aggregate-only: no contributor usernames, pane output, tokens, or per-contributor breakdowns. The collapse state is remembered in browser localStorage so operators can keep the summary visible without scrolling past the controls and tables.
 
 The dashboard **Governor** card's **PRs by model** section uses that same model-effectiveness aggregation for the same `7d`, `30d`, and `all` windows. It keeps the merged/open/closed bar for PR volume, adds compact columns for merged count, first-pass merge rate, verified-PR run rate, failure rate, and “nothing to ship” rate, and badges ranked models that clear the merged-PR threshold. Operators can toggle the row order between effectiveness rank (default) and raw PR count.
+
+The `/contribute/operations` card layout is also a per-viewer browser preference. Each card header has a grip that can be dragged with pointer/touch input or focused and moved with arrow keys; cards can move between the narrow, main, and full-width regions while the Live Activity rail stays fixed. The layout is stored in `localStorage` under `hive.ops.layout`, tolerates cards being added or removed between releases, and the **Reset layout** control restores the template order.
 
 The **Operations** tab lets an operator reorder and park individual issues in the ready-work queue. Both controls persist on the hub configuration alongside the filters above, but they are edited only through two authenticated endpoints (owner or read-write role; a read-only or anonymous caller gets `403`):
 
@@ -598,7 +658,7 @@ Withheld rows carry a stable reason code and, where the refusing gate had one, t
 | Reason | Meaning | Evidence |
 |---|---|---|
 | `open_pr_claim` | An open pull request already claims the issue. | Claiming PR URL and author |
-| `issue_claim` | Someone has claimed the issue on the issue itself - a `hive-claim` marker comment posted by the hive's own App bot, or an assignee - and the claim has not expired ([#8380](https://github.com/hivecommons/hive/issues/8380)). Only while `governor.claims.enabled` is on. | `claimed_by` and `claim_expires_at` |
+| `issue_claim` | Someone has claimed the issue on the issue itself - a `hive:claim` marker comment posted by the hive's own App bot, or an assignee - and the claim has not expired ([#8380](https://github.com/hivecommons/hive/issues/8380)). Only while `governor.claims.enabled` is on. | `claimed_by` and `claim_expires_at` |
 | `merged_claim_stale` | A merged pull request (or a verified `no_work_needed` verdict) has claimed to fix the issue for 7+ days and the issue is still open; the next step is a maintainer's — close it, or say what remains ([#8003](https://github.com/hivecommons/hive/issues/8003)). | Fixing PR URL and author; the age in days |
 | `issue_churn` | The issue has already absorbed several merged or abandoned pull requests without settling, so what is left is a maintainer's call ([#7995](https://github.com/hivecommons/hive/issues/7995)). | Merged / closed-unmerged counts and the PR numbers |
 | `workflow_blocked` | The issue carries the `blocked` workflow label. | Matched label |
@@ -644,13 +704,30 @@ Contributors declare their CLI backend and model when the relay connects. The **
 
 This is the admin's quality floor: a hive doing subtle refactors can require `claude-opus*`/`claude-sonnet*`, while a hive full of `good-first-issue` label work can accept anything, including local Ollama models.
 
+### Minimum reasoning effort
+
+Relays also report their reasoning effort (`reasoning_effort` on `auth_response`). The **Effort floor** control, next to the Model Filter in **Governor → Hub**, sets a minimum:
+
+| Control | Config key | Behavior |
+|---|---|---|
+| **Effort floor** | `contribute_min_reasoning_effort` | Minimum reasoning effort on the ladder `minimal < low < medium < high < xhigh < max`. **Empty = no floor.** A relay whose effort ranks below the floor is rejected **at connect time** with an `auth_failed` message that echoes the floor (`min_reasoning_effort`). The comparison is per backend, not a raw string compare: a floor above a backend's highest level is met by that backend's highest level (e.g. a `max` floor is met by codex at `xhigh` and agy at `high`). Invalid values are rejected by `PUT /api/config/governor/hub` and ignored (with a warning) when loaded from YAML. |
+| **Reject Unknown Effort** | `contribute_reject_unknown_effort` | Only applies when a floor is set. When on, a relay whose effort is empty, unrecognised, or not valid for its backend is rejected; when off (default) it is admitted. |
+
+A single ordered floor was chosen over a per-backend allow-list because effort vocabularies differ per backend (codex `model_reasoning_effort`, claude `--effort`, …): one floor on a shared ladder says "at least this much reasoning" once for every backend. Both keys are returned by `GET /api/config/governor` (alongside `contribute_reasoning_effort_ladder`) and on the contribute admission policy (`min_reasoning_effort`, `reject_unknown_effort`) so relays can pre-check before connecting.
+
+```yaml
+hub:
+  contribute_min_reasoning_effort: high
+  contribute_reject_unknown_effort: true
+```
+
 ### Trust tiers and individual controls
 
 Each trust tier can be toggled on/off and given its own rate limits (`0` = unlimited); tiers promote automatically as contributors complete tasks that open PRs. Admins can also promote, demote, or revoke individual contributors from the dashboard's contributor list (`GET /api/contributors`, with `PUT /api/contributors/{id}/trust` and `POST /api/contributors/{id}/revoke`); revoked contributors cannot reconnect. Completed-task counts and standings are public on the hive's `/leaderboard`. Tier names, promotion thresholds, and delegated roles are documented in [Contributor trust tiers and delegated agent roles](https://github.com/hivecommons/hive/blob/v5/src/docs/contributor-trust-and-roles.md).
 
 ### Filter timing
 
-- **Queue-time vs. connect-time.** Repo, label, title, author, and assignment filters, cooldown, and the hold/priority sets apply when the queue is next built, so tightening them affects the *next* queue build. The Model Filter applies at connect time, so tightening it affects the *next* connection, not agents already mid-task.
+- **Queue-time vs. connect-time.** Repo, label, title, author, and assignment filters, cooldown, and the hold/priority sets apply when the queue is next built, so tightening them affects the *next* queue build. The Model Filter and the effort floor apply at connect time, so tightening them affects the *next* connection, not agents already mid-task.
 - **Suspending vs. revoking.** Suspension idles everyone and is instant to undo; revocation is per-contributor and blocks reconnection.
 
 ## Kubernetes contributor workload
@@ -793,23 +870,31 @@ When the agent determines that nothing is shippable until a maintainer makes a d
 
 The hub books the issue for the full with-PR cooldown immediately and records a `needs_decision` ledger/run-log marker. The relay applies the label advertised by the hub in `auth_ok` (`hub.contribute_needs_decision_label`, default `needs-decision`) using the same task credential path as the `blocked` label. Empty config disables relay labelling, but the cooldown still applies. The relay posts no extra comment: the contributor's assessment comment is the human-readable record. The label is never cleared automatically; removing it is the maintainer signal that the decision has been made. The configured label is also treated as a contributor skip label, so a custom label such as `2-discussing` keeps the issue out of the offer queue until a human removes it.
 
-### A prompt that was typed is not a prompt that was submitted
+### A prompt that was pasted is not a prompt that was submitted
 
-The relay delivers a task prompt by typing it into the pane with `tmux send-keys -l` and then sending Enter. A task prompt is around 2 KB, so it arrives as one burst — and a TUI that implements bracketed-paste handling classifies a burst that fast as **pasted content**. codex collapses it to `[Pasted Content 1024 chars]` in its input widget and takes the Enters that follow as newlines *inside* the paste rather than as submit. The prompt sits in the widget, and the agent is never told anything.
+The relay delivers a task prompt by storing it in a uniquely named tmux buffer (`tmux load-buffer -b … -`, prompt piped on stdin) and pasting it with bracketed paste (`tmux paste-buffer -p -d …`) before sending Enter. The older `tmux send-keys -l` path sent a task-sized prompt as one raw keystroke burst, and a TUI that implements bracketed-paste handling could classify a burst that fast as **pasted content**. codex collapsed it to `[Pasted Content 1024 chars]` in its input widget and took the Enters that followed as newlines *inside* the paste rather than as submit. The prompt sat in the widget, and the agent was never told anything.
 
 Observed live ([#6717](https://github.com/hivecommons/hive/issues/6717), codex-cli 0.154.0): the pane showed the launch banner, the collapsed prompt on the input line, no spinner, no tool rows and no assistant output at all, byte-identical across two consecutive five-minute checks. The relay logged `Task prompt sent to CLI` and, eight minutes later, `completed — signal=chrome_idle`. The hub booked the issue **done** with no commit, no branch and no PR, and it left `/api/contribute/queue`.
 
 `ENTER_COUNT = 3` is not the lever: the problem is not a dropped keystroke but a widget consuming newlines as content, and three are consumed exactly as one is. Three things changed instead.
 
-1. **Settle before submitting.** The send path now waits for the widget to finish ingesting the burst before the Enter goes out, so the Enter is a keypress and not pasted text.
-2. **Verify the submit.** It then re-reads the pane and re-sends Enter while the prompt is still visibly collapsed in the input widget, up to a small budget. The send loop already retried when *tmux* errored; it had never checked whether the keystrokes achieved anything.
-3. **`chrome_idle` may not complete a task that never started.** The fallback infers "the agent finished" from a pane that stopped changing, and that inference had one premise it never checked: that the agent *started*. When the prompt is **still** visibly unsubmitted **and** the pane has not changed by a single byte since delivery, the task is reported `task_failed` with `failure_kind: environment` — so the hub re-offers the issue — instead of `task_complete`, which parks it as finished.
+1. **Use bracketed paste for the prompt.** The prompt text is piped on stdin to `tmux load-buffer` via `execFileSync()`, never shell-interpolated and never subject to the per-argument length limit, and `paste-buffer -p -d` deletes the tmux buffer after delivery (with a best-effort cleanup fallback).
+2. **Settle before submitting.** The send path still waits for the widget to finish ingesting the paste before the Enter goes out, so the Enter is a keypress and not pasted text.
+3. **Verify that a turn started.** It then re-reads the pane and looks for positive evidence that the CLI accepted the prompt: working chrome, a tool row, an echoed prompt, or another non-idle change from the pre-delivery pane. A blank input widget with no activity is `submission unknown`, not success. If `[Pasted Content …]` appears after the first check, the relay re-sends Enter up to the existing small budget; it never re-pastes the prompt.
+4. **`chrome_idle` may not complete a task that never started.** The fallback infers "the agent finished" from a pane that stopped changing, and that inference had one premise it never checked: that the agent *started*. When prompt submission is unconfirmed or visibly unsubmitted **and** the pane has not changed by a single byte since delivery, the task is reported `task_failed` with `failure_kind: environment` — so the hub re-offers the issue — instead of `task_complete`, which parks it as finished.
 
-Both signals in (3) are required together, in both directions. Some CLIs echo a submitted paste back into their transcript with the same placeholder, so the placeholder alone would fail every task on such a backend; and a pane byte-identical to its pre-work state cannot belong to an agent that did anything. An agent that genuinely finished without printing `HIVE_VERDICT` still completes on the fallback exactly as it did before, which is the whole reason the fallback exists ([#5376](https://github.com/hivecommons/hive/issues/5376)).
+Both signals in (4) are required together, in both directions. Some CLIs echo a submitted paste back into their transcript with the same placeholder, so the placeholder alone would fail every task on such a backend; and a pane byte-identical to its pre-work state cannot belong to an agent that did anything. An agent that genuinely finished without printing `HIVE_VERDICT` still completes on the fallback exactly as it did before, which is the whole reason the fallback exists ([#5376](https://github.com/hivecommons/hive/issues/5376)).
 
 The placeholder rendering is recorded **per backend, and only where a real capture has shown it** — codex today, in `bin/lib/pane-classifier.js` and the shared golden fixture `bin/testdata/pane-fixtures/codex_unsubmitted_paste.pane.txt`. A backend whose widget nobody has captured makes no claim either way, and gets neither the extra Enters nor the veto. This detector can fail a task, so a pattern guessed from another CLI's documentation would be a claim about a pane nobody has looked at, in the direction that costs the most.
 
 Finally, a `chrome_idle` completion carrying **neither** a verdict **nor** a PR is now logged as a warning. It is not always wrong — an agent that found nothing to do but never printed the sentinel lands there too — but it is the shape this bug takes, and nothing in the pane shows what such a task produced.
+
+For a real tmux transport smoke test outside CI, run `bin/relay-paste-smoke.sh` on a host with tmux installed. It starts a disposable tmux session running `cat -A`, sends both a short and task-sized prompt via the same `load-buffer`/`paste-buffer -p -d` sequence, and verifies the pane received the bytes intact.
+
+That checks the tmux half only — the bytes land in a pane. Whether a CLI *consumes* them as one submitted turn is what [#9078](https://github.com/hivecommons/hive/issues/9078) actually broke, and a stubbed `child_process` cannot show it either way, so `bin/test_backend_smoke.sh` carries two delivery scenarios through the **real relay**:
+
+- **S4** (keyless, in CI's "Backend smoke (keyless subset)"): the relay, a fake hub, a real `tmux new-session -x 200 -y 50` pane, and a raw-mode codex-shaped stub that enables bracketed paste (`ESC[?2004h`), draws the real idle/working chrome, echoes the expanded prompt on submit the way codex's history cell does, reproduces the captured 0.157.1 raw-burst behaviour (nothing rendered, Enter swallowed, `[Pasted Content 4096 chars]` late), and records every submitted turn as JSONL. A 6,868-character prompt and a short control must each complete via verdict and arrive byte-for-byte as **exactly one** turn, with no `Task prompt delivery unconfirmed` in the relay log. On the pre-#9079 relay the long prompt starts zero turns, which is the incident.
+- **B3** (credential-gated, on the scheduled `backend-smoke.yml` lane after the short B2 control): the same task-sized prompt against the **real** codex CLI on a 200×50 pane. Exactly-once, byte-for-byte delivery is read from the user message codex itself records in its session rollout under the throwaway `CODEX_HOME` (`event_msg/user_message` or the `response_item` user shape); when neither is found the check reports a skip naming the rollout directory rather than a false pass. B2 and B3 share `interactive_round()`.
 
 ### Review notes that land after the verdict get one more turn
 
@@ -955,6 +1040,17 @@ A quota refusal now parks the loop:
 - **The operator is told once, clearly.** The banner previously lived only inside the agy pane while the relay log said `[environment]`; nobody reading the log could learn their quota was gone for four hours, or that switching model or backend was the remedy.
 - **The failure says what happened.** `[environment] … the agent CLI is not visibly working` reads as a broken contributor host. The CLI was working perfectly and the provider said no, so the reason now says so.
 
+Codex's `■ You’ve hit your usage limit` banner also enters this hold, including
+when it is followed by the optional model-switch menu ([#9247](https://github.com/hivecommons/hive/issues/9247)).
+The relay preserves the displayed reset information in its failure reason and
+operator log. A clock time such as `10:21 PM` has no established timezone, so
+this hold does **not** expire on a guessed deadline or the generic fallback.
+It survives CLI relaunches and hub reconnects, even if the new pane looks idle.
+A fresh quota reading captured after the refusal, with every window above its
+reserve, releases it. Without a quota reader, verify that the configured model
+can run again, then restart the contributor relay explicitly. The relay never
+selects the suggested model or purchases credits.
+
 Only quota takes this path. An authorization refusal is not time-bounded, an operator has to change something, and parking the relay would hide it — a 403 still fails fast and stays available.
 
 The `failure_kind` on the wire is still `environment`: the hub's kinds are `environment` / `task` / `unspecified`, and the field is advisory — the hub records and displays it and does not route or change a work item's failure cooldown on it. A dedicated quota kind, and the cooldown exemption [#6541](https://github.com/hivecommons/hive/issues/6541) asks for, are a hub-side protocol change and are not part of this.
@@ -1042,7 +1138,8 @@ Six behaviours are worth knowing:
   condition (b)): a fresh `<poolKey>.publisher.json` presence marker in the
   derived default dir flips a missing reading from the admit to a hold, because a
   live publisher has declared a reading is coming. Where no fresh marker exists —
-  a relay-only contributor machine runs no `hive` process and so no publisher, an
+  a relay-only contributor machine with the standalone publisher opted out or
+  unavailable (hivecommons/hive#10299) and so no publisher, an
   unsupported backend, an uninstalled CLI (the publisher removes the marker on a
   `not_installed` probe), or a dead publisher whose marker went stale — the admit
   stands, so no host is ever stranded holding with no route. Flipping THAT
@@ -1056,6 +1153,26 @@ The `src/pkg/rotation` probers normalize each provider's usage into the reading
 shape above. Two of the three read a different source than #6833's original
 adapter table named, and the divergence is recorded here so a later reader does
 not "fix" an adapter back to a source that was deliberately rejected:
+
+- **Pi** — no built-in Pi-compatible quota reader is currently available,
+  including for `openai-codex`, `openrouter`, and `anthropic`. Pi's
+  `AGENT_MODEL=provider/model` selection is named in the startup diagnostic;
+  it does **not** imply Claude Code credentials or Codex CLI credentials.
+  Those readers use different credential stores and must not publish to Pi's
+  pool. Old automatic Pi pool readings are ignored, including a previous
+  `unknown` reading caused by missing Claude credentials.
+
+  To retain quota protection, supply readings for the **selected Pi provider
+  and account** using `HIVE_CONTRIBUTOR_QUOTA_READING_FILE` (recommended for a
+  live, atomically refreshed source) or `HIVE_CONTRIBUTOR_QUOTA_READING_JSON`.
+  These explicit sources still take precedence and missing, malformed,
+  `unknown`, or `stale` readings still hold work; `continue-*` does not bypass
+  them. Setting only `HIVE_CONTRIBUTOR_QUOTA_POOL_DIR` does not create a Pi
+  reader. With no explicit source, Pi follows the unsupported-backend
+  `unprovisioned` behavior above: work is admitted, with a warning that quota
+  protection is unavailable and paid credits may be consumed. To explicitly
+  opt out instead, set `HIVE_CONTRIBUTOR_QUOTA_GUARD=off` at launch; this is
+  **not quota protection** and may spend paid credits.
 
 - **Codex** — the app-server `account/rateLimits/read` method, as #6833
   specified. All returned windows (`primary`, `secondary`, and any
@@ -1457,7 +1574,7 @@ Trust note: hooks run with the entrypoint's full privileges inside the
 contributor container, and `HIVE_PRE_AGENT_HOOK` is `eval`'d verbatim — only
 bake hooks into images you build, and only pass `HIVE_PRE_AGENT_HOOK` values
 you would be willing to type into that container's shell yourself. Both knobs
-are listed in the [environment variable reference](https://github.com/hivecommons/hive/blob/v5/src/docs/env-vars.md).
+are listed in the [environment variable reference](/docs/hive/env-vars).
 
 ## Troubleshooting: the backend dies seconds after every task
 

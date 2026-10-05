@@ -6,6 +6,8 @@ A hive **agent** is a long-running AI worker — a CLI session the hive keeps al
 
 Start with only a name, a method, and a model. Add the rest when the agent needs it.
 
+For labels that route or gate agent work, see [Hive Labels and Control Signals](https://github.com/hivecommons/hive/blob/v5/src/docs/labels-and-control-signals.md).
+
 ## The smallest agent that works
 
 ```yaml
@@ -71,7 +73,7 @@ Every field below exists in the config schema today. Grouped by what it does:
 agents:
   scanner:
     display_name: scanner        # dashboard label (defaults to the YAML key)
-    description: "Triages issues and opens hold-gated fix PRs."
+    description: "Triages issues and opens PRs gated by `hold`."
     emoji: "🔍"                  # dashboard badge
     color: "#3498db"             # dashboard accent color
     role: scanner                # behavioral role; defaults to the agent name
@@ -203,9 +205,21 @@ spec omits `launch_cmd`, Hive still builds the backend command normally.
                                  #   discouraged. See docs/per-repo-agents.md.
     on_demand: false             # true = never kicked by the governor timer;
                                  #   only triggered explicitly (e.g. inception)
+    continuous: false            # legacy shorthand: continuous in every
+                                 #   non-quiet governor mode; prefer per-mode
+                                 #   cadence: surge: continuous
+    continuous_cooldown: 60s     # optional cool-down before that re-kick;
+                                 #   default 60s, exponential backoff on
+                                 #   undeliverable kicks
+    continuous_budget_pct: 80    # optional token-budget guard; default 80%
+                                 #   of governor.budget.total_tokens
     clear_on_kick: true          # default true; false keeps session context across kicks
     stale_timeout: 28800         # seconds of silence before the agent counts as stale —
                                  #   must exceed its longest cadence
+    busy_no_activity_threshold: 30m
+                                 # surface Working/no-transcript activity after repeated
+                                 #   undeliverable kicks; default 30m
+    max_turn_duration: 0s        # optional visibility-only Working ceiling; 0 disables
     restart_strategy: immediate  # how to bring a dead session back
     beads_dir: /data/beads/scanner   # work-record (bead) storage; default per-agent
     replicas: 3                  # materialize scanner, scanner-2, scanner-3 (max 5)
@@ -307,10 +321,11 @@ Rounding out the schema — fields you will rarely touch:
 |---|---|---|
 | `id` | Stable identifier | agent name |
 | `acmm_levels` | ACMM levels this agent participates in | all |
-| `caveman_mode` | Prompt-compression experiment: `lite`, `full`, `ultra`, `wenyan`; see below | off |
+| `caveman_mode` | Prompt-compression experiment: `lite`, `full`, `ultra`, `wenyan`; see below | empty (disabled) |
+| `jev_mode` | Give the agent the Jev typed-decision tool: `off`, `assist`; see below | empty (off — nothing installed, no Jev calls) |
 | `explain_mode` | Ask the agent to report why it made each tool call: `off`, `brief`, `full`; see below | inherit the hive default |
 | `metrics_collector` | Named metrics source for the stats panel | none |
-| `stats_display` | Custom sidebar metrics (key, label, source, field, style). The `health` source (the primary repo's CI/coverage/release checks) is offered only to agents that can own CI — never to an `ADVISORY` or `on_demand` agent — and a `pct`/`pct-bar` stat with no measurement renders `—`, not `0%`. | none (an agent starts with no stats unless it is a built-in with defaults) |
+| `stats_display` | Custom sidebar metrics (key, label, source, field, style, optional icon/target). The Diagnostics **Quality stats** card mirrors the `quality` agent's configured entries. A `pct`/`pct-bar` stat with no measurement renders `—`, not `0%`. | none (an agent starts with no stats unless it is a built-in with defaults) |
 | `hidden` (packs only) | Keep a pack agent out of the default roster view | false |
 
 ## Explain mode (debugging agent behaviour)
@@ -391,7 +406,7 @@ Leave it off outside of debugging: the explanation is extra output tokens on eve
 | Mode | Dashboard description | When to use |
 | --- | --- | --- |
 | `lite` | Removes filler while preserving normal language. | Lowest-risk token reduction for routine agents. |
-| `full` | Converts output toward terse "caveman-speak". | Default example mode when cost matters and operators accept rougher prose. |
+| `full` | Converts output toward terse "caveman-speak". | Use when cost matters and operators accept rougher prose. |
 | `ultra` | Telegraphic compression. | High-volume lanes where compact summaries are more important than nuance. |
 | `wenyan` | Classical Chinese-style compression. | Specialized/experimental mode; use only when readers and downstream tools can tolerate it. |
 
@@ -402,6 +417,75 @@ Implementation notes:
 - `goose`, `codex`, and `aider` get the skill installed and then receive `/caveman <mode>` after the CLI reaches an input prompt.
 - Unsupported backends log that caveman is not supported and continue without compression.
 - The UI describes the feature as roughly 65% output reduction, but exact savings vary by prompt, backend, and task.
+
+## Jev typed decisions (`jev_mode`)
+
+`jev_mode: assist` gives an agent **Jev** (TypeSafe AI's confidence-scored
+typed-decision model) as a tool, so quick yes/no, pick-one and rubric-score
+judgments — duplicate checks, "which of these N issues is relevant", "does
+this diff touch secrets", rubric scoring before posting a review, gating
+low-value actions — are answered by a cheap model billed on input tokens only
+instead of frontier-model reasoning. It is per agent and off by default,
+mirroring `caveman_mode`.
+
+```yaml
+agents:
+  scanner:
+    jev_mode: assist      # off (default) | assist
+
+jev:                       # hive-wide client; all optional
+  provider: openrouter     # openrouter (default) | typesafe
+  model: typesafe/jev-1.13 # default per provider (typesafe: jev-latest)
+  endpoint: ""             # override the provider's systemone URL
+  api_key_env: JEV_API_KEY # falls back to the connected OpenRouter gateway key
+  timeout: 5s
+```
+
+Toggle it per agent from `hive.yaml`, the agent's General settings panel
+("Jev Mode", next to Caveman Mode), or `hivectl agent jev-mode-set <agent>
+assist`. The dashboard select stays disabled with a hint until the hive can
+resolve a Jev key (`JEV_API_KEY`, or an OpenRouter gateway connected under
+Settings → Governor → Model Gateways).
+Because the skill and env are applied at launch, saving a change of
+`jev_mode` from the dashboard or `hivectl` restarts the agent (as a model or
+backend change does); editing `hive.yaml` by hand takes effect on the agent's
+next start.
+
+What turning it on does:
+
+- **Skill.** Before the CLI starts, the manager writes the embedded
+  `jev-decide` `SKILL.md` into the agent's CLI home (`~/.claude/skills`,
+  `$CODEX_HOME/skills`, `~/.copilot/skills`, `~/.gemini/skills`,
+  `~/.config/goose/skills`), as the agent user. The skill tells the agent
+  when Jev is the right tool and that it must never be used to generate code
+  or prose. Backends without a known skills directory still get the CLI and
+  env below.
+- **Tool.** `hive jev decide --type choice|score|probability --question …
+  [--option name[=description]]… [--level …]… [--state json]` prints
+  `{"answer","confidence","probabilities","model","input_tokens"}`. `choice`
+  picks one of 2–32 options; `score` returns a position along 2–10 ordered
+  rubric levels; `probability` returns P(yes) for a statement (TypeSafe's
+  *Noul*; confidence is derived as |2·P − 1| because the provider reports
+  none for it).
+- **Proxying.** The CLI only ever talks to the hive's loopback decision
+  endpoint (`127.0.0.1:18446`). The hive identifies the caller from the
+  socket UID **only** (the unforgeable half of the egress proxy's check — the
+  self-asserted `Proxy-Authorization` fallback the proxy allows under
+  `HIVE_PROXY_ADVISORY_OK` is deliberately not honoured here), refuses any
+  agent whose live `jev_mode` is not `assist`, attaches the Jev key, and
+  forwards to the provider. Agents never see the key. Consequence: Jev
+  requires per-agent UID isolation (the entrypoint's `uid-map.json`); on a
+  shared-UID or advisory-only deployment every call is refused as
+  unidentified.
+- **Budget and audit.** Input tokens are recorded against the agent through
+  the same inference token sink the governor budget reads, and every call is
+  written to the audit log as `jev_decision` with `question_type`,
+  `confidence`, `input_tokens` and `model` — never the question or state.
+- **Env.** `HIVE_JEV_MODE=assist` and `HIVE_JEV_ENDPOINT` are exported to the
+  agent only when the mode is on.
+
+Config validation accepts only `off`, `assist`, or empty; the dashboard and
+`hivectl` writes apply the same gate.
 
 ## Methods: subscription CLIs vs self-hosted inference
 
@@ -425,7 +509,7 @@ Two rules of thumb:
 
   Only `POST /v1/messages` is translated into an OpenAI `/v1/chat/completions` call. The Claude CLI also talks to its Anthropic host for housekeeping — telemetry batches (`/api/event_logging/...`), error reports, `POST /v1/messages/count_tokens` — and none of that has a meaning to an OpenAI-compatible gateway; forwarding it used to cost a gateway `400 Missing required parameter: 'messages'` per call, charged against the provider's request rate limit (roughly two failures per real completion in practice). The translator and the MITM reroute now answer those locally: `count_tokens` returns a chars-based estimate, anything under `/api/` returns `{}`, and any other path is a 404 in Anthropic error shape with a `WARN` log line naming the method and path, so a new CLI endpoint shows up in the hive log rather than as gateway noise. Inference-routed `claude` sessions are additionally launched with `DISABLE_TELEMETRY=1`, `DISABLE_ERROR_REPORTING=1`, and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`; subscription sessions are not.
 
-Every Model Gateway (and the bob backend) also accepts an optional `key_name` — a human-chosen LABEL for the configured key, e.g. `key_name: openrouter-prod-key`. It is safe-to-show metadata, not a secret: the dashboard's gateway row displays it as "Using key: `<name>`", or "(unnamed)" when no label is set, so operators can tell keys apart without ever seeing the value. See [`inference-backends.md`](https://github.com/hivecommons/hive/blob/v5/docs/inference-backends.md) for a full YAML example.
+Every Model Gateway (and the bob backend) also accepts an optional `key_name` — a human-chosen LABEL for the configured key, e.g. `key_name: openrouter-prod-key`. It is safe-to-show metadata, not a secret: the dashboard's gateway row displays it as "Using key: `<name>`", or "(unnamed)" when no label is set, so operators can tell keys apart without ever seeing the value. For gateway keys, the row and settings/status APIs also expose `keySHA256`, the lowercase SHA-256 of the exact effective key string Hive will inject through the inference proxy; this lets operators compare Hive with LiteLLM/OpenRouter key-hash displays without revealing the secret. Saving a replacement key refreshes live inference proxy routes for running agents, so the next kick uses the new key without an agent restart. See [`inference-backends.md`](https://github.com/hivecommons/hive/blob/v5/docs/inference-backends.md) for a full YAML example.
 
 Kubernetes manifests for deploying inference backends (vllm Deployment, EPP RBAC, kustomization) are in [`deploy/inference/`](https://github.com/hivecommons/hive/blob/v5/src/deploy/inference/).
 
@@ -506,6 +590,7 @@ governor:
 - **Per-agent, per-mode intervals.** Anything Go's duration parser accepts works (`5m`, `2h`) for interval mode.
 - **Pausing.** The value `pause` (or `paused`) suspends an agent for that mode without disabling it.
 - **On-demand agents** (`on_demand: true`) are skipped by the governor timer entirely — they run only when explicitly triggered (the inception workflow drives `brainstorm` this way).
+- **Continuous agents** are configured per governor mode by setting that mode's cadence value to the literal `continuous` (case-insensitive), for example `agents.scanner.cadence.surge: continuous` with `busy: 1h`, `quiet: 6h`, and `idle: off`. No agent name (including `scanner`) has special behavior. The legacy `continuous: true` bool remains a shorthand for continuous in every non-QUIET mode, but new configs should prefer per-mode cadence values. They still need an active cadence entry in the current mode, but cadence no longer decides the next kick while continuous mode is on. Instead, the manager waits until the kicked CLI is genuinely back at its input prompt, records that turn end, and the governor schedules the next kick at `ended_at + continuous_cooldown` (default `60s`). Enabling continuous on an idle agent, including by entering a mode whose cadence is `continuous`, schedules its first continuous kick after one cooldown; leaving a non-continuous mode clears any pending continuous kick and `/api/status` reports `continuousBlocked: "not_in_mode"` for agents that are continuous only in other modes. Continuous never interrupts a busy turn and still respects `enabled: false`, operator/fleet-breaker pause, governor-mode `pause`/`off` (including QUIET-mode pauses), on-demand, non-kick channels, budget/provider holds, provider rate-limit/quota backoff, and upgrade/restart holds; failed deliveries such as "CLI did not reach input prompt" use capped exponential backoff. `continuous_budget_pct` (default `80`) stops only the continuous re-kick loop when the current token-budget window reaches that percentage of `governor.budget.total_tokens`; normal cadence resumes, and `/api/status` reports `continuousBlocked: "budget"` plus per-agent `continuousModes`, `continuousKicks`, and `continuousTokens` counters. The dashboard exposes per-mode `Continuous` in the agent settings **Cadences** form; the Governor cadence table is read-only and shows an `∞ continuous` chip in each continuous mode cell.
 - **Budget.** When the weekly token budget is exhausted, kicks are suppressed hive-wide (exempt agents excepted) until the period rolls over.
 
 Set `stale_timeout` with your cadences in mind: an agent kicked every 4h with a 30-minute stale timeout will look dead between kicks. The shipped packs use "longest cadence × 2".
@@ -558,10 +643,10 @@ You don't have to design a roster. Hive ships six **ACMM packs** (`level-1.yaml`
 |---|---|---|
 | L1 | Inception (Assisted) | inception: brainstorm + guide, everything conversational |
 | L2 | Advisory (Instructed) | advisory beads only; agents observe, humans act |
-| L3 | Quality-Gated (Measured) | quality opens issues and hold-gated test PRs; the rest stay advisory |
-| L4 | Security-Aware (Adaptive) | all agents open issues — no PRs yet |
-| L5 | Semi-Autonomous (Semi-Automated) | issues **and** hold-gated PRs; humans batch-approve |
-| L6 | Fully Autonomous | auto-merge on green CI, no hold label |
+| L3 | Quality-Gated (Measured) | quality opens issues and test PRs gated by literal `hold`; the rest stay advisory |
+| L4 | Security-Aware (Adaptive) | scanner/guide file issues; quality, ci-maintainer, and sec-check can open PRs gated by literal `hold` |
+| L5 | Semi-Autonomous (Semi-Automated) | issues **and** PRs; PRs are gated by literal `hold`; humans batch-approve |
+| L6 | Fully Autonomous | auto-merge on green CI; non-outreach PRs have no level hold, outreach PRs remain held |
 
 Applying a level **reconciles the whole roster**, not just the diff: missing agents are created (as overlay files in `/data/agent-configs/`), existing agents are merged — pack values fill blanks, but your explicit `backend:`, `model:`, and `enabled: false` always win — and the level's `kick_template`, `mode` and `on_demand` are updated so the agent's *policy* matches the level (an `on_demand` you toggled yourself in the agent's settings dialog is operator-owned and left alone; leaving on-demand starts the agent, entering it stops it). A failed agent doesn't abort the rest; the level is only recorded as cleanly applied when every agent reconciled.
 
@@ -686,7 +771,7 @@ Both call sites build the same `defsrc.Resolver` (`main.go:1356`), gated by `fun
 Two merge rules to know before you rely on this:
 
 - **A blank field never clears a baked value.** For most fields, an empty string or empty slice in the fetched definition is skipped, so a minimal definition can't silently wipe presentation you set elsewhere. `ClearOnKick` and `IncludeRepos` are the deliberate exceptions — their zero value (`false`) is a legitimate setting, so the definition's value is taken as authoritative whenever the source resolves live (`defsrc.go:212-216`).
-- **Everything else on the agent is preserved untouched**, explicitly including: `Enabled`/`Paused`/`Managed` (operator lifecycle state), `ID`, `BeadsDir`, `MetricsCollector`, `ACMMLevels`, `OnDemand`, `CavemanMode`, and — critically — the `definition_source`/`prompt_source` pointers themselves. A live definition cannot re-point the agent at a different repo (`ApplyToConfig` re-asserts this at `defsrc.go:437-440` even though the merge already excludes it). Nothing under the hive-level `variables.security` block is reachable either — it isn't part of `AgentConfig` at all.
+- **Everything else on the agent is preserved untouched**, explicitly including: `Enabled`/`Paused`/`Managed` (operator lifecycle state), `ID`, `BeadsDir`, `MetricsCollector`, `ACMMLevels`, `OnDemand`, `CavemanMode`, `JevMode`, and — critically — the `definition_source`/`prompt_source` pointers themselves. A live definition cannot re-point the agent at a different repo (`ApplyToConfig` re-asserts this at `defsrc.go:437-440` even though the merge already excludes it). Nothing under the hive-level `variables.security` block is reachable either — it isn't part of `AgentConfig` at all.
 
 ### The trust boundary: allowlisted repos are seed-only
 
@@ -749,13 +834,15 @@ One agent reaches its template by **role** rather than by `kick_template`: an ag
 
 So the worst an override can do is change the *wording* of a kick that was already going to be sent. The template-specific variables are `${REVIEWER_WORK_LIST}`, `${REVIEWER_MAX_PRS}`, `${REVIEWER_PASSED_LABEL}`, `${REVIEWER_RECOMMEND_CLOSE_LABEL}` and `${REVIEWER_CLOSE_AUTHORITY}`, alongside the usual built-ins.
 
-Do not confuse it with `reviewer-queue.md`, which belongs to the pack-defined `reviewer` agent in the L5/L6 packs: that agent wakes on a 30-minute cadence, works the open PR queue in advisory mode and routes `requires_human` / `reject` verdicts to a maintainer via the triage label itself.
+Do not confuse it with `reviewer-queue.md`, which belongs to the pack-defined `reviewer` agent in the L5/L6 packs: that agent wakes on a 30-minute cadence, works the open PR queue in advisory mode and routes `requires_human` / `reject` verdicts to a maintainer via the triage label itself. Because a `kick_template` shadows the role-based routing, that agent never reaches this lane; the L5/L6 packs therefore ship a separate template-less `adjudicator` agent (`role: reviewer`, `mode: ISSUES_AND_PRS`, 30-minute cadence) to work escalated PRs ([#9477](https://github.com/hivecommons/hive/issues/9477)). Its work list covers every escalated hive PR the hub lists — the escalated rows of `ci_failing` plus the `escalated` list in `ci-failing.json`, which carries conflicted, green, and pending escalations that have no failing check.
 
 Portable agents bundle everything — config plus a `promptTemplate` — in a single `AgentDefinition` YAML you can import from a URL in the dashboard. The reference schema is [`../AGENT-DEFINITION.md`](https://github.com/hivecommons/hive/blob/v5/src/AGENT-DEFINITION.md), and a worked example lives at [`../examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v5/src/examples/agents/customized-agent.yaml).
 
 ### Writing guide: how issues and PRs should read (`project.writing_guide`)
 
-Every default template that files an issue or PR carries the variable `${WRITING_GUIDE}` immediately before the body template it tells the agent to fill in (`--body "## Finding …"`, `--body "## Test Improvement …"`). It expands to the text of `project.writing_guide`, wrapped in a short header that says who set it and that it governs how the body *reads*, not what the policy requires it to contain. It is **empty by default**, and an empty guide renders nothing — a hive that never sets it gets byte-identical prompts.
+Every default template that files an issue or PR carries the variable `${WRITING_GUIDE}` immediately before the body template it tells the agent to fill in (`--body "## Finding …"`, `--body "## Test Improvement …"`). It expands to the text of `project.writing_guide`, wrapped in a short header that says who set it and that it governs how the body or review comment *reads* — wording, plainness, length, tone — not what the policy requires it to contain. The body template stays authoritative: every section, field and piece of evidence appears in the template's order, and the guide never drops, renames or reorders a section. If the guide asks for a high-level summary, the agent writes it at the top, before the template's first section, as an addition ([#9747](https://github.com/hivecommons/hive/issues/9747)). That opening paragraph and the title are written for a newcomer who does not know the codebase — what the thing is, what the problem or change is, why it matters to a user, in plain words and with no unexplained internal names, paths or jargon; the technical detail follows unchanged in the template's sections below ([#9926](https://github.com/hivecommons/hive/issues/9926)). It is **empty by default**, and an empty guide renders nothing — a hive that never sets it gets byte-identical prompts.
+
+Owners can edit the same value from the dashboard at **Settings → Labels → Writing guide**. The editor writes `project.writing_guide` through the same config-save path as the required-labels policy, so the change takes effect on the next kick, survives restart, and appears in the downloaded `hive.yaml`.
 
 ```yaml
 project:
@@ -769,7 +856,7 @@ project:
 
 Why a setting and not `AGENTS.md` ([#7667](https://github.com/hivecommons/hive/issues/7667)): a style rule in a repo's `AGENTS.md` reaches the agent as background knowledge, lower in the prompt than the policy's own body template, and when the two disagree the agent follows the template. The variable puts the owner's rule *next to* the template, which is the only position that changed anything when tried. The alternative — editing each template in the prompt editor — saves a full copy of that policy to `/data/policies/` that then shadows every upstream update to it, per agent, for a style preference.
 
-Where you will see it: the agent's Prompt Template tab renders the guide where the kick will place it, so you can confirm the setting took. Templates whose prompts are built in Go rather than from a policy file do not all carry the variable: the **review swarm** still does not. The **contributor relay's task prompt** does, since [#8124](https://github.com/hivecommons/hive/issues/8124) — it is built in Go, so it takes the rendered guide as a parameter rather than expanding `${WRITING_GUIDE}`, and places it immediately before the instruction that tells the agent to open the PR. The guide travels with the *assigning* hive, so a relay subscribed to two hives gets each hive's guide on that hive's tasks; see [`contributor-relay.md`](/docs/hive/contributor-relay#the-assigning-hives-writing-guide-travels-with-the-task). Review comments (`reviewer-queue.md`) are deliberately outside it: the guide is about issue and PR bodies.
+Where you will see it: the agent's Prompt Template tab renders the guide where the kick will place it, so you can confirm the setting took. Prompts built in Go take the rendered guide as a parameter rather than expanding `${WRITING_GUIDE}` themselves. That includes the **contributor relay's task prompt**, since [#8124](https://github.com/hivecommons/hive/issues/8124), immediately before the instruction that tells the agent to open the PR. The guide travels with the *assigning* hive, so a relay subscribed to two hives gets each hive's guide on that hive's tasks; see [`contributor-relay.md`](/docs/hive/contributor-relay#the-assigning-hives-writing-guide-travels-with-the-task). The **review swarm** also carries it in review prompts, so posted review comments use the same editorial voice as issue and PR bodies.
 
 ## Label policy: which issues agents may work
 
@@ -797,7 +884,29 @@ Semantics:
 - **Exempt wins on conflict**: an issue carrying both an exempt label and a required label stays excluded. There is deliberately no separate `exclude_labels` field — the exempt list *is* the exclusion mechanism, applied first.
 - PRs and the Hold list are unaffected: open PRs are in-flight work, and held issues still appear under On Hold.
 
-Both polarities are enforced at **enumeration** — the point where GitHub issues become the hive's actionable set — not in the prompt. A filtered issue never enters the queue, never appears in a kick, never triggers plan-from-label, and cannot be re-selected by a confused (or prompt-injected) agent re-listing the repo. Kick prompts additionally state the active require policy so agents know the list is intentionally short. Both lists are edited on the Labels tab; an active require gate is also noted read-only under **Repositories**, and hub-managed hives can receive `issue_filter` with their project config over the heartbeat.
+Both polarities are enforced at **enumeration** — the point where GitHub issues become the hive's actionable set — not in the prompt. A filtered issue never enters the queue, never appears in a kick, never triggers plan-from-label, and cannot be re-selected by a confused (or prompt-injected) agent re-listing the repo. Kick prompts additionally state the active require policy so agents know the list is intentionally short. Both lists are edited on the Labels tab; an active require gate is also noted read-only under **Projects**, and hub-managed hives can receive `issue_filter` with their project config over the heartbeat.
+
+### Reporter trust: who filed it, not only what it is labelled
+
+The two polarities above look only at labels, so a maintainer's issue and a first-time stranger's issue are admitted by the same rule — and at ACMM L6 a stranger's request can be worked and merged on green CI with nobody looking. The require polarity fixes that only by making *everyone*, maintainers included, hand-label their own issues first. **Reporter trust** ([#9665](https://github.com/hivecommons/hive/issues/9665)) splits the two:
+
+```yaml
+project:
+  issue_filter:
+    reporter_trust:
+      enabled: true                                  # off by default — existing hives change nothing
+      trusted_associations: [OWNER, MEMBER, COLLABORATOR]   # the default; CONTRIBUTOR is deliberately not in it
+      trusted_logins: [external-maintainer]          # trusted whatever GitHub says about them
+      untrusted_require_labels: [triage/accepted]    # the default
+      awaiting_label: needs-triage                   # default; set "" to skip the visible wait label
+      comment: true                                  # default; posts one marked wait explanation
+github:
+  reporter_trust_hold: true                          # optional; nil follows reporter_trust.enabled
+```
+
+- **Admission.** GitHub reports an `author_association` on every issue. A reporter in `trusted_associations` (or whose login is in `trusted_logins`) has their issues admitted by the ordinary rules. Anyone else's issue is not actionable until a maintainer adds one of `untrusted_require_labels`. On the first excluded enumeration, the core `github.Client.fetchIssues` poller posts one `<!-- hive:reporter-trust-wait ... -->` comment explaining the gate and applies `awaiting_label` (default `needs-triage`) so the wait is visible; later scans do not repeat the comment. This is a poller-side write, not an agent prompt, and is capped at 10 new notices per poll. Once a maintainer adds the required label, the same poll loop removes the awaiting label only if that marker records that Hive added it, then admits the issue. This runs after the hold/exempt checks and **before** `require_labels`, so the ordinary allow-list still applies to trusted reporters afterwards — "everyone needs an approval label" stays expressible exactly as before. Hive- and bot-filed issues are not judged here; the [#5117 self-authorization gate](https://github.com/hivecommons/hive/blob/v5/src/docs/labels-and-control-signals.md) owns those on the PR side. An unknown reporter (no login, or no association in the payload) is treated as untrusted.
+- **Merge.** A PR whose rationale (its closing or referencing links, or the request's declared issue list) traces to an untrusted reporter's issue receives `hold` at **every** ACMM level, including L6, together with a marked notice explaining who asked. Any one untrusted citation holds. A human removes the label; Hive never auto-releases a reporter-trust hold — the level-hold release path recognises the notice and leaves the label, and holdguard re-holds on a new head SHA. `github.reporter_trust_hold` follows `reporter_trust.enabled` unless set explicitly; `project.repo_policies[].reporter_trust_hold` overrides per repo; `HIVE_REPORTER_TRUST_HOLD` locks it from the environment, exactly like the #5117 knobs.
+- **Where you see it.** Both halves are edited in the dashboard: **Settings → Labels → Reporter trust** (the switch, the association checkboxes, extra logins, triage labels) and **Settings → Repos** (the hold, with the same all-repos default / per-repo override / inherit rows as #5117). An active gate is stated in the read-only note under **Projects**, and each repo card counts issues **needs triage** separately from generic filter refusals. The issue itself carries `needs-triage` while waiting when Hive had to add it. Holds carry the reason in the PR notice and in the `agent_pr_created` audit entry (`reporter_trust_held`, `reporter_login`, `reporter_association`).
 
 **Not the same thing as the contribute filters.** `hub.contribute_labels_mode` + its label list gate which issues are *handed out to external contributors* over `/contribute` — they have never gated the hive's **own** agents, so an operator who allow-listed a queue label there (a common setup for routing labeled issues to contributors) still had a hive whose own scanner could work every other open issue. `project.issue_filter.require_labels` is the agent-side gate; configure both if you want the same label to govern both lanes.
 

@@ -15,7 +15,7 @@ Each agent runs in one of four modes, controlling what actions it can take on Gi
 
 - **Advisory**: Agent observes and records findings as beads on the dashboard. No GitHub interaction.
 - **Measured**: Agent can file GitHub issues to make findings visible to the team. No code changes.
-- **Holdgated**: Agent can write code and open PRs, but every PR gets a `hold` label. A human must review and remove `hold` before merge. Agent never merges. One exception: a hold the hive applied *for level reasons* is released automatically once the current level no longer calls for it — see the promotion note below. A hold **you** applied is never removed automatically.
+- **Holdgated**: Agent can write code and open PRs, but every PR gets a `hold` label. A human must review and remove `hold` before merge. Agent never merges. Level-applied holds are not released automatically on promotion. A human removes them after review; a deliberate one-off `release_level_holds: true` request can release attributable Hive level holds — see the promotion note below. A hold **you** applied is never removed automatically.
 - **Full**: Agent operates autonomously — opens PRs and merges on green CI. Highest trust level.
 
 ## ACMM Levels
@@ -68,9 +68,9 @@ Delivery agents open GitHub issues — bugs, docs gaps, CI problems, security vu
 | **sec-check** | **holdgated** | `sec-check-holdgated.md` |
 | brainstorm | advisory | `brainstorm-advisory.md` |
 
-### L5 — Semi-Autonomous (Semi-Automated) (12 agents)
+### L5 — Semi-Autonomous (Semi-Automated) (13 agents)
 
-Agents open issues AND pull requests. All PRs get a hold label — humans batch-review and approve. Architect produces RFCs, strategist coordinates across agents, and reviewer works the hold-gated PR queue every 30 minutes. The system proposes; it does not merge autonomously.
+Agents open issues AND pull requests. Agent PRs get literal `hold` from the level gate — humans batch-review and approve. The dashboard `hive-pause/<hive-id>` label is a separate manual hold, and `hive/<hive-id>` is provenance only. Architect produces RFCs, strategist coordinates across agents, and reviewer works the hold-gated PR queue every 30 minutes, and adjudicator works escalated (`needs-human`) hive PRs through the reviewer lane every 30 minutes (recommend-close only; closing is operator-only below L6). The system proposes; it does not merge autonomously.
 
 | Agent | Mode | Template |
 |-------|------|----------|
@@ -83,13 +83,14 @@ Agents open issues AND pull requests. All PRs get a hold label — humans batch-
 | architect | holdgated | `architect-holdgated.md` |
 | strategist | holdgated | `strategist-holdgated.md` |
 | reviewer | converse | `reviewer-queue.md` |
+| adjudicator | issues+prs | `reviewer-lane.md` (by role; no `kick_template`) |
 | telemetry (paused) | holdgated | `telemetry-holdgated.md` |
 | operations (paused) | holdgated | `operations-holdgated.md` |
 | brainstorm | advisory | `brainstorm-advisory.md` |
 
-### L6 — Fully Autonomous (13 agents)
+### L6 — Fully Autonomous (14 agents)
 
-Existing autonomous lanes can open issues, create PRs, and auto-merge on green CI. No hold label. Outreach handles community engagement. Reviewer stays advisory even here — its `requires_human` verdict is what pulls a PR out of the auto-merge lane. Telemetry and operations remain paused and use `ISSUES_AND_PRS`, so they never merge their own PRs.
+Existing autonomous lanes can open issues, create PRs, and auto-merge on green CI. Auto-merge is off below L6; switching to L6 turns it on for every active repository, after which owners can toggle repositories individually. Non-outreach L6 PRs do not get the level hold, but outreach PRs are still held for human review. Outreach handles community engagement. Reviewer stays advisory even here: `requires_human` alone does not stop the App auto-merge sweep. `review.require_approval: true` gates scanner eligibility on same-head approval, not the App sweep; use actual holds or GitHub branch rules for a universal merge stop. Adjudicator is the reviewer lane: it repairs, de-escalates, or recommends closing (and may close) escalated `needs-human` hive PRs, and never merges. Telemetry and operations remain paused and use `ISSUES_AND_PRS`, so they never merge their own PRs.
 
 | Agent | Mode | Template |
 |-------|------|----------|
@@ -103,6 +104,7 @@ Existing autonomous lanes can open issues, create PRs, and auto-merge on green C
 | strategist | full | `strategist-full.md` |
 | outreach | full | `outreach-full.md` |
 | reviewer | converse | `reviewer-queue.md` |
+| adjudicator | issues+prs | `reviewer-lane.md` (by role; no `kick_template`) |
 | telemetry (paused) | full | `telemetry-full.md` |
 | operations (paused) | full | `operations-full.md` |
 | brainstorm | advisory | `brainstorm-advisory.md` |
@@ -113,13 +115,13 @@ Existing autonomous lanes can open issues, create PRs, and auto-merge on green C
 
 ## Key Rules
 
-1. **All PRs are holdgated below L6.** No agent can auto-merge unless running at L6 (Fully Autonomous).
+1. **Level holds use literal `hold`.** Agent PRs below L6 are hold-gated with `hold`, and outreach PRs are held at every level. The dashboard `hive-pause/<hive-id>` label is for manual item holds. See [Hive Labels and Control Signals](https://github.com/hivecommons/hive/blob/v5/src/docs/labels-and-control-signals.md).
 2. **Advisory agents never get GH auth.** The `${GH_AUTH}` template variable is only injected into measured, holdgated, full, and converse templates. The converse tier is the one place an agent writes to GitHub without sitting on the mode ladder: `reviewer` is `mode: ADVISORY` plus the orthogonal `converse` capability ([#4492](https://github.com/hivecommons/hive/issues/4492)), which grants comments and PR reviews and nothing else — no issue creation, no relabelling, no push, no merge. It needs the auth block because posting a review *is* a GitHub write.
 3. **Supervisor uses no-GitHub advisory mode.** At every level, supervisor uses `supervisor-nogithub.md` in the built-in ACMM packs — it monitors agent health, not code.
 4. **Mode escalation is per-agent.** At L4, some agents are measured (issues only) while others are holdgated (issues + PRs). The level defines the mix.
 5. **Knowledge priming works at all levels.** The `${KNOWLEDGE}` template variable injects relevant facts from git sources and wiki layers regardless of the agent's mode.
 6. **Brainstorm is always advisory.** It produces KB facts and beads, never GitHub issues or PRs. Its role evolves from inception (L1) to ongoing ideation (L2+), but its mode stays advisory at all levels.
-7. **Reviewer is L5/L6-only by default and never merges.** It joined the L5 and L6 rosters in [#8023](https://github.com/hivecommons/hive/issues/8023) at a 30-minute cadence in every governor mode. Below L5 no pack lists it, so an operator who wants repo-grounded PR review creates it by hand and a pack apply leaves that agent's mode, model, backend, and pause state alone. Its mode stays `ADVISORY` at both levels, including L6: it reads the queue, comments, and returns a verdict, and it is that verdict — `requires_human` or `reject` — that pulls a PR out of the auto-merge lane.
+7. **Reviewer is L5/L6-only by default and never merges.** It joined the L5 and L6 rosters in [#8023](https://github.com/hivecommons/hive/issues/8023) at a 30-minute cadence in every governor mode. Below L5 no pack lists it, so an operator who wants repo-grounded PR review creates it by hand and a pack apply leaves that agent's mode, model, backend, and pause state alone. Its mode stays `ADVISORY` at both levels, including L6: it reads the queue, comments, and returns a verdict. `requires_human` or `reject` stops scanner eligibility only when `review.require_approval: true` requires same-head approval; the App auto-merge sweep does not read those verdicts. Use a hold or GitHub branch rule when merging must stop. See [Running at Level 6](/docs/hive/running-at-level-6#does-the-hive-reviewer-stop-a-merge).
 8. **Telemetry and operations are L5/L6-only opt-in agents.** Below L5 they are absent from the pack roster and dashboard, do not spawn panes, and cannot be kicked. At L5–L6 they use a paused cadence in every governor mode until an operator opts in; they may open issues and PRs but never merge.
 
 ## ioscan hardening defaults per level
@@ -200,9 +202,15 @@ Promoting or demoting a running hive between levels is a single operation — th
 hive reconciles its agent roster and per-agent modes to match the target level.
 
 **From the dashboard:** open the Governor config and set the ACMM level. This is
-the normal path.
+the normal path. When a change makes the L6 self-authored merge sweep eligible,
+Hive turns auto-merge on for every active repository, and the dashboard shows an informational modal listing held App-authored PRs and
+the watched repositories' auto-merge switches so owners can switch off repos that should not participate; it does not release holds.
 
 **Over the API:** `PUT /api/packs/level` with `{"level": N}` where N is 1–6.
+Level-applied `hold` labels are never released automatically on a level change.
+For a deliberate one-off recovery, include `release_level_holds: true` on this
+PUT; Hive removes only its own level-applied `hold` labels whose latest hold
+event was by the App and comments on each PR with the operator and target level.
 
 What happens when the level changes (`handlePackSetLevel` → `ApplyPack`):
 
@@ -214,19 +222,27 @@ What happens when the level changes (`handlePackSetLevel` → `ApplyPack`):
    roster** — adding every agent the level introduces (for example
    architect/strategist at higher levels) and applying each agent's mode for
    that level (advisory → measured → holdgated → full).
+4. If the change crosses the L6 self-merge boundary, Hive restarts the request
+   relay generation so the self-authored auto-merge sweep starts or stops under
+   the new ACMM verdict without waiting for a pod restart or GitHub App re-save.
+   Existing level-applied holds remain held unless this `PUT /api/packs/level`
+   request explicitly included `release_level_holds: true`. When the sweep just
+   became eligible, the response includes `self_merge_sweep_active`,
+   `level_holds_pending`, `repos`, and `level_changed_at` so the dashboard can
+   inform the owner what remains held and which repos participate in L6
+   auto-merge.
 
 Notes:
 
 - **Promotion adds agents and capability; demotion narrows it.** Moving up to L6
   makes agents auto-merge on green CI; moving down returns them to holdgated or
   advisory. The per-level capability grid is the table at the top of this page.
-  Promotion also **releases the level holds the hive itself applied** to open App
-  PRs that the new level no longer requires, so you do not have to clean them up
-  by hand after a level bump. Release is fail-closed: it applies only to
-  App-authored PRs carrying the hive's own attributable level-hold notice, only
-  when the most recent `hold` label event was applied by the App, and never while
-  a self-authorization hold applies. A hold a human applied — or re-applied after
-  the hive removed one — is never touched.
+  Promotion does **not** release level holds the hive itself applied; a human
+  removes `hold`, or an operator makes the one-off API call above. The one-off
+  release is fail-closed: it applies only to PRs carrying the hive's own
+  attributable level-hold notice and only when the most recent `hold` label
+  event was applied by the App. A hold a human applied — or re-applied after the
+  hive removed one — is never touched.
 - **Operator-created agents are preserved.** `ApplyPack` reconciles pack agents;
   agents you created yourself are not removed by a level change (deletion is
   tombstoned separately — see agent configuration).
@@ -271,3 +287,13 @@ entry plus a visible decision bead. The hive-wide `acmm_level` remains the
 ceiling. Until the per-repo ACMM RFC (#6111) lands, Hive keeps this repo-keyed
 seam and teaches the live proxy to apply the repo override on matching
 repository requests so enforcement observes the decision without a restart.
+
+For the narrow L6-except-one-repo case, `project.repo_policies[].auto_merge:
+false` disables only auto-merge on that repository. Below L6, auto-merge is
+effectively off for every repo regardless of stored values. The hive-wide ACMM
+level still determines issue/PR creation authority, but merge authority is removed at
+the `hive-merge` relay, App self-authored sweep, and proxy direct-merge seam.
+The dashboard toggle (`POST /api/repos/auto-merge`) is gated asymmetrically:
+switching auto-merge *off* needs the same tier as pausing the repo (verified
+owner or GitHub repo write), but switching it back *on* restores Hive's merge
+authority and requires a verified owner (#9070).
