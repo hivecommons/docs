@@ -1,0 +1,1 @@
+- Document the required Node.js version (22.19 or newer) in README and CONTRIBUTING (hivecommons/docs#230).

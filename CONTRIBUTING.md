@@ -13,7 +13,8 @@ Thank you for helping improve the Hive Commons documentation site
 ## Before you open a PR
 
 From a fresh checkout, install the exact dependency set and run the local
-validation commands that cover the PR gates:
+validation commands that cover the PR gates. You need Node.js 22.19 or newer
+(the `engines` field in `package.json`; `.nvmrc` pins 22, which CI also uses):
 
 ```bash
 npm ci

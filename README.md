@@ -37,6 +37,8 @@ are used as a fallback.
 
 ## Development
 
+Requires Node.js 22.19 or newer (`.nvmrc` pins 22, matching CI).
+
 ```bash
 npm install
 npm run dev        # http://localhost:3000
