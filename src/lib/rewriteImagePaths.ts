@@ -12,23 +12,28 @@
  *                 or "hive").  Pass an empty string when the file lives directly
  *                 under docs/content/.
  */
-export function rewriteRelativeImagePaths(content: string, baseDir: string): string {
+export function rewriteRelativeImagePaths(
+  content: string,
+  baseDir: string
+): string {
   return content.replace(
     /!\[([^\]]*)\]\(([^)]+)\)/g,
     (match, alt: string, src: string) => {
-      const trimmed = src.trim()
+      const trimmed = src.trim();
       // Leave absolute URLs, absolute paths, data URIs, and anchor-only refs unchanged.
       if (
-        trimmed.startsWith('/') ||
+        trimmed.startsWith("/") ||
         /^https?:\/\//.test(trimmed) ||
-        trimmed.startsWith('data:') ||
-        trimmed.startsWith('#')
+        trimmed.startsWith("data:") ||
+        trimmed.startsWith("#")
       ) {
-        return match
+        return match;
       }
-      const normalised = trimmed.replace(/^\.\//, '')
-      const apiPath = baseDir ? `/docs-images/${baseDir}/${normalised}` : `/docs-images/${normalised}`
-      return `![${alt}](${apiPath})`
+      const normalised = trimmed.replace(/^\.\//, "");
+      const apiPath = baseDir
+        ? `/docs-images/${baseDir}/${normalised}`
+        : `/docs-images/${normalised}`;
+      return `![${alt}](${apiPath})`;
     }
-  )
+  );
 }

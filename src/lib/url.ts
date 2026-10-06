@@ -3,7 +3,7 @@
  * NEXT_PUBLIC_BRANCH=${BRANCH:-main} build command in netlify.toml.
  * Falls back to 'main' for local development or any build that doesn't set the var.
  */
-export const CURRENT_BRANCH = process.env.NEXT_PUBLIC_BRANCH || 'main';
+export const CURRENT_BRANCH = process.env.NEXT_PUBLIC_BRANCH || "main";
 
 /**
  * Get the base URL for the application.

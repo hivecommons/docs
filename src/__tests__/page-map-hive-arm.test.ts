@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { buildPageMap } from '../app/docs/page-map'
+import { describe, expect, it } from "vitest";
+import { buildPageMap } from "../app/docs/page-map";
 
 /**
  * Coverage for the 'hive' arm of getNavStructure() (page-map.ts:527-528)
@@ -14,66 +14,73 @@ import { buildPageMap } from '../app/docs/page-map'
  */
 
 type PageNode = {
-  kind: 'Folder' | 'MdxPage' | 'Meta'
-  name?: string
-  route?: string
-  children?: PageNode[]
-}
+  kind: "Folder" | "MdxPage" | "Meta";
+  name?: string;
+  route?: string;
+  children?: PageNode[];
+};
 
 type BuildResult = {
-  pageMap: PageNode[]
-  routeMap: Record<string, string>
-  filePaths: string[]
-  contentPath: string
-}
+  pageMap: PageNode[];
+  routeMap: Record<string, string>;
+  filePaths: string[];
+  contentPath: string;
+};
 
 function flatten(nodes: PageNode[]): PageNode[] {
-  return nodes.flatMap((n) => [n, ...flatten(n.children || [])])
+  return nodes.flatMap(n => [n, ...flatten(n.children || [])]);
 }
 
 describe("buildPageMap('hive') — getNavStructure switch arm", () => {
-  it('uses the hive base path (not the default kubestellar base)', () => {
-    const { pageMap } = buildPageMap('hive') as unknown as BuildResult
-    const flat = flatten(pageMap)
+  it("uses the hive base path (not the default kubestellar base)", () => {
+    const { pageMap } = buildPageMap("hive") as unknown as BuildResult;
+    const flat = flatten(pageMap);
     const hiveNodes = flat.filter(
-      (n) => typeof n.route === 'string' && n.route.startsWith('/docs/hive/')
-    )
-    expect(hiveNodes.length).toBeGreaterThan(0)
-  })
+      n => typeof n.route === "string" && n.route.startsWith("/docs/hive/")
+    );
+    expect(hiveNodes.length).toBeGreaterThan(0);
+  });
 
   it('exposes NAV_STRUCTURE_HIVE top-level sections ("Overview" and "Operations")', () => {
     // If the switch fell through to the kubestellar default, the top-level
     // categories would include "Getting Started" and "User Guide" — not the
     // hive-specific "Operations" section.
-    const { pageMap } = buildPageMap('hive') as unknown as BuildResult
-    const titles = pageMap.map((n) => n.name)
-    expect(titles).toContain('Overview')
-    expect(titles).toContain('Operations')
-  })
+    const { pageMap } = buildPageMap("hive") as unknown as BuildResult;
+    const titles = pageMap.map(n => n.name);
+    expect(titles).toContain("Overview");
+    expect(titles).toContain("Operations");
+  });
 
-  it('publishes the operator security guide in the Security section', () => {
-    const { pageMap, routeMap, filePaths } = buildPageMap('hive') as unknown as BuildResult
-    const security = pageMap.find((node) => node.name === 'Security')
-    expect(flatten(security?.children || [])).toContainEqual(expect.objectContaining({
-      kind: 'MdxPage',
-      name: 'Securing your hive',
-      route: '/docs/hive/security/securing-your-hive',
-    }))
-    expect(routeMap['security/securing-your-hive']).toBe('securing-your-hive.md')
-    expect(routeMap['securing-your-hive']).toBe('securing-your-hive.md')
-    expect(filePaths).toContain('securing-your-hive.md')
-  })
+  it("publishes the operator security guide in the Security section", () => {
+    const { pageMap, routeMap, filePaths } = buildPageMap(
+      "hive"
+    ) as unknown as BuildResult;
+    const security = pageMap.find(node => node.name === "Security");
+    expect(flatten(security?.children || [])).toContainEqual(
+      expect.objectContaining({
+        kind: "MdxPage",
+        name: "Securing your hive",
+        route: "/docs/hive/security/securing-your-hive",
+      })
+    );
+    expect(routeMap["security/securing-your-hive"]).toBe(
+      "securing-your-hive.md"
+    );
+    expect(routeMap["securing-your-hive"]).toBe("securing-your-hive.md");
+    expect(filePaths).toContain("securing-your-hive.md");
+  });
 
-  it('registers hive-specific pages such as architecture.md and governor.md', () => {
-    const { routeMap, filePaths } = buildPageMap('hive') as unknown as BuildResult
-    expect(filePaths).toContain('architecture.md')
-    expect(filePaths).toContain('governor.md')
+  it("registers hive-specific pages such as architecture.md and governor.md", () => {
+    const { routeMap, filePaths } = buildPageMap(
+      "hive"
+    ) as unknown as BuildResult;
+    expect(filePaths).toContain("architecture.md");
+    expect(filePaths).toContain("governor.md");
     // The Operations section maps { 'Governor': 'governor.md' } via a
     // slugified title, so the route key ends with '/governor'.
     const governorKey = Object.keys(routeMap).find(
-      (k) => routeMap[k] === 'governor.md',
-    )
-    expect(governorKey).toBeDefined()
-  })
-
-})
+      k => routeMap[k] === "governor.md"
+    );
+    expect(governorKey).toBeDefined();
+  });
+});

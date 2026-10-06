@@ -43,11 +43,14 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-const useSharedConfigMock = vi.fn<() => { config: SharedConfig | null }>(() => ({
-  config: null,
-}));
-vi.mock("@/hooks/useSharedConfig", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/hooks/useSharedConfig")>();
+const useSharedConfigMock = vi.fn<() => { config: SharedConfig | null }>(
+  () => ({
+    config: null,
+  })
+);
+vi.mock("@/hooks/useSharedConfig", async importOriginal => {
+  const actual =
+    await importOriginal<typeof import("@/hooks/useSharedConfig")>();
   return {
     ...actual,
     useSharedConfig: () => useSharedConfigMock(),
@@ -56,7 +59,9 @@ vi.mock("@/hooks/useSharedConfig", async (importOriginal) => {
 
 import { RelatedProjects } from "@/components/docs/RelatedProjects";
 
-function configWith(relatedProjects: SharedConfig["relatedProjects"]): SharedConfig {
+function configWith(
+  relatedProjects: SharedConfig["relatedProjects"]
+): SharedConfig {
   return {
     versions: {},
     projects: {},
@@ -111,7 +116,7 @@ describe("project list and highlighting", () => {
     render(
       <RelatedProjects
         generalSections={[{ title: "Community", href: "/docs/community" }]}
-      />,
+      />
     );
     expect(screen.getByText("Community").className).toContain("font-medium");
     expect(screen.getByText("Hive").className).not.toContain("font-medium");
@@ -122,7 +127,9 @@ describe("getProjectUrl branch-deploy handling", () => {
   it("keeps links relative on localhost (production-like host)", async () => {
     render(<RelatedProjects />);
     // The mounted effect re-evaluates isProduction from window.location.
-    expect((await screen.findByText("pluk")).getAttribute("href")).toBe("/docs/pluk");
+    expect((await screen.findByText("pluk")).getAttribute("href")).toBe(
+      "/docs/pluk"
+    );
   });
 
   it("prefixes the production origin on unknown hostnames", async () => {
@@ -134,12 +141,17 @@ describe("getProjectUrl branch-deploy handling", () => {
     try {
       render(<RelatedProjects />);
       expect((await screen.findByText("pluk")).getAttribute("href")).toBe(
-        "https://docs.hivecommons.dev/docs/pluk",
+        "https://docs.hivecommons.dev/docs/pluk"
       );
       // Absolute URLs render as plain <a>, not next/link.
-      expect(screen.getByText("pluk").getAttribute("data-next-link")).toBeNull();
+      expect(
+        screen.getByText("pluk").getAttribute("data-next-link")
+      ).toBeNull();
     } finally {
-      Object.defineProperty(window, "location", { configurable: true, value: original });
+      Object.defineProperty(window, "location", {
+        configurable: true,
+        value: original,
+      });
     }
   });
 });
@@ -147,7 +159,9 @@ describe("getProjectUrl branch-deploy handling", () => {
 describe("Legacy secondary section", () => {
   it("is collapsed by default and expands via the Legacy button", () => {
     render(<RelatedProjects />);
-    const wrapper = screen.getByText("Old Thing").closest("div.overflow-hidden");
+    const wrapper = screen
+      .getByText("Old Thing")
+      .closest("div.overflow-hidden");
     expect(wrapper?.className).toContain("max-h-0");
     fireEvent.click(screen.getByText("Legacy"));
     expect(wrapper?.className).toContain("max-h-[2000px]");
@@ -157,7 +171,9 @@ describe("Legacy secondary section", () => {
 
   it("syncs with autoExpandLegacy across rerenders", () => {
     const { rerender } = render(<RelatedProjects autoExpandLegacy={false} />);
-    const wrapper = screen.getByText("Old Thing").closest("div.overflow-hidden");
+    const wrapper = screen
+      .getByText("Old Thing")
+      .closest("div.overflow-hidden");
     expect(wrapper?.className).toContain("max-h-0");
     rerender(<RelatedProjects autoExpandLegacy={true} />);
     expect(wrapper?.className).toContain("max-h-[2000px]");
@@ -203,9 +219,11 @@ describe("renderLegacyMenuTree", () => {
     renderTree();
     expect(screen.getByText("Guides")).toBeTruthy();
     expect(screen.getByText("Quickstart").getAttribute("href")).toBe(
-      "/docs/legacy/quickstart",
+      "/docs/legacy/quickstart"
     );
-    expect(screen.getByText("Quickstart").getAttribute("data-next-link")).toBe("true");
+    expect(screen.getByText("Quickstart").getAttribute("data-next-link")).toBe(
+      "true"
+    );
     const external = screen.getByText("External");
     expect(external.getAttribute("href")).toBe("https://example.com/legacy");
     expect(external.getAttribute("data-next-link")).toBeNull();
@@ -218,7 +236,7 @@ describe("renderLegacyMenuTree", () => {
     expect(screen.queryByText("Deepest")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Deep/ }));
     expect(screen.getByText("Deepest").getAttribute("href")).toBe(
-      "/docs/legacy/deepest",
+      "/docs/legacy/deepest"
     );
     fireEvent.click(screen.getByRole("button", { name: /Deep/ }));
     expect(screen.queryByText("Deepest")).toBeNull();

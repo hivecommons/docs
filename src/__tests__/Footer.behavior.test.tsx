@@ -16,10 +16,18 @@ import en from "../../messages/en.json";
 
 vi.mock("@/components/index", () => ({
   GridLines: (props: { horizontalLines?: number; verticalLines?: number }) => (
-    <div data-testid="grid-lines" data-h={props.horizontalLines} data-v={props.verticalLines} />
+    <div
+      data-testid="grid-lines"
+      data-h={props.horizontalLines}
+      data-v={props.verticalLines}
+    />
   ),
   StarField: (props: { density?: string; cometCount?: number }) => (
-    <div data-testid="star-field" data-density={props.density} data-comets={props.cometCount} />
+    <div
+      data-testid="star-field"
+      data-density={props.density}
+      data-comets={props.cometCount}
+    />
   ),
 }));
 
@@ -40,14 +48,15 @@ vi.mock("next-intl", async () => {
     footer: Record<string, string>;
   };
   return {
-    useTranslations: (ns: string) => (key: string, params?: Record<string, unknown>) => {
-      const table = ns === "footer" ? messages.footer : {};
-      let msg = table[key] ?? key;
-      for (const [k, v] of Object.entries(params ?? {})) {
-        msg = msg.replace(`{${k}}`, String(v));
-      }
-      return msg;
-    },
+    useTranslations:
+      (ns: string) => (key: string, params?: Record<string, unknown>) => {
+        const table = ns === "footer" ? messages.footer : {};
+        let msg = table[key] ?? key;
+        for (const [k, v] of Object.entries(params ?? {})) {
+          msg = msg.replace(`{${k}}`, String(v));
+        }
+        return msg;
+      },
   };
 });
 
@@ -102,7 +111,7 @@ describe("Footer content", () => {
       name: footerMsgs.releasesNotes,
     });
     expect(releaseLink.getAttribute("href")).toBe(
-      "https://github.com/hivecommons/hive/releases",
+      "https://github.com/hivecommons/hive/releases"
     );
     expect(releaseLink.getAttribute("target")).toBe("_blank");
     expect(releaseLink.getAttribute("rel")).toBe("noopener noreferrer");
@@ -112,22 +121,26 @@ describe("Footer content", () => {
     expect(liveDemo.getAttribute("rel")).toBe("noopener noreferrer");
 
     expect(
-      screen.getByRole("link", { name: footerMsgs.news }).getAttribute("href"),
+      screen.getByRole("link", { name: footerMsgs.news }).getAttribute("href")
     ).toBe("/docs/news/latest-news");
     // getLocalizedUrl passes relative URLs through unchanged
     expect(
-      screen.getByRole("link", { name: footerMsgs.overview }).getAttribute("href"),
+      screen
+        .getByRole("link", { name: footerMsgs.overview })
+        .getAttribute("href")
     ).toBe("/docs");
 
     const socials = screen
       .getAllByRole("link")
-      .filter((a) => a.getAttribute("href") === "https://github.com/hivecommons");
+      .filter(a => a.getAttribute("href") === "https://github.com/hivecommons");
     expect(socials.length).toBeGreaterThanOrEqual(4);
   });
 
   it("renders the background animation layers", () => {
     render(<Footer />);
-    expect(screen.getByTestId("star-field").getAttribute("data-density")).toBe("low");
+    expect(screen.getByTestId("star-field").getAttribute("data-density")).toBe(
+      "low"
+    );
     expect(screen.getByTestId("grid-lines").getAttribute("data-h")).toBe("21");
     expect(screen.getByTestId("grid-lines").getAttribute("data-v")).toBe("15");
   });
@@ -135,7 +148,9 @@ describe("Footer content", () => {
 
 describe("newsletter subscribe form", () => {
   function emailInput(): HTMLInputElement {
-    return screen.getByPlaceholderText(footerMsgs.emailPlaceholder) as HTMLInputElement;
+    return screen.getByPlaceholderText(
+      footerMsgs.emailPlaceholder
+    ) as HTMLInputElement;
   }
   function form(): HTMLFormElement {
     return document.getElementById("newsletter-form") as HTMLFormElement;
@@ -164,7 +179,7 @@ describe("newsletter subscribe form", () => {
     fireEvent.submit(form());
     expect(alertSpy).toHaveBeenCalledTimes(1);
     expect(alertSpy).toHaveBeenCalledWith(
-      "Subscriptions are not available yet. Please try again later.",
+      "Subscriptions are not available yet. Please try again later."
     );
     expect(emailInput().value).toBe("");
   });

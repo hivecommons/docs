@@ -24,6 +24,7 @@ npm test              # Vitest unit tests
 npx vitest run --coverage   # what CI runs: tests plus the coverage gate
 npm run check-links   # internal docs links
 npm run lint          # ESLint for src/, scripts/ and netlify/
+npm run format        # Prettier; CI runs format:check, so run this before pushing
 npm run build         # production build and doc-sync scripts
 ```
 
@@ -54,4 +55,3 @@ actual security-sensitive surface: the Netlify serverless function in
 `netlify.toml`), and dependency bumps (`npm audit`, Dependabot PRs). This repo
 has no Dockerfiles or Kubernetes manifests, so those checklist items do not
 apply here — leave them unchecked as the template instructs.
-

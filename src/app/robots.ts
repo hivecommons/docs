@@ -1,13 +1,13 @@
-import type { MetadataRoute } from 'next'
+import type { MetadataRoute } from "next";
 
-const SITE_URL = 'https://docs.hivecommons.dev'
+const SITE_URL = "https://docs.hivecommons.dev";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
-      userAgent: '*',
-      allow: '/',
+      userAgent: "*",
+      allow: "/",
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
-  }
+  };
 }

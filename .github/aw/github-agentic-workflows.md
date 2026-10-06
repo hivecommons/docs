@@ -158,362 +158,364 @@ The YAML frontmatter supports these fields:
        version: "3.12"
        action-repo: "actions/setup-python"
        action-version: "v5"
- ```
+    ```
+
+````
 
 - **`jobs:`** - Groups together all the jobs that run in the workflow (object)
-  - Standard GitHub Actions jobs configuration
-  - Each job can have: `name`, `runs-on`, `steps`, `needs`, `if`, `env`, `permissions`, `timeout-minutes`, etc.
-  - For most agentic workflows, jobs are auto-generated; only specify this for advanced multi-job workflows
-  - Example:
-    ```yaml
-    jobs:
-      custom-job:
-        runs-on: ubuntu-latest
-        steps:
-          - name: Custom step
-            run: echo "Custom job"
-    ```
+ - Standard GitHub Actions jobs configuration
+ - Each job can have: `name`, `runs-on`, `steps`, `needs`, `if`, `env`, `permissions`, `timeout-minutes`, etc.
+ - For most agentic workflows, jobs are auto-generated; only specify this for advanced multi-job workflows
+ - Example:
+   ```yaml
+   jobs:
+     custom-job:
+       runs-on: ubuntu-latest
+       steps:
+         - name: Custom step
+           run: echo "Custom job"
+   ```
 
 - **`engine:`** - AI processor configuration
-  - String format: `"copilot"` (default, recommended), `"custom"` (user-defined steps)
-  - ⚠️ **Experimental engines**: `"claude"` and `"codex"` are available but experimental
-  - Object format for extended configuration:
-    ```yaml
-    engine:
-      id: copilot # Required: coding agent identifier (copilot, custom, or experimental: claude, codex)
-      version: beta # Optional: version of the action (has sensible default)
-      model: gpt-5 # Optional: LLM model to use (has sensible default)
-      max-turns: 5 # Optional: maximum chat iterations per run (has sensible default)
-      max-concurrency: 3 # Optional: max concurrent workflows across all workflows (default: 3)
-      env: # Optional: custom environment variables (object)
-        DEBUG_MODE: "true"
-      args: ["--verbose"] # Optional: custom CLI arguments injected before prompt (array)
-      error_patterns: # Optional: custom error pattern recognition (array)
-        - pattern: "ERROR: (.+)"
-          level_group: 1
-    ```
-  - **Note**: The `version`, `model`, `max-turns`, and `max-concurrency` fields have sensible defaults and can typically be omitted unless you need specific customization.
-  - **Custom engine format** (⚠️ experimental):
+ - String format: `"copilot"` (default, recommended), `"custom"` (user-defined steps)
+ - ⚠️ **Experimental engines**: `"claude"` and `"codex"` are available but experimental
+ - Object format for extended configuration:
+   ```yaml
+   engine:
+     id: copilot # Required: coding agent identifier (copilot, custom, or experimental: claude, codex)
+     version: beta # Optional: version of the action (has sensible default)
+     model: gpt-5 # Optional: LLM model to use (has sensible default)
+     max-turns: 5 # Optional: maximum chat iterations per run (has sensible default)
+     max-concurrency: 3 # Optional: max concurrent workflows across all workflows (default: 3)
+     env: # Optional: custom environment variables (object)
+       DEBUG_MODE: "true"
+     args: ["--verbose"] # Optional: custom CLI arguments injected before prompt (array)
+     error_patterns: # Optional: custom error pattern recognition (array)
+       - pattern: "ERROR: (.+)"
+         level_group: 1
+   ```
+ - **Note**: The `version`, `model`, `max-turns`, and `max-concurrency` fields have sensible defaults and can typically be omitted unless you need specific customization.
+ - **Custom engine format** (⚠️ experimental):
 
-    ```yaml
-    engine:
-      id: custom # Required: custom engine identifier
-      max-turns: 10 # Optional: maximum iterations (for consistency)
-      max-concurrency: 5 # Optional: max concurrent workflows (for consistency)
-      steps: # Required: array of custom GitHub Actions steps
-        - name: Run tests
-          run: npm test
-    ```
+   ```yaml
+   engine:
+     id: custom # Required: custom engine identifier
+     max-turns: 10 # Optional: maximum iterations (for consistency)
+     max-concurrency: 5 # Optional: max concurrent workflows (for consistency)
+     steps: # Required: array of custom GitHub Actions steps
+       - name: Run tests
+         run: npm test
+   ```
 
-    The `custom` engine allows you to define your own GitHub Actions steps instead of using an AI processor. Each step in the `steps` array follows standard GitHub Actions step syntax with `name`, `uses`/`run`, `with`, `env`, etc. This is useful for deterministic workflows that don't require AI processing.
+   The `custom` engine allows you to define your own GitHub Actions steps instead of using an AI processor. Each step in the `steps` array follows standard GitHub Actions step syntax with `name`, `uses`/`run`, `with`, `env`, etc. This is useful for deterministic workflows that don't require AI processing.
 
-    **Environment Variables Available to Custom Engines:**
+   **Environment Variables Available to Custom Engines:**
 
-    Custom engine steps have access to the following environment variables:
-    - **`$GH_AW_PROMPT`**: Path to the generated prompt file (`/tmp/gh-aw/aw-prompts/prompt.txt`) containing the markdown content from the workflow. This file contains the natural language instructions that would normally be sent to an AI processor. Custom engines can read this file to access the workflow's markdown content programmatically.
-    - **`$GH_AW_SAFE_OUTPUTS`**: Path to the safe outputs file (when safe-outputs are configured). Used for writing structured output that gets processed automatically.
-    - **`$GH_AW_MAX_TURNS`**: Maximum number of turns/iterations (when max-turns is configured in engine config).
+   Custom engine steps have access to the following environment variables:
+   - **`$GH_AW_PROMPT`**: Path to the generated prompt file (`/tmp/gh-aw/aw-prompts/prompt.txt`) containing the markdown content from the workflow. This file contains the natural language instructions that would normally be sent to an AI processor. Custom engines can read this file to access the workflow's markdown content programmatically.
+   - **`$GH_AW_SAFE_OUTPUTS`**: Path to the safe outputs file (when safe-outputs are configured). Used for writing structured output that gets processed automatically.
+   - **`$GH_AW_MAX_TURNS`**: Maximum number of turns/iterations (when max-turns is configured in engine config).
 
-    Example of accessing the prompt content:
+   Example of accessing the prompt content:
 
-    ```bash
-    # Read the workflow prompt content
-    cat $GH_AW_PROMPT
+   ```bash
+   # Read the workflow prompt content
+   cat $GH_AW_PROMPT
 
-    # Process the prompt content in a custom step
-    - name: Process workflow instructions
-      run: |
-        echo "Workflow instructions:"
-        cat $GH_AW_PROMPT
-        # Add your custom processing logic here
-    ```
+   # Process the prompt content in a custom step
+   - name: Process workflow instructions
+     run: |
+       echo "Workflow instructions:"
+       cat $GH_AW_PROMPT
+       # Add your custom processing logic here
+   ```
 
 - **`network:`** - Network access control for AI engines (top-level field)
-  - String format: `"defaults"` (curated allow-list of development domains)
-  - Empty object format: `{}` (no network access)
-  - Object format for custom permissions:
-    ```yaml
-    network:
-      allowed:
-        - "example.com"
-        - "*.trusted-domain.com"
-      firewall: true # Optional: Enable AWF (Agent Workflow Firewall) for Copilot engine
-    ```
-  - **Firewall configuration** (Copilot engine only):
-    ```yaml
-    network:
-      firewall:
-        version: "v1.0.0" # Optional: AWF version (defaults to latest)
-        log-level: debug # Optional: debug, info (default), warn, error
-        args: ["--custom-arg", "value"] # Optional: additional AWF arguments
-    ```
+ - String format: `"defaults"` (curated allow-list of development domains)
+ - Empty object format: `{}` (no network access)
+ - Object format for custom permissions:
+   ```yaml
+   network:
+     allowed:
+       - "example.com"
+       - "*.trusted-domain.com"
+     firewall: true # Optional: Enable AWF (Agent Workflow Firewall) for Copilot engine
+   ```
+ - **Firewall configuration** (Copilot engine only):
+   ```yaml
+   network:
+     firewall:
+       version: "v1.0.0" # Optional: AWF version (defaults to latest)
+       log-level: debug # Optional: debug, info (default), warn, error
+       args: ["--custom-arg", "value"] # Optional: additional AWF arguments
+   ```
 - **`tools:`** - Tool configuration for coding agent
-  - `github:` - GitHub API tools
-    - `allowed:` - Array of allowed GitHub API functions
-    - `mode:` - "local" (Docker, default) or "remote" (hosted)
-    - `version:` - MCP server version (local mode only)
-    - `args:` - Additional command-line arguments (local mode only)
-    - `read-only:` - Restrict to read-only operations (boolean)
-    - `github-token:` - Custom GitHub token
-    - `toolsets:` - Enable specific GitHub toolset groups (array only)
-      - **Default toolsets** (when unspecified): `context`, `repos`, `issues`, `pull_requests`, `users`
-      - **All toolsets**: `context`, `repos`, `issues`, `pull_requests`, `actions`, `code_security`, `dependabot`, `discussions`, `experiments`, `gists`, `labels`, `notifications`, `orgs`, `projects`, `secret_protection`, `security_advisories`, `stargazers`, `users`, `search`
-      - Use `[default]` for recommended toolsets, `[all]` to enable everything
-      - Examples: `toolsets: [default]`, `toolsets: [default, discussions]`, `toolsets: [repos, issues]`
-      - **Recommended**: Prefer `toolsets:` over `allowed:` for better organization and reduced configuration verbosity
-  - `agentic-workflows:` - GitHub Agentic Workflows MCP server for workflow introspection
-    - Provides tools for:
-      - `status` - Show status of workflow files in the repository
-      - `compile` - Compile markdown workflows to YAML
-      - `logs` - Download and analyze workflow run logs
-      - `audit` - Investigate workflow run failures and generate reports
-    - **Use case**: Enable AI agents to analyze GitHub Actions traces and improve workflows based on execution history
-    - **Example**: Configure with `agentic-workflows: true` or `agentic-workflows:` (no additional configuration needed)
-  - `edit:` - File editing tools (required to write to files in the repository)
-  - `web-fetch:` - Web content fetching tools
-  - `web-search:` - Web search tools
-  - `bash:` - Shell command tools
-  - `playwright:` - Browser automation tools
-  - Custom tool names for MCP servers
+ - `github:` - GitHub API tools
+   - `allowed:` - Array of allowed GitHub API functions
+   - `mode:` - "local" (Docker, default) or "remote" (hosted)
+   - `version:` - MCP server version (local mode only)
+   - `args:` - Additional command-line arguments (local mode only)
+   - `read-only:` - Restrict to read-only operations (boolean)
+   - `github-token:` - Custom GitHub token
+   - `toolsets:` - Enable specific GitHub toolset groups (array only)
+     - **Default toolsets** (when unspecified): `context`, `repos`, `issues`, `pull_requests`, `users`
+     - **All toolsets**: `context`, `repos`, `issues`, `pull_requests`, `actions`, `code_security`, `dependabot`, `discussions`, `experiments`, `gists`, `labels`, `notifications`, `orgs`, `projects`, `secret_protection`, `security_advisories`, `stargazers`, `users`, `search`
+     - Use `[default]` for recommended toolsets, `[all]` to enable everything
+     - Examples: `toolsets: [default]`, `toolsets: [default, discussions]`, `toolsets: [repos, issues]`
+     - **Recommended**: Prefer `toolsets:` over `allowed:` for better organization and reduced configuration verbosity
+ - `agentic-workflows:` - GitHub Agentic Workflows MCP server for workflow introspection
+   - Provides tools for:
+     - `status` - Show status of workflow files in the repository
+     - `compile` - Compile markdown workflows to YAML
+     - `logs` - Download and analyze workflow run logs
+     - `audit` - Investigate workflow run failures and generate reports
+   - **Use case**: Enable AI agents to analyze GitHub Actions traces and improve workflows based on execution history
+   - **Example**: Configure with `agentic-workflows: true` or `agentic-workflows:` (no additional configuration needed)
+ - `edit:` - File editing tools (required to write to files in the repository)
+ - `web-fetch:` - Web content fetching tools
+ - `web-search:` - Web search tools
+ - `bash:` - Shell command tools
+ - `playwright:` - Browser automation tools
+ - Custom tool names for MCP servers
 
 - **`safe-outputs:`** - Safe output processing configuration (preferred way to handle GitHub API write operations)
-  - `create-issue:` - Safe GitHub issue creation (bugs, features)
+ - `create-issue:` - Safe GitHub issue creation (bugs, features)
 
-    ```yaml
-    safe-outputs:
-      create-issue:
-        title-prefix: "[ai] " # Optional: prefix for issue titles
-        labels: [automation, agentic] # Optional: labels to attach to issues
-        assignees: [user1, copilot] # Optional: assignees (use 'copilot' for bot)
-        max: 5 # Optional: maximum number of issues (default: 1)
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
+   ```yaml
+   safe-outputs:
+     create-issue:
+       title-prefix: "[ai] " # Optional: prefix for issue titles
+       labels: [automation, agentic] # Optional: labels to attach to issues
+       assignees: [user1, copilot] # Optional: assignees (use 'copilot' for bot)
+       max: 5 # Optional: maximum number of issues (default: 1)
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
 
-    When using `safe-outputs.create-issue`, the main job does **not** need `issues: write` permission since issue creation is handled by a separate job with appropriate permissions.
+   When using `safe-outputs.create-issue`, the main job does **not** need `issues: write` permission since issue creation is handled by a separate job with appropriate permissions.
 
-    **Temporary IDs and Sub-Issues:**
-    When creating multiple issues, use `temporary_id` (format: `aw_` + 12 hex chars) to reference parent issues before creation. References like `#aw_abc123def456` in issue bodies are automatically replaced with actual issue numbers. Use the `parent` field to create sub-issue relationships:
+   **Temporary IDs and Sub-Issues:**
+   When creating multiple issues, use `temporary_id` (format: `aw_` + 12 hex chars) to reference parent issues before creation. References like `#aw_abc123def456` in issue bodies are automatically replaced with actual issue numbers. Use the `parent` field to create sub-issue relationships:
 
-    ```json
-    {"type": "create_issue", "temporary_id": "aw_abc123def456", "title": "Parent", "body": "Parent issue"}
-    {"type": "create_issue", "parent": "aw_abc123def456", "title": "Sub-task", "body": "References #aw_abc123def456"}
-    ```
+   ```json
+   {"type": "create_issue", "temporary_id": "aw_abc123def456", "title": "Parent", "body": "Parent issue"}
+   {"type": "create_issue", "parent": "aw_abc123def456", "title": "Sub-task", "body": "References #aw_abc123def456"}
+   ```
 
-  - `close-issue:` - Close issues with comment
-    ```yaml
-    safe-outputs:
-      close-issue:
-        target: "triggering" # Optional: "triggering" (default), "*", or number
-        required-labels: [automated] # Optional: only close with any of these labels
-        required-title-prefix: "[bot]" # Optional: only close matching prefix
-        max: 20 # Optional: max closures (default: 1)
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-  - `create-discussion:` - Safe GitHub discussion creation (status, audits, reports, logs)
+ - `close-issue:` - Close issues with comment
+   ```yaml
+   safe-outputs:
+     close-issue:
+       target: "triggering" # Optional: "triggering" (default), "*", or number
+       required-labels: [automated] # Optional: only close with any of these labels
+       required-title-prefix: "[bot]" # Optional: only close matching prefix
+       max: 20 # Optional: max closures (default: 1)
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+ - `create-discussion:` - Safe GitHub discussion creation (status, audits, reports, logs)
 
-    ```yaml
-    safe-outputs:
-      create-discussion:
-        title-prefix: "[ai] " # Optional: prefix for discussion titles
-        category: "General" # Optional: discussion category name, slug, or ID (defaults to first category if not specified)
-        max: 3 # Optional: maximum number of discussions (default: 1)
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
+   ```yaml
+   safe-outputs:
+     create-discussion:
+       title-prefix: "[ai] " # Optional: prefix for discussion titles
+       category: "General" # Optional: discussion category name, slug, or ID (defaults to first category if not specified)
+       max: 3 # Optional: maximum number of discussions (default: 1)
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
 
-    The `category` field is optional and can be specified by name (e.g., "General"), slug (e.g., "general"), or ID (e.g., "DIC_kwDOGFsHUM4BsUn3"). If not specified, discussions will be created in the first available category. Category resolution tries ID first, then name, then slug.
+   The `category` field is optional and can be specified by name (e.g., "General"), slug (e.g., "general"), or ID (e.g., "DIC_kwDOGFsHUM4BsUn3"). If not specified, discussions will be created in the first available category. Category resolution tries ID first, then name, then slug.
 
-    When using `safe-outputs.create-discussion`, the main job does **not** need `discussions: write` permission since discussion creation is handled by a separate job with appropriate permissions.
+   When using `safe-outputs.create-discussion`, the main job does **not** need `discussions: write` permission since discussion creation is handled by a separate job with appropriate permissions.
 
-  - `close-discussion:` - Close discussions with comment and resolution
-    ```yaml
-    safe-outputs:
-      close-discussion:
-        target: "triggering" # Optional: "triggering" (default), "*", or number
-        required-category: "Ideas" # Optional: only close in category
-        required-labels: [resolved] # Optional: only close with labels
-        required-title-prefix: "[ai]" # Optional: only close matching prefix
-        max: 1 # Optional: max closures (default: 1)
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    Resolution reasons: `RESOLVED`, `DUPLICATE`, `OUTDATED`, `ANSWERED`.
-  - `add-comment:` - Safe comment creation on issues/PRs/discussions
-    ```yaml
-    safe-outputs:
-      add-comment:
-        max: 3 # Optional: maximum number of comments (default: 1)
-        target: "*" # Optional: target for comments (default: "triggering")
-        discussion: true # Optional: target discussions
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    When using `safe-outputs.add-comment`, the main job does **not** need `issues: write` or `pull-requests: write` permissions since comment creation is handled by a separate job with appropriate permissions.
-  - `create-pull-request:` - Safe pull request creation with git patches
-    ```yaml
-    safe-outputs:
-      create-pull-request:
-        title-prefix: "[ai] " # Optional: prefix for PR titles
-        labels: [automation, ai-agent] # Optional: labels to attach to PRs
-        reviewers: [user1, copilot] # Optional: reviewers (use 'copilot' for bot)
-        draft: true # Optional: create as draft PR (defaults to true)
-        if-no-changes: "warn" # Optional: "warn" (default), "error", or "ignore"
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    When using `output.create-pull-request`, the main job does **not** need `contents: write` or `pull-requests: write` permissions since PR creation is handled by a separate job with appropriate permissions.
-  - `create-pull-request-review-comment:` - Safe PR review comment creation on code lines
-    ```yaml
-    safe-outputs:
-      create-pull-request-review-comment:
-        max: 3 # Optional: maximum number of review comments (default: 1)
-        side: "RIGHT" # Optional: side of diff ("LEFT" or "RIGHT", default: "RIGHT")
-        target: "*" # Optional: "triggering" (default), "*", or number
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    When using `safe-outputs.create-pull-request-review-comment`, the main job does **not** need `pull-requests: write` permission since review comment creation is handled by a separate job with appropriate permissions.
-  - `update-issue:` - Safe issue updates
-    ```yaml
-    safe-outputs:
-      update-issue:
-        status: true # Optional: allow updating issue status (open/closed)
-        target: "*" # Optional: target for updates (default: "triggering")
-        title: true # Optional: allow updating issue title
-        body: true # Optional: allow updating issue body
-        max: 3 # Optional: maximum number of issues to update (default: 1)
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    When using `safe-outputs.update-issue`, the main job does **not** need `issues: write` permission since issue updates are handled by a separate job with appropriate permissions.
-  - `update-pull-request:` - Update PR title or body
-    ```yaml
-    safe-outputs:
-      update-pull-request:
-        title: true # Optional: enable title updates (default: true)
-        body: true # Optional: enable body updates (default: true)
-        max: 1 # Optional: max updates (default: 1)
-        target: "*" # Optional: "triggering" (default), "*", or number
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    Operation types: `append` (default), `prepend`, `replace`.
-  - `close-pull-request:` - Safe pull request closing with filtering
-    ```yaml
-    safe-outputs:
-      close-pull-request:
-        required-labels: [test, automated] # Optional: only close PRs with these labels
-        required-title-prefix: "[bot]" # Optional: only close PRs with this title prefix
-        target: "triggering" # Optional: "triggering" (default), "*" (any PR), or explicit PR number
-        max: 10 # Optional: maximum number of PRs to close (default: 1)
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    When using `safe-outputs.close-pull-request`, the main job does **not** need `pull-requests: write` permission since PR closing is handled by a separate job with appropriate permissions.
-  - `add-labels:` - Safe label addition to issues or PRs
-    ```yaml
-    safe-outputs:
-      add-labels:
-        allowed: [bug, enhancement, documentation] # Optional: restrict to specific labels
-        max: 3 # Optional: maximum number of labels (default: 3)
-        target: "*" # Optional: "triggering" (default), "*" (any issue/PR), or number
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    When using `safe-outputs.add-labels`, the main job does **not** need `issues: write` or `pull-requests: write` permission since label addition is handled by a separate job with appropriate permissions.
-  - `add-reviewer:` - Add reviewers to pull requests
-    ```yaml
-    safe-outputs:
-      add-reviewer:
-        reviewers: [user1, copilot] # Optional: restrict to specific reviewers
-        max: 3 # Optional: max reviewers (default: 3)
-        target: "*" # Optional: "triggering" (default), "*", or number
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    Use `reviewers: copilot` to assign Copilot PR reviewer bot. Requires PAT as `COPILOT_GITHUB_TOKEN`.
-  - `assign-milestone:` - Assign issues to milestones
-    ```yaml
-    safe-outputs:
-      assign-milestone:
-        allowed: [v1.0, v2.0] # Optional: restrict to specific milestone titles
-        max: 1 # Optional: max assignments (default: 1)
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-  - `link-sub-issue:` - Safe sub-issue linking
-    ```yaml
-    safe-outputs:
-      link-sub-issue:
-        parent-required-labels: [epic] # Optional: parent must have these labels
-        parent-title-prefix: "[Epic]" # Optional: parent must match this prefix
-        sub-required-labels: [task] # Optional: sub-issue must have these labels
-        sub-title-prefix: "[Task]" # Optional: sub-issue must match this prefix
-        max: 1 # Optional: maximum number of links (default: 1)
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    Links issues as sub-issues using GitHub's parent-child relationships. Agent output includes `parent_issue_number` and `sub_issue_number`. Use with `create-issue` temporary IDs or existing issue numbers.
-  - `update-project:` - Manage GitHub Projects boards
-    ```yaml
-    safe-outputs:
-      update-project:
-        max: 20 # Optional: max project operations (default: 10)
-        github-token: ${{ secrets.PROJECTS_PAT }} # Optional: token with projects:write
-    ```
-    Not supported for cross-repository operations.
-  - `push-to-pull-request-branch:` - Push changes to PR branch
-    ```yaml
-    safe-outputs:
-      push-to-pull-request-branch:
-        target: "*" # Optional: "triggering" (default), "*", or number
-        title-prefix: "[bot] " # Optional: require title prefix
-        labels: [automated] # Optional: require all labels
-        if-no-changes: "warn" # Optional: "warn" (default), "error", or "ignore"
-    ```
-    Not supported for cross-repository operations.
-  - `update-release:` - Update GitHub release descriptions
-    ```yaml
-    safe-outputs:
-      update-release:
-        max: 1 # Optional: max releases (default: 1, max: 10)
-        target-repo: "owner/repo" # Optional: cross-repository
-        github-token: ${{ secrets.CUSTOM_TOKEN }} # Optional: custom token
-    ```
-    Operation types: `replace`, `append`, `prepend`.
-  - `create-code-scanning-alert:` - Generate SARIF security advisories
-    ```yaml
-    safe-outputs:
-      create-code-scanning-alert:
-        max: 50 # Optional: max findings (default: unlimited)
-    ```
-    Severity levels: error, warning, info, note.
-  - `create-agent-task:` - Create GitHub Copilot agent tasks
-    ```yaml
-    safe-outputs:
-      create-agent-task:
-        base: main # Optional: base branch (defaults to current)
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    Requires PAT as `COPILOT_GITHUB_TOKEN`.
-  - `assign-to-agent:` - Assign Copilot agents to issues
-    ```yaml
-    safe-outputs:
-      assign-to-agent:
-        name: "copilot" # Optional: agent name
-        target-repo: "owner/repo" # Optional: cross-repository
-    ```
-    Requires PAT with elevated permissions as `GH_AW_AGENT_TOKEN`.
-  - `noop:` - Log completion message for transparency (auto-enabled)
-    ```yaml
-    safe-outputs:
-      noop:
-    ```
-    The noop safe-output provides a fallback mechanism ensuring workflows never complete silently. When enabled (automatically by default), agents can emit human-visible messages even when no other actions are required (e.g., "Analysis complete - no issues found"). This ensures every workflow run produces visible output.
-  - `missing-tool:` - Report missing tools or functionality (auto-enabled)
-    ```yaml
-    safe-outputs:
-      missing-tool:
-    ```
-    The missing-tool safe-output allows agents to report when they need tools or functionality not currently available. This is automatically enabled by default and helps track feature requests from agents.
+ - `close-discussion:` - Close discussions with comment and resolution
+   ```yaml
+   safe-outputs:
+     close-discussion:
+       target: "triggering" # Optional: "triggering" (default), "*", or number
+       required-category: "Ideas" # Optional: only close in category
+       required-labels: [resolved] # Optional: only close with labels
+       required-title-prefix: "[ai]" # Optional: only close matching prefix
+       max: 1 # Optional: max closures (default: 1)
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   Resolution reasons: `RESOLVED`, `DUPLICATE`, `OUTDATED`, `ANSWERED`.
+ - `add-comment:` - Safe comment creation on issues/PRs/discussions
+   ```yaml
+   safe-outputs:
+     add-comment:
+       max: 3 # Optional: maximum number of comments (default: 1)
+       target: "*" # Optional: target for comments (default: "triggering")
+       discussion: true # Optional: target discussions
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   When using `safe-outputs.add-comment`, the main job does **not** need `issues: write` or `pull-requests: write` permissions since comment creation is handled by a separate job with appropriate permissions.
+ - `create-pull-request:` - Safe pull request creation with git patches
+   ```yaml
+   safe-outputs:
+     create-pull-request:
+       title-prefix: "[ai] " # Optional: prefix for PR titles
+       labels: [automation, ai-agent] # Optional: labels to attach to PRs
+       reviewers: [user1, copilot] # Optional: reviewers (use 'copilot' for bot)
+       draft: true # Optional: create as draft PR (defaults to true)
+       if-no-changes: "warn" # Optional: "warn" (default), "error", or "ignore"
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   When using `output.create-pull-request`, the main job does **not** need `contents: write` or `pull-requests: write` permissions since PR creation is handled by a separate job with appropriate permissions.
+ - `create-pull-request-review-comment:` - Safe PR review comment creation on code lines
+   ```yaml
+   safe-outputs:
+     create-pull-request-review-comment:
+       max: 3 # Optional: maximum number of review comments (default: 1)
+       side: "RIGHT" # Optional: side of diff ("LEFT" or "RIGHT", default: "RIGHT")
+       target: "*" # Optional: "triggering" (default), "*", or number
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   When using `safe-outputs.create-pull-request-review-comment`, the main job does **not** need `pull-requests: write` permission since review comment creation is handled by a separate job with appropriate permissions.
+ - `update-issue:` - Safe issue updates
+   ```yaml
+   safe-outputs:
+     update-issue:
+       status: true # Optional: allow updating issue status (open/closed)
+       target: "*" # Optional: target for updates (default: "triggering")
+       title: true # Optional: allow updating issue title
+       body: true # Optional: allow updating issue body
+       max: 3 # Optional: maximum number of issues to update (default: 1)
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   When using `safe-outputs.update-issue`, the main job does **not** need `issues: write` permission since issue updates are handled by a separate job with appropriate permissions.
+ - `update-pull-request:` - Update PR title or body
+   ```yaml
+   safe-outputs:
+     update-pull-request:
+       title: true # Optional: enable title updates (default: true)
+       body: true # Optional: enable body updates (default: true)
+       max: 1 # Optional: max updates (default: 1)
+       target: "*" # Optional: "triggering" (default), "*", or number
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   Operation types: `append` (default), `prepend`, `replace`.
+ - `close-pull-request:` - Safe pull request closing with filtering
+   ```yaml
+   safe-outputs:
+     close-pull-request:
+       required-labels: [test, automated] # Optional: only close PRs with these labels
+       required-title-prefix: "[bot]" # Optional: only close PRs with this title prefix
+       target: "triggering" # Optional: "triggering" (default), "*" (any PR), or explicit PR number
+       max: 10 # Optional: maximum number of PRs to close (default: 1)
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   When using `safe-outputs.close-pull-request`, the main job does **not** need `pull-requests: write` permission since PR closing is handled by a separate job with appropriate permissions.
+ - `add-labels:` - Safe label addition to issues or PRs
+   ```yaml
+   safe-outputs:
+     add-labels:
+       allowed: [bug, enhancement, documentation] # Optional: restrict to specific labels
+       max: 3 # Optional: maximum number of labels (default: 3)
+       target: "*" # Optional: "triggering" (default), "*" (any issue/PR), or number
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   When using `safe-outputs.add-labels`, the main job does **not** need `issues: write` or `pull-requests: write` permission since label addition is handled by a separate job with appropriate permissions.
+ - `add-reviewer:` - Add reviewers to pull requests
+   ```yaml
+   safe-outputs:
+     add-reviewer:
+       reviewers: [user1, copilot] # Optional: restrict to specific reviewers
+       max: 3 # Optional: max reviewers (default: 3)
+       target: "*" # Optional: "triggering" (default), "*", or number
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   Use `reviewers: copilot` to assign Copilot PR reviewer bot. Requires PAT as `COPILOT_GITHUB_TOKEN`.
+ - `assign-milestone:` - Assign issues to milestones
+   ```yaml
+   safe-outputs:
+     assign-milestone:
+       allowed: [v1.0, v2.0] # Optional: restrict to specific milestone titles
+       max: 1 # Optional: max assignments (default: 1)
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+ - `link-sub-issue:` - Safe sub-issue linking
+   ```yaml
+   safe-outputs:
+     link-sub-issue:
+       parent-required-labels: [epic] # Optional: parent must have these labels
+       parent-title-prefix: "[Epic]" # Optional: parent must match this prefix
+       sub-required-labels: [task] # Optional: sub-issue must have these labels
+       sub-title-prefix: "[Task]" # Optional: sub-issue must match this prefix
+       max: 1 # Optional: maximum number of links (default: 1)
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   Links issues as sub-issues using GitHub's parent-child relationships. Agent output includes `parent_issue_number` and `sub_issue_number`. Use with `create-issue` temporary IDs or existing issue numbers.
+ - `update-project:` - Manage GitHub Projects boards
+   ```yaml
+   safe-outputs:
+     update-project:
+       max: 20 # Optional: max project operations (default: 10)
+       github-token: ${{ secrets.PROJECTS_PAT }} # Optional: token with projects:write
+   ```
+   Not supported for cross-repository operations.
+ - `push-to-pull-request-branch:` - Push changes to PR branch
+   ```yaml
+   safe-outputs:
+     push-to-pull-request-branch:
+       target: "*" # Optional: "triggering" (default), "*", or number
+       title-prefix: "[bot] " # Optional: require title prefix
+       labels: [automated] # Optional: require all labels
+       if-no-changes: "warn" # Optional: "warn" (default), "error", or "ignore"
+   ```
+   Not supported for cross-repository operations.
+ - `update-release:` - Update GitHub release descriptions
+   ```yaml
+   safe-outputs:
+     update-release:
+       max: 1 # Optional: max releases (default: 1, max: 10)
+       target-repo: "owner/repo" # Optional: cross-repository
+       github-token: ${{ secrets.CUSTOM_TOKEN }} # Optional: custom token
+   ```
+   Operation types: `replace`, `append`, `prepend`.
+ - `create-code-scanning-alert:` - Generate SARIF security advisories
+   ```yaml
+   safe-outputs:
+     create-code-scanning-alert:
+       max: 50 # Optional: max findings (default: unlimited)
+   ```
+   Severity levels: error, warning, info, note.
+ - `create-agent-task:` - Create GitHub Copilot agent tasks
+   ```yaml
+   safe-outputs:
+     create-agent-task:
+       base: main # Optional: base branch (defaults to current)
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   Requires PAT as `COPILOT_GITHUB_TOKEN`.
+ - `assign-to-agent:` - Assign Copilot agents to issues
+   ```yaml
+   safe-outputs:
+     assign-to-agent:
+       name: "copilot" # Optional: agent name
+       target-repo: "owner/repo" # Optional: cross-repository
+   ```
+   Requires PAT with elevated permissions as `GH_AW_AGENT_TOKEN`.
+ - `noop:` - Log completion message for transparency (auto-enabled)
+   ```yaml
+   safe-outputs:
+     noop:
+   ```
+   The noop safe-output provides a fallback mechanism ensuring workflows never complete silently. When enabled (automatically by default), agents can emit human-visible messages even when no other actions are required (e.g., "Analysis complete - no issues found"). This ensures every workflow run produces visible output.
+ - `missing-tool:` - Report missing tools or functionality (auto-enabled)
+   ```yaml
+   safe-outputs:
+     missing-tool:
+   ```
+   The missing-tool safe-output allows agents to report when they need tools or functionality not currently available. This is automatically enabled by default and helps track feature requests from agents.
 
-  **Global Safe Output Configuration:**
-  - `github-token:` - Custom GitHub token for all safe output jobs
-    ```yaml
-    safe-outputs:
-      create-issue:
-      add-comment:
-      github-token: ${{ secrets.CUSTOM_PAT }} # Use custom PAT instead of GITHUB_TOKEN
-    ```
-    Useful when you need additional permissions or want to perform actions across repositories.
+ **Global Safe Output Configuration:**
+ - `github-token:` - Custom GitHub token for all safe output jobs
+   ```yaml
+   safe-outputs:
+     create-issue:
+     add-comment:
+     github-token: ${{ secrets.CUSTOM_PAT }} # Use custom PAT instead of GITHUB_TOKEN
+   ```
+   Useful when you need additional permissions or want to perform actions across repositories.
 
 - **`command:`** - Command trigger configuration for /mention workflows
 - **`cache:`** - Cache configuration for workflow dependencies (object or array)
@@ -527,11 +529,11 @@ The `cache:` field supports the same syntax as the GitHub Actions `actions/cache
 
 ```yaml
 cache:
-  key: node-modules-${{ hashFiles('package-lock.json') }}
-  path: node_modules
-  restore-keys: |
-    node-modules-
-```
+ key: node-modules-${{ hashFiles('package-lock.json') }}
+ path: node_modules
+ restore-keys: |
+   node-modules-
+````
 
 **Multiple Caches:**
 
@@ -908,12 +910,12 @@ network: defaults
 # Use ecosystem identifiers for common development tools
 network:
   allowed:
-    - defaults         # Basic infrastructure
-    - python          # Python/PyPI ecosystem
-    - node            # Node.js/NPM ecosystem
-    - containers      # Container registries
+    - defaults # Basic infrastructure
+    - python # Python/PyPI ecosystem
+    - node # Node.js/NPM ecosystem
+    - containers # Container registries
     - "api.custom.com" # Custom domain
-  firewall: true      # Enable AWF (Copilot engine only)
+  firewall: true # Enable AWF (Copilot engine only)
 
 # Or allow specific domains only
 network:

@@ -14,7 +14,9 @@ export default function Footer() {
     e.preventDefault();
     if (!email.trim()) return;
 
-    window.alert("Subscriptions are not available yet. Please try again later.");
+    window.alert(
+      "Subscriptions are not available yet. Please try again later."
+    );
     setEmail("");
   };
   useEffect(() => {
@@ -168,9 +170,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href={getLocalizedUrl(
-                      "/docs"
-                    )}
+                    href={getLocalizedUrl("/docs")}
                     className="text-gray-400 hover:text-white transition-colors duration-200 text-xs sm:text-sm inline-block"
                   >
                     {t("userGuide")}
@@ -178,9 +178,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href={getLocalizedUrl(
-                      "/docs"
-                    )}
+                    href={getLocalizedUrl("/docs")}
                     className="text-gray-400 hover:text-white transition-colors duration-200 text-xs sm:text-sm inline-block"
                   >
                     {t("onboarding")}
@@ -205,9 +203,7 @@ export default function Footer() {
                 {t("gettingStarted")}
               </h3>
               <ul className="space-y-1 sm:space-y-3">
-                <li>
-                  
-                </li>
+                <li></li>
                 <li>
                   <Link
                     href={getLocalizedUrl("/docs")}
@@ -314,7 +310,7 @@ export default function Footer() {
                       id="email-address"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={e => setEmail(e.target.value)}
                       className="block w-full pl-10 pr-3 py-3 text-sm text-white placeholder-gray-400 bg-gray-700/50 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                       placeholder={t("emailPlaceholder")}
                       required

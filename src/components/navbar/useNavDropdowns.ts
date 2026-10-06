@@ -28,9 +28,7 @@ export function useNavDropdowns() {
       document.querySelectorAll<HTMLElement>("[data-dropdown]");
 
     dropdownContainers.forEach(container => {
-      const menu = container.querySelector<HTMLElement>(
-        "[data-dropdown-menu]"
-      );
+      const menu = container.querySelector<HTMLElement>("[data-dropdown-menu]");
 
       if (!menu) return;
 

@@ -77,11 +77,11 @@ describe("ghsaIdFromUrl", () => {
 describe("collectAdvisories", () => {
   it("collects only root advisory objects, deduplicated", () => {
     const advs = collectAdvisories(REPORT);
-    expect(advs.map((a) => a.id).sort()).toEqual([
+    expect(advs.map(a => a.id).sort()).toEqual([
       "GHSA-AAAA-BBBB-CCCC",
       "GHSA-VFJ7-8CJW-P6XM",
     ]);
-    const braces = advs.find((a) => a.package === "braces")!;
+    const braces = advs.find(a => a.package === "braces")!;
     expect(braces.severity).toBe("high");
     expect(braces.url).toBe(BRACES_URL);
   });
@@ -99,15 +99,15 @@ describe("collectAdvisories", () => {
 describe("evaluateAudit", () => {
   it("blocks high advisories with no exception and ignores lower ones", () => {
     const r = evaluateAudit(REPORT, [], "high", NOW);
-    expect(r.blocking.map((a) => a.id)).toEqual(["GHSA-VFJ7-8CJW-P6XM"]);
-    expect(r.belowLevel.map((a) => a.id)).toEqual(["GHSA-AAAA-BBBB-CCCC"]);
+    expect(r.blocking.map(a => a.id)).toEqual(["GHSA-VFJ7-8CJW-P6XM"]);
+    expect(r.belowLevel.map(a => a.id)).toEqual(["GHSA-AAAA-BBBB-CCCC"]);
     expect(r.excepted).toEqual([]);
   });
 
   it("passes when every high advisory is covered by an active exception", () => {
     const r = evaluateAudit(REPORT, [exception()], "high", NOW);
     expect(r.blocking).toEqual([]);
-    expect(r.excepted.map((a) => a.id)).toEqual(["GHSA-VFJ7-8CJW-P6XM"]);
+    expect(r.excepted.map(a => a.id)).toEqual(["GHSA-VFJ7-8CJW-P6XM"]);
     expect(r.unused).toEqual([]);
   });
 
@@ -128,7 +128,7 @@ describe("evaluateAudit", () => {
       "high",
       NOW
     );
-    expect(r.blocking.map((a) => a.id)).toEqual(["GHSA-VFJ7-8CJW-P6XM"]);
+    expect(r.blocking.map(a => a.id)).toEqual(["GHSA-VFJ7-8CJW-P6XM"]);
     expect(r.unused).toHaveLength(1);
   });
 
@@ -165,7 +165,7 @@ describe("evaluateAudit", () => {
       "high",
       NOW
     );
-    expect(r.unused.map((e) => e.id)).toEqual(["GHSA-zzzz-zzzz-zzzz"]);
+    expect(r.unused.map(e => e.id)).toEqual(["GHSA-zzzz-zzzz-zzzz"]);
   });
 
   it("honours the level threshold", () => {

@@ -10,105 +10,143 @@
  *
  * The mocks mirror src/__tests__/docs-page-render.test.ts; see there for why.
  */
-import { describe, expect, it, vi } from 'vitest'
-import { createElement, type ReactNode } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
+import { describe, expect, it, vi } from "vitest";
+import { createElement, type ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
-vi.mock('nextra/evaluate', async () => {
-  const runtime = await import('react/jsx-runtime')
+vi.mock("nextra/evaluate", async () => {
+  const runtime = await import("react/jsx-runtime");
   return {
-    evaluate(rawJs: string, components = {}, scope: Record<string, unknown> = {}) {
-      const keys = Object.keys(scope)
-      const values = Object.values(scope)
-      const hydrateFn = Reflect.construct(Function, ['$', ...keys, rawJs])
-      return hydrateFn({ ...runtime, useMDXComponents: () => components }, ...values)
+    evaluate(
+      rawJs: string,
+      components = {},
+      scope: Record<string, unknown> = {}
+    ) {
+      const keys = Object.keys(scope);
+      const values = Object.values(scope);
+      const hydrateFn = Reflect.construct(Function, ["$", ...keys, rawJs]);
+      return hydrateFn(
+        { ...runtime, useMDXComponents: () => components },
+        ...values
+      );
     },
-  }
-})
+  };
+});
 
-vi.mock('next/navigation', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('next/navigation')>()
+vi.mock("next/navigation", async importOriginal => {
+  const actual = await importOriginal<typeof import("next/navigation")>();
   return {
     ...actual,
-    usePathname: () => '/docs/spektacular/overview/introduction',
-  }
-})
+    usePathname: () => "/docs/spektacular/overview/introduction",
+  };
+});
 
-vi.mock('next/link', async () => {
-  const { createElement: h } = await import('react')
+vi.mock("next/link", async () => {
+  const { createElement: h } = await import("react");
   return {
     default: ({
       href,
       children,
       ...rest
     }: { href?: unknown; children?: ReactNode } & Record<string, unknown>) =>
-      h('a', { ...rest, href: typeof href === 'string' ? href : undefined }, children),
-  }
-})
+      h(
+        "a",
+        { ...rest, href: typeof href === "string" ? href : undefined },
+        children
+      ),
+  };
+});
 
-import { DocsProvider } from '../components/docs/DocsProvider'
-import DocPage from '../app/docs/[...slug]/page'
+import { DocsProvider } from "../components/docs/DocsProvider";
+import DocPage from "../app/docs/[...slug]/page";
 
 async function renderDocsRoute(slug: string[]): Promise<string> {
-  const page = await DocPage({ params: Promise.resolve({ slug }) })
-  return renderToStaticMarkup(createElement(DocsProvider, null, page))
+  const page = await DocPage({ params: Promise.resolve({ slug }) });
+  return renderToStaticMarkup(createElement(DocsProvider, null, page));
 }
 
-const RENDER_TIMEOUT_MS = 60_000
+const RENDER_TIMEOUT_MS = 60_000;
 
 // Route -> the H1 the synced page must render with.
 const SPEKTACULAR_PAGES: Array<{ slug: string[]; h1: string }> = [
-  { slug: ['spektacular', 'overview', 'introduction'], h1: 'Spektacular' },
-  { slug: ['spektacular', 'tutorials', 'getting-started'], h1: 'How to use Spektacular' },
-  { slug: ['spektacular', 'tutorials', 'unknown-criteria'], h1: 'Dealing with unknown criteria' },
-  { slug: ['spektacular', 'guides', 'knowledge-base'], h1: 'The Knowledge Base' },
-]
+  { slug: ["spektacular", "overview", "introduction"], h1: "Spektacular" },
+  {
+    slug: ["spektacular", "tutorials", "getting-started"],
+    h1: "How to use Spektacular",
+  },
+  {
+    slug: ["spektacular", "tutorials", "unknown-criteria"],
+    h1: "Dealing with unknown criteria",
+  },
+  {
+    slug: ["spektacular", "guides", "knowledge-base"],
+    h1: "The Knowledge Base",
+  },
+];
 
-describe('Spektacular synced pages render', () => {
+describe("Spektacular synced pages render", () => {
   for (const { slug, h1 } of SPEKTACULAR_PAGES) {
     it(
-      `/docs/${slug.join('/')} compiles and renders its heading`,
+      `/docs/${slug.join("/")} compiles and renders its heading`,
       async () => {
-        const html = await renderDocsRoute(slug)
-        expect(html).toMatch(/<article[^>]+class="[^"]*\bprose\b[^"]*"/)
+        const html = await renderDocsRoute(slug);
+        expect(html).toMatch(/<article[^>]+class="[^"]*\bprose\b[^"]*"/);
         // The plain-text fallback wraps the whole source in a single <pre>
         // that starts with the synced-from blockquote marker.
-        expect(html).not.toMatch(/<pre>&gt; \*\*Synced from/)
-        expect(html).toMatch(new RegExp(`<h1[^>]*>[^<]*${h1}`))
-        expect(html).toMatch(/<h2[^>]*>/)
-        expect(html).toContain('spektacular.dev')
+        expect(html).not.toMatch(/<pre>&gt; \*\*Synced from/);
+        expect(html).toMatch(new RegExp(`<h1[^>]*>[^<]*${h1}`));
+        expect(html).toMatch(/<h2[^>]*>/);
+        expect(html).toContain("spektacular.dev");
       },
       RENDER_TIMEOUT_MS
-    )
+    );
   }
 
   // The content path is flattened by the sync (docs/knowledge-base.md ->
   // knowledge-base.md; tutorials come from spektacular-website), so the
   // source/edit buttons must follow the banner's canonical URL, not the path.
   it(
-    'points View Source / Compose a PR at the un-flattened upstream file',
+    "points View Source / Compose a PR at the un-flattened upstream file",
     async () => {
-      const kb = await renderDocsRoute(['spektacular', 'guides', 'knowledge-base'])
-      expect(kb).toContain('href="https://github.com/hivecommons/spektacular/blob/main/docs/knowledge-base.md"')
-      expect(kb).toContain('href="https://github.com/hivecommons/spektacular/edit/main/docs/knowledge-base.md?fork=true"')
-      expect(kb).not.toContain('/blob/main/knowledge-base.md"')
+      const kb = await renderDocsRoute([
+        "spektacular",
+        "guides",
+        "knowledge-base",
+      ]);
+      expect(kb).toContain(
+        'href="https://github.com/hivecommons/spektacular/blob/main/docs/knowledge-base.md"'
+      );
+      expect(kb).toContain(
+        'href="https://github.com/hivecommons/spektacular/edit/main/docs/knowledge-base.md?fork=true"'
+      );
+      expect(kb).not.toContain('/blob/main/knowledge-base.md"');
 
-      const tut = await renderDocsRoute(['spektacular', 'tutorials', 'getting-started'])
+      const tut = await renderDocsRoute([
+        "spektacular",
+        "tutorials",
+        "getting-started",
+      ]);
       expect(tut).toContain(
         'href="https://github.com/hivecommons/spektacular-website/blob/main/src/content/tutorials/getting-started.mdx"'
-      )
+      );
     },
     RENDER_TIMEOUT_MS
-  )
+  );
 
   it(
-    'serves tutorial screenshots through the docs-image route',
+    "serves tutorial screenshots through the docs-image route",
     async () => {
-      const html = await renderDocsRoute(['spektacular', 'tutorials', 'getting-started'])
-      expect(html).toMatch(/src="\/docs-images\/spektacular\/images\/tutorials\/getting-started\/[a-z-]+\.png"/)
+      const html = await renderDocsRoute([
+        "spektacular",
+        "tutorials",
+        "getting-started",
+      ]);
+      expect(html).toMatch(
+        /src="\/docs-images\/spektacular\/images\/tutorials\/getting-started\/[a-z-]+\.png"/
+      );
       // Watch-on-YouTube links replace the site's embedded player.
-      expect(html).toContain('https://youtu.be/ZRVa9gml_Bg?t=108')
+      expect(html).toContain("https://youtu.be/ZRVa9gml_Bg?t=108");
     },
     RENDER_TIMEOUT_MS
-  )
-})
+  );
+});

@@ -11,7 +11,13 @@
 //    response with no results shows "No matching docs found."
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 
 const usePathnameMock = vi.fn<() => string | null>();
 
@@ -33,7 +39,12 @@ vi.mock("next/link", () => ({
 
 import NotFoundUI from "@/components/NotFoundUI";
 
-type SearchResult = { title: string; url: string; category: string; snippet: string };
+type SearchResult = {
+  title: string;
+  url: string;
+  category: string;
+  snippet: string;
+};
 
 function makeResults(count: number): SearchResult[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -63,20 +74,26 @@ describe("quick links and messaging", () => {
     usePathnameMock.mockReturnValue("/docs/hive/some/moved/page");
     render(<NotFoundUI />);
 
-    expect(screen.getByRole("heading", { name: "Hive docs links" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Hive docs links" })
+    ).toBeTruthy();
     expect(screen.getByText(/reorganized the Hive docs/)).toBeTruthy();
     // primary quick links render both as action buttons and in the sidebar list
     const intros = screen.getAllByRole("link", { name: /Hive intro/ });
     expect(intros).toHaveLength(2);
     expect(intros[0].getAttribute("href")).toBe("/docs/hive/readme");
-    expect(screen.getAllByRole("link", { name: /Documentation map/ }).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole("link", { name: /Documentation map/ }).length
+    ).toBeGreaterThan(0);
   });
 
   it("treats the bare /docs/hive path as Hive docs", () => {
     usePathnameMock.mockReturnValue("/docs/hive");
     render(<NotFoundUI />);
 
-    expect(screen.getByRole("heading", { name: "Hive docs links" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Hive docs links" })
+    ).toBeTruthy();
   });
 
   it("shows the general links and message elsewhere", () => {
@@ -84,8 +101,12 @@ describe("quick links and messaging", () => {
     render(<NotFoundUI />);
 
     expect(screen.getByRole("heading", { name: "Helpful links" })).toBeTruthy();
-    expect(screen.getByText(/reorganized Hive Commons documentation/)).toBeTruthy();
-    expect(screen.getAllByRole("link", { name: /What is Hive Commons\?/ }).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/reorganized Hive Commons documentation/)
+    ).toBeTruthy();
+    expect(
+      screen.getAllByRole("link", { name: /What is Hive Commons\?/ }).length
+    ).toBeGreaterThan(0);
   });
 
   it("marks external quick links to open safely in a new tab", () => {
@@ -148,7 +169,7 @@ describe("search", () => {
     expect(screen.getByText("Category 1")).toBeTruthy();
     expect(screen.getByText("Snippet 1")).toBeTruthy();
     expect(
-      screen.getByRole("link", { name: /Result 1/ }).getAttribute("href"),
+      screen.getByRole("link", { name: /Result 1/ }).getAttribute("href")
     ).toBe("/docs/result-1");
   });
 
@@ -157,7 +178,9 @@ describe("search", () => {
     render(<NotFoundUI />);
 
     submitSearch("nothing matches this");
-    await waitFor(() => expect(screen.getByText("No matching docs found.")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByText("No matching docs found.")).toBeTruthy()
+    );
   });
 
   it("shows the unavailable hint on a non-ok response", async () => {
@@ -166,7 +189,9 @@ describe("search", () => {
 
     submitSearch("boom");
     await waitFor(() =>
-      expect(screen.getByText("Search is temporarily unavailable.")).toBeTruthy(),
+      expect(
+        screen.getByText("Search is temporarily unavailable.")
+      ).toBeTruthy()
     );
   });
 
@@ -183,7 +208,9 @@ describe("search", () => {
     fetchMock.mockRejectedValueOnce(new Error("network down"));
     submitSearch("second");
     await waitFor(() =>
-      expect(screen.getByText("Search is temporarily unavailable.")).toBeTruthy(),
+      expect(
+        screen.getByText("Search is temporarily unavailable.")
+      ).toBeTruthy()
     );
     expect(screen.queryByText("Result 1")).toBeNull();
   });

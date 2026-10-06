@@ -13,7 +13,14 @@
 //  - mobile menu button toggles the menu and its aria-label
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 
 import { DROPDOWN_HIDE_DELAY_MS } from "@/components/navbar/useHoverDropdown";
 
@@ -85,7 +92,9 @@ function dropdownContainer(name: string): HTMLElement {
 }
 
 function dropdownMenu(name: string): HTMLElement {
-  const menu = dropdownContainer(name).querySelector<HTMLElement>("[data-dropdown-menu]");
+  const menu = dropdownContainer(name).querySelector<HTMLElement>(
+    "[data-dropdown-menu]"
+  );
   if (!menu) throw new Error(`missing dropdown menu ${name}`);
   return menu;
 }
@@ -93,7 +102,7 @@ function dropdownMenu(name: string): HTMLElement {
 function mockFetchWith(values: Record<string, string>) {
   return vi.fn(async (url: string | URL) => {
     const u = String(url);
-    const metric = Object.keys(values).find((m) => u.includes(`/${m}/`));
+    const metric = Object.keys(values).find(m => u.includes(`/${m}/`));
     if (!metric) return { ok: false, json: async () => ({}) };
     return { ok: true, json: async () => ({ value: values[metric] }) };
   });
@@ -102,7 +111,7 @@ function mockFetchWith(values: Record<string, string>) {
 beforeEach(() => {
   vi.stubGlobal(
     "fetch",
-    mockFetchWith({ stars: "999", forks: "888", watchers: "777" }),
+    mockFetchWith({ stars: "999", forks: "888", watchers: "777" })
   );
 });
 
@@ -118,12 +127,12 @@ describe("Navbar top-level links", () => {
 
     const docsLinks = screen
       .getAllByRole("link")
-      .filter((a) => a.getAttribute("href") === "/docs");
+      .filter(a => a.getAttribute("href") === "/docs");
     expect(docsLinks.length).toBeGreaterThan(0);
 
     const demo = screen
       .getAllByRole("link")
-      .filter((a) => a.getAttribute("href") === "https://hivecommons.dev");
+      .filter(a => a.getAttribute("href") === "https://hivecommons.dev");
     expect(demo.length).toBeGreaterThan(0);
     for (const a of demo) {
       expect(a.getAttribute("target")).toBe("_blank");
@@ -151,7 +160,7 @@ describe("Navbar hover dropdowns", () => {
     expect(
       dropdownContainer("contribute")
         .querySelector("[data-dropdown-button]")
-        ?.getAttribute("aria-expanded"),
+        ?.getAttribute("aria-expanded")
     ).toBe("true");
 
     // Opening community closes contribute.
@@ -161,7 +170,7 @@ describe("Navbar hover dropdowns", () => {
     expect(
       dropdownContainer("contribute")
         .querySelector("[data-dropdown-button]")
-        ?.getAttribute("aria-expanded"),
+        ?.getAttribute("aria-expanded")
     ).toBe("false");
   });
 
@@ -177,7 +186,7 @@ describe("Navbar hover dropdowns", () => {
 
     await waitFor(
       () => expect(dropdownMenu("github").style.display).toBe("none"),
-      { timeout: DROPDOWN_HIDE_DELAY_MS + 1000 },
+      { timeout: DROPDOWN_HIDE_DELAY_MS + 1000 }
     );
   });
 
@@ -188,7 +197,7 @@ describe("Navbar hover dropdowns", () => {
     fireEvent.mouseLeave(dropdownContainer("contribute"));
     fireEvent.mouseEnter(dropdownMenu("contribute"));
 
-    await new Promise((r) => setTimeout(r, DROPDOWN_HIDE_DELAY_MS + 100));
+    await new Promise(r => setTimeout(r, DROPDOWN_HIDE_DELAY_MS + 100));
     expect(dropdownMenu("contribute").style.display).toBe("block");
   });
 
@@ -205,7 +214,7 @@ describe("Navbar hover dropdowns", () => {
     expect(
       dropdownContainer("community")
         .querySelector("[data-dropdown-button]")
-        ?.getAttribute("aria-expanded"),
+        ?.getAttribute("aria-expanded")
     ).toBe("false");
   });
 });
@@ -225,14 +234,14 @@ describe("Navbar GitHub stats", () => {
       "fetch",
       vi.fn(async () => {
         throw new Error("network down");
-      }),
+      })
     );
     render(<Navbar />);
     // Defaults render immediately and are never replaced.
     expect(screen.getAllByText("30").length).toBeGreaterThan(0);
     expect(screen.getAllByText("25").length).toBeGreaterThan(0);
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 50));
+      await new Promise(r => setTimeout(r, 50));
     });
     expect(screen.getAllByText("30").length).toBeGreaterThan(0);
   });

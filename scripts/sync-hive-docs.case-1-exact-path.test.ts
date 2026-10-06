@@ -75,10 +75,7 @@ describe("rewriteLinkTarget — Case 1 (exact syncedRepoPaths lookup)", () => {
     // discriminate between Case 1 and Case 1b on its own — its value is
     // establishing baseline exact-path behavior for the ADR subtree.
     expect(
-      rewriteLinkTarget(
-        "0001-record-architecture-decisions.md",
-        ADR_README,
-      ),
+      rewriteLinkTarget("0001-record-architecture-decisions.md", ADR_README)
     ).toBe("/docs/hive/adr/0001-record-architecture-decisions");
   });
 
@@ -86,9 +83,9 @@ describe("rewriteLinkTarget — Case 1 (exact syncedRepoPaths lookup)", () => {
     // Sanity: exact-path branch attaches `${suffix}` to the mapped route.
     // Regression risk: a refactor that concatenates suffix in the wrong
     // spot (e.g. before the route lookup) would drop the anchor.
-    expect(
-      rewriteLinkTarget("architecture.md#the-governor-loop", README),
-    ).toBe("/docs/hive/architecture#the-governor-loop");
+    expect(rewriteLinkTarget("architecture.md#the-governor-loop", README)).toBe(
+      "/docs/hive/architecture#the-governor-loop"
+    );
   });
 
   it("resolves a `../adr/README.md` escape from an ADR page back to the ADR readme via exact-path", () => {

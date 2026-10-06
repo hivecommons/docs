@@ -54,7 +54,9 @@ import DocsFooter from "@/components/docs/DocsFooter";
 let alertSpy: ReturnType<typeof vi.spyOn>;
 
 function linkByHref(href: string): HTMLElement[] {
-  return screen.getAllByRole("link").filter((a) => a.getAttribute("href") === href);
+  return screen
+    .getAllByRole("link")
+    .filter(a => a.getAttribute("href") === href);
 }
 
 beforeEach(() => {
@@ -72,15 +74,18 @@ describe("DocsFooter content", () => {
     render(<DocsFooter />);
 
     expect(
-      screen.getByText(/Hive Commons is an open source home for projects/),
+      screen.getByText(/Hive Commons is an open source home for projects/)
     ).toBeTruthy();
-    for (const heading of ["Projects", "Get started", "Community", "Resources"]) {
+    for (const heading of [
+      "Projects",
+      "Get started",
+      "Community",
+      "Resources",
+    ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
     }
     expect(
-      screen.getByText(
-        new RegExp(`© ${new Date().getFullYear()} Hive Commons`),
-      ),
+      screen.getByText(new RegExp(`© ${new Date().getFullYear()} Hive Commons`))
     ).toBeTruthy();
   });
 
@@ -95,9 +100,9 @@ describe("DocsFooter content", () => {
       "spektacular",
       "dibs",
     ]) {
-      expect(
-        linkByHref(`/docs/${project}/overview/introduction`),
-      ).toHaveLength(1);
+      expect(linkByHref(`/docs/${project}/overview/introduction`)).toHaveLength(
+        1
+      );
     }
   });
 
@@ -117,7 +122,9 @@ describe("DocsFooter content", () => {
       }
     }
     expect(
-      screen.getByRole("link", { name: "Hive Commons on GitHub" }).getAttribute("href"),
+      screen
+        .getByRole("link", { name: "Hive Commons on GitHub" })
+        .getAttribute("href")
     ).toBe("https://github.com/hivecommons");
   });
 
@@ -145,7 +152,7 @@ describe("DocsFooter newsletter form", () => {
     fireEvent.change(input, { target: { value: "bee@example.com" } });
     fireEvent.submit(input.closest("form")!);
     expect(alertSpy).toHaveBeenCalledWith(
-      "Subscriptions are not available yet. Please try again later.",
+      "Subscriptions are not available yet. Please try again later."
     );
     expect(input.value).toBe("");
   });

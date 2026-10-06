@@ -1,0 +1,1 @@
+- Enforce Prettier in CI by running `npm run format:check` in the TypeScript & Lint workflow, after a one-time repository reformat.

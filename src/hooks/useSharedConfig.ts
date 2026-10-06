@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 // Production URL for fetching shared config
-const PRODUCTION_CONFIG_URL = 'https://docs.hivecommons.dev/config/shared.json';
+const PRODUCTION_CONFIG_URL = "https://docs.hivecommons.dev/config/shared.json";
 
 // Cache TTL - config will be refreshed after this time
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -57,7 +57,10 @@ function mergeVersionMaps(
   primary: Record<string, Record<string, VersionInfo>> = {},
   secondary: Record<string, Record<string, VersionInfo>> = {}
 ): Record<string, Record<string, VersionInfo>> {
-  const mergedProjects = new Set([...Object.keys(secondary), ...Object.keys(primary)]);
+  const mergedProjects = new Set([
+    ...Object.keys(secondary),
+    ...Object.keys(primary),
+  ]);
   const merged: Record<string, Record<string, VersionInfo>> = {};
 
   for (const projectId of mergedProjects) {
@@ -70,7 +73,10 @@ function mergeVersionMaps(
   return merged;
 }
 
-function mergeSharedConfigs(primary: SharedConfig, secondary: SharedConfig): SharedConfig {
+function mergeSharedConfigs(
+  primary: SharedConfig,
+  secondary: SharedConfig
+): SharedConfig {
   const primaryTimestamp = getConfigTimestamp(primary);
   const secondaryTimestamp = getConfigTimestamp(secondary);
 
@@ -81,18 +87,25 @@ function mergeSharedConfigs(primary: SharedConfig, secondary: SharedConfig): Sha
       ...(primary.projects ?? {}),
     },
     relatedProjects:
-      primary.relatedProjects.length > 0 ? primary.relatedProjects : secondary.relatedProjects,
+      primary.relatedProjects.length > 0
+        ? primary.relatedProjects
+        : secondary.relatedProjects,
     editBaseUrls: {
       ...(secondary.editBaseUrls ?? {}),
       ...(primary.editBaseUrls ?? {}),
     },
     surveyUrl: primary.surveyUrl ?? secondary.surveyUrl,
     updatedAt:
-      primaryTimestamp >= secondaryTimestamp ? primary.updatedAt : secondary.updatedAt,
+      primaryTimestamp >= secondaryTimestamp
+        ? primary.updatedAt
+        : secondary.updatedAt,
   };
 }
 
-async function fetchConfigJson(url: string, init?: RequestInit): Promise<SharedConfig | null> {
+async function fetchConfigJson(
+  url: string,
+  init?: RequestInit
+): Promise<SharedConfig | null> {
   const res = await fetch(url, init);
   if (!res.ok) {
     return null;
@@ -103,10 +116,12 @@ async function fetchConfigJson(url: string, init?: RequestInit): Promise<SharedC
 
 // Check if cache is still valid
 function isCacheValid(): boolean {
-  return configCache !== null && (Date.now() - cacheTimestamp) < CACHE_TTL_MS;
+  return configCache !== null && Date.now() - cacheTimestamp < CACHE_TTL_MS;
 }
 
-async function fetchConfig(forceRefresh: boolean = false): Promise<SharedConfig | null> {
+async function fetchConfig(
+  forceRefresh: boolean = false
+): Promise<SharedConfig | null> {
   // Return cached config if still valid and not forcing refresh
   if (!forceRefresh && isCacheValid()) {
     return configCache;
@@ -119,17 +134,17 @@ async function fetchConfig(forceRefresh: boolean = false): Promise<SharedConfig 
 
   fetchPromise = (async () => {
     const [localConfig, productionConfig] = await Promise.all([
-      fetchConfigJson('/config/shared.json').catch((e) => {
-        console.warn('Failed to fetch local config:', e);
+      fetchConfigJson("/config/shared.json").catch(e => {
+        console.warn("Failed to fetch local config:", e);
         return null;
       }),
       fetchConfigJson(PRODUCTION_CONFIG_URL, {
-        cache: 'no-store',
+        cache: "no-store",
         headers: {
-          Accept: 'application/json',
+          Accept: "application/json",
         },
-      }).catch((e) => {
-        console.warn('Failed to fetch config from production:', e);
+      }).catch(e => {
+        console.warn("Failed to fetch config from production:", e);
         return null;
       }),
     ]);
@@ -158,7 +173,9 @@ async function fetchConfig(forceRefresh: boolean = false): Promise<SharedConfig 
 }
 
 export function useSharedConfig() {
-  const [config, setConfig] = useState<SharedConfig | null>(isCacheValid() ? configCache : null);
+  const [config, setConfig] = useState<SharedConfig | null>(
+    isCacheValid() ? configCache : null
+  );
   const [loading, setLoading] = useState(!isCacheValid());
   const [error, setError] = useState<Error | null>(null);
 
@@ -173,13 +190,13 @@ export function useSharedConfig() {
     let mounted = true;
 
     fetchConfig()
-      .then((data) => {
+      .then(data => {
         if (mounted) {
           setConfig(data);
           setLoading(false);
         }
       })
-      .catch((err) => {
+      .catch(err => {
         if (mounted) {
           setError(err);
           setLoading(false);
@@ -227,13 +244,13 @@ export function getEditUrl(
     return null;
   }
   // Remove leading slash if present
-  const cleanPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
+  const cleanPath = filePath.startsWith("/") ? filePath.slice(1) : filePath;
   return `${config.editBaseUrls[projectId]}/${cleanPath}`;
 }
 
 // Get survey URL from config or fallback to redirect
 export function getSurveyUrl(config: SharedConfig | null): string {
-  return config?.surveyUrl ?? 'https://docs.hivecommons.dev/survey';
+  return config?.surveyUrl ?? "https://docs.hivecommons.dev/survey";
 }
 
 // Export the fetch function for server-side usage

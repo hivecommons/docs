@@ -40,7 +40,7 @@ export default [
         FormData: "readonly",
         DataView: "readonly",
         ArrayBuffer: "readonly",
-        
+
         // Node.js globals
         Buffer: "readonly",
         __dirname: "readonly",
@@ -49,7 +49,7 @@ export default [
         clearImmediate: "readonly",
         setInterval: "readonly",
         clearInterval: "readonly",
-        
+
         // React/JSX
         React: "readonly",
         JSX: "readonly",
@@ -81,7 +81,7 @@ export default [
       "no-unused-vars": "off",
       "no-undef": "off",
       "no-control-regex": "off",
-      
+
       // TypeScript ESLint rules
       "@typescript-eslint/no-unused-vars": [
         "warn",
@@ -89,20 +89,20 @@ export default [
       ],
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/no-explicit-any": "warn",
-      
+
       // Next.js rules
       "@next/next/no-html-link-for-pages": "warn",
       "@next/next/no-img-element": "warn",
       "@next/next/no-duplicate-head": "warn",
       "@next/next/google-font-display": "warn",
       "@next/next/google-font-preconnect": "warn",
-      
+
       // React rules
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
       "react/no-unescaped-entities": "warn",
       "react/display-name": "off",
-      
+
       // React Hooks rules
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
@@ -110,10 +110,10 @@ export default [
       "react-hooks/purity": "off",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/static-components": "off",
-      
+
       // Import rules
       "import/no-unresolved": "off",
-      
+
       // JSX A11y rules
       "jsx-a11y/alt-text": "warn",
       "jsx-a11y/click-events-have-key-events": "warn",

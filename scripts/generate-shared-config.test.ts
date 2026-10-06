@@ -13,8 +13,15 @@ import { fileURLToPath } from "node:url";
  * run it there via tsx — the real repo's shared.json is never touched.
  */
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const scriptSource = path.join(repoRoot, "scripts", "generate-shared-config.ts");
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  ".."
+);
+const scriptSource = path.join(
+  repoRoot,
+  "scripts",
+  "generate-shared-config.ts"
+);
 const tsxBin = path.join(repoRoot, "node_modules", ".bin", "tsx");
 
 const FIXTURE_VERSIONS = `
@@ -57,7 +64,10 @@ function writeFixtureRepo(): { scriptPath: string; sharedJsonPath: string } {
   const scriptPath = path.join(scriptsDir, "generate-shared-config.ts");
   fs.copyFileSync(scriptSource, scriptPath);
   fs.writeFileSync(path.join(configDir, "versions.ts"), FIXTURE_VERSIONS);
-  return { scriptPath, sharedJsonPath: path.join(publicConfigDir, "shared.json") };
+  return {
+    scriptPath,
+    sharedJsonPath: path.join(publicConfigDir, "shared.json"),
+  };
 }
 
 function runScript(scriptPath: string) {
@@ -68,7 +78,7 @@ function runScript(scriptPath: string) {
   });
   if (result.status !== 0) {
     throw new Error(
-      `generate-shared-config failed (status ${result.status}):\n${result.stdout}\n${result.stderr}`,
+      `generate-shared-config failed (status ${result.status}):\n${result.stdout}\n${result.stderr}`
     );
   }
   return result;
@@ -114,7 +124,9 @@ describe("generate-shared-config", () => {
     const shared = JSON.parse(fs.readFileSync(sharedJsonPath, "utf8"));
 
     expect(shared.versions.alpha.v6.isDev).toBe(true);
-    expect(shared.versions.alpha.v4.externalUrl).toBe("https://v4.example.test");
+    expect(shared.versions.alpha.v4.externalUrl).toBe(
+      "https://v4.example.test"
+    );
     // The stable entry must not carry the optional keys at all.
     expect("isDev" in shared.versions.alpha.v5).toBe(false);
     expect("externalUrl" in shared.versions.alpha.v5).toBe(false);
@@ -127,12 +139,14 @@ describe("generate-shared-config", () => {
       sharedJsonPath,
       JSON.stringify({
         surveyUrl: "https://survey.example.test/q1",
-        relatedProjects: [{ name: "Spektacular", url: "https://spektacular.dev" }],
+        relatedProjects: [
+          { name: "Spektacular", url: "https://spektacular.dev" },
+        ],
         editBaseUrls: { docs: "https://example.test/edit/main/docs" },
         // Stale generated data that must be replaced, not preserved.
         versions: { stale: {} },
         projects: { stale: {} },
-      }),
+      })
     );
     runScript(scriptPath);
     const shared = JSON.parse(fs.readFileSync(sharedJsonPath, "utf8"));

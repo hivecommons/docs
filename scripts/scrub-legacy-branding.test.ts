@@ -3,15 +3,21 @@ import { scrubLegacyBranding } from "./scrub-legacy-branding";
 
 describe("scrubLegacyBranding", () => {
   it("rewrites transferred jumppad-labs repo sub-paths but not the Go module path", () => {
-    expect(scrubLegacyBranding("https://github.com/jumppad-labs/spektacular/releases")).toBe(
-      "https://github.com/hivecommons/spektacular/releases"
-    );
-    expect(scrubLegacyBranding("go install github.com/jumppad-labs/spektacular@latest")).toBe(
-      "go install github.com/jumppad-labs/spektacular@latest"
-    );
-    expect(scrubLegacyBranding("https://github.com/jumppad-labs/tutorial-spektacular-how-to")).toBe(
-      "https://github.com/jumppad-labs/tutorial-spektacular-how-to"
-    );
+    expect(
+      scrubLegacyBranding(
+        "https://github.com/jumppad-labs/spektacular/releases"
+      )
+    ).toBe("https://github.com/hivecommons/spektacular/releases");
+    expect(
+      scrubLegacyBranding(
+        "go install github.com/jumppad-labs/spektacular@latest"
+      )
+    ).toBe("go install github.com/jumppad-labs/spektacular@latest");
+    expect(
+      scrubLegacyBranding(
+        "https://github.com/jumppad-labs/tutorial-spektacular-how-to"
+      )
+    ).toBe("https://github.com/jumppad-labs/tutorial-spektacular-how-to");
   });
 
   it("rewrites KubeStellar branding and repo references", () => {
@@ -26,10 +32,12 @@ describe("scrubLegacyBranding", () => {
 
   it("keeps the ghcr.io/kubestellar mirror org intact (docs#180)", () => {
     expect(
-      scrubLegacyBranding("`ghcr.io/hivecommons/hive` and `ghcr.io/kubestellar/hive`"),
+      scrubLegacyBranding(
+        "`ghcr.io/hivecommons/hive` and `ghcr.io/kubestellar/hive`"
+      )
     ).toBe("`ghcr.io/hivecommons/hive` and `ghcr.io/kubestellar/hive`");
     expect(scrubLegacyBranding("ghcr.io/kubestellar/hive-hub:stable")).toBe(
-      "ghcr.io/kubestellar/hive-hub:stable",
+      "ghcr.io/kubestellar/hive-hub:stable"
     );
   });
 });

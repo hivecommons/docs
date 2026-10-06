@@ -89,7 +89,6 @@ const NetworkGlobe = ({ isLoaded = true }: NetworkGlobeProps) => {
     [t]
   );
 
-
   // Generate data flow paths
   const dataFlows = useMemo(() => {
     const flows: {

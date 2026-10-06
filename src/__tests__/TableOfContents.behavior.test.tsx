@@ -15,7 +15,9 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import { TableOfContents } from "@/components/docs/TableOfContents";
 
-type ObserverCallback = (entries: Array<Partial<IntersectionObserverEntry>>) => void;
+type ObserverCallback = (
+  entries: Array<Partial<IntersectionObserverEntry>>
+) => void;
 
 let observerCallback: ObserverCallback | undefined;
 const observed: Element[] = [];
@@ -82,7 +84,7 @@ describe("TableOfContents", () => {
     addHeading("intro");
     addHeading("faq");
     render(<TableOfContents toc={TOC} />);
-    expect(observed.map((el) => el.id)).toEqual(["intro", "faq"]);
+    expect(observed.map(el => el.id)).toEqual(["intro", "faq"]);
   });
 
   it("highlights the heading reported as intersecting", () => {

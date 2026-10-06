@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 /**
  * Coverage for the non-Error branch of the catch handler at
@@ -15,35 +15,37 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
  * string from `buildPageMap`.
  */
 
-vi.mock('fs', () => ({
+vi.mock("fs", () => ({
   default: {
     existsSync: () => false,
-    readFileSync: () => '',
+    readFileSync: () => "",
   },
-}))
+}));
 
-vi.mock('../app/docs/page-map', () => ({
+vi.mock("../app/docs/page-map", () => ({
   buildPageMap: () => {
     // Deliberately throw a non-Error value to hit the else arm of
     // `error instanceof Error ? error.message : String(error)`.
-    throw 'plain-string-blowup'
+    throw "plain-string-blowup";
   },
-  docsContentPath: '/fake/docs/content',
-  basePath: 'docs',
-}))
+  docsContentPath: "/fake/docs/content",
+  basePath: "docs",
+}));
 
-vi.mock('@/lib/transformMdx', () => ({
+vi.mock("@/lib/transformMdx", () => ({
   convertHtmlScriptsToJsxComments: (content: string) => content,
-}))
+}));
 
 class MockNextRequest {
-  nextUrl: { searchParams: URLSearchParams }
+  nextUrl: { searchParams: URLSearchParams };
   constructor(query: string) {
-    this.nextUrl = { searchParams: new URLSearchParams(query ? `q=${query}` : '') }
+    this.nextUrl = {
+      searchParams: new URLSearchParams(query ? `q=${query}` : ""),
+    };
   }
 }
 
-vi.mock('next/server', () => ({
+vi.mock("next/server", () => ({
   NextRequest: MockNextRequest,
   NextResponse: {
     json: (body: unknown, init?: { status?: number }) => ({
@@ -51,48 +53,51 @@ vi.mock('next/server', () => ({
       status: init?.status || 200,
     }),
   },
-}))
+}));
 
-const errorSpy = { calls: [] as unknown[][] }
+const errorSpy = { calls: [] as unknown[][] };
 
-vi.mock('@/lib/logger', () => ({
+vi.mock("@/lib/logger", () => ({
   logger: {
     error: (...args: unknown[]) => {
-      errorSpy.calls.push(args)
+      errorSpy.calls.push(args);
     },
     info: () => {},
     warn: () => {},
     debug: () => {},
   },
-}))
+}));
 
-vi.mock('@/lib/metrics', () => ({
+vi.mock("@/lib/metrics", () => ({
   recordApiRequest: () => {},
-}))
+}));
 
-let GET: (request: unknown) => Promise<{ status: number; body: { error: string; results: unknown[]; count: number } }>
+let GET: (request: unknown) => Promise<{
+  status: number;
+  body: { error: string; results: unknown[]; count: number };
+}>;
 
 beforeEach(async () => {
-  vi.resetModules()
-  errorSpy.calls.length = 0
-  const mod = await import('../app/api/search/route')
-  GET = mod.GET as typeof GET
-})
+  vi.resetModules();
+  errorSpy.calls.length = 0;
+  const mod = await import("../app/api/search/route");
+  GET = mod.GET as typeof GET;
+});
 
-describe('GET /api/search — non-Error throws', () => {
-  it('coerces a non-Error throw via String(error) in the structured log', async () => {
-    const res = await GET(new MockNextRequest('anything'))
+describe("GET /api/search — non-Error throws", () => {
+  it("coerces a non-Error throw via String(error) in the structured log", async () => {
+    const res = await GET(new MockNextRequest("anything"));
 
-    expect(res.status).toBe(500)
-    expect(res.body.error).toBe('Search failed')
-    expect(res.body.results).toEqual([])
-    expect(res.body.count).toBe(0)
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe("Search failed");
+    expect(res.body.results).toEqual([]);
+    expect(res.body.count).toBe(0);
 
     // The logger should have received the coerced string form, proving the
     // else arm of `error instanceof Error ? ... : String(error)` fired.
-    expect(errorSpy.calls.length).toBe(1)
-    const [msg, meta] = errorSpy.calls[0]
-    expect(msg).toBe('search request failed')
-    expect((meta as { error: string }).error).toBe('plain-string-blowup')
-  })
-})
+    expect(errorSpy.calls.length).toBe(1);
+    const [msg, meta] = errorSpy.calls[0];
+    expect(msg).toBe("search request failed");
+    expect((meta as { error: string }).error).toBe("plain-string-blowup");
+  });
+});

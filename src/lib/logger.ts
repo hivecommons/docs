@@ -10,12 +10,12 @@
  */
 
 export type LogFields = {
-  route: string
-  method?: string
-  status?: number
-  durationMs?: number
-  error?: string
-}
+  route: string;
+  method?: string;
+  status?: number;
+  durationMs?: number;
+  error?: string;
+};
 
 function write(level: "info" | "error", message: string, fields: LogFields) {
   const record = {
@@ -23,27 +23,27 @@ function write(level: "info" | "error", message: string, fields: LogFields) {
     time: new Date().toISOString(),
     message,
     ...fields,
-  }
-  const line = JSON.stringify(record)
+  };
+  const line = JSON.stringify(record);
   // Repo lint policy only allows console.warn/console.error (no-console), so
   // info-level records are emitted via console.warn rather than console.log.
   if (level === "error") {
-    console.error(line)
+    console.error(line);
   } else {
-    console.warn(line)
+    console.warn(line);
   }
 }
 
 export const logger = {
   info(message: string, fields: LogFields) {
-    write("info", message, fields)
+    write("info", message, fields);
   },
   /** Truncates `error` to keep log lines bounded (no stack traces / raw payloads). */
   error(message: string, fields: LogFields) {
     const truncated =
       fields.error && fields.error.length > 300
         ? `${fields.error.slice(0, 300)}...`
-        : fields.error
-    write("error", message, { ...fields, error: truncated })
+        : fields.error;
+    write("error", message, { ...fields, error: truncated });
   },
-}
+};

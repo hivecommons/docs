@@ -40,8 +40,19 @@ const styles: Record<string, CSSProperties> = {
     letterSpacing: "-0.04em",
     margin: "0 0 1rem",
   },
-  message: { color: "var(--ef-ink-2)", fontSize: "1.05rem", lineHeight: 1.7, margin: "0 auto 1.75rem", maxWidth: "38rem" },
-  actions: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0.75rem" },
+  message: {
+    color: "var(--ef-ink-2)",
+    fontSize: "1.05rem",
+    lineHeight: 1.7,
+    margin: "0 auto 1.75rem",
+    maxWidth: "38rem",
+  },
+  actions: {
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: "0.75rem",
+  },
   primary: {
     border: "1px solid var(--ef-honey)",
     background: "var(--ef-honey)",
@@ -95,17 +106,34 @@ export default function ErrorFallbackUI({ reset }: { reset: () => void }) {
     <main style={styles.page}>
       <ThemeVars />
       <section style={styles.card} aria-labelledby="runtime-error-title">
-        <img src="/hive-commons-logo.png" width="48" height="48" alt="Hive Commons logo" style={styles.logo} />
+        <img
+          src="/hive-commons-logo.png"
+          width="48"
+          height="48"
+          alt="Hive Commons logo"
+          style={styles.logo}
+        />
         <div style={styles.eyebrow}>Hive Commons Docs</div>
-        <h1 id="runtime-error-title" style={styles.title}>Something went wrong</h1>
+        <h1 id="runtime-error-title" style={styles.title}>
+          Something went wrong
+        </h1>
         <p style={styles.message}>
-          The docs hit a temporary runtime error. Try again, or jump back into the Hive docs while we recover this page.
+          The docs hit a temporary runtime error. Try again, or jump back into
+          the Hive docs while we recover this page.
         </p>
         <div style={styles.actions}>
-          <button type="button" onClick={reset} style={styles.primary}>Try again</button>
-          <Link href="/docs/hive/readme" style={styles.secondary}>Hive intro</Link>
-          <Link href="/docs" style={styles.secondary}>Docs home</Link>
-          <Link href="/docs/community/meetings" style={styles.secondary}>Community meetings</Link>
+          <button type="button" onClick={reset} style={styles.primary}>
+            Try again
+          </button>
+          <Link href="/docs/hive/readme" style={styles.secondary}>
+            Hive intro
+          </Link>
+          <Link href="/docs" style={styles.secondary}>
+            Docs home
+          </Link>
+          <Link href="/docs/community/meetings" style={styles.secondary}>
+            Community meetings
+          </Link>
         </div>
       </section>
     </main>

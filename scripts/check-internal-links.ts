@@ -81,7 +81,7 @@ for (const entry of parseNavStructures(pageMapSrc, PROJECT_FOR_NAV)) {
   const fileAbs = path.join(
     contentRoot,
     entry.base.replace(/^docs\/?/, ""),
-    entry.file,
+    entry.file
   );
   if (!fs.existsSync(fileAbs) && entry.base !== "docs") {
     // Kubestellar nav references live under docs/content directly.

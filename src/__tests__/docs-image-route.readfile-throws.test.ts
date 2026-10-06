@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 /**
  * Branch coverage for /api/docs-image/[...path]/route.ts line 53 —
@@ -8,46 +8,46 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
  * text, and must not let the exception escape.
  */
 
-describe('/api/docs-image/[...path] — readFileSync throws yields 500', () => {
-  beforeEach(() => vi.resetModules())
+describe("/api/docs-image/[...path] — readFileSync throws yields 500", () => {
+  beforeEach(() => vi.resetModules());
 
-  it('returns 500 when readFileSync throws for an existing file', async () => {
-    vi.doMock('fs', () => ({
+  it("returns 500 when readFileSync throws for an existing file", async () => {
+    vi.doMock("fs", () => ({
       default: {
         existsSync: () => true,
         readFileSync: () => {
-          throw new Error('EACCES: permission denied')
+          throw new Error("EACCES: permission denied");
         },
       },
-    }))
-    vi.doMock('next/server', () => {
+    }));
+    vi.doMock("next/server", () => {
       class NextResponse {
-        body: unknown
-        status: number
-        headers: Map<string, string>
+        body: unknown;
+        status: number;
+        headers: Map<string, string>;
         constructor(
           body: unknown,
-          init?: { status?: number; headers?: Record<string, string> },
+          init?: { status?: number; headers?: Record<string, string> }
         ) {
-          this.body = body
-          this.status = init?.status ?? 200
-          this.headers = new Map(Object.entries(init?.headers ?? {}))
+          this.body = body;
+          this.status = init?.status ?? 200;
+          this.headers = new Map(Object.entries(init?.headers ?? {}));
         }
       }
-      return { NextRequest: class {}, NextResponse }
-    })
+      return { NextRequest: class {}, NextResponse };
+    });
 
-    const { GET } = await import('../app/api/docs-image/[...path]/route')
-    const params = Promise.resolve({ path: ['ok.png'] })
+    const { GET } = await import("../app/api/docs-image/[...path]/route");
+    const params = Promise.resolve({ path: ["ok.png"] });
     const res = (await GET({} as never, { params })) as unknown as {
-      body: unknown
-      status: number
-    }
+      body: unknown;
+      status: number;
+    };
 
-    expect(res.status).toBe(500)
-    expect(String(res.body)).toBe('Internal Server Error')
+    expect(res.status).toBe(500);
+    expect(String(res.body)).toBe("Internal Server Error");
     // The underlying error text must NOT leak into the response body.
-    expect(String(res.body)).not.toContain('EACCES')
-    expect(String(res.body)).not.toContain('permission denied')
-  })
-})
+    expect(String(res.body)).not.toContain("EACCES");
+    expect(String(res.body)).not.toContain("permission denied");
+  });
+});

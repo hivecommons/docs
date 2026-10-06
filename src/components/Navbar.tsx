@@ -17,7 +17,6 @@ export default function Navbar() {
 
   const t = useTranslations("navigation");
 
-
   return (
     <>
       {/* Blur overlay when dropdown is open */}
@@ -122,9 +121,7 @@ export default function Navbar() {
                 </div>
 
                 {/* Marketplace Link */}
-                <div className="relative group">
-                  
-                </div>
+                <div className="relative group"></div>
 
                 {/* Contribute Dropdown */}
                 <div
@@ -199,10 +196,7 @@ export default function Navbar() {
                       </svg>
                       {t("joinIn")}
                     </a>
-                    
-                    
-                    
-                    
+
                     <Link
                       href="/docs/contributing/security/security-inc"
                       className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-emerald-900/30 rounded transition-all duration-200 hover:text-emerald-300 hover:shadow-md"
@@ -289,7 +283,8 @@ export default function Navbar() {
                         ></path>
                       </svg>
                       {t("news")}
-                    </Link><Link
+                    </Link>
+                    <Link
                       href="/docs/news/reviews"
                       className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-cyan-900/30 rounded transition-all duration-200 hover:text-cyan-300 hover:shadow-md"
                     >
@@ -307,40 +302,41 @@ export default function Navbar() {
                         ></path>
                       </svg>
                       {t("reviews")}
-                    </Link><Link
+                    </Link>
+                    <Link
                       href="/docs/community/meetings#agendas-and-notes"
                       target="_blank"
                       className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-cyan-900/30 rounded transition-all duration-200 hover:text-cyan-300 hover:shadow-md"
                     >
-                    <svg
-                      className="h-4 w-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
+                      <svg
+                        className="h-4 w-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
                       {t("agenda")}
                       <svg
-                      className="ml-1 w-3 h-3 sm:w-4 sm:h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
+                        className="ml-1 w-3 h-3 sm:w-4 sm:h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
                     </Link>
-                    
+
                     <LocalizedLink
                       href="/#contact"
                       className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-cyan-900/30 rounded transition-all duration-200 hover:text-cyan-300 hover:shadow-md"
@@ -360,7 +356,6 @@ export default function Navbar() {
                       </svg>
                       {t("contactUs")}
                     </LocalizedLink>
-                    
                   </div>
                 </div>
               </div>
@@ -387,7 +382,7 @@ export default function Navbar() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={e => e.stopPropagation()}
                   >
                     <svg
                       className="w-4 h-4"
@@ -610,9 +605,7 @@ export default function Navbar() {
                   </a>
                 </div>
                 {/* MARKETPLACE */}
-                <div className="relative mb-4">
-                  
-                </div>
+                <div className="relative mb-4"></div>
                 <div className="border-t border-gray-400/50 mb-4"></div>
                 <div className="mb-2">
                   <span className="text-sm sm:text-base px-3 font-medium tracking-wider text-gray-400 uppercase">
@@ -642,18 +635,10 @@ export default function Navbar() {
                     <span>{t("joinIn")}</span>
                   </a>
                 </div>
-                <div className="relative mb-2">
-                  
-                </div>
-                <div className="relative mb-2">
-                  
-                </div>
-                <div className="relative mb-2">
-                  
-                </div>
-                <div className="relative mb-2">
-                  
-                </div>
+                <div className="relative mb-2"></div>
+                <div className="relative mb-2"></div>
+                <div className="relative mb-2"></div>
+                <div className="relative mb-2"></div>
                 <div className="relative mb-4">
                   <Link
                     href="/docs/contributing/security/security-inc"
@@ -683,12 +668,8 @@ export default function Navbar() {
                     {t("community")}
                   </span>
                 </div>
-                <div className="relative mb-2">
-                  
-                </div>
-                <div className="relative mb-2">
-                  
-                </div>
+                <div className="relative mb-2"></div>
+                <div className="relative mb-2"></div>
                 <div className="relative mb-2">
                   <LocalizedLink
                     href="/#contact"
@@ -712,9 +693,7 @@ export default function Navbar() {
                     <span>{t("contactUs")}</span>
                   </LocalizedLink>
                 </div>
-                <div className="relative mb-4">
-                  
-                </div>
+                <div className="relative mb-4"></div>
                 <div className="border-t border-gray-400/50 mb-4"></div>
                 <div className="mb-4">
                   <span className="text-sm sm:text-base px-3 font-medium tracking-wider text-gray-400 uppercase">

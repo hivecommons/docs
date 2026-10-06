@@ -1,14 +1,14 @@
-import { describe, expect, it } from 'vitest'
-import robots from '../app/robots'
+import { describe, expect, it } from "vitest";
+import robots from "../app/robots";
 
-describe('robots', () => {
-  it('allows all crawlers and points them at the sitemap', () => {
+describe("robots", () => {
+  it("allows all crawlers and points them at the sitemap", () => {
     expect(robots()).toEqual({
       rules: {
-        userAgent: '*',
-        allow: '/',
+        userAgent: "*",
+        allow: "/",
       },
-      sitemap: 'https://docs.hivecommons.dev/sitemap.xml',
-    })
-  })
-})
+      sitemap: "https://docs.hivecommons.dev/sitemap.xml",
+    });
+  });
+});

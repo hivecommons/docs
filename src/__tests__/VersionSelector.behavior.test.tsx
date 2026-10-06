@@ -26,8 +26,9 @@ const useSharedConfigMock = vi.fn<() => { config: SharedConfig | null }>(
   () => ({ config: null })
 );
 
-vi.mock("@/hooks/useSharedConfig", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/hooks/useSharedConfig")>();
+vi.mock("@/hooks/useSharedConfig", async importOriginal => {
+  const actual =
+    await importOriginal<typeof import("@/hooks/useSharedConfig")>();
   return {
     ...actual,
     useSharedConfig: () => useSharedConfigMock(),
@@ -94,9 +95,7 @@ describe("version list", () => {
   it("sorts default first, dev next, numeric descending, legacy last", () => {
     render(<VersionSelector />);
     openDropdown();
-    const labels = screen
-      .getAllByRole("option")
-      .map((o) => o.textContent);
+    const labels = screen.getAllByRole("option").map(o => o.textContent);
     expect(labels).toEqual([
       "v5 (Latest)",
       "main (dev)",
