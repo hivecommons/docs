@@ -982,7 +982,7 @@ describe("Netlify function wiring", () => {
       "utf8"
     );
     for (const p of [RELAY_BASE_PATH, REGISTER_PATH, PENDING_PATH, ACK_PATH]) {
-      expect(fn).toContain(`'${p}'`);
+      expect(fn).toContain(`"${p}"`);
     }
     expect(fn).toContain("handleRelayRequest");
     expect(fn).toContain("HUB_SECRET_HASH_ENV");
