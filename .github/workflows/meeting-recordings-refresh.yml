@@ -12,6 +12,7 @@ jobs:
   refresh:
     permissions:
       contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -19,7 +20,7 @@ jobs:
         with:
           # On `schedule`, github.sha is main as of trigger time. If the job sits in
           # the runner queue (run 37370568225 waited 70 min) that base is stale and
-          # the auto-commit push below is rejected non-fast-forward. Checking out the
+          # the PR branch is created from a stale base. Checking out the
           # branch by name fetches the live tip at job start instead.
           ref: main
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -28,11 +29,18 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npx tsx scripts/update-meeting-recordings.ts
-      - name: Commit recording feed snapshot
-        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
+      - name: Open PR with recording feed snapshot
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          commit_message: "docs: refresh community meeting recordings"
-          file_pattern: data/meeting-recordings.json
+          branch: automation/meeting-recordings-refresh
+          delete-branch: true
+          add-paths: data/meeting-recordings.json
+          commit-message: "docs: refresh community meeting recordings"
+          title: "docs: refresh community meeting recordings"
+          body: |
+            Automated daily refresh of `data/meeting-recordings.json`.
+
+            The hive sweep merges this PR once CI is green.
       - name: Trigger Netlify rebuild
         if: env.NETLIFY_BUILD_HOOK_URL != ''
         env:
