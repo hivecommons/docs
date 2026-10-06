@@ -1,0 +1,1 @@
+- Make `prebuild` fail the build when a content sync step fails instead of masking it with `|| echo`; set `DOCS_SYNC_OPTIONAL=1` to keep the offline fallback to committed content for local development.
