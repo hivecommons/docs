@@ -1,8 +1,16 @@
 // Shared legacy-branding rewrite rules used by both sync-hive-docs.ts and
 // sync-sibling-docs.ts when pulling markdown content in from upstream repos
 // that still carry pre-rename (KubeStellar) branding/URLs.
+// ghcr.io/kubestellar/* is a real, still-published mirror org (the stable
+// promotion workflow mirrors every channel there), not legacy branding, so it
+// must survive the generic kubestellar -> hivecommons rewrite below
+// (hivecommons/docs#180).
+const GHCR_KUBESTELLAR = /ghcr\.io\/kubestellar\//g;
+const GHCR_KUBESTELLAR_SENTINEL = "\u0000GHCR_KUBESTELLAR\u0000";
+
 export function scrubLegacyBranding(content: string): string {
   return content
+    .replace(GHCR_KUBESTELLAR, GHCR_KUBESTELLAR_SENTINEL)
     .replace(/io\.kubestellar\.hive\./g, "io.hivecommons.hive.")
     .replace(/hive\\?\.kubestellar\\?\.io/g, (m) =>
       m.includes("\\") ? "hive\\.hivecommons\\.dev" : "hive.hivecommons.dev")
@@ -25,5 +33,6 @@ export function scrubLegacyBranding(content: string): string {
     .replace(/kubestellar\.io/g, "hivecommons.dev")
     .replace(/KubeStellar/g, "Hive Commons")
     .replace(/Kubestellar/g, "Hive Commons")
-    .replace(/kubestellar/g, "hivecommons");
+    .replace(/kubestellar/g, "hivecommons")
+    .split(GHCR_KUBESTELLAR_SENTINEL).join("ghcr.io/kubestellar/");
 }
