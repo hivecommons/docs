@@ -61,13 +61,13 @@ function check(): NextResponse {
 
     return NextResponse.json({ status: "ok" }, { status: 200 });
   } catch (err) {
-    const reason =
-      err instanceof Error ? err.message : "docs content path is unreadable";
+    // Raw fs errors embed absolute paths; keep them in the log, not the response.
+    const reason = "docs content path is unreadable";
     logger.error("healthz check failed", {
       route: "healthz",
       method: "GET",
       status: 503,
-      error: reason,
+      error: err instanceof Error ? err.message : reason,
     });
     return NextResponse.json({ status: "unhealthy", reason }, { status: 503 });
   }

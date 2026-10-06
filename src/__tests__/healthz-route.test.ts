@@ -88,7 +88,7 @@ describe("/api/healthz route", () => {
     });
   });
 
-  it("returns 503 propagating the Error.message when statSync throws (missing directory)", async () => {
+  it("returns 503 a generic reason (Error.message only logged) when statSync throws (missing directory)", async () => {
     statSyncSpy.mockImplementationOnce(() => {
       throw new Error("ENOENT: no such file or directory");
     });
@@ -100,7 +100,7 @@ describe("/api/healthz route", () => {
     const body = await res.json();
     expect(body).toEqual({
       status: "unhealthy",
-      reason: "ENOENT: no such file or directory",
+      reason: "docs content path is unreadable",
     });
     expect(loggerErrorSpy).toHaveBeenCalledWith("healthz check failed", {
       route: "healthz",
@@ -146,7 +146,7 @@ describe("/api/healthz route", () => {
     const body = await res.json();
     expect(body).toEqual({
       status: "unhealthy",
-      reason: "EACCES: permission denied",
+      reason: "docs content path is unreadable",
     });
     expect(loggerErrorSpy).toHaveBeenCalledWith("healthz check failed", {
       route: "healthz",
