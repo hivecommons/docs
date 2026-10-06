@@ -38,6 +38,10 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "security-model.md" },
   { source: "securing-your-hive.md" },
   { source: "troubleshooting.md" },
+  // Dashboard section help pages (hivecommons/docs#253, hivecommons/hive#10915).
+  { source: "dashboard-sections.md" },
+  { source: "dashboard-glossary.md" },
+  { source: "labels-and-control-signals.md" },
   { source: "backup-restore.md", target: "backup-dr.md" },
   { source: "env-vars.md" },
   // Third-party integration guide (hivecommons/hive#10171).
