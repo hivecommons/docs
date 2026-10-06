@@ -3,6 +3,7 @@ import fs from "fs";
 import { docsContentPath } from "@/app/docs/page-map";
 import { GET } from "@/app/api/healthz/route";
 import { logger } from "@/lib/logger";
+import { metricsRegistry } from "@/lib/metrics";
 
 /**
  * Coverage for src/app/api/healthz/route.ts — the readiness probe that
@@ -153,5 +154,19 @@ describe("/api/healthz route", () => {
       status: 503,
       error: "EACCES: permission denied",
     });
+  });
+
+  it("records healthz requests by status class in the metrics registry", async () => {
+    statSyncSpy.mockImplementationOnce(() => {
+      throw new Error("boom");
+    });
+
+    const res = await GET();
+
+    expect(res.status).toBe(503);
+    const body = await metricsRegistry.metrics();
+    expect(body).toContain(
+      'docs_api_requests_total{route="healthz",method="GET",status_class="5xx"}'
+    );
   });
 });

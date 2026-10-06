@@ -15,7 +15,7 @@
  */
 import { Counter, Histogram, Registry } from "prom-client";
 
-export const ApiRoutes = ["search", "docs-image"] as const;
+export const ApiRoutes = ["search", "docs-image", "healthz"] as const;
 export type ApiRoute = (typeof ApiRoutes)[number];
 
 const HTTP_METHODS = new Set([

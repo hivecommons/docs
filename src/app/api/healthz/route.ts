@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import { docsContentPath } from "../../docs/page-map";
 import { logger } from "@/lib/logger";
+import { recordApiRequest } from "@/lib/metrics";
 
 // Readiness check for the docs app.
 //
@@ -15,6 +16,18 @@ import { logger } from "@/lib/logger";
 // orchestrator or deploy pipeline can detect that condition before routing
 // traffic to this instance.
 export async function GET() {
+  const startedAt = performance.now();
+  const response = check();
+  recordApiRequest(
+    "healthz",
+    "GET",
+    response.status,
+    performance.now() - startedAt
+  );
+  return response;
+}
+
+function check(): NextResponse {
   try {
     const stat = fs.statSync(docsContentPath);
     if (!stat.isDirectory()) {
