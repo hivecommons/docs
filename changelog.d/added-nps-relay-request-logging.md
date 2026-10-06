@@ -1,0 +1,1 @@
+- Emit one bounded structured log line per NPS relay request (route, method, status, duration) so rate-limit and auth rejections are visible in Netlify function logs.

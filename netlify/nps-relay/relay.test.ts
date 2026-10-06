@@ -8,7 +8,7 @@ import {
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ACK_PATH,
   CAS_MAX_ATTEMPTS,
@@ -987,5 +987,25 @@ describe("Netlify function wiring", () => {
     expect(fn).toContain("handleRelayRequest");
     expect(fn).toContain("HUB_SECRET_HASH_ENV");
     expect(fn).not.toContain("INSTALL_TOKENS");
+  });
+});
+
+describe("request logging", () => {
+  it("emits one bounded log line without request data", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const res = await handleRelayRequest(
+      new Request("https://x.test/api/nps/secret-id", { method: "BREW" }),
+      deps()
+    );
+    const rec = JSON.parse(String(warn.mock.calls[0][0]));
+    warn.mockRestore();
+    expect(res.status).toBe(404);
+    expect(rec).toMatchObject({
+      message: "nps relay request",
+      route: "unknown",
+      method: "OTHER",
+      status: 404,
+    });
+    expect(JSON.stringify(rec)).not.toContain("secret-id");
   });
 });
