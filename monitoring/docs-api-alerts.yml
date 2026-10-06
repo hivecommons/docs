@@ -1,0 +1,34 @@
+# Prometheus alerting rules for the docs site API metrics exposed at
+# /api/metrics (see src/lib/metrics.ts). Inert until a Prometheus-compatible
+# system loads this file; nothing here sends data anywhere.
+groups:
+  - name: docs-api
+    rules:
+      - alert: DocsApiHighErrorRate
+        expr: |
+          sum by (route) (rate(docs_api_requests_total{status_class="5xx"}[5m]))
+            /
+          sum by (route) (rate(docs_api_requests_total[5m])) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 5% of docs API requests on route {{ $labels.route }} are failing with 5xx"
+      - alert: DocsApiHealthzFailing
+        expr: |
+          sum(rate(docs_api_requests_total{route="healthz",status_class="5xx"}[5m])) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "/api/healthz is returning 5xx; docs content may be unreadable"
+      - alert: DocsApiSlowRequests
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le, route) (rate(docs_api_request_duration_seconds_bucket[5m]))
+          ) > 2.5
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 latency on docs API route {{ $labels.route }} exceeds 2.5s"

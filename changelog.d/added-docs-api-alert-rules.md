@@ -1,0 +1,1 @@
+- Add Prometheus alert rules (`monitoring/docs-api-alerts.yml`) for docs API 5xx rate, `/api/healthz` failures, and p95 latency, built on the existing bounded `docs_api_*` metrics.
