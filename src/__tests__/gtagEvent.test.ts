@@ -18,94 +18,94 @@
  * The happy path — window.gtag exists — should forward the call verbatim
  * as gtag("event", eventName, params).
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { gtagEvent } from '../components/GoogleAnalytics'
+import { gtagEvent } from "../components/GoogleAnalytics";
 
-const originalWindow = globalThis.window
+const originalWindow = globalThis.window;
 
 function installWindow(gtag: unknown) {
-  Object.defineProperty(globalThis, 'window', {
+  Object.defineProperty(globalThis, "window", {
     value: gtag === undefined ? {} : { gtag },
     writable: true,
     configurable: true,
-  })
+  });
 }
 
 function restoreWindow() {
   if (originalWindow === undefined) {
     // @ts-expect-error - removing window for SSR tests
-    delete globalThis.window
+    delete globalThis.window;
   } else {
-    Object.defineProperty(globalThis, 'window', {
+    Object.defineProperty(globalThis, "window", {
       value: originalWindow,
       writable: true,
       configurable: true,
-    })
+    });
   }
 }
 
-describe('gtagEvent', () => {
+describe("gtagEvent", () => {
   beforeEach(() => {
-    restoreWindow()
-  })
+    restoreWindow();
+  });
 
   afterEach(() => {
-    restoreWindow()
-    vi.restoreAllMocks()
-  })
+    restoreWindow();
+    vi.restoreAllMocks();
+  });
 
-  it('is a no-op on the server (window undefined) and does not throw', () => {
+  it("is a no-op on the server (window undefined) and does not throw", () => {
     // @ts-expect-error - removing window for SSR path
-    delete globalThis.window
-    expect(() => gtagEvent('survey_click')).not.toThrow()
-    expect(() => gtagEvent('survey_click', { source: 'navbar' })).not.toThrow()
-  })
+    delete globalThis.window;
+    expect(() => gtagEvent("survey_click")).not.toThrow();
+    expect(() => gtagEvent("survey_click", { source: "navbar" })).not.toThrow();
+  });
 
-  it('is a no-op when window exists but window.gtag has not loaded yet', () => {
-    installWindow(undefined)
-    expect(() => gtagEvent('doc_feedback', { rating: 5 })).not.toThrow()
-  })
+  it("is a no-op when window exists but window.gtag has not loaded yet", () => {
+    installWindow(undefined);
+    expect(() => gtagEvent("doc_feedback", { rating: 5 })).not.toThrow();
+  });
 
-  it('forwards eventName and params to window.gtag when available', () => {
-    const spy = vi.fn()
-    installWindow(spy)
+  it("forwards eventName and params to window.gtag when available", () => {
+    const spy = vi.fn();
+    installWindow(spy);
 
-    gtagEvent('survey_click', { source: 'navbar', variant: 'A' })
+    gtagEvent("survey_click", { source: "navbar", variant: "A" });
 
-    expect(spy).toHaveBeenCalledTimes(1)
-    expect(spy).toHaveBeenCalledWith('event', 'survey_click', {
-      source: 'navbar',
-      variant: 'A',
-    })
-  })
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith("event", "survey_click", {
+      source: "navbar",
+      variant: "A",
+    });
+  });
 
-  it('forwards undefined params without adding a synthetic third argument', () => {
-    const spy = vi.fn()
-    installWindow(spy)
+  it("forwards undefined params without adding a synthetic third argument", () => {
+    const spy = vi.fn();
+    installWindow(spy);
 
-    gtagEvent('page_view_manual')
+    gtagEvent("page_view_manual");
 
-    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledTimes(1);
     // Third arg is passed through as-is (undefined), matching gtag.js's
     // own signature: gtag('event', name, params?)
-    expect(spy).toHaveBeenCalledWith('event', 'page_view_manual', undefined)
-  })
+    expect(spy).toHaveBeenCalledWith("event", "page_view_manual", undefined);
+  });
 
-  it('supports the full param value type union (string | number | boolean)', () => {
-    const spy = vi.fn()
-    installWindow(spy)
+  it("supports the full param value type union (string | number | boolean)", () => {
+    const spy = vi.fn();
+    installWindow(spy);
 
-    gtagEvent('mixed_params', {
-      label: 'signup',
+    gtagEvent("mixed_params", {
+      label: "signup",
       value: 42,
       logged_in: true,
-    })
+    });
 
-    expect(spy).toHaveBeenCalledWith('event', 'mixed_params', {
-      label: 'signup',
+    expect(spy).toHaveBeenCalledWith("event", "mixed_params", {
+      label: "signup",
       value: 42,
       logged_in: true,
-    })
-  })
-})
+    });
+  });
+});

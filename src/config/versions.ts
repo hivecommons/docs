@@ -12,31 +12,38 @@
 //   default together.
 
 // Netlify site name for branch deploys
-export const NETLIFY_SITE_NAME = "hivecommons-docs"
+export const NETLIFY_SITE_NAME = "hivecommons-docs";
 
 // Production URL for latest version
-export const PRODUCTION_URL = "https://docs.hivecommons.dev"
+export const PRODUCTION_URL = "https://docs.hivecommons.dev";
 
 // Project identifiers
-export type ProjectId = "hive" | "hotshot" | "pluk" | "rationguard" | "promptargs" | "dibs" | "spektacular"
+export type ProjectId =
+  | "hive"
+  | "hotshot"
+  | "pluk"
+  | "rationguard"
+  | "promptargs"
+  | "dibs"
+  | "spektacular";
 
 // Version info structure
 export interface VersionInfo {
-  label: string
-  branch: string
-  isDefault: boolean
-  externalUrl?: string
-  isDev?: boolean // marks development/unreleased versions
+  label: string;
+  branch: string;
+  isDefault: boolean;
+  externalUrl?: string;
+  isDev?: boolean; // marks development/unreleased versions
 }
 
 // Project configuration
 export interface ProjectConfig {
-  id: ProjectId
-  name: string
-  basePath: string
-  currentVersion: string
-  contentPath: string
-  versions: Record<string, VersionInfo>
+  id: ProjectId;
+  name: string;
+  basePath: string;
+  currentVersion: string;
+  contentPath: string;
+  versions: Record<string, VersionInfo>;
 }
 
 // hive versions
@@ -59,7 +66,7 @@ const HIVE_VERSIONS: Record<string, VersionInfo> = {
     isDefault: false,
     externalUrl: "https://github.com/hivecommons/hive/tree/v4/src/docs",
   },
-}
+};
 
 // hotshot versions
 const HOTSHOT_VERSIONS: Record<string, VersionInfo> = {
@@ -68,7 +75,7 @@ const HOTSHOT_VERSIONS: Record<string, VersionInfo> = {
     branch: "main",
     isDefault: true,
   },
-}
+};
 
 // pluk versions
 const PLUK_VERSIONS: Record<string, VersionInfo> = {
@@ -77,7 +84,7 @@ const PLUK_VERSIONS: Record<string, VersionInfo> = {
     branch: "main",
     isDefault: true,
   },
-}
+};
 
 // rationguard versions
 const RATIONGUARD_VERSIONS: Record<string, VersionInfo> = {
@@ -86,7 +93,7 @@ const RATIONGUARD_VERSIONS: Record<string, VersionInfo> = {
     branch: "main",
     isDefault: true,
   },
-}
+};
 
 // promptargs versions
 const PROMPTARGS_VERSIONS: Record<string, VersionInfo> = {
@@ -95,7 +102,7 @@ const PROMPTARGS_VERSIONS: Record<string, VersionInfo> = {
     branch: "main",
     isDefault: true,
   },
-}
+};
 
 // dibs versions
 const DIBS_VERSIONS: Record<string, VersionInfo> = {
@@ -104,7 +111,7 @@ const DIBS_VERSIONS: Record<string, VersionInfo> = {
     branch: "main",
     isDefault: true,
   },
-}
+};
 
 // spektacular versions (canonical site: https://spektacular.dev)
 const SPEKTACULAR_VERSIONS: Record<string, VersionInfo> = {
@@ -113,7 +120,7 @@ const SPEKTACULAR_VERSIONS: Record<string, VersionInfo> = {
     branch: "main",
     isDefault: true,
   },
-}
+};
 
 // All projects configuration
 export const PROJECTS: Record<ProjectId, ProjectConfig> = {
@@ -173,100 +180,103 @@ export const PROJECTS: Record<ProjectId, ProjectConfig> = {
     contentPath: "docs/content/spektacular",
     versions: SPEKTACULAR_VERSIONS,
   },
-}
+};
 
 // Get project from URL pathname
 export function getProjectFromPath(pathname: string): ProjectConfig {
   if (pathname.startsWith("/docs/hotshot")) {
-    return PROJECTS.hotshot
+    return PROJECTS.hotshot;
   }
   if (pathname.startsWith("/docs/pluk")) {
-    return PROJECTS.pluk
+    return PROJECTS.pluk;
   }
   if (pathname.startsWith("/docs/rationguard")) {
-    return PROJECTS.rationguard
+    return PROJECTS.rationguard;
   }
   if (pathname.startsWith("/docs/promptargs")) {
-    return PROJECTS.promptargs
+    return PROJECTS.promptargs;
   }
   if (pathname.startsWith("/docs/dibs")) {
-    return PROJECTS.dibs
+    return PROJECTS.dibs;
   }
   if (pathname.startsWith("/docs/spektacular")) {
-    return PROJECTS.spektacular
+    return PROJECTS.spektacular;
   }
-  return PROJECTS.hive
+  return PROJECTS.hive;
 }
 
 // Get project by ID
 export function getProject(projectId: ProjectId): ProjectConfig {
-  return PROJECTS[projectId]
+  return PROJECTS[projectId];
 }
 
 // Get all projects
 export function getAllProjects(): ProjectConfig[] {
-  return Object.values(PROJECTS)
+  return Object.values(PROJECTS);
 }
 
 // ============================================
 // Backwards-compatible exports (hive is the flagship project)
 // ============================================
 
-export const CURRENT_VERSION = PROJECTS.hive.currentVersion
-export const VERSIONS = HIVE_VERSIONS
+export const CURRENT_VERSION = PROJECTS.hive.currentVersion;
+export const VERSIONS = HIVE_VERSIONS;
 
-export type VersionKey = keyof typeof HIVE_VERSIONS
+export type VersionKey = keyof typeof HIVE_VERSIONS;
 
 export function getDefaultVersion(): VersionKey {
-  return "latest"
+  return "latest";
 }
 
 export function getCurrentVersion(): string {
-  return CURRENT_VERSION
+  return CURRENT_VERSION;
 }
 
 export function getBranchForVersion(version: VersionKey): string {
-  return HIVE_VERSIONS[version]?.branch ?? "main"
+  return HIVE_VERSIONS[version]?.branch ?? "main";
 }
 
 export function getVersionFromBranch(branch: string): VersionKey | null {
   for (const [key, value] of Object.entries(HIVE_VERSIONS)) {
     if (value.branch === branch) {
-      return key as VersionKey
+      return key as VersionKey;
     }
   }
 
   // Check if branch matches docs/{version} pattern
-  const match = branch.match(/^docs\/(.+)$/)
+  const match = branch.match(/^docs\/(.+)$/);
   if (match) {
-    const versionNum = match[1]
+    const versionNum = match[1];
     // Find version entry with matching branch
     for (const [key, value] of Object.entries(HIVE_VERSIONS)) {
       if (value.branch === branch || key === versionNum) {
-        return key as VersionKey
+        return key as VersionKey;
       }
     }
   }
 
   // Check for main branch
   if (branch === "main" || branch === "master") {
-    return "latest"
+    return "latest";
   }
 
-  return null
+  return null;
 }
 
 export function getAllVersions(): Array<{ key: VersionKey } & VersionInfo> {
   return Object.entries(HIVE_VERSIONS).map(([key, value]) => ({
     key: key as VersionKey,
     ...value,
-  }))
+  }));
 }
 
 // Helper to validate if a branch name follows version convention
 export function isVersionBranch(branch: string): boolean {
-  return branch === "main" || branch.startsWith("docs/") ||
+  return (
+    branch === "main" ||
+    branch.startsWith("docs/") ||
     Object.values(HIVE_VERSIONS).some(version => version.branch === branch)
+  );
 }
 
 // Get the URL for a specific version (project-aware)
@@ -275,38 +285,38 @@ export function getVersionUrl(
   pathname: string = "/docs",
   projectId: ProjectId = "hive"
 ): string {
-  const project = PROJECTS[projectId]
-  const version = project.versions[versionKey]
+  const project = PROJECTS[projectId];
+  const version = project.versions[versionKey];
 
   if (!version) {
-    return `${PRODUCTION_URL}${pathname}`
+    return `${PRODUCTION_URL}${pathname}`;
   }
 
   // If it has an external URL, use that
   if ("externalUrl" in version && version.externalUrl) {
-    return version.externalUrl
+    return version.externalUrl;
   }
 
   // Latest version uses production URL
   if (versionKey === "latest" || version.isDefault) {
-    return `${PRODUCTION_URL}${pathname}`
+    return `${PRODUCTION_URL}${pathname}`;
   }
 
   // Other versions use Netlify branch deploys
   // Netlify converts branch names: docs/0.28.0 -> docs-0-28-0
-  const branchSlug = version.branch.replace(/\//g, "-").replace(/\./g, "-")
-  return `https://${branchSlug}--${NETLIFY_SITE_NAME}.netlify.app${pathname}`
+  const branchSlug = version.branch.replace(/\//g, "-").replace(/\./g, "-");
+  return `https://${branchSlug}--${NETLIFY_SITE_NAME}.netlify.app${pathname}`;
 }
 
 // Get versions for a specific project
 export function getProjectVersions(
   projectId: ProjectId
 ): Array<{ key: string } & VersionInfo> {
-  const project = PROJECTS[projectId]
+  const project = PROJECTS[projectId];
   return Object.entries(project.versions).map(([key, value]) => ({
     key,
     ...value,
-  }))
+  }));
 }
 
 // Check if a version has been migrated (branch exists)
@@ -314,14 +324,14 @@ export function isVersionMigrated(
   versionKey: string,
   projectId: ProjectId = "hive"
 ): boolean {
-  const project = PROJECTS[projectId]
+  const project = PROJECTS[projectId];
 
   // Latest is always available
-  if (versionKey === "latest") return true
+  if (versionKey === "latest") return true;
 
   // Legacy links externally, so it's "available"
-  if (versionKey === "legacy") return true
+  if (versionKey === "legacy") return true;
 
   // For other versions, assume they exist if in the versions list
-  return versionKey in project.versions
+  return versionKey in project.versions;
 }

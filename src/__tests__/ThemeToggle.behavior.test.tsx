@@ -57,7 +57,9 @@ describe("ThemeToggle fixed variant (mounted)", () => {
 
   it("clicking in dark mode requests the light theme", () => {
     render(<ThemeToggle />);
-    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Switch to light mode" })
+    );
     expect(setThemeMock).toHaveBeenCalledTimes(1);
     expect(setThemeMock).toHaveBeenCalledWith("light");
   });
@@ -65,7 +67,9 @@ describe("ThemeToggle fixed variant (mounted)", () => {
   it("clicking in light mode requests the dark theme", () => {
     resolvedTheme = "light";
     render(<ThemeToggle />);
-    fireEvent.click(screen.getByRole("button", { name: "Switch to dark mode" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Switch to dark mode" })
+    );
     expect(setThemeMock).toHaveBeenCalledWith("dark");
   });
 });
@@ -81,13 +85,17 @@ describe("ThemeToggle icon variant (mounted)", () => {
   it("toggles from light to dark", () => {
     resolvedTheme = "light";
     render(<ThemeToggle variant="icon" />);
-    fireEvent.click(screen.getByRole("button", { name: "Switch to dark mode" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Switch to dark mode" })
+    );
     expect(setThemeMock).toHaveBeenCalledWith("dark");
   });
 
   it("toggles from dark to light", () => {
     render(<ThemeToggle variant="icon" />);
-    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Switch to light mode" })
+    );
     expect(setThemeMock).toHaveBeenCalledWith("light");
   });
 });

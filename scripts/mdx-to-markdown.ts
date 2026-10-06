@@ -52,7 +52,8 @@ const BLOCK_OPEN_RE = /^\s*<([A-Z][A-Za-z0-9.]*)((?:\s+[^>]*?)?)\s*(\/?)>\s*$/;
 const BLOCK_CLOSE_RE = /^\s*<\/([A-Z][A-Za-z0-9.]*)\s*>\s*$/;
 const INLINE_TAG_RE = /<\/?([A-Z][A-Za-z0-9.]*)(?:\s+[^>]*?)?\s*\/?>/g;
 const IMPORT_RE = /^import\b[\s\S]*?;[ \t]*$/gm;
-const EXPORT_RE = /^export\s+(?:const|let|var|default|function)\b[\s\S]*?;[ \t]*$/gm;
+const EXPORT_RE =
+  /^export\s+(?:const|let|var|default|function)\b[\s\S]*?;[ \t]*$/gm;
 const JSX_COMMENT_RE = /\{\/\*[\s\S]*?\*\/\}/g;
 const SECONDS_PER_MINUTE = 60;
 
@@ -68,7 +69,10 @@ type Attrs = Record<string, string | number | boolean>;
 // Frontmatter
 // ---------------------------------------------------------------------------
 
-export function splitFrontmatter(src: string): { data: Record<string, string>; body: string } {
+export function splitFrontmatter(src: string): {
+  data: Record<string, string>;
+  body: string;
+} {
   const m = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!m) return { data: {}, body: src };
   const data: Record<string, string> = {};
@@ -93,7 +97,8 @@ export function splitFrontmatter(src: string): { data: Record<string, string>; b
 
 export function parseAttrs(raw: string): Attrs {
   const attrs: Attrs = {};
-  const re = /([A-Za-z_][\w-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|\{([^}]*)\}))?/g;
+  const re =
+    /([A-Za-z_][\w-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|\{([^}]*)\}))?/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(raw)) !== null) {
     const [, name, dq, sq, expr] = m;
@@ -123,7 +128,10 @@ function formatTimestamp(seconds: number): string {
 function renderYouTube(attrs: Attrs): string {
   const url = typeof attrs.url === "string" ? attrs.url : "";
   const start = typeof attrs.start === "number" ? attrs.start : undefined;
-  const href = start !== undefined ? `${url}${url.includes("?") ? "&" : "?"}t=${start}` : url;
+  const href =
+    start !== undefined
+      ? `${url}${url.includes("?") ? "&" : "?"}t=${start}`
+      : url;
   const label =
     start !== undefined
       ? `Watch this section on YouTube (from ${formatTimestamp(start)})`
@@ -134,13 +142,17 @@ function renderYouTube(attrs: Attrs): string {
 function renderStep(attrs: Attrs, inner: string): string {
   const number = attrs.number !== undefined ? String(attrs.number) : "";
   const heading = typeof attrs.heading === "string" ? attrs.heading : "";
-  const title = number && heading ? `Step ${number}: ${heading}` : heading || `Step ${number}`;
+  const title =
+    number && heading
+      ? `Step ${number}: ${heading}`
+      : heading || `Step ${number}`;
   return `### ${title}\n\n${inner.trim()}`;
 }
 
 function renderAgentBlock(attrs: Attrs, inner: string): string {
   const id = typeof attrs.for === "string" ? attrs.for : "";
-  const label = AGENT_LABELS[id] ?? (id ? id[0].toUpperCase() + id.slice(1) : "Agent");
+  const label =
+    AGENT_LABELS[id] ?? (id ? id[0].toUpperCase() + id.slice(1) : "Agent");
   return `**${label}**\n\n${inner.trim()}`;
 }
 
@@ -156,7 +168,7 @@ function dedent(lines: string[]): string[] {
     if (indent < min) min = indent;
   }
   if (!Number.isFinite(min) || min === 0) return lines;
-  return lines.map((l) => (l.trim() === "" ? "" : l.slice(min)));
+  return lines.map(l => (l.trim() === "" ? "" : l.slice(min)));
 }
 
 function findClose(lines: string[], from: number, name: string): number {
@@ -165,7 +177,13 @@ function findClose(lines: string[], from: number, name: string): number {
   for (let i = from; i < lines.length; i++) {
     const f = lines[i].match(FENCE_RE);
     if (fence) {
-      if (f && f[1][0] === fence[0] && f[1].length >= fence.length && f[2].trim() === "") fence = null;
+      if (
+        f &&
+        f[1][0] === fence[0] &&
+        f[1].length >= fence.length &&
+        f[2].trim() === ""
+      )
+        fence = null;
       continue;
     }
     if (f) {
@@ -192,7 +210,13 @@ function convertBlocks(lines: string[], notes: string[]): string[] {
     const f = line.match(FENCE_RE);
     if (fence) {
       out.push(line);
-      if (f && f[1][0] === fence[0] && f[1].length >= fence.length && f[2].trim() === "") fence = null;
+      if (
+        f &&
+        f[1][0] === fence[0] &&
+        f[1].length >= fence.length &&
+        f[2].trim() === ""
+      )
+        fence = null;
       continue;
     }
     if (f) {
@@ -209,16 +233,23 @@ function convertBlocks(lines: string[], notes: string[]): string[] {
         if (name === "YouTubeVideo") {
           out.push(renderYouTube(attrs));
         } else {
-          notes.push(`dropped self-closing component <${name} /> (no Markdown equivalent)`);
+          notes.push(
+            `dropped self-closing component <${name} /> (no Markdown equivalent)`
+          );
         }
         continue;
       }
       const closeIdx = findClose(lines, i + 1, name);
       if (closeIdx === -1) {
-        notes.push(`unterminated <${name}> at line ${i + 1}; tag removed, content kept`);
+        notes.push(
+          `unterminated <${name}> at line ${i + 1}; tag removed, content kept`
+        );
         continue;
       }
-      const inner = convertBlocks(dedent(lines.slice(i + 1, closeIdx)), notes).join("\n");
+      const inner = convertBlocks(
+        dedent(lines.slice(i + 1, closeIdx)),
+        notes
+      ).join("\n");
       if (name === "Step") out.push(renderStep(attrs, inner));
       else if (name === "AgentBlock") out.push(renderAgentBlock(attrs, inner));
       else {
@@ -256,42 +287,49 @@ function withCodeProtected(src: string, fn: (s: string) => string): string {
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => slots[Number(i)]);
 }
 
-export function convertMdxToMarkdown(src: string, opts: MdxConvertOptions): MdxConversion {
+export function convertMdxToMarkdown(
+  src: string,
+  opts: MdxConvertOptions
+): MdxConversion {
   const notes: string[] = [];
   const images: string[] = [];
   const imagePrefix = opts.imagePrefix ?? DEFAULT_IMAGE_PREFIX;
-  const rewriteImage = opts.rewriteImage ?? ((s: string) => s.replace(/^\//, ""));
+  const rewriteImage =
+    opts.rewriteImage ?? ((s: string) => s.replace(/^\//, ""));
   const siteBase = opts.siteBase.replace(/\/$/, "");
 
   const { data, body } = splitFrontmatter(src);
   const title = data.title;
   const description = data.summary ?? data.description;
 
-  let text = withCodeProtected(body, (s) =>
+  let text = withCodeProtected(body, s =>
     s.replace(IMPORT_RE, "").replace(EXPORT_RE, "").replace(JSX_COMMENT_RE, "")
   );
 
   text = convertBlocks(text.split("\n"), notes).join("\n");
 
-  text = withCodeProtected(text, (s) => {
+  text = withCodeProtected(text, s => {
     // Inline components left inside paragraphs: keep the text, drop the tags.
     s = s.replace(INLINE_TAG_RE, (m, name: string) => {
       notes.push(`removed inline tag ${m.trim()} (<${name}>)`);
       return "";
     });
     // Links and images.
-    s = s.replace(/(!?)\[([^\]]*)\]\(([^)\s]+)((?:\s+"[^"]*")?)\)/g, (m, bang, alt, href, tail) => {
-      if (bang === "!" && href.startsWith(imagePrefix)) {
-        images.push(href);
-        return `![${alt}](${rewriteImage(href)}${tail})`;
+    s = s.replace(
+      /(!?)\[([^\]]*)\]\(([^)\s]+)((?:\s+"[^"]*")?)\)/g,
+      (m, bang, alt, href, tail) => {
+        if (bang === "!" && href.startsWith(imagePrefix)) {
+          images.push(href);
+          return `![${alt}](${rewriteImage(href)}${tail})`;
+        }
+        if (bang !== "!" && href.startsWith("/")) {
+          return `[${alt}](${siteBase}${href}${tail})`;
+        }
+        return m;
       }
-      if (bang !== "!" && href.startsWith("/")) {
-        return `[${alt}](${siteBase}${href}${tail})`;
-      }
-      return m;
-    });
+    );
     // Stray braces would be parsed as MDX expressions.
-    s = s.replace(/[{}]/g, (c) => (c === "{" ? "&#123;" : "&#125;"));
+    s = s.replace(/[{}]/g, c => (c === "{" ? "&#123;" : "&#125;"));
     return s;
   });
 

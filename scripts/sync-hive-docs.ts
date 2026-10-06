@@ -65,7 +65,9 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "adr/0017-podman-quadlet-lifecycle.md" },
 ];
 
-const localHiveDocs: Array<{ source: string; target?: string }> = [{ source: "public-knowledge-mcp.md" }];
+const localHiveDocs: Array<{ source: string; target?: string }> = [
+  { source: "public-knowledge-mcp.md" },
+];
 
 // ---------------------------------------------------------------------------
 // Brand scrub
@@ -256,7 +258,8 @@ async function main() {
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
     fs.writeFileSync(
       targetPath,
-      canonicalHeader(file.source) + normalizeFences(scrubLegacyBranding(rewritten))
+      canonicalHeader(file.source) +
+        normalizeFences(scrubLegacyBranding(rewritten))
     );
     console.log(`synced ${file.source} -> docs/content/hive/${target}`);
   }

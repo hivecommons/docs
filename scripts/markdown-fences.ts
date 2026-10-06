@@ -65,7 +65,8 @@ export function normalizeFences(content: string): string {
       // MD031: blank line before the opener.
       if (out.length > 0 && out[out.length - 1].trim() !== "") out.push("");
       // MD040: language on the opener.
-      const lang = info.trim() === "" ? DEFAULT_FENCE_LANGUAGE : info.trimStart();
+      const lang =
+        info.trim() === "" ? DEFAULT_FENCE_LANGUAGE : info.trimStart();
       out.push(`${indent}${marker}${lang}`);
       open = { marker };
       continue;

@@ -145,7 +145,16 @@ describe("isExternalOrAnchor", () => {
 // ─────────────────────────────────────────────────────────────────────────
 describe("ASSET_EXT", () => {
   it("matches common image formats", () => {
-    for (const ext of ["png", "jpg", "jpeg", "gif", "svg", "webp", "avif", "ico"]) {
+    for (const ext of [
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "svg",
+      "webp",
+      "avif",
+      "ico",
+    ]) {
       expect(ASSET_EXT.test(`foo.${ext}`)).toBe(true);
     }
   });
@@ -221,39 +230,39 @@ describe("resolveInternalLink", () => {
 
   it("resolves '../' up-level links", () => {
     expect(resolveInternalLink("../other/page.md", base)).toBe(
-      "/docs/other/page",
+      "/docs/other/page"
     );
   });
 
   it("keeps root-absolute paths unchanged (aside from stripping .md/.mdx)", () => {
     expect(resolveInternalLink("/docs/console/overview.md", base)).toBe(
-      "/docs/console/overview",
+      "/docs/console/overview"
     );
     expect(resolveInternalLink("/docs/console/overview", base)).toBe(
-      "/docs/console/overview",
+      "/docs/console/overview"
     );
   });
 
   it("strips query strings and fragments before resolving", () => {
     expect(resolveInternalLink("intro.md?v=1", base)).toBe("/docs/hive/intro");
     expect(resolveInternalLink("intro.md#section", base)).toBe(
-      "/docs/hive/intro",
+      "/docs/hive/intro"
     );
     expect(resolveInternalLink("/docs/x?v=1#top", base)).toBe("/docs/x");
   });
 
   it("normalises redundant path segments via path.posix.normalize", () => {
     expect(resolveInternalLink("./sub/../intro.md", base)).toBe(
-      "/docs/hive/intro",
+      "/docs/hive/intro"
     );
     expect(resolveInternalLink("sub/./intro.md", base)).toBe(
-      "/docs/hive/sub/intro",
+      "/docs/hive/sub/intro"
     );
   });
 
   it("strips .md or .mdx suffix regardless of resolution path", () => {
     expect(resolveInternalLink("../other/page.mdx", base)).toBe(
-      "/docs/other/page",
+      "/docs/other/page"
     );
     expect(resolveInternalLink("/docs/a/b.md", base)).toBe("/docs/a/b");
   });
@@ -358,7 +367,7 @@ describe("parseNavStructures", () => {
     const entries = parseNavStructures(src);
     expect(entries).toHaveLength(2);
     expect(new Set(entries.map(navEntryRoute))).toEqual(
-      new Set(["/docs/hive/overview/introduction", "/docs/hive/introduction"]),
+      new Set(["/docs/hive/overview/introduction", "/docs/hive/introduction"])
     );
   });
 
@@ -380,7 +389,7 @@ describe("parseNavStructures", () => {
         "/docs/hive/overview/intro",
         "/docs/hive/guides/intro",
         "/docs/hive/intro",
-      ]),
+      ])
     );
   });
 
@@ -437,11 +446,11 @@ describe("parseNavStructures", () => {
 ]
 `;
     const [sectioned, bare] = parseNavStructures(src);
-expect(sectioned.sectionSlug).toBe("whats-new");
+    expect(sectioned.sectionSlug).toBe("whats-new");
     expect(sectioned.slug).toBe("v1-2-3-release-notes");
     expect(bare.sectionSlug).toBe("");
     expect(navEntryRoute(sectioned)).toBe(
-  "/docs/hive/whats-new/v1-2-3-release-notes",
+      "/docs/hive/whats-new/v1-2-3-release-notes"
     );
   });
 
@@ -530,7 +539,7 @@ describe("navEntryRoute", () => {
 
   it("returns /<base>/<sectionSlug>/<slug> when sectionSlug is set", () => {
     expect(navEntryRoute({ ...base, sectionSlug: "overview" })).toBe(
-      "/docs/hive/overview/intro",
+      "/docs/hive/overview/intro"
     );
   });
 });

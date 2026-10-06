@@ -24,13 +24,11 @@ describe("ErrorFallbackUI", () => {
   it("renders the branded error card", () => {
     render(<ErrorFallbackUI reset={() => {}} />);
     expect(
-      screen.getByRole("heading", { name: "Something went wrong" }),
+      screen.getByRole("heading", { name: "Something went wrong" })
     ).toBeTruthy();
     expect(screen.getByText("Hive Commons Docs")).toBeTruthy();
     expect(screen.getByAltText("Hive Commons logo")).toBeTruthy();
-    expect(
-      screen.getByText(/temporary runtime error/),
-    ).toBeTruthy();
+    expect(screen.getByText(/temporary runtime error/)).toBeTruthy();
   });
 
   it("invokes reset when Try again is clicked", () => {
@@ -48,7 +46,7 @@ describe("ErrorFallbackUI", () => {
     const hrefs = new Map(
       screen
         .getAllByRole("link")
-        .map((a) => [a.textContent, a.getAttribute("href")]),
+        .map(a => [a.textContent, a.getAttribute("href")])
     );
     expect(hrefs.get("Hive intro")).toBe("/docs/hive/readme");
     expect(hrefs.get("Docs home")).toBe("/docs");
@@ -72,7 +70,7 @@ describe("app error boundaries", () => {
 
   it("global-error.tsx renders a full html document around the fallback", () => {
     const html = renderToString(
-      <GlobalError error={new Error("boom")} reset={() => {}} />,
+      <GlobalError error={new Error("boom")} reset={() => {}} />
     );
     expect(html).toContain("<html");
     expect(html).toContain("Something went wrong");

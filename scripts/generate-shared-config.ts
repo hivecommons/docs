@@ -15,17 +15,17 @@
  * overwrites hand-maintained content.
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // ---------------------------------------------------------------------------
 // Resolve paths relative to repo root
 // ---------------------------------------------------------------------------
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, '..');
-const versionsPath = path.join(repoRoot, 'src', 'config', 'versions.ts');
-const sharedJsonPath = path.join(repoRoot, 'public', 'config', 'shared.json');
+const repoRoot = path.resolve(__dirname, "..");
+const versionsPath = path.join(repoRoot, "src", "config", "versions.ts");
+const sharedJsonPath = path.join(repoRoot, "public", "config", "shared.json");
 
 // ---------------------------------------------------------------------------
 // Import version data from versions.ts and generate shared.json
@@ -48,11 +48,16 @@ interface ExistingSharedConfig {
 }
 
 (async () => {
-  const { PROJECTS } = await import(versionsPath) as typeof import('../src/config/versions');
+  const { PROJECTS } = (await import(
+    versionsPath
+  )) as typeof import("../src/config/versions");
 
   // Build versions and projects maps from PROJECTS
   const versions: Record<string, Record<string, VersionEntry>> = {};
-  const projects: Record<string, { name: string; basePath: string; currentVersion: string }> = {};
+  const projects: Record<
+    string,
+    { name: string; basePath: string; currentVersion: string }
+  > = {};
 
   for (const [id, project] of Object.entries(PROJECTS)) {
     versions[id] = Object.fromEntries(
@@ -65,7 +70,7 @@ interface ExistingSharedConfig {
         if (v.externalUrl) entry.externalUrl = v.externalUrl;
         if (v.isDev) entry.isDev = v.isDev;
         return [key, entry];
-      }),
+      })
     );
 
     projects[id] = {
@@ -78,12 +83,16 @@ interface ExistingSharedConfig {
   // Preserve hand-maintained fields from the existing shared.json
   let existing: ExistingSharedConfig = {};
   if (fs.existsSync(sharedJsonPath)) {
-    existing = JSON.parse(fs.readFileSync(sharedJsonPath, 'utf8')) as ExistingSharedConfig;
+    existing = JSON.parse(
+      fs.readFileSync(sharedJsonPath, "utf8")
+    ) as ExistingSharedConfig;
   }
 
   // Derive editBaseUrls from project data; fall back to existing values so
   // hand-maintained URLs (e.g. external repos) are not lost.
-  const editBaseUrls: Record<string, string> = { ...(existing.editBaseUrls ?? {}) };
+  const editBaseUrls: Record<string, string> = {
+    ...(existing.editBaseUrls ?? {}),
+  };
   // Hive-family edit URLs are static (see DocsSourceActions.tsx); nothing to
   // derive from version branches here.
 
@@ -97,6 +106,11 @@ interface ExistingSharedConfig {
     updatedAt: new Date().toISOString(),
   };
 
-  fs.writeFileSync(sharedJsonPath, JSON.stringify(sharedConfig, null, 2) + '\n');
-  console.log(`✅ Generated ${path.relative(repoRoot, sharedJsonPath)} from versions.ts`);
+  fs.writeFileSync(
+    sharedJsonPath,
+    JSON.stringify(sharedConfig, null, 2) + "\n"
+  );
+  console.log(
+    `✅ Generated ${path.relative(repoRoot, sharedJsonPath)} from versions.ts`
+  );
 })();

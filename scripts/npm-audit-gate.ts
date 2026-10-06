@@ -143,7 +143,7 @@ export function evaluateAudit(
     }
   }
   const unused = [...active.values()].filter(
-    (ex) => !used.has(ex.id.toUpperCase())
+    ex => !used.has(ex.id.toUpperCase())
   );
 
   return { blocking, excepted, belowLevel, expired, unused, invalid };
@@ -163,9 +163,9 @@ function fmt(adv: Advisory): string {
 }
 
 export function main(argv: string[] = process.argv.slice(2)): void {
-  const levelArg = argv.find((a) => a.startsWith("--level="));
+  const levelArg = argv.find(a => a.startsWith("--level="));
   const level = levelArg ? levelArg.slice("--level=".length) : "high";
-  const reportFile = argv.find((a) => !a.startsWith("--"));
+  const reportFile = argv.find(a => !a.startsWith("--"));
   if (!reportFile) {
     console.error(
       "usage: npx tsx scripts/npm-audit-gate.ts <audit.json> [--level=high]"
@@ -204,12 +204,16 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   let failed = false;
   if (result.invalid.length > 0) {
     failed = true;
-    console.error("\n❌ Malformed exception entries (need id, reason, expires):");
+    console.error(
+      "\n❌ Malformed exception entries (need id, reason, expires):"
+    );
     for (const raw of result.invalid) console.error(`  ${raw}`);
   }
   if (result.expired.length > 0) {
     failed = true;
-    console.error("\n❌ Expired npm audit exceptions (re-review and extend or remove):");
+    console.error(
+      "\n❌ Expired npm audit exceptions (re-review and extend or remove):"
+    );
     for (const ex of result.expired) {
       console.error(`  ${ex.id}  expired ${ex.expires}  ${ex.reason}`);
     }

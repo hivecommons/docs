@@ -38,11 +38,15 @@ describe("normalizeFences", () => {
 
   it("supports tilde fences", () => {
     const input = "x\n~~~\ncode\n~~~\ny\n";
-    expect(normalizeFences(input)).toBe(`x\n\n~~~${DEFAULT_FENCE_LANGUAGE}\ncode\n~~~\n\ny\n`);
+    expect(normalizeFences(input)).toBe(
+      `x\n\n~~~${DEFAULT_FENCE_LANGUAGE}\ncode\n~~~\n\ny\n`
+    );
   });
 
   it("leaves a fence that closes the document unchanged apart from the language", () => {
     const input = "text\n```\ncode\n```";
-    expect(normalizeFences(input)).toBe(`text\n\n\`\`\`${DEFAULT_FENCE_LANGUAGE}\ncode\n\`\`\``);
+    expect(normalizeFences(input)).toBe(
+      `text\n\n\`\`\`${DEFAULT_FENCE_LANGUAGE}\ncode\n\`\`\``
+    );
   });
 });

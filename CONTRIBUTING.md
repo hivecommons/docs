@@ -54,4 +54,3 @@ actual security-sensitive surface: the Netlify serverless function in
 `netlify.toml`), and dependency bumps (`npm audit`, Dependabot PRs). This repo
 has no Dockerfiles or Kubernetes manifests, so those checklist items do not
 apply here — leave them unchecked as the template instructs.
-

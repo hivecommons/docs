@@ -7,7 +7,7 @@ on:
     - cron: "23 5 * * 1"
   workflow_dispatch:
 
-permissions: read-all  # default read; writes scoped to job below
+permissions: read-all # default read; writes scoped to job below
 
 concurrency:
   group: scorecard-${{ github.workflow }}-${{ github.ref }}

@@ -32,7 +32,10 @@ const HIVE_LINKS: QuickLink[] = [
 
 const GENERAL_LINKS: QuickLink[] = [
   { href: "/docs", label: "Docs home", primary: true },
-  { href: "/docs/community/what-is-hive-commons", label: "What is Hive Commons?" },
+  {
+    href: "/docs/community/what-is-hive-commons",
+    label: "What is Hive Commons?",
+  },
   { href: "/docs/community/join-hive-commons", label: "Join Hive Commons" },
   { href: "/docs/community/meetings", label: "Community meetings" },
   { href: "https://github.com/hivecommons", label: "GitHub" },
@@ -97,7 +100,8 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: "1.5rem",
     background:
       "linear-gradient(135deg, color-mix(in srgb, var(--nf-bg-2) 94%, transparent), color-mix(in srgb, var(--nf-bg) 86%, transparent))",
-    boxShadow: "0 24px 80px color-mix(in srgb, var(--nf-shadow) 38%, transparent)",
+    boxShadow:
+      "0 24px 80px color-mix(in srgb, var(--nf-shadow) 38%, transparent)",
     padding: "clamp(1.5rem, 4vw, 3rem)",
   },
   eyebrow: {
@@ -245,8 +249,17 @@ const styles: Record<string, CSSProperties> = {
     textDecoration: "none",
     borderTop: "1px solid var(--nf-line)",
   },
-  resultMeta: { color: "var(--nf-honey)", fontSize: "0.8rem", marginBottom: "0.2rem" },
-  resultSnippet: { color: "var(--nf-ink-2)", fontSize: "0.9rem", lineHeight: 1.5, margin: "0.25rem 0 0" },
+  resultMeta: {
+    color: "var(--nf-honey)",
+    fontSize: "0.8rem",
+    marginBottom: "0.2rem",
+  },
+  resultSnippet: {
+    color: "var(--nf-ink-2)",
+    fontSize: "0.9rem",
+    lineHeight: 1.5,
+    margin: "0.25rem 0 0",
+  },
   footer: {
     borderTop: "1px solid var(--nf-line)",
     padding: "1rem 1.5rem",
@@ -344,10 +357,15 @@ function isExternal(href: string) {
 function QuickLinks({ links }: { links: QuickLink[] }) {
   return (
     <ul style={styles.linkList}>
-      {links.map((link) => (
+      {links.map(link => (
         <li key={link.href}>
           {isExternal(link.href) ? (
-            <a href={link.href} target="_blank" rel="noopener noreferrer" style={styles.listLink}>
+            <a
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.listLink}
+            >
               <span>{link.label}</span>
               <span aria-hidden="true">↗</span>
             </a>
@@ -365,11 +383,14 @@ function QuickLinks({ links }: { links: QuickLink[] }) {
 
 export default function NotFoundUI() {
   const pathname = usePathname();
-  const isHiveDocs = pathname?.startsWith("/docs/hive/") || pathname === "/docs/hive";
+  const isHiveDocs =
+    pathname?.startsWith("/docs/hive/") || pathname === "/docs/hive";
   const quickLinks = isHiveDocs ? HIVE_LINKS : GENERAL_LINKS;
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [searchState, setSearchState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [searchState, setSearchState] = useState<
+    "idle" | "loading" | "done" | "error"
+  >("idle");
 
   const message = useMemo(() => {
     if (isHiveDocs) {
@@ -384,7 +405,9 @@ export default function NotFoundUI() {
     if (!trimmed) return;
     setSearchState("loading");
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`);
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(trimmed)}`
+      );
       if (!response.ok) throw new Error("Search failed");
       const data = (await response.json()) as { results?: SearchResult[] };
       setResults((data.results ?? []).slice(0, MAX_RESULTS));
@@ -424,11 +447,13 @@ export default function NotFoundUI() {
           )}
 
           <div style={styles.actions}>
-            {quickLinks.slice(0, 3).map((link) => (
+            {quickLinks.slice(0, 3).map(link => (
               <Link
                 key={link.href}
                 href={link.href}
-                style={link.primary ? styles.buttonPrimary : styles.buttonSecondary}
+                style={
+                  link.primary ? styles.buttonPrimary : styles.buttonSecondary
+                }
               >
                 {link.label}
               </Link>
@@ -437,19 +462,24 @@ export default function NotFoundUI() {
         </section>
 
         <aside style={styles.sidePanel} aria-label="Helpful links and search">
-          <h2 style={styles.sideTitle}>{isHiveDocs ? "Hive docs links" : "Helpful links"}</h2>
+          <h2 style={styles.sideTitle}>
+            {isHiveDocs ? "Hive docs links" : "Helpful links"}
+          </h2>
           <QuickLinks links={quickLinks} />
 
           <h2 style={styles.sideTitle}>Search the docs</h2>
           <form onSubmit={handleSearch} style={styles.searchForm}>
-            <label htmlFor="not-found-search" style={{ position: "absolute", left: "-10000px" }}>
+            <label
+              htmlFor="not-found-search"
+              style={{ position: "absolute", left: "-10000px" }}
+            >
               Search documentation
             </label>
             <input
               id="not-found-search"
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={event => setQuery(event.target.value)}
               placeholder="Search documentation..."
               style={styles.searchInput}
             />
@@ -458,11 +488,22 @@ export default function NotFoundUI() {
             </button>
           </form>
 
-          {searchState === "idle" && <p style={styles.searchHint}>Search Hive, Spektacular, hotshot, pluk, and other Hive Commons docs.</p>}
-          {searchState === "loading" && <p style={styles.searchHint}>Searching…</p>}
-          {searchState === "error" && <p style={styles.searchHint}>Search is temporarily unavailable.</p>}
-          {searchState === "done" && results.length === 0 && <p style={styles.searchHint}>No matching docs found.</p>}
-          {results.map((result) => (
+          {searchState === "idle" && (
+            <p style={styles.searchHint}>
+              Search Hive, Spektacular, hotshot, pluk, and other Hive Commons
+              docs.
+            </p>
+          )}
+          {searchState === "loading" && (
+            <p style={styles.searchHint}>Searching…</p>
+          )}
+          {searchState === "error" && (
+            <p style={styles.searchHint}>Search is temporarily unavailable.</p>
+          )}
+          {searchState === "done" && results.length === 0 && (
+            <p style={styles.searchHint}>No matching docs found.</p>
+          )}
+          {results.map(result => (
             <Link key={result.url} href={result.url} style={styles.resultLink}>
               <div style={styles.resultMeta}>{result.category}</div>
               <strong>{result.title}</strong>
@@ -472,7 +513,9 @@ export default function NotFoundUI() {
         </aside>
       </main>
 
-      <footer style={styles.footer}>© {new Date().getFullYear()} Hive Commons. Apache 2.0 License.</footer>
+      <footer style={styles.footer}>
+        © {new Date().getFullYear()} Hive Commons. Apache 2.0 License.
+      </footer>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest"
-import { metricsRegistry, recordApiRequest } from "@/lib/metrics"
+import { describe, it, expect, beforeEach } from "vitest";
+import { metricsRegistry, recordApiRequest } from "@/lib/metrics";
 
 /**
  * Extends the existing metrics.test.ts by covering the two edge branches
@@ -23,62 +23,60 @@ import { metricsRegistry, recordApiRequest } from "@/lib/metrics"
  */
 describe("metrics — out-of-range status + negative-duration clamps", () => {
   beforeEach(() => {
-    metricsRegistry.resetMetrics()
-  })
+    metricsRegistry.resetMetrics();
+  });
 
   it('classifies status < 200 as "other" (bounded-cardinality fallback)', async () => {
-    recordApiRequest("search", "GET", 100, 5)
-    recordApiRequest("search", "GET", 0, 5)
+    recordApiRequest("search", "GET", 100, 5);
+    recordApiRequest("search", "GET", 0, 5);
 
-    const text = await metricsRegistry.metrics()
+    const text = await metricsRegistry.metrics();
 
-    expect(text).toContain('status_class="other"')
+    expect(text).toContain('status_class="other"');
     // Regression guard: raw status codes must NEVER surface as label
     // values. If a refactor started stringifying `status` directly,
     // this would fail.
-    expect(text).not.toMatch(/status_class="100"/)
-    expect(text).not.toMatch(/status_class="0"/)
-  })
+    expect(text).not.toMatch(/status_class="100"/);
+    expect(text).not.toMatch(/status_class="0"/);
+  });
 
   it('classifies status >= 600 as "other"', async () => {
-    recordApiRequest("docs-image", "GET", 600, 5)
-    recordApiRequest("docs-image", "GET", 999, 5)
+    recordApiRequest("docs-image", "GET", 600, 5);
+    recordApiRequest("docs-image", "GET", 999, 5);
 
-    const text = await metricsRegistry.metrics()
-    expect(text).toContain('status_class="other"')
-    expect(text).not.toMatch(/status_class="600"/)
-    expect(text).not.toMatch(/status_class="999"/)
-  })
+    const text = await metricsRegistry.metrics();
+    expect(text).toContain('status_class="other"');
+    expect(text).not.toMatch(/status_class="600"/);
+    expect(text).not.toMatch(/status_class="999"/);
+  });
 
   it("clamps negative durationMs to 0 without throwing (prom-client would reject negatives)", async () => {
-    expect(() =>
-      recordApiRequest("search", "GET", 200, -50)
-    ).not.toThrow()
+    expect(() => recordApiRequest("search", "GET", 200, -50)).not.toThrow();
 
-    const text = await metricsRegistry.metrics()
+    const text = await metricsRegistry.metrics();
     // The observation must land in the smallest bucket (le=0.01) and
     // in +Inf, both with count >= 1 for a 0-second observation.
     expect(text).toMatch(
-      /docs_api_request_duration_seconds_bucket\{[^}]*le="0\.01"[^}]*\} 1/,
-    )
+      /docs_api_request_duration_seconds_bucket\{[^}]*le="0\.01"[^}]*\} 1/
+    );
     // Sum must equal exactly 0 for a single clamped observation.
     expect(text).toMatch(
-      /docs_api_request_duration_seconds_sum\{[^}]*route="search"[^}]*\} 0\b/,
-    )
-  })
+      /docs_api_request_duration_seconds_sum\{[^}]*route="search"[^}]*\} 0\b/
+    );
+  });
 
   it("normalizes standard method labels and buckets custom methods as OTHER", async () => {
-    recordApiRequest("search", "POST", 201, 8)
-    recordApiRequest("search", "CUSTOM-ONE", 201, 8)
-    recordApiRequest("search", "CUSTOM-TWO", 201, 8)
-    recordApiRequest("search", "get", 200, 8)
+    recordApiRequest("search", "POST", 201, 8);
+    recordApiRequest("search", "CUSTOM-ONE", 201, 8);
+    recordApiRequest("search", "CUSTOM-TWO", 201, 8);
+    recordApiRequest("search", "get", 200, 8);
 
-    const text = await metricsRegistry.metrics()
-    expect(text).toContain('method="POST"')
-    expect(text).toContain('method="GET"')
-    expect(text).toContain('method="OTHER"')
-    expect(text).not.toContain('method="CUSTOM-ONE"')
-    expect(text).not.toContain('method="CUSTOM-TWO"')
-    expect(text).toContain('status_class="2xx"')
-  })
-})
+    const text = await metricsRegistry.metrics();
+    expect(text).toContain('method="POST"');
+    expect(text).toContain('method="GET"');
+    expect(text).toContain('method="OTHER"');
+    expect(text).not.toContain('method="CUSTOM-ONE"');
+    expect(text).not.toContain('method="CUSTOM-TWO"');
+    expect(text).toContain('status_class="2xx"');
+  });
+});

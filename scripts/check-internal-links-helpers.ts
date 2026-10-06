@@ -141,7 +141,7 @@ export interface NavAliasEntry {
  */
 export function parseNavStructures(
   pageMapSrc: string,
-  projectForNav: Record<string, string> = PROJECT_FOR_NAV,
+  projectForNav: Record<string, string> = PROJECT_FOR_NAV
 ): NavAliasEntry[] {
   const results: NavAliasEntry[] = [];
   const navBlockRe = /const NAV_STRUCTURE_([A-Z_]+)[^=]*=\s*(\[[\s\S]*?\n\])/g;
@@ -210,7 +210,7 @@ export function navEntryRoute(e: NavAliasEntry): string {
  */
 export function resolveInternalLink(
   raw: string,
-  baseRoute: string,
+  baseRoute: string
 ): string | null {
   if (isExternalOrAnchor(raw)) return null;
 

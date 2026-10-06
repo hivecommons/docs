@@ -39,9 +39,8 @@ export function convertHtmlScriptsToJsxComments(input: string): string {
 
   // Convert HTML comments to JSX comments and protect them from the
   // curly-brace entity-encoding step at the bottom of this function.
-  s = s.replace(
-    /<!--([\s\S]*?)-->/g,
-    (_m, comment) => put(`{/*${comment.trim()}*/}`)
+  s = s.replace(/<!--([\s\S]*?)-->/g, (_m, comment) =>
+    put(`{/*${comment.trim()}*/}`)
   );
 
   // Loop until stable to prevent nested-tag bypass (CWE-116 / CodeQL #106-#108).
@@ -76,10 +75,7 @@ export function convertHtmlScriptsToJsxComments(input: string): string {
   // Strip HTML event-handler attributes (onclick, onload, etc.).
   // Require `=` after the attribute name so normal prose words like
   // "onto", "once", "one", "only" are NOT removed.
-  s = stripLoop(
-    s,
-    /\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|\{[^}]*\}|[^\s>]+)/gi
-  );
+  s = stripLoop(s, /\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|\{[^}]*\}|[^\s>]+)/gi);
 
   s = s.replace(
     /\b(href|src)=(?!["'{])([^\s>]+)/gi,

@@ -1,11 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { convertMdxToMarkdown, parseAttrs, splitFrontmatter } from "./mdx-to-markdown";
+import {
+  convertMdxToMarkdown,
+  parseAttrs,
+  splitFrontmatter,
+} from "./mdx-to-markdown";
 
 const SITE = "https://spektacular.dev";
 
 describe("splitFrontmatter", () => {
   it("parses quoted and bare values and returns the body", () => {
-    const { data, body } = splitFrontmatter('---\ntitle: "A title"\norder: 10\n---\nBody\n');
+    const { data, body } = splitFrontmatter(
+      '---\ntitle: "A title"\norder: 10\n---\nBody\n'
+    );
     expect(data).toEqual({ title: "A title", order: "10" });
     expect(body).toBe("Body\n");
   });
@@ -17,7 +23,11 @@ describe("splitFrontmatter", () => {
 
 describe("parseAttrs", () => {
   it("reads string, expression and boolean attributes", () => {
-    expect(parseAttrs(' spaced number="1" heading="Clone" start={107} fullscreen={true}')).toEqual({
+    expect(
+      parseAttrs(
+        ' spaced number="1" heading="Clone" start={107} fullscreen={true}'
+      )
+    ).toEqual({
       spaced: true,
       number: "1",
       heading: "Clone",
@@ -29,11 +39,14 @@ describe("parseAttrs", () => {
 
 describe("convertMdxToMarkdown", () => {
   it("lifts title and summary into an H1 and lede", () => {
-    const src = '---\ntitle: "How to use it"\nsummary: "Short summary."\norder: 1\n---\nHello.\n';
+    const src =
+      '---\ntitle: "How to use it"\nsummary: "Short summary."\norder: 1\n---\nHello.\n';
     const out = convertMdxToMarkdown(src, { siteBase: SITE });
     expect(out.title).toBe("How to use it");
     expect(out.description).toBe("Short summary.");
-    expect(out.markdown).toBe("# How to use it\n\n_Short summary._\n\nHello.\n");
+    expect(out.markdown).toBe(
+      "# How to use it\n\n_Short summary._\n\nHello.\n"
+    );
   });
 
   it("strips multi-line imports and component exports", () => {
@@ -68,7 +81,9 @@ describe("convertMdxToMarkdown", () => {
       "</Step>",
     ].join("\n");
     const out = convertMdxToMarkdown(src, { siteBase: SITE });
-    expect(out.markdown).toBe("### Step 2: Install\n\nVerify:\n\n```bash\nspektacular --version\n```\n");
+    expect(out.markdown).toBe(
+      "### Step 2: Install\n\nVerify:\n\n```bash\nspektacular --version\n```\n"
+    );
   });
 
   it("converts nested <AgentBlock> inside <Step> to labelled sections", () => {
@@ -114,26 +129,37 @@ describe("convertMdxToMarkdown", () => {
   });
 
   it("turns a self-closing <YouTubeVideo> into a timestamped link", () => {
-    const src = '<YouTubeVideo url="https://youtu.be/abc" start={108} end={151} fullscreen={true} />\n';
+    const src =
+      '<YouTubeVideo url="https://youtu.be/abc" start={108} end={151} fullscreen={true} />\n';
     const out = convertMdxToMarkdown(src, { siteBase: SITE });
-    expect(out.markdown).toBe("[Watch this section on YouTube (from 1:48)](https://youtu.be/abc?t=108)\n");
+    expect(out.markdown).toBe(
+      "[Watch this section on YouTube (from 1:48)](https://youtu.be/abc?t=108)\n"
+    );
   });
 
   it("flattens an unknown block component to its content and records a note", () => {
     const src = '<Callout kind="warn">\n  Careful.\n</Callout>\n';
     const out = convertMdxToMarkdown(src, { siteBase: SITE });
     expect(out.markdown).toBe("Careful.\n");
-    expect(out.notes).toEqual(["flattened unknown component <Callout> to its text content"]);
+    expect(out.notes).toEqual([
+      "flattened unknown component <Callout> to its text content",
+    ]);
   });
 
   it("drops an unknown self-closing component and records a note", () => {
-    const out = convertMdxToMarkdown("Before\n\n<AgentSelector />\n\nAfter\n", { siteBase: SITE });
+    const out = convertMdxToMarkdown("Before\n\n<AgentSelector />\n\nAfter\n", {
+      siteBase: SITE,
+    });
     expect(out.markdown).toBe("Before\n\nAfter\n");
-    expect(out.notes).toEqual(["dropped self-closing component <AgentSelector /> (no Markdown equivalent)"]);
+    expect(out.notes).toEqual([
+      "dropped self-closing component <AgentSelector /> (no Markdown equivalent)",
+    ]);
   });
 
   it("removes inline tags but keeps their text", () => {
-    const out = convertMdxToMarkdown("Use <Badge>beta</Badge> now.\n", { siteBase: SITE });
+    const out = convertMdxToMarkdown("Use <Badge>beta</Badge> now.\n", {
+      siteBase: SITE,
+    });
     expect(out.markdown).toBe("Use beta now.\n");
     expect(out.notes).toHaveLength(2);
   });
@@ -142,7 +168,7 @@ describe("convertMdxToMarkdown", () => {
     const src = "See the [guide](/install/).\n\n![init](/images/t/init.png)\n";
     const out = convertMdxToMarkdown(src, {
       siteBase: SITE,
-      rewriteImage: (s) => `assets${s}`,
+      rewriteImage: s => `assets${s}`,
     });
     expect(out.markdown).toBe(
       "See the [guide](https://spektacular.dev/install/).\n\n![init](assets/images/t/init.png)\n"
@@ -156,7 +182,7 @@ describe("convertMdxToMarkdown", () => {
   });
 
   it("leaves absolute URLs, anchors and code untouched", () => {
-    const src = "[repo](https://github.com/x/y) [top](#top) `{\"step\":\"a\"}`\n";
+    const src = '[repo](https://github.com/x/y) [top](#top) `{"step":"a"}`\n';
     expect(convertMdxToMarkdown(src, { siteBase: SITE }).markdown).toBe(src);
   });
 
@@ -166,7 +192,9 @@ describe("convertMdxToMarkdown", () => {
   });
 
   it("removes JSX comments", () => {
-    const out = convertMdxToMarkdown("A\n\n{/* hidden */}\n\nB\n", { siteBase: SITE });
+    const out = convertMdxToMarkdown("A\n\n{/* hidden */}\n\nB\n", {
+      siteBase: SITE,
+    });
     expect(out.markdown).toBe("A\n\nB\n");
   });
 });

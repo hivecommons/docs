@@ -9,7 +9,7 @@ on:
       - "docs/**/*.md"
       - "docs/**/*.mdx"
 
-permissions: read-all  # default read; writes scoped to job below
+permissions: read-all # default read; writes scoped to job below
 
 concurrency:
   group: mdlint-${{ github.workflow }}-${{ github.ref }}

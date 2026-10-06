@@ -13,19 +13,35 @@ import "../globals.css";
 // Self-hosted fonts (see src/fonts) to avoid fetching from fonts.googleapis.com at build time.
 const inter = localFont({
   src: [
-    { path: "../../fonts/ibm-plex-sans-400-600-normal.woff2", weight: "400 600", style: "normal" },
-    { path: "../../fonts/ibm-plex-sans-400-600-italic.woff2", weight: "400 600", style: "italic" },
+    {
+      path: "../../fonts/ibm-plex-sans-400-600-normal.woff2",
+      weight: "400 600",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/ibm-plex-sans-400-600-italic.woff2",
+      weight: "400 600",
+      style: "italic",
+    },
   ],
   variable: "--font-inter",
 });
 
 const fraunces = localFont({
-  src: [{ path: "../../fonts/fraunces-600.woff2", weight: "600", style: "normal" }],
+  src: [
+    { path: "../../fonts/fraunces-600.woff2", weight: "600", style: "normal" },
+  ],
   variable: "--font-fraunces",
 });
 
 const jetbrainsMono = localFont({
-  src: [{ path: "../../fonts/jetbrains-mono-100-800.woff2", weight: "100 800", style: "normal" }],
+  src: [
+    {
+      path: "../../fonts/jetbrains-mono-100-800.woff2",
+      weight: "100 800",
+      style: "normal",
+    },
+  ],
   variable: "--font-jetbrains-mono",
 });
 

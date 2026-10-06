@@ -160,8 +160,8 @@ describe("parseNavStructures", () => {
     const entries = parseNavStructures(src);
     // One per section + one bare = 2 rows
     expect(entries).toHaveLength(2);
-    const sectionRow = entries.find((e) => e.sectionSlug === "overview");
-    const bareRow = entries.find((e) => e.sectionSlug === "");
+    const sectionRow = entries.find(e => e.sectionSlug === "overview");
+    const bareRow = entries.find(e => e.sectionSlug === "");
     expect(sectionRow).toEqual<NavAliasEntry>({
       navName: "HIVE",
       base: "docs/hive",
@@ -190,7 +190,7 @@ describe("parseNavStructures", () => {
 ]
     `;
     const slugs = parseNavStructures(src)
-      .map((e) => e.slug)
+      .map(e => e.slug)
       .sort();
     expect(slugs).toEqual(["deploy", "deploy", "rollback", "rollback"]);
   });
@@ -205,10 +205,10 @@ describe("parseNavStructures", () => {
         ] },
 ]
     `;
-    const files = parseNavStructures(src).map((e) => e.file);
+    const files = parseNavStructures(src).map(e => e.file);
     expect(files).not.toContain("https://example.com/x.md");
     expect(files).not.toContain("/other/place.md");
-    expect(files.filter((f) => f === "real.md")).toHaveLength(2); // section + bare
+    expect(files.filter(f => f === "real.md")).toHaveLength(2); // section + bare
   });
 
   it("supports .mdx entries", () => {
@@ -234,7 +234,7 @@ describe("parseNavStructures", () => {
 ]
     `;
     const entries = parseNavStructures(src);
-    const sections = entries.map((e) => e.sectionSlug).sort();
+    const sections = entries.map(e => e.sectionSlug).sort();
     // 2 sections + 1 bare = 3 rows for the single 'deploy' entry
     expect(sections).toEqual(["", "ops", "overview"]);
   });
@@ -248,7 +248,7 @@ describe("parseNavStructures", () => {
     // Override with a *different* base to prove the override is respected.
     const custom = { HIVE: "docs/custom-hive" };
     const entries = parseNavStructures(src, custom);
-    expect(entries.every((e) => e.base === "docs/custom-hive")).toBe(true);
+    expect(entries.every(e => e.base === "docs/custom-hive")).toBe(true);
   });
 });
 
@@ -264,7 +264,7 @@ describe("navEntryRoute", () => {
 
   it("emits a section-scoped route when sectionSlug is set", () => {
     expect(navEntryRoute({ ...base, sectionSlug: "ops" })).toBe(
-      "/docs/hive/ops/overview",
+      "/docs/hive/ops/overview"
     );
   });
 
@@ -277,17 +277,17 @@ describe("resolveInternalLink", () => {
   it("returns null for external, anchor, or empty links", () => {
     expect(resolveInternalLink("", "/docs/hive/overview")).toBeNull();
     expect(
-      resolveInternalLink("https://example.com", "/docs/hive/overview"),
+      resolveInternalLink("https://example.com", "/docs/hive/overview")
     ).toBeNull();
     expect(resolveInternalLink("#section", "/docs/hive/overview")).toBeNull();
   });
 
   it("returns null for asset extensions", () => {
     expect(
-      resolveInternalLink("./diagram.png", "/docs/hive/overview"),
+      resolveInternalLink("./diagram.png", "/docs/hive/overview")
     ).toBeNull();
     expect(
-      resolveInternalLink("/img/logo.svg", "/docs/hive/overview"),
+      resolveInternalLink("/img/logo.svg", "/docs/hive/overview")
     ).toBeNull();
   });
 
@@ -298,43 +298,43 @@ describe("resolveInternalLink", () => {
 
   it("resolves relative links against baseRoute's directory", () => {
     expect(
-      resolveInternalLink("getting-started.md", "/docs/hive/overview"),
+      resolveInternalLink("getting-started.md", "/docs/hive/overview")
     ).toBe("/docs/hive/getting-started");
   });
 
   it("resolves parent-relative links", () => {
     expect(
-      resolveInternalLink("../console/overview.md", "/docs/hive/overview"),
+      resolveInternalLink("../console/overview.md", "/docs/hive/overview")
     ).toBe("/docs/console/overview");
   });
 
   it("keeps absolute-path links intact (no join)", () => {
     expect(
-      resolveInternalLink("/docs/hive/other.md", "/docs/console/overview"),
+      resolveInternalLink("/docs/hive/other.md", "/docs/console/overview")
     ).toBe("/docs/hive/other");
   });
 
   it("strips a ?query suffix before resolving", () => {
     expect(
-      resolveInternalLink("target.md?foo=bar", "/docs/hive/overview"),
+      resolveInternalLink("target.md?foo=bar", "/docs/hive/overview")
     ).toBe("/docs/hive/target");
   });
 
   it("strips a #fragment suffix before resolving", () => {
-    expect(
-      resolveInternalLink("target.md#anchor", "/docs/hive/overview"),
-    ).toBe("/docs/hive/target");
+    expect(resolveInternalLink("target.md#anchor", "/docs/hive/overview")).toBe(
+      "/docs/hive/target"
+    );
   });
 
   it("strips a .mdx extension too", () => {
     expect(
-      resolveInternalLink("tutorial.mdx", "/docs/hive/guides/overview"),
+      resolveInternalLink("tutorial.mdx", "/docs/hive/guides/overview")
     ).toBe("/docs/hive/guides/tutorial");
   });
 
   it("leaves extensionless internal links alone (no double-strip)", () => {
-    expect(
-      resolveInternalLink("./target", "/docs/hive/overview"),
-    ).toBe("/docs/hive/target");
+    expect(resolveInternalLink("./target", "/docs/hive/overview")).toBe(
+      "/docs/hive/target"
+    );
   });
 });

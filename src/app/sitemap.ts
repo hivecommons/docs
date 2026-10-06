@@ -1,62 +1,62 @@
-import type { MetadataRoute } from 'next'
-import fs from 'fs'
-import path from 'path'
-import { PROJECTS, type ProjectId } from '@/config/versions'
+import type { MetadataRoute } from "next";
+import fs from "fs";
+import path from "path";
+import { PROJECTS, type ProjectId } from "@/config/versions";
 
-const SITE_URL = 'https://docs.hivecommons.dev'
+const SITE_URL = "https://docs.hivecommons.dev";
 
 /** Weekly update frequency for docs content */
-const DOCS_CHANGE_FREQ = 'weekly' as const
+const DOCS_CHANGE_FREQ = "weekly" as const;
 /** Monthly update frequency for marketing pages */
-const MARKETING_CHANGE_FREQ = 'monthly' as const
+const MARKETING_CHANGE_FREQ = "monthly" as const;
 
 /** Priority for the homepage */
-const HOMEPAGE_PRIORITY = 1.0
+const HOMEPAGE_PRIORITY = 1.0;
 /** Priority for top-level marketing pages */
-const MARKETING_PRIORITY = 0.8
+const MARKETING_PRIORITY = 0.8;
 /** Priority for docs landing / project root pages */
-const DOCS_ROOT_PRIORITY = 0.9
+const DOCS_ROOT_PRIORITY = 0.9;
 /** Priority for individual docs pages */
-const DOCS_PAGE_PRIORITY = 0.7
+const DOCS_PAGE_PRIORITY = 0.7;
 
 /**
  * Recursively find all .md and .mdx files in a directory.
  * Returns paths relative to the given base directory.
  */
 function findMarkdownFiles(dir: string, baseDir: string = dir): string[] {
-  const files: string[] = []
+  const files: string[] = [];
 
   if (!fs.existsSync(dir)) {
-    return files
+    return files;
   }
 
-  const entries = fs.readdirSync(dir, { withFileTypes: true })
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
 
   for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name)
+    const fullPath = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
       // Skip hidden directories, node_modules, common-subs (partials), and images
       if (
-        !entry.name.startsWith('.') &&
-        !entry.name.startsWith('_') &&
-        entry.name !== 'node_modules' &&
-        entry.name !== 'common-subs' &&
-        entry.name !== 'images'
+        !entry.name.startsWith(".") &&
+        !entry.name.startsWith("_") &&
+        entry.name !== "node_modules" &&
+        entry.name !== "common-subs" &&
+        entry.name !== "images"
       ) {
-        files.push(...findMarkdownFiles(fullPath, baseDir))
+        files.push(...findMarkdownFiles(fullPath, baseDir));
       }
     } else if (
       entry.isFile() &&
-      (entry.name.endsWith('.md') || entry.name.endsWith('.mdx')) &&
-      !entry.name.startsWith('_')
+      (entry.name.endsWith(".md") || entry.name.endsWith(".mdx")) &&
+      !entry.name.startsWith("_")
     ) {
-      const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, '/')
-      files.push(relativePath)
+      const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, "/");
+      files.push(relativePath);
     }
   }
 
-  return files
+  return files;
 }
 
 /**
@@ -65,17 +65,17 @@ function findMarkdownFiles(dir: string, baseDir: string = dir): string[] {
  */
 function filePathToRoute(filePath: string, projectId: ProjectId): string {
   // Remove file extension
-  let route = filePath.replace(/\.(md|mdx)$/i, '')
+  let route = filePath.replace(/\.(md|mdx)$/i, "");
 
   // Remove trailing /index (index files map to the parent folder route)
-  route = route.replace(/\/index$/, '')
+  route = route.replace(/\/index$/, "");
 
   // For project sub-paths (a2a, kubeflex, etc.), strip the project prefix
   // since content is already scoped to the project directory
-  const project = PROJECTS[projectId]
-  const projectBase = project.basePath ? `/docs/${project.basePath}` : '/docs'
+  const project = PROJECTS[projectId];
+  const projectBase = project.basePath ? `/docs/${project.basePath}` : "/docs";
 
-  return `${projectBase}/${route}`
+  return `${projectBase}/${route}`;
 }
 
 /**
@@ -83,16 +83,16 @@ function filePathToRoute(filePath: string, projectId: ProjectId): string {
  */
 function getLastModified(filePath: string): Date {
   try {
-    const stats = fs.statSync(filePath)
-    return stats.mtime
+    const stats = fs.statSync(filePath);
+    return stats.mtime;
   } catch {
-    return new Date()
+    return new Date();
   }
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const entries: MetadataRoute.Sitemap = []
-  const contentRoot = path.join(process.cwd(), 'docs', 'content')
+  const entries: MetadataRoute.Sitemap = [];
+  const contentRoot = path.join(process.cwd(), "docs", "content");
 
   // --- Homepage ---
   entries.push({
@@ -100,12 +100,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
     changeFrequency: MARKETING_CHANGE_FREQ,
     priority: HOMEPAGE_PRIORITY,
-  })
+  });
 
   // --- Marketing / locale pages ---
-  const marketingPages = [
-    '/en',
-  ]
+  const marketingPages = ["/en"];
 
   for (const page of marketingPages) {
     entries.push({
@@ -113,7 +111,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: MARKETING_CHANGE_FREQ,
       priority: MARKETING_PRIORITY,
-    })
+    });
   }
 
   // --- Docs landing page ---
@@ -122,13 +120,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
     changeFrequency: DOCS_CHANGE_FREQ,
     priority: DOCS_ROOT_PRIORITY,
-  })
+  });
 
   // --- Project-specific docs ---
-  const projectIds: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'spektacular']
+  const projectIds: ProjectId[] = [
+    "hive",
+    "hotshot",
+    "pluk",
+    "rationguard",
+    "promptargs",
+    "dibs",
+    "spektacular",
+  ];
 
   for (const projectId of projectIds) {
-    const projectContentPath = path.join(contentRoot, PROJECTS[projectId].basePath)
+    const projectContentPath = path.join(
+      contentRoot,
+      PROJECTS[projectId].basePath
+    );
 
     // Add project root entry
     entries.push({
@@ -136,22 +145,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: DOCS_CHANGE_FREQ,
       priority: DOCS_ROOT_PRIORITY,
-    })
+    });
 
-    const projectFiles = findMarkdownFiles(projectContentPath)
+    const projectFiles = findMarkdownFiles(projectContentPath);
 
     for (const file of projectFiles) {
-      const fullPath = path.join(projectContentPath, file)
-      const route = filePathToRoute(file, projectId)
+      const fullPath = path.join(projectContentPath, file);
+      const route = filePathToRoute(file, projectId);
 
       entries.push({
         url: `${SITE_URL}${route}`,
         lastModified: getLastModified(fullPath),
         changeFrequency: DOCS_CHANGE_FREQ,
         priority: DOCS_PAGE_PRIORITY,
-      })
+      });
     }
   }
 
-  return entries
+  return entries;
 }
