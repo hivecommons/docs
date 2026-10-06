@@ -129,6 +129,14 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
     ]
   },
   {
+    title: 'Dashboard',
+    items: [
+      { 'Dashboard sections explained': 'dashboard-sections.md' },
+      { 'Dashboard glossary': 'dashboard-glossary.md' },
+      { 'Labels and control signals': 'labels-and-control-signals.md' },
+    ]
+  },
+  {
     title: 'Integrating with Hive',
     items: [
       { 'Integration guide': 'integration-guide.md' },
