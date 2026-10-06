@@ -1,0 +1,1 @@
+- Check out live `main` in the meeting-recordings refresh workflow so the scheduled auto-commit no longer fails with a non-fast-forward push when the job is queued.
