@@ -86,6 +86,7 @@ import {
   timingSafeEqual,
   verify as cryptoVerify,
 } from "node:crypto";
+import { logger } from "../../src/lib/logger";
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -924,8 +925,35 @@ async function handleAck(req: Request, deps: RelayDeps): Promise<Response> {
   return json(200, { deleted: valid.length });
 }
 
-/** Routes one request. The Netlify function is a thin wrapper around this. */
+const LOG_ROUTES: Record<string, string> = {
+  [RELAY_BASE_PATH]: "nps",
+  [REGISTER_PATH]: "nps-register",
+  [PENDING_PATH]: "nps-pending",
+  [ACK_PATH]: "nps-ack",
+};
+
+/**
+ * Routes one request and emits one bounded structured log line (route from a
+ * fixed set, method, status, duration; no paths, headers, IPs or bodies).
+ * The Netlify function is a thin wrapper around this.
+ */
 export async function handleRelayRequest(
+  req: Request,
+  deps: RelayDeps
+): Promise<Response> {
+  const started = performance.now();
+  const res = await routeRelayRequest(req, deps);
+  const path = new URL(req.url).pathname.replace(/\/+$/, "");
+  logger.info("nps relay request", {
+    route: LOG_ROUTES[path] ?? "unknown",
+    method: ["GET", "POST"].includes(req.method) ? req.method : "OTHER",
+    status: res.status,
+    durationMs: Math.round(performance.now() - started),
+  });
+  return res;
+}
+
+async function routeRelayRequest(
   req: Request,
   deps: RelayDeps
 ): Promise<Response> {
