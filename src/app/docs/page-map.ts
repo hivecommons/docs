@@ -122,6 +122,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'The agent Terminal window': 'agent-terminal.md' },
       { 'Troubleshooting': 'troubleshooting.md' },
       { 'Release channels': 'release-channels.md' },
+      { 'Stable soak and promotion policy': 'stable-soak-policy.md' },
       { 'Backup and disaster recovery': 'backup-dr.md' },
       { 'Running on macOS': 'macos.md' },
       { 'Running at ACMM Level 6': 'running-at-level-6.md' },

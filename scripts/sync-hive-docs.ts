@@ -32,6 +32,8 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "getting-started.md" },
   { source: "net-admin-requirement.md" },
   { source: "release-channels.md" },
+  // Stable soak/promotion policy referenced from release-channels (hivecommons/docs#181).
+  { source: "stable-soak-policy.md" },
   { source: "contributor-relay.md" },
   { source: "security-model.md" },
   { source: "securing-your-hive.md" },

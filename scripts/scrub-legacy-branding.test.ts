@@ -23,4 +23,13 @@ describe("scrubLegacyBranding", () => {
     );
     expect(scrubLegacyBranding("@kubestellar/foo")).toBe("@hivecommons/foo");
   });
+
+  it("keeps the ghcr.io/kubestellar mirror org intact (docs#180)", () => {
+    expect(
+      scrubLegacyBranding("`ghcr.io/hivecommons/hive` and `ghcr.io/kubestellar/hive`"),
+    ).toBe("`ghcr.io/hivecommons/hive` and `ghcr.io/kubestellar/hive`");
+    expect(scrubLegacyBranding("ghcr.io/kubestellar/hive-hub:stable")).toBe(
+      "ghcr.io/kubestellar/hive-hub:stable",
+    );
+  });
 });
