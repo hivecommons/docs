@@ -24,6 +24,7 @@ npm test              # Vitest unit tests
 npx vitest run --coverage   # what CI runs: tests plus the coverage gate
 npm run check-links   # internal docs links
 npm run lint          # ESLint for src/, scripts/ and netlify/
+npm run format        # Prettier; CI runs format:check, so run this before pushing
 npm run build         # production build and doc-sync scripts
 ```
 

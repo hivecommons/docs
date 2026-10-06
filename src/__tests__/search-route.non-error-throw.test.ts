@@ -72,9 +72,7 @@ vi.mock("@/lib/metrics", () => ({
   recordApiRequest: () => {},
 }));
 
-let GET: (
-  request: unknown
-) => Promise<{
+let GET: (request: unknown) => Promise<{
   status: number;
   body: { error: string; results: unknown[]; count: number };
 }>;
