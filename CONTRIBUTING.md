@@ -43,6 +43,11 @@ Then open the local URL printed by Next.js, usually
 <http://localhost:3000>. For a production-style preview, run
 `npm run build` followed by `npm run start`.
 
+`npm run build` fails if a doc-sync step in `prebuild` fails. When working
+offline, set `DOCS_SYNC_OPTIONAL=1` (for example
+`DOCS_SYNC_OPTIONAL=1 npm run build`) to keep the committed content instead.
+CI and Netlify always use the strict behavior.
+
 ## Code review requirements
 
 A PR merges once it passes the CI gates defined in `.github/workflows/` — Build,
