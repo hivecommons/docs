@@ -252,5 +252,204 @@ describe("useNavDropdowns", () => {
       });
       expect(click).toHaveBeenCalledTimes(1);
     });
+
+    function appendListbox() {
+      const listbox = document.createElement("div");
+      listbox.setAttribute("role", "listbox");
+      document.body.appendChild(listbox);
+      return listbox;
+    }
+
+    // MutationObserver callbacks are delivered as microtasks, which fake
+    // timers leave alone; an async act flushes them.
+    async function flushObservers() {
+      await act(async () => {
+        await Promise.resolve();
+      });
+    }
+
+    it("cancels a pending nav-dropdown hide when the switcher is hovered", () => {
+      const { container, menu } = buildDropdown("contribute");
+      const { wrap } = buildLangSwitcher();
+      renderHook(() => useNavDropdowns());
+
+      mouseEnter(container);
+      mouseLeave(container); // schedules the 300ms hide
+      mouseEnter(wrap); // hides immediately and clears the timer
+      expect(menu.style.display).toBe("none");
+
+      // The cleared timer must not fire and re-touch the menu later.
+      menu.style.display = "block";
+      advance(300);
+      expect(menu.style.display).toBe("block");
+    });
+
+    it("does not click the switcher button again when its listbox is already visible", () => {
+      const { wrap, button } = buildLangSwitcher();
+      appendListbox();
+      const click = vi.spyOn(button, "click");
+      const { result } = renderHook(() => useNavDropdowns());
+
+      mouseEnter(wrap);
+      expect(click).not.toHaveBeenCalled();
+      expect(result.current.isDropdownOpen).toBe(false);
+
+      // Hovered state was still recorded: leaving later closes via click.
+      mouseLeave(wrap);
+      advance(300);
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(result.current.isDropdownOpen).toBe(false);
+    });
+
+    it("clears open state on leave when the listbox never appeared, without clicking", () => {
+      const { wrap, button } = buildLangSwitcher();
+      const click = vi.spyOn(button, "click");
+      const { result } = renderHook(() => useNavDropdowns());
+
+      mouseEnter(wrap);
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(result.current.isDropdownOpen).toBe(true);
+
+      mouseLeave(wrap);
+      advance(299);
+      expect(result.current.isDropdownOpen).toBe(true);
+      advance(1);
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(result.current.isDropdownOpen).toBe(false);
+    });
+
+    it("resolves close-lang-switcher without clicking when hovered but no listbox is visible", () => {
+      const { wrap, button } = buildLangSwitcher();
+      const click = vi.spyOn(button, "click");
+      const { result } = renderHook(() => useNavDropdowns());
+
+      mouseEnter(wrap);
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(result.current.isDropdownOpen).toBe(true);
+
+      act(() => {
+        document.dispatchEvent(new CustomEvent("close-lang-switcher"));
+      });
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(result.current.isDropdownOpen).toBe(false);
+    });
+
+    it("ignores close-lang-switcher when neither hovered nor visible", () => {
+      const { button } = buildLangSwitcher();
+      const click = vi.spyOn(button, "click");
+      const { result } = renderHook(() => useNavDropdowns());
+
+      act(() => {
+        document.dispatchEvent(new CustomEvent("close-lang-switcher"));
+      });
+      expect(click).not.toHaveBeenCalled();
+      expect(result.current.isDropdownOpen).toBe(false);
+    });
+
+    it("keeps the listbox open while the pointer is over the listbox itself", async () => {
+      const { wrap, button } = buildLangSwitcher();
+      const click = vi.spyOn(button, "click");
+      renderHook(() => useNavDropdowns());
+
+      mouseEnter(wrap);
+      const listbox = appendListbox();
+      await flushObservers();
+
+      mouseLeave(wrap); // pointer moves from the button onto the listbox
+      mouseEnter(listbox); // cancels the pending close
+      advance(300);
+      expect(click).toHaveBeenCalledTimes(1);
+
+      mouseLeave(listbox); // leaving the listbox schedules the close again
+      advance(300);
+      expect(click).toHaveBeenCalledTimes(2);
+    });
+
+    it("wires a listbox that is itself the added node", async () => {
+      const { wrap, button } = buildLangSwitcher();
+      const click = vi.spyOn(button, "click");
+      renderHook(() => useNavDropdowns());
+
+      mouseEnter(wrap);
+      const listbox = appendListbox();
+      await flushObservers();
+
+      mouseLeave(listbox);
+      advance(300);
+      expect(click).toHaveBeenCalledTimes(2);
+    });
+
+    it("wires a listbox nested inside an added subtree", async () => {
+      const { wrap, button } = buildLangSwitcher();
+      const click = vi.spyOn(button, "click");
+      renderHook(() => useNavDropdowns());
+
+      mouseEnter(wrap);
+      const portal = document.createElement("div");
+      const listbox = document.createElement("ul");
+      listbox.setAttribute("role", "listbox");
+      portal.appendChild(listbox);
+      act(() => {
+        document.body.appendChild(portal);
+      });
+      await flushObservers();
+
+      mouseLeave(listbox);
+      advance(300);
+      expect(click).toHaveBeenCalledTimes(2);
+    });
+
+    it("drops open state when the tracked listbox is removed while hovered", async () => {
+      const { wrap } = buildLangSwitcher();
+      const { result } = renderHook(() => useNavDropdowns());
+
+      mouseEnter(wrap);
+      expect(result.current.isDropdownOpen).toBe(true);
+      const listbox = appendListbox();
+      await flushObservers();
+
+      act(() => {
+        listbox.remove();
+      });
+      await flushObservers();
+      expect(result.current.isDropdownOpen).toBe(false);
+    });
+
+    it("ignores removal of unrelated nodes", async () => {
+      const { wrap } = buildLangSwitcher();
+      const { result, unmount } = renderHook(() => useNavDropdowns());
+
+      mouseEnter(wrap);
+      const stray = document.createElement("span");
+      act(() => {
+        appendListbox();
+        document.body.appendChild(stray);
+      });
+      await flushObservers();
+
+      act(() => {
+        stray.remove();
+      });
+      await flushObservers();
+      expect(result.current.isDropdownOpen).toBe(true);
+      // Unmount before afterEach clears the body, so the observer's removal
+      // path does not fire outside act.
+      unmount();
+    });
+
+    it("stops observing the listbox after unmount", async () => {
+      const { wrap, button } = buildLangSwitcher();
+      const click = vi.spyOn(button, "click");
+      const { unmount } = renderHook(() => useNavDropdowns());
+
+      mouseEnter(wrap);
+      unmount();
+      const listbox = appendListbox();
+      await flushObservers();
+
+      mouseLeave(listbox);
+      advance(300);
+      expect(click).toHaveBeenCalledTimes(1);
+    });
   });
 });
