@@ -90,7 +90,9 @@ beforeEach(async () => {
 describe("GET /api/search — sibling projects", () => {
   it("finds a sibling-project page and links it under /docs/<project>/", async () => {
     const res = await GET(new MockNextRequest("Pluk Roadmap"));
-    const hits = res.body.results.filter((r: any) => r.title === "Pluk Roadmap");
+    const hits = res.body.results.filter(
+      (r: { title: string }) => r.title === "Pluk Roadmap"
+    );
     expect(hits).toHaveLength(1);
     expect(hits[0].url).toBe("/docs/pluk/roadmap");
   });
@@ -98,6 +100,8 @@ describe("GET /api/search — sibling projects", () => {
   it("lists shared general-section pages once", async () => {
     const res = await GET(new MockNextRequest("umbrella"));
     expect(res.body.results).toHaveLength(1);
-    expect(res.body.results[0].url).toBe("/docs/community/what-is-hive-commons");
+    expect(res.body.results[0].url).toBe(
+      "/docs/community/what-is-hive-commons"
+    );
   });
 });
