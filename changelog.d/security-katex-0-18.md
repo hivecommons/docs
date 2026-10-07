@@ -1,0 +1,1 @@
+- Bump `katex` 0.16.47 → 0.18.10 via a `package.json` override so the transitive KaTeX dependency is on a patched line and the production `npm audit` gate stays clean.
