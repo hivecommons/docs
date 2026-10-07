@@ -5,6 +5,9 @@ import fs from "fs";
 import path from "path";
 import { logger } from "@/lib/logger";
 import { recordApiRequest } from "@/lib/metrics";
+import { PROJECTS, type ProjectId } from "@/config/versions";
+
+const MAX_QUERY_LENGTH = 200;
 
 interface SearchResult {
   title: string;
@@ -67,56 +70,93 @@ function extractTitle(md: string, fallback: string): string {
   return m ? m[1].trim() : fallback;
 }
 
-// `isProjectFile` is true when the content was resolved from the hive
-// project's own directory (docs/content/hive/...) rather than the shared
-// general-section root (docs/content/...), so the URL needs the `/hive`
-// segment that the real docs route (src/app/docs/[...slug]/page.tsx) adds
-// for project pages.
-function routeKeyToUrl(routeKey: string, isProjectFile: boolean): string {
-  const prefix = isProjectFile ? `${basePath}/hive` : basePath;
+// `project` is the project segment the real docs route
+// (src/app/docs/[...slug]/page.tsx) adds for project pages, or null for
+// shared general-section pages that live directly under docs/content/.
+function routeKeyToUrl(routeKey: string, project: string | null): string {
+  const prefix = project ? `${basePath}/${project}` : basePath;
   return routeKey ? `/${prefix}/${routeKey}` : `/${prefix}`;
 }
 
 interface LocalFile {
   content: string;
-  isProjectFile: boolean;
+  project: string | null;
 }
 
-// buildPageMap() (called with no projectId below) defaults to the hive
-// project, whose routeMap values are paths relative to docs/content/hive/,
-// not the shared docs/content/ root. Reading only from docsContentPath (the
-// previous behavior) silently failed existsSync for every hive-specific page
-// — e.g. release-channels.md — so none of that content ever reached the
-// search index, while shared general-section pages (community/, etc., which
-// do live directly under docs/content/) kept matching. Try the shared root
-// first, then the hive project root, mirroring the fallback in
-// getPageContent() in src/app/docs/[...slug]/page.tsx.
-function readLocalFile(filePath: string): LocalFile | null {
-  const sharedPath = path.join(docsContentPath, filePath);
+function tryRead(fullPath: string): string | null {
   try {
-    if (fs.existsSync(sharedPath)) {
-      return {
-        content: fs.readFileSync(sharedPath, "utf-8"),
-        isProjectFile: false,
-      };
-    }
+    if (fs.existsSync(fullPath)) return fs.readFileSync(fullPath, "utf-8");
   } catch {
-    // File doesn't exist under the shared root
+    // Treat unreadable files as missing
   }
-
-  const projectPath = path.join(docsContentPath, "hive", filePath);
-  try {
-    if (fs.existsSync(projectPath)) {
-      return {
-        content: fs.readFileSync(projectPath, "utf-8"),
-        isProjectFile: true,
-      };
-    }
-  } catch {
-    // File doesn't exist under the hive project root either
-  }
-
   return null;
+}
+
+// buildPageMap(projectId) returns routeMap values relative to
+// docs/content/<projectId>/, except for shared general-section pages
+// (community/, etc.) which live directly under docs/content/. For hive, try
+// the shared root first, then the project root, mirroring getPageContent() in
+// src/app/docs/[...slug]/page.tsx. Sibling projects only probe their own
+// directory, so shared general-section entries are indexed once (under hive).
+function readLocalFile(projectId: string, filePath: string): LocalFile | null {
+  if (projectId === "hive") {
+    const shared = tryRead(path.join(docsContentPath, filePath));
+    if (shared !== null) return { content: shared, project: null };
+  }
+  const own = tryRead(path.join(docsContentPath, projectId, filePath));
+  return own !== null ? { content: own, project: projectId } : null;
+}
+
+interface IndexedDoc {
+  title: string;
+  url: string;
+  category: string;
+  text: string;
+  lowerText: string;
+  titleLower: string;
+}
+
+// Content is immutable at build time, so build the index once per process.
+let searchIndex: IndexedDoc[] | null = null;
+
+function buildSearchIndex(): IndexedDoc[] {
+  const docs: IndexedDoc[] = [];
+  for (const projectId of Object.keys(PROJECTS) as ProjectId[]) {
+    const { routeMap } = buildPageMap(projectId);
+    for (const [routeKey, filePath] of Object.entries(routeMap) as Array<
+      [string, string]
+    >) {
+      const file = readLocalFile(projectId, filePath);
+      if (!file) continue;
+      const { content: raw, project } = file;
+
+      const text = toPlainText(convertHtmlScriptsToJsxComments(raw));
+
+      const fallbackTitle =
+        routeKey
+          .split("/")
+          .pop()
+          ?.replace(/-/g, " ")
+          .replace(/\b\w/g, c => c.toUpperCase()) || "Untitled";
+      const title = extractTitle(raw, fallbackTitle);
+
+      const category =
+        routeKey
+          .split("/")[0]
+          ?.replace(/-/g, " ")
+          .replace(/\b\w/g, c => c.toUpperCase()) || "Docs";
+
+      docs.push({
+        title,
+        url: routeKeyToUrl(routeKey, project),
+        category,
+        text,
+        lowerText: text.toLowerCase(),
+        titleLower: title.toLowerCase(),
+      });
+    }
+  }
+  return docs;
 }
 
 /** HTML-encode special characters so they render as text in innerHTML */
@@ -130,33 +170,17 @@ export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams;
     const queryRaw = sp.get("q") || "";
-    const query = queryRaw.toLowerCase().trim();
+    const query = queryRaw.toLowerCase().trim().slice(0, MAX_QUERY_LENGTH);
     if (!query) return NextResponse.json({ results: [], count: 0 });
 
-    const { routeMap } = buildPageMap();
-
-    const entries = Object.entries(routeMap) as Array<[string, string]>;
+    searchIndex ??= buildSearchIndex();
 
     const results: SearchResult[] = [];
 
-    for (const [routeKey, filePath] of entries) {
-      const file = readLocalFile(filePath);
-      if (!file) continue;
-      const { content: raw, isProjectFile } = file;
-
-      const preprocessed = convertHtmlScriptsToJsxComments(raw);
-      const text = toPlainText(preprocessed);
-
-      const fallbackTitle =
-        routeKey
-          .split("/")
-          .pop()
-          ?.replace(/-/g, " ")
-          .replace(/\b\w/g, c => c.toUpperCase()) || "Untitled";
-      const title = extractTitle(raw, fallbackTitle);
-
-      const hay = text.toLowerCase();
-      const titleMatch = title.toLowerCase().includes(query);
+    for (const doc of searchIndex) {
+      const { text, title, category } = doc;
+      const hay = doc.lowerText;
+      const titleMatch = doc.titleLower.includes(query);
       const contentMatch = hay.includes(query);
       if (!titleMatch && !contentMatch) continue;
 
@@ -185,15 +209,9 @@ export async function GET(request: NextRequest) {
         highlightedSnippet = htmlEncode(snippet);
       }
 
-      const category =
-        routeKey
-          .split("/")[0]
-          ?.replace(/-/g, " ")
-          .replace(/\b\w/g, c => c.toUpperCase()) || "Docs";
-
       results.push({
         title,
-        url: routeKeyToUrl(routeKey, isProjectFile),
+        url: doc.url,
         category,
         content: text.slice(0, 500),
         snippet,
