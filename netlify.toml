@@ -101,6 +101,16 @@
   status = 302
 
 [[redirects]]
+  from = "/docs/dibs"
+  to = "/docs/dibs/overview/introduction"
+  status = 302
+
+[[redirects]]
+  from = "/docs/dibs/"
+  to = "/docs/dibs/overview/introduction"
+  status = 302
+
+[[redirects]]
   from = "/docs/spektacular"
   to = "/docs/spektacular/overview/introduction"
   status = 302

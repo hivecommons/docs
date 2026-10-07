@@ -1,0 +1,1 @@
+- Redirect the bare `/docs/dibs` root to its introduction page like every other project; previously it returned 404.
