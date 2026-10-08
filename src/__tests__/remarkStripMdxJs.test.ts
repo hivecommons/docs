@@ -65,12 +65,14 @@ const SPREAD_ATTRIBUTE = `# Title\n\n<div {...(() => { ${record("spread")}; retu
 
 describe("remarkStripMdxJs", () => {
   // The first compileMdx call loads the MDX toolchain; keep that cost out of
-  // the per-test timeout.
+  // the per-test timeout. Alone this takes ~8s, but with every test file in
+  // its own worker on a saturated host it has exceeded 30s, so give the
+  // warm-up generous headroom — it guards against a hang, not a slow box.
   beforeAll(async () => {
     await compileMdx("# warm up", {
       mdxOptions: { remarkPlugins: [], rehypePlugins: [] },
     });
-  }, 30_000);
+  }, 120_000);
 
   beforeEach(() => {
     delete g.__mdxProbe;
