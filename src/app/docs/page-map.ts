@@ -437,10 +437,11 @@ export function buildPageMap(projectId: ProjectId = 'hive') {
     }
   }
 
-  // Add top-level meta - only include our defined navigation structure
+  // Add top-level meta - only categories that produced a folder, since
+  // normalizePageMap rejects meta keys that point at a missing page.
   const meta: Record<string, string> = {}
-  for (const category of navStructure) {
-    meta[category.title] = category.title
+  for (const node of _pageMap) {
+    if (node.kind === 'Folder') meta[node.name] = node.name
   }
   _pageMap.unshift({ kind: 'Meta', data: meta })
 

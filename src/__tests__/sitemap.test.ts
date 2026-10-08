@@ -23,18 +23,31 @@ describe("sitemap", () => {
     expect(urls).toEqual(
       expect.arrayContaining([
         `${SITE_URL}/docs/hive`,
-        `${SITE_URL}/docs/hive/architecture`,
-        `${SITE_URL}/docs/hive/adr/0001-record-architecture-decisions`,
+        `${SITE_URL}/docs/hive/overview/architecture`,
+        `${SITE_URL}/docs/hive/reference/architecture-decision-records/0001-record-architecture-decisions`,
         `${SITE_URL}/docs/hotshot`,
-        `${SITE_URL}/docs/hotshot/windows`,
         `${SITE_URL}/docs/pluk`,
         `${SITE_URL}/docs/rationguard`,
         `${SITE_URL}/docs/promptargs`,
         `${SITE_URL}/docs/dibs`,
         `${SITE_URL}/docs/spektacular`,
-        `${SITE_URL}/docs/spektacular/getting-started`,
       ])
     );
+  });
+
+  it("includes shared general sections once and omits unlinked file-path routes", () => {
+    const urls = sitemap().map(entry => entry.url);
+
+    expect(urls).toEqual(
+      expect.arrayContaining([
+        `${SITE_URL}/docs/community/meetings`,
+        `${SITE_URL}/docs/community/join-hive-commons`,
+        `${SITE_URL}/docs/community/what-is-hive-commons`,
+      ])
+    );
+    expect(new Set(urls).size).toBe(urls.length);
+    expect(urls).not.toContain(`${SITE_URL}/docs/hive/architecture`);
+    expect(urls).not.toContain(`${SITE_URL}/docs/hive/community/meetings`);
   });
 
   it("does not include shared partials or image assets as docs pages", () => {
@@ -66,32 +79,25 @@ describe("sitemap generated from fixture content", () => {
     }
   });
 
-  it("maps markdown files to routes, priorities, frequencies, and mtimes", () => {
+  it("maps navigation-linked files to routes, priorities, frequencies, and mtimes", () => {
     fixtureRoot = fs.mkdtempSync(path.join(realCwd, ".sitemap-fixture-"));
-    const setupPath = write("docs/content/hive/guides/setup.md");
-    write("docs/content/hive/guides/advanced/scaling.mdx");
-    write("docs/content/pluk/cli/index.md");
+    const archPath = write("docs/content/hive/architecture.md");
+    write("docs/content/hive/unlinked/page.md");
     vi.spyOn(process, "cwd").mockReturnValue(fixtureRoot);
 
     const entries = sitemap();
     const byUrl = new Map(entries.map(entry => [entry.url, entry]));
+    const arch = byUrl.get(`${SITE_URL}/docs/hive/overview/architecture`);
 
     expect(byUrl.get(SITE_URL)?.priority).toBe(1.0);
     expect(byUrl.get(`${SITE_URL}/en`)?.changeFrequency).toBe("monthly");
     expect(byUrl.get(`${SITE_URL}/docs`)?.priority).toBe(0.9);
     expect(byUrl.get(`${SITE_URL}/docs/hive`)?.priority).toBe(0.9);
-    expect(byUrl.get(`${SITE_URL}/docs/hive/guides/setup`)?.priority).toBe(0.7);
-    expect(
-      byUrl.get(`${SITE_URL}/docs/hive/guides/setup`)?.changeFrequency
-    ).toBe("weekly");
-    expect(
-      byUrl.get(`${SITE_URL}/docs/hive/guides/setup`)?.lastModified
-    ).toEqual(fs.statSync(setupPath).mtime);
-    expect(byUrl.has(`${SITE_URL}/docs/hive/guides/advanced/scaling`)).toBe(
-      true
-    );
-    expect(byUrl.has(`${SITE_URL}/docs/pluk/cli`)).toBe(true);
-    expect(byUrl.has(`${SITE_URL}/docs/pluk/cli/index`)).toBe(false);
+    expect(arch?.priority).toBe(0.7);
+    expect(arch?.changeFrequency).toBe("weekly");
+    expect(arch?.lastModified).toEqual(fs.statSync(archPath).mtime);
+    expect(byUrl.has(`${SITE_URL}/docs/hive/architecture`)).toBe(false);
+    expect(byUrl.has(`${SITE_URL}/docs/hive/unlinked/page`)).toBe(false);
   });
 
   it("omits generated routes for missing content while retaining project roots", () => {
@@ -100,7 +106,9 @@ describe("sitemap generated from fixture content", () => {
 
     const entries = sitemap();
 
-    expect(entries).toHaveLength(10);
+    expect(entries.some(entry => entry.url.includes("/docs/hive/"))).toBe(
+      false
+    );
     expect(entries.map(entry => entry.url)).toEqual(
       expect.arrayContaining([
         SITE_URL,
