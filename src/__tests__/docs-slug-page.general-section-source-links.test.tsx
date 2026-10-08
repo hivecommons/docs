@@ -43,16 +43,16 @@ async function renderDocsRoute(slug: string[]): Promise<string> {
 }
 
 describe("general-section pages — source action links", () => {
-  it.each([
-    [["community", "meetings"]],
-    [["pluk", "community", "meetings"]],
-  ])("%j targets the docs repository", async slug => {
-    const html = await renderDocsRoute(slug);
+  it.each([[["community", "meetings"]], [["pluk", "community", "meetings"]]])(
+    "%j targets the docs repository",
+    async slug => {
+      const html = await renderDocsRoute(slug);
 
-    expect(html).toContain(`href="${EDIT}"`);
-    expect(html).toContain(`href="${BLOB}"`);
-    expect(html).toContain(encodeURIComponent(`Source file:\n${BLOB}`));
-    expect(html).not.toContain("hivecommons/hive/edit");
-    expect(html).not.toContain("hivecommons/pluk/edit");
-  });
+      expect(html).toContain(`href="${EDIT}"`);
+      expect(html).toContain(`href="${BLOB}"`);
+      expect(html).toContain(encodeURIComponent(`Source file:\n${BLOB}`));
+      expect(html).not.toContain("hivecommons/hive/edit");
+      expect(html).not.toContain("hivecommons/pluk/edit");
+    }
+  );
 });
