@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import fs from "fs";
 import path from "path";
 import { PROJECTS, type ProjectId } from "@/config/versions";
+import { buildPageMap, docsContentPath } from "@/app/docs/page-map";
 
 const SITE_URL = "https://docs.hivecommons.dev";
 
@@ -19,63 +20,22 @@ const DOCS_ROOT_PRIORITY = 0.9;
 /** Priority for individual docs pages */
 const DOCS_PAGE_PRIORITY = 0.7;
 
-/**
- * Recursively find all .md and .mdx files in a directory.
- * Returns paths relative to the given base directory.
- */
-function findMarkdownFiles(dir: string, baseDir: string = dir): string[] {
-  const files: string[] = [];
+type PageMapNode = {
+  route?: string;
+  children?: PageMapNode[];
+  kind?: string;
+};
 
-  if (!fs.existsSync(dir)) {
-    return files;
-  }
-
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-
-    if (entry.isDirectory()) {
-      // Skip hidden directories, node_modules, common-subs (partials), and images
-      if (
-        !entry.name.startsWith(".") &&
-        !entry.name.startsWith("_") &&
-        entry.name !== "node_modules" &&
-        entry.name !== "common-subs" &&
-        entry.name !== "images"
-      ) {
-        files.push(...findMarkdownFiles(fullPath, baseDir));
-      }
-    } else if (
-      entry.isFile() &&
-      (entry.name.endsWith(".md") || entry.name.endsWith(".mdx")) &&
-      !entry.name.startsWith("_")
-    ) {
-      const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, "/");
-      files.push(relativePath);
+/** Collect routes of real pages (not folders/meta) that the navigation links to. */
+function collectPageRoutes(nodes: PageMapNode[], routes: string[] = []) {
+  for (const node of nodes) {
+    if (node.children) {
+      collectPageRoutes(node.children, routes);
+    } else if (node.kind === "MdxPage" && node.route?.startsWith("/docs/")) {
+      routes.push(node.route);
     }
   }
-
-  return files;
-}
-
-/**
- * Convert a markdown file path to its URL route for a given project.
- * Uses the same slug logic as page-map.ts navigation structures.
- */
-function filePathToRoute(filePath: string, projectId: ProjectId): string {
-  // Remove file extension
-  let route = filePath.replace(/\.(md|mdx)$/i, "");
-
-  // Remove trailing /index (index files map to the parent folder route)
-  route = route.replace(/\/index$/, "");
-
-  // For project sub-paths (a2a, kubeflex, etc.), strip the project prefix
-  // since content is already scoped to the project directory
-  const project = PROJECTS[projectId];
-  const projectBase = project.basePath ? `/docs/${project.basePath}` : "/docs";
-
-  return `${projectBase}/${route}`;
+  return routes;
 }
 
 /**
@@ -92,7 +52,7 @@ function getLastModified(filePath: string): Date {
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
-  const contentRoot = path.join(process.cwd(), "docs", "content");
+  const seen = new Set<string>();
 
   // --- Homepage ---
   entries.push({
@@ -134,11 +94,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   for (const projectId of projectIds) {
-    const projectContentPath = path.join(
-      contentRoot,
-      PROJECTS[projectId].basePath
-    );
-
     // Add project root entry
     entries.push({
       url: `${SITE_URL}/docs/${PROJECTS[projectId].basePath}`,
@@ -147,15 +102,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: DOCS_ROOT_PRIORITY,
     });
 
-    const projectFiles = findMarkdownFiles(projectContentPath);
+    const { pageMap, routeMap, contentPath } = buildPageMap(projectId);
+    const projectPrefix = `/docs/${PROJECTS[projectId].basePath}/`;
 
-    for (const file of projectFiles) {
-      const fullPath = path.join(projectContentPath, file);
-      const route = filePathToRoute(file, projectId);
+    for (const route of collectPageRoutes(pageMap as PageMapNode[])) {
+      const isProjectRoute = route.startsWith(projectPrefix);
+      const key = route.slice(isProjectRoute ? projectPrefix.length : "/docs/".length);
+      const file = routeMap[key];
+      const url = `${SITE_URL}${route}`;
+      // General sections appear in every project's nav; list them once.
+      if (!file || seen.has(url)) continue;
+      seen.add(url);
 
       entries.push({
-        url: `${SITE_URL}${route}`,
-        lastModified: getLastModified(fullPath),
+        url,
+        lastModified: getLastModified(
+          path.join(isProjectRoute ? contentPath : docsContentPath, file)
+        ),
         changeFrequency: DOCS_CHANGE_FREQ,
         priority: DOCS_PAGE_PRIORITY,
       });

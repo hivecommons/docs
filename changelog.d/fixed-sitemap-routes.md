@@ -1,0 +1,1 @@
+- `sitemap.xml` now lists the routes the docs navigation actually links to (including the community general section) instead of file-path routes that were never linked
