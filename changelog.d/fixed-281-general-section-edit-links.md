@@ -1,0 +1,1 @@
+- Fixed the "Compose a PR", "View Source" and "Open Issue" links on general-section docs pages (community, contributing, news) to target the docs repository instead of a project repository.
