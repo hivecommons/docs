@@ -74,6 +74,10 @@ bad build, a failed volume mount, or an incomplete version-branch checkout). Thi
 guards against an instance returning 200 on its normal routes while actually serving
 broken or empty documentation.
 
+## Runbooks
+
+If a deploy ships broken pages or missing content, start at [`runbooks/README.md`](runbooks/README.md); it indexes the [site rollback runbook](runbooks/site-rollback.md).
+
 ## Contributing
 
 PRs welcome. Sign your commits (DCO): `git commit -s`.
