@@ -8,6 +8,7 @@ Thank you for helping improve the Hive Commons documentation site
   README "How content is sourced").
 - Site code, navigation, and layout changes belong in this repository.
 - Sign your commits with the DCO: `git commit -s`.
+- Operating the deployed site (for example rolling back a bad deploy): see [`runbooks/`](runbooks/README.md).
 - Open an issue at https://github.com/hivecommons/docs/issues for anything unclear.
 
 ## Before you open a PR
