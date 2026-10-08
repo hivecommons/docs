@@ -106,7 +106,9 @@ describe("sitemap generated from fixture content", () => {
 
     const entries = sitemap();
 
-    expect(entries.some(entry => entry.url.includes("/docs/hive/"))).toBe(false);
+    expect(entries.some(entry => entry.url.includes("/docs/hive/"))).toBe(
+      false
+    );
     expect(entries.map(entry => entry.url)).toEqual(
       expect.arrayContaining([
         SITE_URL,

@@ -107,7 +107,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     for (const route of collectPageRoutes(pageMap as PageMapNode[])) {
       const isProjectRoute = route.startsWith(projectPrefix);
-      const key = route.slice(isProjectRoute ? projectPrefix.length : "/docs/".length);
+      const key = route.slice(
+        isProjectRoute ? projectPrefix.length : "/docs/".length
+      );
       const file = routeMap[key];
       const url = `${SITE_URL}${route}`;
       // General sections appear in every project's nav; list them once.
