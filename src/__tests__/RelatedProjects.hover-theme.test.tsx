@@ -193,9 +193,7 @@ describe("dark theme colours", () => {
     render(<RelatedProjects />);
     // isDark requires mounted; wait for the effect to flip it.
     const hive = screen.getByText("Hive");
-    await vi.waitFor(() =>
-      expect(bg(hive)).toBe(norm(DARK_CURRENT_BG))
-    );
+    await vi.waitFor(() => expect(bg(hive)).toBe(norm(DARK_CURRENT_BG)));
     expect(hive.style.color).toBe(normColor("#60a5fa"));
 
     const pluk = screen.getByText("pluk");
@@ -212,9 +210,7 @@ describe("dark theme colours", () => {
       <RelatedProjects generalSections={[community, news]} autoExpandLegacy />
     );
     const newsEl = screen.getByText("News");
-    await vi.waitFor(() =>
-      expect(bg(newsEl)).toBe(norm(DARK_CURRENT_BG))
-    );
+    await vi.waitFor(() => expect(bg(newsEl)).toBe(norm(DARK_CURRENT_BG)));
 
     const communityEl = screen.getByText("Community");
     fireEvent.mouseEnter(communityEl);
@@ -232,7 +228,11 @@ describe("dark theme colours", () => {
 describe("bannerActive compact spacing", () => {
   it("tightens wrapper, list, row and Legacy spacing when the banner is shown", () => {
     const { container } = render(
-      <RelatedProjects bannerActive generalSections={[community]} autoExpandLegacy />
+      <RelatedProjects
+        bannerActive
+        generalSections={[community]}
+        autoExpandLegacy
+      />
     );
     const wrapper = container.firstElementChild as HTMLElement;
     expect(wrapper.className).toContain("py-1");
