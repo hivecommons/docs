@@ -292,7 +292,7 @@ function stripDangerousPatterns(content: string): string {
     // Remove inline event handlers.
     content = stripUntilStable(
       content,
-      /\s+on\w+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>'"]+))?/gi
+      /\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>'"]+)/gi
     );
   }
   return content;
