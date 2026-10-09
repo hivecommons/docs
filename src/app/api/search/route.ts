@@ -41,9 +41,9 @@ function toPlainText(content: string): string {
   // (CodeQL #11: js/incomplete-multi-character-sanitization)
   text = stripUntilStableSR(text, /<!--[\s\S]*?-->/g);
 
-  // Links/images
-  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
+  // Images first, then links: the link pattern also matches the tail of ![alt](src)
   text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, "");
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
 
   // Headings -> keep text
   text = text.replace(/^#{1,6}\s+(.+)$/gm, "$1");

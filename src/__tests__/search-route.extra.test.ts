@@ -193,6 +193,7 @@ describe("GET /api/search (extra branches)", () => {
     // Link text preserved, image dropped
     expect(hit.content).toContain("link text");
     expect(hit.content).not.toContain("![alt]");
+    expect(hit.content).not.toContain("!alt");
     // The inner `<!--payload-->` gets stripped by the stable loop
     expect(hit.content).not.toContain("payload");
   });
