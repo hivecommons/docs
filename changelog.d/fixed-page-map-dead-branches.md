@@ -1,0 +1,1 @@
+- Removed unreachable bare-string and external-link branches from the docs page-map nav builder; `NavItem` now rejects bare strings (hivecommons/docs#285).

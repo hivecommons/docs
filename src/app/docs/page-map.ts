@@ -55,9 +55,6 @@ type FolderNode = { kind: 'Folder'; name: string; route: string; children: PageM
 type MetaNode = { kind: 'Meta'; data: Record<string, string> }
 type PageMapNode = MdxPageNode | FolderNode | MetaNode
 
-// Helper to prettify names
-const pretty = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, ' ')
-
 // Recursively get all markdown files from the local docs directory
 function getAllDocFiles(dir: string, baseDir: string = dir): string[] {
   const files: string[] = []
@@ -87,7 +84,7 @@ function getAllDocFiles(dir: string, baseDir: string = dir): string[] {
 }
 
 // Navigation structure based on mkdocs.yml
-type NavItem = { [key: string]: string | NavItem[] | NavItem } | string
+type NavItem = { [title: string]: string | NavItem[] }
 
 const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
   {
@@ -330,76 +327,50 @@ export function buildPageMap(projectId: ProjectId = 'hive') {
     const meta: Record<string, string> = {}
 
     for (const item of items) {
-      if (typeof item === 'string') {
-        // Simple file reference
-        if (allDocFiles.includes(item)) {
-          processedFiles.add(item)
-          const baseName = item.replace(/\.(md|mdx)$/i, '').split('/').pop()!
-          // Use /docs path for general sections, project path for everything else
-          const isGeneralSection = item.startsWith('contributing/') || item.startsWith('community/') || item.startsWith('news/')
-          const basePathForRoute = isGeneralSection ? 'docs' : projectBasePath
-          const route = `/${basePathForRoute}/${parentSlug}/${baseName}`
-          routeMap[`${parentSlug}/${baseName}`] = item
-          nodes.push({ kind: 'MdxPage', name: pretty(baseName), route })
-          meta[pretty(baseName)] = pretty(baseName)
-        }
-      } else {
-        // Object with title: path or title: children
-        const title = Object.keys(item)[0]
-        const value = (item as Record<string, string | NavItem[]>)[title]
+      // Object with title: path or title: children
+      const title = Object.keys(item)[0]
+      const value = (item as Record<string, string | NavItem[]>)[title]
 
-        if (typeof value === 'string') {
-          // It's a file path or link
-          if (value.startsWith('http') || value.startsWith('/')) {
-            // External link or absolute internal link
-            nodes.push({ kind: 'MdxPage', name: title, route: value })
-            meta[title] = title
-          } else if (allDocFiles.includes(value)) {
-            processedFiles.add(value)
-            // Use /docs path for general sections, project path for everything else
-            const isGeneralSection = value.startsWith('contributing/') || value.startsWith('community/') || value.startsWith('news/')
-            const baseName = value.replace(/\.(md|mdx)$/i, '').split('/').pop()!
-            const slug = isGeneralSection
-              ? baseName
-              : title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-            const basePathForRoute = isGeneralSection ? 'docs' : projectBasePath
-            const route = `/${basePathForRoute}/${parentSlug ? parentSlug + '/' : ''}${slug}`
-            routeMap[`${parentSlug ? parentSlug + '/' : ''}${slug}`] = value
-            nodes.push({ kind: 'MdxPage', name: title, route })
-            meta[title] = title
-          }
-        } else if (Array.isArray(value)) {
-          // It's a folder with children
-          const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-          const newParentSlug = parentSlug ? `${parentSlug}/${slug}` : slug
-          const children = buildNavNodes(value, newParentSlug)
-          if (children.length > 0) {
-            // Use /docs path for general sections, project path for everything else
-            // Check both direct string entries and nested values in objects
-            const isGeneralSection = Array.isArray(value) &&
-              value.some(v => {
-                if (typeof v === 'string') {
-                  return v.startsWith('contributing/') || v.startsWith('community/') || v.startsWith('news/')
-                }
-                // For object entries, check if any value starts with general section path
-                if (typeof v === 'object' && v !== null) {
-                  const objValues = Object.values(v);
-                  return objValues.some(val =>
-                    typeof val === 'string' &&
-                    (val.startsWith('contributing/') || val.startsWith('community/') || val.startsWith('news/'))
-                  );
-                }
-                return false;
-              })
-            const basePathForRoute = isGeneralSection ? 'docs' : projectBasePath
-            nodes.push({
-              kind: 'Folder',
-              name: title,
-              route: `/${basePathForRoute}/${newParentSlug}`,
-              children
-            })
-            meta[title] = title
-          }
+      if (typeof value === 'string') {
+        // It's a file path
+        if (allDocFiles.includes(value)) {
+          processedFiles.add(value)
+          // Use /docs path for general sections, project path for everything else
+          const isGeneralSection = value.startsWith('contributing/') || value.startsWith('community/') || value.startsWith('news/')
+          const baseName = value.replace(/\.(md|mdx)$/i, '').split('/').pop()!
+          const slug = isGeneralSection
+            ? baseName
+            : title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+          const basePathForRoute = isGeneralSection ? 'docs' : projectBasePath
+          const route = `/${basePathForRoute}/${parentSlug ? parentSlug + '/' : ''}${slug}`
+          routeMap[`${parentSlug ? parentSlug + '/' : ''}${slug}`] = value
+          nodes.push({ kind: 'MdxPage', name: title, route })
+          meta[title] = title
+        }
+      } else if (Array.isArray(value)) {
+        // It's a folder with children
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        const newParentSlug = parentSlug ? `${parentSlug}/${slug}` : slug
+        const children = buildNavNodes(value, newParentSlug)
+        if (children.length > 0) {
+          // Use /docs path for general sections, project path for everything else
+          // Check both direct string entries and nested values in objects
+          const isGeneralSection = Array.isArray(value) &&
+            value.some(v =>
+              // Check if any value in the entry starts with a general section path
+              Object.values(v).some(val =>
+                typeof val === 'string' &&
+                (val.startsWith('contributing/') || val.startsWith('community/') || val.startsWith('news/'))
+              )
+            )
+          const basePathForRoute = isGeneralSection ? 'docs' : projectBasePath
+          nodes.push({
+            kind: 'Folder',
+            name: title,
+            route: `/${basePathForRoute}/${newParentSlug}`,
+            children
+          })
+          meta[title] = title
         }
       }
     }
