@@ -21,7 +21,7 @@ Pages and `/api/search` read from it, so readers see empty or broken docs.
 
 More than 5% of requests on one `route` label are returning 5xx.
 
-1. Identify the route from the alert label (`search`, `healthz`, `metrics`,
+1. Identify the route from the alert label (`search`, `healthz`,
    `docs-image`) and find matching error logs.
 2. Correlate with the most recent deploy; if it lines up, roll back with
    [site-rollback.md](site-rollback.md).
