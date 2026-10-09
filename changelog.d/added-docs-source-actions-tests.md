@@ -1,0 +1,1 @@
+- Add unit tests for DocsSourceActions: synced-source edit URL rewriting and rejection of non-GitHub sources, shared-config edit-base override and validation, path sanitisation, and the compact variant.
