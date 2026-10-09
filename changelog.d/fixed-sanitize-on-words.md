@@ -1,0 +1,1 @@
+- `sanitizeHtmlForMdx` no longer deletes prose words that start with `on` (once, only, onto, ...); only `on*=` handler attributes are stripped

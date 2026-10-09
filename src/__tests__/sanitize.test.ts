@@ -462,3 +462,15 @@ describe("URL scheme neutralization in href/src attributes", () => {
     expect(result).toContain('href="#"');
   });
 });
+
+describe("sanitizeHtmlForMdx prose words starting with 'on'", () => {
+  it("keeps once/only/onto in prose", () => {
+    const input = "Run this once, only when online. Move onto the next step.";
+    expect(sanitizeHtmlForMdx(input)).toBe(input);
+  });
+
+  it("still strips real on* handler attributes", () => {
+    const result = sanitizeHtmlForMdx('<img src="a.png" onerror="alert(1)">');
+    expect(result).not.toContain("onerror");
+  });
+});
