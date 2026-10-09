@@ -55,9 +55,6 @@ type FolderNode = { kind: 'Folder'; name: string; route: string; children: PageM
 type MetaNode = { kind: 'Meta'; data: Record<string, string> }
 type PageMapNode = MdxPageNode | FolderNode | MetaNode
 
-// Helper to prettify names
-const pretty = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, ' ')
-
 // Recursively get all markdown files from the local docs directory
 function getAllDocFiles(dir: string, baseDir: string = dir): string[] {
   const files: string[] = []
