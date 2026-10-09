@@ -195,15 +195,19 @@ export async function GET(request: NextRequest) {
           text.slice(start, end) +
           (end < text.length ? "..." : "");
 
-        // HTML-encode the snippet so HTML entities in docs content (&lt;img&gt;
-        // etc.) cannot become live HTML when rendered via dangerouslySetInnerHTML.
-        // Only the <mark>/<\/mark> tags we insert below are trusted raw HTML.
-        const encodedSnippet = htmlEncode(snippet);
+        // Highlight on the raw snippet and HTML-encode each segment, so entities
+        // are never split by <mark> and docs content cannot become live HTML.
+        // Only the <mark>/<\/mark> tags we insert are trusted raw HTML.
         const rx = new RegExp(
           `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
           "gi"
         );
-        highlightedSnippet = encodedSnippet.replace(rx, "<mark>$1</mark>");
+        highlightedSnippet = snippet
+          .split(rx)
+          .map((part, i) =>
+            i % 2 === 1 ? `<mark>${htmlEncode(part)}</mark>` : htmlEncode(part)
+          )
+          .join("");
       } else {
         snippet = text.slice(0, 140) + (text.length > 140 ? "..." : "");
         highlightedSnippet = htmlEncode(snippet);
