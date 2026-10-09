@@ -13,6 +13,7 @@ groups:
         labels:
           severity: warning
         annotations:
+          runbook_url: https://github.com/hivecommons/docs/blob/main/runbooks/api-alerts.md#docsapihigherrorrate
           summary: "More than 5% of docs API requests on route {{ $labels.route }} are failing with 5xx"
       - alert: DocsApiHealthzFailing
         expr: |
@@ -21,6 +22,7 @@ groups:
         labels:
           severity: critical
         annotations:
+          runbook_url: https://github.com/hivecommons/docs/blob/main/runbooks/api-alerts.md#docsapihealthzfailing
           summary: "/api/healthz is returning 5xx; docs content may be unreadable"
       - alert: DocsApiSlowRequests
         expr: |
@@ -31,4 +33,5 @@ groups:
         labels:
           severity: warning
         annotations:
+          runbook_url: https://github.com/hivecommons/docs/blob/main/runbooks/api-alerts.md#docsapislowrequests
           summary: "p95 latency on docs API route {{ $labels.route }} exceeds 2.5s"
