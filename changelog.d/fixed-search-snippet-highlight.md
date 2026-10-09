@@ -1,0 +1,1 @@
+- `/api/search` highlights snippets before HTML-encoding, so queries like `amp` no longer inject `<mark>` inside entities
