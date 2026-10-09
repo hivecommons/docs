@@ -1,0 +1,1 @@
+- Added a runbook for the docs API alerts and a `runbook_url` annotation on each alert rule in `monitoring/docs-api-alerts.yml`.
