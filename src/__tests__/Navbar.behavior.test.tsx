@@ -245,6 +245,35 @@ describe("Navbar GitHub stats", () => {
     });
     expect(screen.getAllByText("30").length).toBeGreaterThan(0);
   });
+
+  it("does not let a click on the repo link propagate past the React root", async () => {
+    await renderNavbar();
+    const container = dropdownContainer("github");
+    const trigger = container.querySelector<HTMLElement>(
+      "[data-dropdown-button]"
+    )!;
+    const repoLink = trigger.querySelector<HTMLAnchorElement>(
+      'a[href="https://github.com/hivecommons/hive"]'
+    )!;
+    expect(repoLink.target).toBe("_blank");
+    expect(repoLink.rel).toBe("noopener noreferrer");
+
+    // React delegates to the root, so a synthetic stopPropagation is only
+    // observable above it: document-level outside-click handlers must never
+    // see a navigation click on the repo link as a dropdown interaction.
+    const documentClick = vi.fn();
+    document.addEventListener("click", documentClick);
+    try {
+      fireEvent.click(repoLink);
+      expect(documentClick).not.toHaveBeenCalled();
+
+      // Sanity: a click elsewhere on the trigger still reaches document.
+      fireEvent.click(trigger);
+      expect(documentClick).toHaveBeenCalledTimes(1);
+    } finally {
+      document.removeEventListener("click", documentClick);
+    }
+  });
 });
 
 describe("Navbar mobile menu", () => {
