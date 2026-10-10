@@ -10,7 +10,7 @@ Hive publishes three **release channels** — moving GHCR image tags an operator
 | `candidate` | A build believed good, awaiting soak before promotion to stable. |
 | `edge` | The newest good build, with no soak period. |
 
-> **Promotion policy:** the channels diverge by release line and maturity. Every green merge to **`v5`** retags **`candidate`** (and `:latest`); **`stable`** advances later by digest through the scheduled/manual stable-promotion workflow after the [stable soak and promotion policy](/docs/hive/stable-soak-policy) passes. Merges to **`v6`** retag **`edge`**, so `edge` is an active-development v6 build, not a synonym for `stable`. **`v4`** is a maintenance line: its builds publish only `v4-latest` and short-SHA tags, no channel (#7721 Phase 1).
+> **Promotion policy:** the channels diverge by release line and maturity. Every green merge to **`v5`** retags **`candidate`** (and `:latest`); **`stable`** advances later by digest through the scheduled/manual stable-promotion workflow after the [stable soak and promotion policy](/docs/hive/operations/stable-soak-and-promotion-policy) passes. Merges to **`v6`** retag **`edge`**, so `edge` is an active-development v6 build, not a synonym for `stable`. **`v4`** is a maintenance line: its builds publish only `v4-latest` and short-SHA tags, no channel (#7721 Phase 1).
 
 The hub's release-channel block also shows the stable auto-promotion state.
 Hub admins see a play/pause control on the `stable` row: play (the default)
