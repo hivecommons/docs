@@ -13,7 +13,7 @@ const docsRoot = path.join(process.cwd(), "docs", "content", "hive");
 const rawBase = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/src/docs`;
 const canonicalBase = `https://github.com/${owner}/${repo}/blob/${branch}/src/docs`;
 
-const files: Array<{ source: string; target?: string }> = [
+const files: Array<{ source: string; target?: string; route?: string }> = [
   { source: "README.md", target: "readme.md" },
   { source: "documentation-map.md" },
   { source: "architecture.md" },
@@ -33,7 +33,8 @@ const files: Array<{ source: string; target?: string }> = [
   { source: "net-admin-requirement.md" },
   { source: "release-channels.md" },
   // Stable soak/promotion policy referenced from release-channels (hivecommons/docs#181).
-  { source: "stable-soak-policy.md" },
+  // `route` is the nav URL (slug derives from the page-map title), so links land on the page shown in the sidebar.
+  { source: "stable-soak-policy.md", route: "operations/stable-soak-and-promotion-policy" },
   { source: "contributor-relay.md" },
   { source: "security-model.md" },
   { source: "securing-your-hive.md" },
@@ -130,7 +131,7 @@ const repoPathToSiteRoute = new Map<string, string>();
 for (const f of [...files, ...localHiveDocs]) {
   const repoPath = `src/docs/${f.source}`;
   const target = f.target || f.source;
-  const targetNoExt = target.replace(/\.mdx?$/i, "");
+  const targetNoExt = ("route" in f && f.route) || target.replace(/\.mdx?$/i, "");
   repoPathToSiteRoute.set(repoPath, `/docs/hive/${targetNoExt}`);
 }
 
@@ -142,7 +143,8 @@ for (const f of [...files, ...localHiveDocs]) {
   const base = f.source.split("/").pop()!;
   if (base.toLowerCase() === "readme.md") continue;
   const target = f.target || f.source;
-  basenameToSiteRoute.set(base, `/docs/hive/${target.replace(/\.mdx?$/i, "")}`);
+  const route = ("route" in f && f.route) || target.replace(/\.mdx?$/i, "");
+  basenameToSiteRoute.set(base, `/docs/hive/${route}`);
 }
 
 // Split a link target into its path portion and a preserved `#fragment` /
