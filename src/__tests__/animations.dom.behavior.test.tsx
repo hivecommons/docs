@@ -1,20 +1,18 @@
 // @vitest-environment jsdom
 //
-// Covers the three non-WebGL animation components (previously 0%):
+// Covers the non-WebGL animation components (previously 0%):
 //  - GridLines: builds one SVG with horizontalLines + verticalLines <line>
 //    children, applies stroke props, honours 0-line props, wires `speed`
 //    into the container animation and clears + rebuilds on prop change
 //  - StarField: star count follows the density map (100/150/200), comets
 //    follow showComets/cometCount, every star gets exactly one size class,
 //    and a re-render replaces rather than appends
-//  - GlobeLoader: static brand/loading copy
 import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 
 import GridLines from "@/components/animations/GridLines";
 import StarField from "@/components/animations/StarField";
-import GlobeLoader from "@/components/animations/globe/GlobeLoader";
 
 afterEach(() => {
   cleanup();
@@ -186,13 +184,5 @@ describe("StarField", () => {
     rerender(<StarField density="high" cometCount={1} />);
     expect(stars(container)).toHaveLength(200);
     expect(comets(container)).toHaveLength(1);
-  });
-});
-
-describe("GlobeLoader", () => {
-  it("renders the brand name and loading copy", () => {
-    render(<GlobeLoader />);
-    expect(screen.getByText("Hive Commons")).toBeTruthy();
-    expect(screen.getByText("Initializing clusters...")).toBeTruthy();
   });
 });
