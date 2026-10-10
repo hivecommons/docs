@@ -922,32 +922,6 @@
       "costManagement": "Gestione dei costi"
     }
   },
-  "networkGlobe": {
-    "hive": "Hive Commons",
-    "controlPlane": "Control Plane",
-    "clusters": {
-      "kubeflexCore": {
-        "name": "KubeFlex Core",
-        "description": "Control plane KubeFlex per la gestione delle operazioni multi‑cluster"
-      },
-      "edgeClusters": {
-        "name": "Cluster Edge",
-        "description": "Cluster di edge computing per workload distribuiti"
-      },
-      "productionCluster": {
-        "name": "Cluster di produzione",
-        "description": "Workload di produzione e applicazioni mission‑critical"
-      },
-      "devTestCluster": {
-        "name": "Cluster Dev/Test",
-        "description": "Ambienti di sviluppo e test"
-      },
-      "multiCloudHub": {
-        "name": "Hub Multi‑Cloud",
-        "description": "Orchestrazione e gestione cross‑cloud"
-      }
-    }
-  },
   "metadata": {
     "title": "Hive Commons - Progetti per agenti AI",
     "description": "Scopri i progetti Hive Commons che aiutano agenti di coding AI e maintainer a collaborare con governance, auditabilità e responsabilità."
