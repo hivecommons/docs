@@ -34,7 +34,10 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
   { source: "release-channels.md" },
   // Stable soak/promotion policy referenced from release-channels (hivecommons/docs#181).
   // `route` is the nav URL (slug derives from the page-map title), so links land on the page shown in the sidebar.
-  { source: "stable-soak-policy.md", route: "operations/stable-soak-and-promotion-policy" },
+  {
+    source: "stable-soak-policy.md",
+    route: "operations/stable-soak-and-promotion-policy",
+  },
   { source: "contributor-relay.md" },
   { source: "security-model.md" },
   { source: "securing-your-hive.md" },
@@ -131,7 +134,8 @@ const repoPathToSiteRoute = new Map<string, string>();
 for (const f of [...files, ...localHiveDocs]) {
   const repoPath = `src/docs/${f.source}`;
   const target = f.target || f.source;
-  const targetNoExt = ("route" in f && f.route) || target.replace(/\.mdx?$/i, "");
+  const targetNoExt =
+    ("route" in f && f.route) || target.replace(/\.mdx?$/i, "");
   repoPathToSiteRoute.set(repoPath, `/docs/hive/${targetNoExt}`);
 }
 
