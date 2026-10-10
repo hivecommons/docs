@@ -20,6 +20,17 @@ describe("scrubLegacyBranding", () => {
     ).toBe("https://github.com/jumppad-labs/tutorial-spektacular-how-to");
   });
 
+  it("rewrites the hive domain in both plain and regex-escaped forms", () => {
+    expect(scrubLegacyBranding("https://hive.kubestellar.io/docs")).toBe(
+      "https://hive.hivecommons.dev/docs"
+    );
+    // Upstream docs embed the domain inside regex literals; the escaped form
+    // must stay escaped after the rewrite.
+    expect(scrubLegacyBranding("/hive\\.kubestellar\\.io/")).toBe(
+      "/hive\\.hivecommons\\.dev/"
+    );
+  });
+
   it("rewrites KubeStellar branding and repo references", () => {
     expect(scrubLegacyBranding("KubeStellar hive at kubestellar.io")).toBe(
       "Hive Commons hive at hivecommons.dev"
