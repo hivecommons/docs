@@ -129,9 +129,11 @@ describe("useSharedConfig — warm cache (module-scoped)", () => {
 describe("useSharedConfig — null-config fallback (fetchConfig resolves to null)", () => {
   it("when both LOCAL and PROD fetches fail (fetchConfig returns null), config stays null and loading flips off", async () => {
     // Note: fetchConfig catches per-URL errors internally and returns
-    // null rather than rejecting, so the .catch(err => setError) arm
-    // of useSharedConfig is unreachable from this level. The observable
-    // behaviour is: config=null, loading=false, error=null.
+    // null rather than rejecting, so a network outage never reaches the
+    // .catch(err => setError) arm of useSharedConfig. (That arm is
+    // exercised by useSharedConfig.hook-error.test.tsx via a payload that
+    // makes mergeSharedConfigs throw.) The observable behaviour here is:
+    // config=null, loading=false, error=null.
     fetchMock.mockImplementation(async () => {
       throw new Error("network down");
     });
