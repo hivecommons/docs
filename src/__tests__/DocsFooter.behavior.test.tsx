@@ -9,12 +9,10 @@
 //  - newsletter form: empty email is a no-op, a real email triggers the
 //    "not available yet" alert and clears the field
 //  - dark vs light resolvedTheme picks the matching text classes
-//
-// KNOWN GAP (not asserted here): the back-to-top wiring effect runs with []
-// deps against the pre-mount fallback render, which does not contain
-// #back-to-top, so its scroll/click listeners are never attached once the
-// real footer renders. Fixing that is a production change tracked in the
-// coverage-gap issue; this file only pins that the button renders.
+//  - back-to-top: hidden at the top of the page, shown past 300px of scroll,
+//    clicking scrolls smoothly to the top, and the listeners are removed on
+//    unmount (the wiring effect re-runs on [mounted], so it finds the button
+//    once the real footer renders)
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -159,11 +157,75 @@ describe("DocsFooter newsletter form", () => {
 });
 
 describe("DocsFooter back-to-top button", () => {
+  function setScrollY(value: number) {
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      writable: true,
+      value,
+    });
+  }
+
+  beforeEach(() => {
+    setScrollY(0);
+  });
+
+  afterEach(() => {
+    setScrollY(0);
+  });
+
   it("renders the labelled back-to-top button", () => {
     render(<DocsFooter />);
     const button = document.getElementById("back-to-top");
     expect(button).toBeTruthy();
     expect(button!.getAttribute("aria-label")).toBe("Back to top");
+  });
+
+  it("starts hidden at the top of the page", () => {
+    render(<DocsFooter />);
+    const button = document.getElementById("back-to-top")!;
+    expect(button.style.opacity).toBe("0");
+    expect(button.style.transform).toBe("translateY(10px)");
+  });
+
+  it("shows the button once the page is scrolled past 300px and hides it again", () => {
+    render(<DocsFooter />);
+    const button = document.getElementById("back-to-top")!;
+
+    setScrollY(301);
+    fireEvent.scroll(window);
+    expect(button.style.opacity).toBe("1");
+    expect(button.style.transform).toBe("translateY(-30px)");
+
+    setScrollY(300);
+    fireEvent.scroll(window);
+    expect(button.style.opacity).toBe("0");
+    expect(button.style.transform).toBe("translateY(10px)");
+  });
+
+  it("scrolls smoothly to the top when clicked", () => {
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      writable: true,
+      value: scrollTo,
+    });
+    render(<DocsFooter />);
+    fireEvent.click(document.getElementById("back-to-top")!);
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: "smooth" });
+  });
+
+  it("removes the scroll and click listeners on unmount", () => {
+    const removeWindow = vi.spyOn(window, "removeEventListener");
+    const { unmount } = render(<DocsFooter />);
+    const button = document.getElementById("back-to-top")!;
+    const removeButton = vi.spyOn(button, "removeEventListener");
+
+    unmount();
+
+    expect(removeWindow).toHaveBeenCalledWith("scroll", expect.any(Function));
+    expect(removeButton).toHaveBeenCalledWith("click", expect.any(Function));
+    removeWindow.mockRestore();
   });
 });
 

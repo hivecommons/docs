@@ -35,12 +35,12 @@ export default defineConfig({
       ],
       exclude: ["**/*.test.ts", "**/*.test.tsx", "**/*.d.ts"],
       // Ratchet: raise these as coverage grows; never lower without a reason
-      // in the PR. Measured at the last ratchet: 87.9 / 87.8 / 81.8 / 87.0.
+      // in the PR. Measured at the last ratchet: 99.4 / 99.6 / 94.2 / 98.6.
       thresholds: {
-        lines: 85,
-        functions: 85,
-        branches: 79,
-        statements: 84,
+        lines: 97,
+        functions: 97,
+        branches: 92,
+        statements: 96,
       },
     },
   },
