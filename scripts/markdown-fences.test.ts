@@ -43,6 +43,21 @@ describe("normalizeFences", () => {
     );
   });
 
+  it("does not treat a backtick opener whose info string contains a backtick as a fence (CommonMark)", () => {
+    // Per CommonMark a backtick fence's info string may not contain a
+    // backtick, so this line is a paragraph: no language is added, no blank
+    // line is forced before it, and the following lines are not fence content.
+    const input = "Intro\n```foo`bar\nnot code\n```\nAfter\n";
+    expect(normalizeFences(input)).toBe(
+      `Intro\n\`\`\`foo\`bar\nnot code\n\n\`\`\`${DEFAULT_FENCE_LANGUAGE}\nAfter\n`
+    );
+  });
+
+  it("still allows a backtick inside the info string of a tilde fence", () => {
+    const input = "~~~foo`bar\ncode\n~~~\n";
+    expect(normalizeFences(input)).toBe(input);
+  });
+
   it("leaves a fence that closes the document unchanged apart from the language", () => {
     const input = "text\n```\ncode\n```";
     expect(normalizeFences(input)).toBe(
