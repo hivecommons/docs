@@ -18,6 +18,8 @@ import {
   HEADER_SIGNATURE,
   HEADER_TIMESTAMP,
   INSTALL_PREFIX,
+  INSTALL_RATE_PREFIX,
+  MAX_ACK_BODY_BYTES,
   MAX_ENTRIES,
   MAX_FEEDBACK_CHARS,
   MAX_NONCES_PER_INSTALL,
@@ -630,6 +632,113 @@ describe("POST /api/nps (submit)", () => {
     expect(store.entries()).toHaveLength(MAX_PER_INSTALL_PER_WINDOW);
   });
 
+  it("holds the per-install cap when the pre-check read is stale", async () => {
+    // Blobs reads are eventually consistent: the plain `get` the pre-check
+    // uses may lag the record the conditional write is compared against.
+    // Simulate a read that is always one slot behind, so the pre-check
+    // passes and only the compare-and-swap can refuse the 11th submission.
+    const stale = new (class extends MemoryStore {
+      async get(key: string): Promise<unknown> {
+        const rec = await super.get(key);
+        if (!key.startsWith(INSTALL_RATE_PREFIX) || !rec) return rec;
+        const { times } = rec as { times: number[] };
+        return { times: times.slice(1) };
+      }
+      async getWithMetadata(
+        key: string
+      ): Promise<{ data: unknown; etag?: string } | null> {
+        await new Promise(r => setImmediate(r));
+        if (!this.data.has(key)) return null;
+        return {
+          data: JSON.parse(JSON.stringify(this.data.get(key))),
+          etag: this.etags.get(key),
+        };
+      }
+    })();
+    store = stale;
+    await registerOk();
+    for (let i = 0; i < MAX_PER_INSTALL_PER_WINDOW; i++) {
+      const res = await handleRelayRequest(
+        submit(GOOD),
+        deps({ clientIp: `198.51.100.${i}` })
+      );
+      expect(res.status).toBe(201);
+    }
+    const res = await handleRelayRequest(
+      submit(GOOD),
+      deps({ clientIp: "192.0.2.99" })
+    );
+    expect(res.status).toBe(429);
+    expect(await res.json()).toEqual({ error: "rate limit exceeded" });
+    expect(store.entries()).toHaveLength(MAX_PER_INSTALL_PER_WINDOW);
+  });
+
+  it("omits feedback and dashboard_version from the entry when not supplied", async () => {
+    const res = await handleRelayRequest(
+      submit({ hive_id: "solo-hive", score: 2 }),
+      deps()
+    );
+    expect(res.status).toBe(201);
+    const [entry] = store.entries();
+    expect(entry).not.toHaveProperty("feedback");
+    expect(entry).not.toHaveProperty("dashboard_version");
+    expect(entry).toMatchObject({ hive_id: "solo-hive", score: 2 });
+  });
+
+  it("treats a null feedback and a non-string dashboard_version as absent", async () => {
+    const res = await handleRelayRequest(
+      submit({
+        hive_id: "solo-hive",
+        score: 3,
+        feedback: null,
+        dashboard_version: 42,
+      }),
+      deps()
+    );
+    expect(res.status).toBe(201);
+    const [entry] = store.entries();
+    expect(entry).not.toHaveProperty("feedback");
+    expect(entry).not.toHaveProperty("dashboard_version");
+  });
+
+  it("drops feedback and dashboard_version that clean down to nothing, with default clock and unknown IP", async () => {
+    const realNow = Date.now();
+    const res = await handleRelayRequest(
+      submit(
+        {
+          hive_id: "solo-hive",
+          score: 1,
+          feedback: " \u0007\u001f ",
+          dashboard_version: "!!! ???",
+        },
+        { timestampMs: realNow }
+      ),
+      deps({ clientIp: "", now: undefined })
+    );
+    expect(res.status).toBe(201);
+    const [entry] = store.entries();
+    expect(entry).not.toHaveProperty("feedback");
+    expect(entry).not.toHaveProperty("dashboard_version");
+    expect(Date.parse(entry.timestamp)).toBeGreaterThanOrEqual(realNow);
+    // An empty client IP still rate-limits under a shared bucket.
+    expect(
+      (
+        await handleRelayRequest(
+          submit(GOOD, { timestampMs: realNow }),
+          deps({ clientIp: "", now: undefined })
+        )
+      ).status
+    ).toBe(429);
+  });
+
+  it("answers unknown_install when the stored registration lacks a public key", async () => {
+    store.data.set(`${INSTALL_PREFIX}${hive.installId}`, { corrupt: true });
+    const res = await handleRelayRequest(submit(GOOD), deps());
+    expect(res.status).toBe(401);
+    expect(await res.json()).toMatchObject({ code: UNKNOWN_INSTALL_CODE });
+    expect(store.entries()).toHaveLength(0);
+  });
+
   it("caps the body by bytes read, including chunked bodies with no Content-Length", async () => {
     const chunk = new Uint8Array(1024).fill(0x20);
     const chunks = Math.ceil(MAX_SUBMIT_BODY_BYTES / chunk.byteLength) + 1;
@@ -843,6 +952,60 @@ describe("hub pull and ack", () => {
       String(i)
     );
     expect((await handleRelayRequest(ack(tooMany), deps())).status).toBe(400);
+  });
+
+  it("rejects a malformed JSON ack body", async () => {
+    const req = new Request(ORIGIN + ACK_PATH, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${HUB_SECRET}`,
+      },
+      body: '{"ids": [',
+    });
+    const res = await handleRelayRequest(req, deps());
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "invalid JSON body" });
+  });
+
+  it("skips entries that were acked between listing and reading them", async () => {
+    await seed(2);
+    const [, gone] = store.entries();
+    const listed = await store.list({ prefix: ENTRY_PREFIX });
+    vi.spyOn(store, "list").mockResolvedValue(listed);
+    await store.delete(`${ENTRY_PREFIX}${gone.id}`);
+    const res = await handleRelayRequest(pending(), deps());
+    expect(res.status).toBe(200);
+    const { entries } = (await res.json()) as { entries: RelayEntry[] };
+    expect(entries).toHaveLength(1);
+    expect(entries[0].id).not.toBe(gone.id);
+  });
+
+  it("rejects a JSON null ack body without reading ids off it", async () => {
+    const req = new Request(ORIGIN + ACK_PATH, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${HUB_SECRET}`,
+      },
+      body: "null",
+    });
+    const res = await handleRelayRequest(req, deps());
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: `ids must be an array of at most ${MAX_PULL_BATCH} entry ids`,
+    });
+  });
+
+  it("caps the ack body by bytes read and deletes nothing when it overflows", async () => {
+    await seed(2);
+    const perId = Math.ceil(MAX_ACK_BODY_BYTES / MAX_PULL_BATCH) + 1;
+    const ids = Array.from({ length: MAX_PULL_BATCH }, () => "a".repeat(perId));
+    expect(JSON.stringify({ ids }).length).toBeGreaterThan(MAX_ACK_BODY_BYTES);
+    const res = await handleRelayRequest(ack(ids), deps());
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ error: "payload too large" });
+    expect(store.entries()).toHaveLength(2);
   });
 });
 
