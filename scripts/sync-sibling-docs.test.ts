@@ -109,4 +109,41 @@ describe("rewriteLinks", () => {
     const src = "[a](https://x.y) [b](#c) [d](/docs/hive)";
     expect(rewriteLinks(src, spek)).toBe(src);
   });
+
+  it("routes a synced page without an anchor and strips a leading ./", () => {
+    expect(rewriteLinks("[kb](./docs/knowledge-base.md)", spek)).toBe(
+      "[kb](/docs/spektacular/knowledge-base)"
+    );
+  });
+
+  it("matches synced pages case-insensitively", () => {
+    expect(rewriteLinks("[kb](Docs/Knowledge-Base.MD)", spek)).toBe(
+      "[kb](/docs/spektacular/knowledge-base)"
+    );
+  });
+
+  it("points relative image sources at raw.githubusercontent", () => {
+    expect(rewriteLinks("![logo](./assets/logo.png)", spek)).toBe(
+      "![logo](https://raw.githubusercontent.com/hivecommons/spektacular/main/assets/logo.png)"
+    );
+  });
+
+  it("uses the file's own repo for image sources of website-sourced pages", () => {
+    const tutorial = spek.files.find(f => f.target === "getting-started.md")!;
+    expect(rewriteLinks("![shot](img/shot.png)", spek, tutorial)).toBe(
+      "![shot](https://raw.githubusercontent.com/hivecommons/spektacular-website/main/img/shot.png)"
+    );
+  });
+
+  it("never routes an image to a docs route even if its path is a synced page", () => {
+    // Images are always raw-linked; the synced-route lookup is for links only.
+    expect(rewriteLinks("![kb](docs/knowledge-base.md)", spek)).toBe(
+      "![kb](https://raw.githubusercontent.com/hivecommons/spektacular/main/docs/knowledge-base.md)"
+    );
+  });
+
+  it("leaves absolute and anchor image sources alone", () => {
+    const src = "![a](https://x.y/a.png) ![b](/img/b.png)";
+    expect(rewriteLinks(src, spek)).toBe(src);
+  });
 });

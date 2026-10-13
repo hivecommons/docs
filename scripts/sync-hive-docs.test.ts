@@ -109,6 +109,32 @@ describe("rewriteLinkTarget — left untouched", () => {
     );
     expect(rewriteLinkTarget("#section", README)).toBe("#section");
   });
+
+  it("leaves protocol-relative URLs alone", () => {
+    const url = "//cdn.example.com/asset.js";
+    expect(rewriteLinkTarget(url, README)).toBe(url);
+  });
+
+  it("leaves an empty or whitespace-only target alone", () => {
+    expect(rewriteLinkTarget("", README)).toBe("");
+    expect(rewriteLinkTarget("   ", README)).toBe("   ");
+  });
+
+  it("leaves a lone ?query target alone (nothing to resolve)", () => {
+    expect(rewriteLinkTarget("?tab=readme", README)).toBe("?tab=readme");
+  });
+
+  it("preserves a ?query suffix on a rewritten in-tree link", () => {
+    expect(rewriteLinkTarget("architecture.md?plain=1", README)).toBe(
+      "/docs/hive/architecture?plain=1"
+    );
+  });
+
+  it("returns the original (untrimmed) target when skipping", () => {
+    // Surrounding whitespace is trimmed for matching only; the caller keeps
+    // the raw target so the markdown is not reformatted.
+    expect(rewriteLinkTarget("  #top  ", README)).toBe("  #top  ");
+  });
 });
 
 describe("rewriteLinks — over full markdown content", () => {
