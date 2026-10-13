@@ -9,8 +9,8 @@ metrics come from `/api/metrics` (`src/lib/metrics.ts`).
 `src/app/docs/page-map.ts`) is missing, not a directory, empty, or unreadable.
 Pages and `/api/search` read from it, so readers see empty or broken docs.
 
-1. Open `/api/healthz` on the live site and read the `error` reason; the same
-   reason is logged as `healthz check failed`.
+1. Open `/api/healthz` on the live site and read the `reason` field; the same
+   detail is logged as `healthz check failed` (field `error`).
 2. If the last deploy introduced it, restore the previous deploy with
    [site-rollback.md](site-rollback.md).
 3. If the content tree is incomplete, fix the sync source or the committed
