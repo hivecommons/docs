@@ -3,36 +3,8 @@ name: TypeScript & Lint Check
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "src/**"
-      - "scripts/**"
-      - "netlify/**"
-      - "*.ts"
-      - "*.tsx"
-      - "tsconfig.json"
-      - "package.json"
-      - ".eslintrc*"
-      - "eslint.config.*"
-      - "next.config.*"
-      - ".prettierrc.json"
-      - ".prettierignore"
-      - "vitest.config.ts"
   push:
     branches: [main]
-    paths:
-      - "src/**"
-      - "scripts/**"
-      - "netlify/**"
-      - "*.ts"
-      - "*.tsx"
-      - "tsconfig.json"
-      - "package.json"
-      - ".eslintrc*"
-      - "eslint.config.*"
-      - "next.config.*"
-      - ".prettierrc.json"
-      - ".prettierignore"
-      - "vitest.config.ts"
 
 permissions: read-all # default read; writes scoped to job below
 

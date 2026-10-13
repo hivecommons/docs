@@ -3,26 +3,8 @@ name: Vitest
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "src/**"
-      - "scripts/**"
-      - "netlify/**"
-      - "docs/content/**"
-      - "package.json"
-      - "package-lock.json"
-      - "vitest.config.ts"
-      - "next.config.*"
   push:
     branches: [main]
-    paths:
-      - "src/**"
-      - "scripts/**"
-      - "netlify/**"
-      - "docs/content/**"
-      - "package.json"
-      - "package-lock.json"
-      - "vitest.config.ts"
-      - "next.config.*"
 
 permissions: read-all # default read; writes scoped to job below
 
