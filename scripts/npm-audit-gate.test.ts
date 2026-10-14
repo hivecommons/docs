@@ -94,6 +94,55 @@ describe("collectAdvisories", () => {
       { id: "npm-7", package: "x", severity: "low", title: "", url: "" },
     ]);
   });
+
+  it("keeps one entry when the same GHSA is a root advisory under two packages", () => {
+    // npm lists a root advisory object under every package name it applies
+    // to (e.g. a renamed/forked package); the gate must count it once and
+    // attribute it to the first package seen so an exception can target it.
+    const advs = collectAdvisories({
+      vulnerabilities: {
+        "pkg-a": {
+          name: "pkg-a",
+          severity: "high",
+          via: [{ name: "pkg-a", url: BRACES_URL, severity: "high" }],
+        },
+        "pkg-b": {
+          name: "pkg-b",
+          severity: "critical",
+          via: [{ name: "pkg-b", url: BRACES_URL, severity: "critical" }],
+        },
+      },
+    });
+    expect(advs).toHaveLength(1);
+    expect(advs[0]).toMatchObject({
+      id: "GHSA-VFJ7-8CJW-P6XM",
+      package: "pkg-a",
+      severity: "high",
+    });
+  });
+
+  it("falls back to npm-unknown, the parent severity, then info", () => {
+    const advs = collectAdvisories({
+      vulnerabilities: {
+        // No url and no source: id must still be stable and non-empty.
+        x: { severity: "Moderate", via: [{}] },
+        // Neither via nor parent carries a severity: default to info.
+        y: { via: [{ source: 9 }] },
+        // A package entry with no via list contributes nothing.
+        z: { severity: "low" },
+      },
+    });
+    expect(advs).toEqual([
+      {
+        id: "npm-unknown",
+        package: "x",
+        severity: "moderate",
+        title: "",
+        url: "",
+      },
+      { id: "npm-9", package: "y", severity: "info", title: "", url: "" },
+    ]);
+  });
 });
 
 describe("evaluateAudit", () => {
@@ -178,6 +227,29 @@ describe("evaluateAudit", () => {
       /Unknown audit level/
     );
   });
+
+  it("treats an unrecognised advisory severity as below every level", () => {
+    // Documents the current contract: a severity string the gate does not
+    // know ranks as 0 and is reported under belowLevel rather than blocking,
+    // even at the lowest configured level.
+    const report = {
+      vulnerabilities: {
+        odd: {
+          name: "odd",
+          via: [
+            {
+              name: "odd",
+              url: "https://github.com/advisories/GHSA-dddd-eeee-ffff",
+              severity: "unusual",
+            },
+          ],
+        },
+      },
+    };
+    const r = evaluateAudit(report, [], "low", NOW);
+    expect(r.blocking).toEqual([]);
+    expect(r.belowLevel.map(a => a.id)).toEqual(["GHSA-DDDD-EEEE-FFFF"]);
+  });
 });
 
 describe("loadExceptions", () => {
@@ -260,6 +332,20 @@ describe("main", () => {
     expect(out).toMatch(/::warning::Unused npm audit exception GHSA-zzzz/);
     expect(out).toMatch(/Ignoring 1 advisory/);
     expect(out).toMatch(/passed at level "high"/);
+  });
+
+  it("omits the Ignoring line when nothing sits below the level", () => {
+    const report = write("audit.json", REPORT);
+    write(".github/npm-audit-exceptions.json", [
+      exception(),
+      exception({ id: "GHSA-aaaa-bbbb-cccc", package: "some-lib" }),
+    ]);
+    main([report, "--level=moderate"]);
+    expect(exitSpy).not.toHaveBeenCalled();
+    const out = logSpy.mock.calls.flat().join("\n");
+    expect(out).toMatch(/Acknowledged 2 advisory/);
+    expect(out).not.toMatch(/Ignoring/);
+    expect(out).toMatch(/passed at level "moderate"/);
   });
 
   it("fails on expired and malformed exceptions", () => {
