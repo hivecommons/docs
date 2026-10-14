@@ -123,12 +123,17 @@ function buildSearchIndex(): IndexedDoc[] {
   const docs: IndexedDoc[] = [];
   for (const projectId of Object.keys(PROJECTS) as ProjectId[]) {
     const { routeMap } = buildPageMap(projectId);
+    // routeMap lists nav routes first, then flat fallback aliases for the same
+    // file; index each file once, under its navigation route.
+    const seenFiles = new Set<string>();
     for (const [routeKey, filePath] of Object.entries(routeMap) as Array<
       [string, string]
     >) {
       const file = readLocalFile(projectId, filePath);
       if (!file) continue;
       const { content: raw, project } = file;
+      if (seenFiles.has(filePath)) continue;
+      seenFiles.add(filePath);
 
       const text = toPlainText(convertHtmlScriptsToJsxComments(raw));
 
