@@ -1,1 +1,1 @@
-- "What is Hive Commons?" opening: bold emphasis on Hive Commons / Hive / governed agents against real project work (community feedback).
+- "What is Hive Commons?" opening: bold emphasis on Hive Commons / Hive / runs governed agents, and on "Agents do the chores, while you decide what matters." (community feedback).
