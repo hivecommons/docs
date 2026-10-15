@@ -18,7 +18,7 @@ const HIVE_DOCS_PATH = process.env.HIVE_DOCS_PATH
 const STATIC_PROJECTS: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'spektacular']
 
 const INTEGRATIONS_DESCRIPTION =
-  'Hive works with Claude Code, GitHub Copilot, Codex, Gemini, IBM Bob, Goose, vLLM, llm-d and more.'
+  'Hive works with Claude Code, GitHub Copilot, Codex, Antigravity, IBM Bob, Goose, vLLM, llm-d and more.'
 
 const INTEGRATION_NAMES = [
   'Claude Code',
@@ -86,7 +86,7 @@ function integrationsJsonLd() {
       codeRepository: 'https://github.com/hivecommons/hive',
       keywords: [...INTEGRATION_NAMES, 'TypeSafe AI', 'Spektacular', 'Spek', 'speks'].join(', '),
       featureList: [
-        'Drives supported agent CLI backends including Claude Code, GitHub Copilot CLI, Goose, OpenAI Codex CLI, IBM Bob, Gemini CLI and more.',
+        'Drives supported agent CLI backends including Claude Code, GitHub Copilot CLI, Goose, OpenAI Codex CLI, Google Antigravity CLI, IBM Bob and more.',
         'Routes inference through supported engines and gateways including vLLM, llm-d, LiteLLM, IBM watsonx.ai, OpenRouter, Anthropic, OpenAI and DeepSeek.',
         'Supports Jev by TypeSafe AI as a Hive v6 optional advisory smart-classifier backend.',
         'Admits report-only external execution through the Flue pilot and ready C/C++ to Rust migration graph nodes through Crustify/Wavefront.',
