@@ -1,0 +1,1 @@
+- Default page: list Codex and Antigravity (replacing the retired Gemini CLI) among the agent CLIs Hive drives.
