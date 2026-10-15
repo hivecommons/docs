@@ -1,10 +1,10 @@
 # What is Hive Commons?
 
-**Hive Commons** is a family of open source tools for getting real work out of AI coding agents. **Hive** is the flagship tool: it **runs governed agents** against real project work. The rest of the family is listed afterwards.
+**Hive Commons** is a family of open source tools for getting real work out of AI coding agents, with **Hive** as the flagship tool. The rest of the family is listed afterwards.
 
 ## What Hive is
 
-Hive is a **co-maintainer for your GitHub project that never sleeps**. Point it at a repo and it watches the things that pile up — issues, pull requests, failing CI, CVEs, dependabot alerts — and sends AI coding agents (Claude, Copilot, Gemini, Goose...) to deal with them: triage, fixes, reviews, releases. You decide how much it is allowed to do. **Agents do the chores, while you decide what matters.**
+**Hive** is a **co-maintainer system** for your GitHub projects. It lets you **run governed agents** against real project work, continuously. Point it at a repo and it watches the things that pile up — issues, pull requests, failing CI, CVEs, dependabot alerts — and sends AI coding agents (Claude, Copilot, Gemini, Goose...) to deal with them: triage, fixes, reviews, releases. You decide how much it is allowed to do. **Agents do the chores, while you decide what matters.**
 
 ## "I already use an agent. How is this different?"
 

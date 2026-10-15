@@ -1,1 +1,1 @@
-- "What is Hive Commons?" opening: bold emphasis on Hive Commons / Hive / runs governed agents, and on "Agents do the chores, while you decide what matters." (community feedback).
+- "What is Hive Commons?" opening reworded per community feedback: Hive Commons/Hive framing in one sentence; "Hive is a co-maintainer system … run governed agents … continuously"; bold on "Agents do the chores, while you decide what matters."
