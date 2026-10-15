@@ -1,0 +1,1 @@
+- "What is Hive Commons?" FAQ: the AI-reviewer answer now says Hive also ships a Reviewer agent (advisory, never merges) rather than claiming Hive is not a reviewer.

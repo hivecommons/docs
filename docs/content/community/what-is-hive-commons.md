@@ -48,7 +48,7 @@ A spoke works alone. A hub is how you see and manage a fleet of them.
 
 **Do maintainers have to run it?** A maintainer configures it (or uses the hosted hub). Optionally, outside contributors can work your curated queue through Hive's [contributor lane](/docs/hive/contributor-relay) with their own models, under your prompts and limits, without repo permissions.
 
-**We already use AI PR reviewers (Copilot, cubic).** Keep them. Hive isn't a reviewer — it's the thing that does the maintenance work (triage, fixes, CI repair, deps, CVEs) that then gets reviewed.
+**We already use AI PR reviewers (Copilot, cubic).** Keep them. Hive's main job is the maintenance work that then gets reviewed (triage, fixes, CI repair, deps, CVEs). It also ships its own [Reviewer agent](/docs/hive/acmm-policy-matrix) that reads your repo's conventions and leaves a verdict on each PR — it advises, it never merges on its own, and it sits alongside the reviewers you already run.
 
 **Our AI policy needs an "Assisted-by" trailer.** [`governor.attribution_trailer`](/docs/hive/governor) (default on) stamps AI-assistance attribution on every commit.
 
