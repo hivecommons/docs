@@ -1,5 +1,9 @@
 import fs from "fs";
 import path from "path";
+import {
+  rewriteLinkTarget as rewriteSharedLinkTarget,
+  rewriteMarkdownLinks,
+} from "./link-rewrite";
 import { normalizeFences } from "./markdown-fences";
 import { scrubLegacyBranding } from "./scrub-legacy-branding";
 
@@ -122,6 +126,9 @@ function canonicalHeader(source: string): string {
 //
 //   Absolute (`http(s)://`, `//`) links and pure in-page `#anchor` links are
 //   left untouched.
+//
+// The resolution itself lives in scripts/link-rewrite.ts, shared with
+// sync-sibling-docs.ts; this file supplies the Hive route map.
 
 // Repo path (relative to the hive repo root) of every source file the sync
 // pulls, e.g. `src/docs/architecture.md`, `src/docs/adr/README.md`.
@@ -151,85 +158,45 @@ for (const f of [...files, ...localHiveDocs]) {
   basenameToSiteRoute.set(base, `/docs/hive/${route}`);
 }
 
-// Split a link target into its path portion and a preserved `#fragment` /
-// `?query` suffix so we only rewrite the path.
-function splitSuffix(target: string): { pathPart: string; suffix: string } {
-  const match = target.match(/^([^?#]*)([?#].*)?$/);
-  return { pathPart: match?.[1] ?? target, suffix: match?.[2] ?? "" };
+const blobBase = `https://github.com/${owner}/${repo}/blob/${branch}`;
+
+// Case 1: the link points at a doc we actually sync/publish -> site route.
+// Case 1b (recovery): the resolved path is not itself synced, but its basename
+// uniquely matches a synced doc. This happens when the Hive source was already
+// hand-edited with SITE-relative links (e.g. `../architecture.md` written to
+// resolve at `/docs/hive/...` rather than in GitHub's file browser). Rather
+// than push such a link out to GitHub, keep it internal.
+// Returning undefined falls through to Case 2 (absolute GitHub URL).
+function resolveSyncedRoute(
+  resolved: string,
+  pathPart: string
+): string | undefined {
+  if (syncedRepoPaths.has(resolved)) {
+    return repoPathToSiteRoute.get(resolved)!;
+  }
+  const base = pathPart.split("/").pop() ?? "";
+  return basenameToSiteRoute.get(base);
 }
 
 // Rewrite a single markdown link target that appears in `sourceRepoPath`'s
 // content (sourceRepoPath is e.g. `src/docs/README.md`). Returns the original
 // target unchanged when no rewrite applies.
 function rewriteLinkTarget(target: string, sourceRepoPath: string): string {
-  const trimmed = target.trim();
-
-  // Leave absolute URLs, protocol-relative URLs, root-absolute site paths, and
-  // pure in-page anchors alone. Skipping root-absolute `/...` paths also makes
-  // the pass idempotent: already-rewritten `/docs/hive/...` links are untouched.
-  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return target; // http:, https:, mailto:, etc.
-  if (trimmed.startsWith("//")) return target;
-  if (trimmed.startsWith("/")) return target; // root-absolute (e.g. /docs/hive/...)
-  if (trimmed.startsWith("#")) return target;
-  if (trimmed === "") return target;
-
-  const { pathPart, suffix } = splitSuffix(trimmed);
-  if (pathPart === "") return target; // e.g. a lone `?query` — nothing to resolve.
-
-  // Resolve the (possibly `../`-laden) relative link against the directory of
-  // the source file, yielding a repo-root-relative path.
-  const sourceDir = path.posix.dirname(sourceRepoPath);
-  const resolved = path.posix.normalize(path.posix.join(sourceDir, pathPart));
-
-  // Case 1: the link points at a doc we actually sync/publish -> site route.
-  if (syncedRepoPaths.has(resolved)) {
-    const route = repoPathToSiteRoute.get(resolved)!;
-    return `${route}${suffix}`;
-  }
-
-  // Case 1b (recovery): the resolved path is not itself synced, but its basename
-  // uniquely matches a synced doc. This happens when the Hive source was already
-  // hand-edited with SITE-relative links (e.g. `../architecture.md` written to
-  // resolve at `/docs/hive/...` rather than in GitHub's file browser). Rather
-  // than push such a link out to GitHub, keep it internal. This keeps the pass
-  // correct whether the upstream source uses pristine GitHub-relative links
-  // (matched by Case 1) or site-adjusted `../` links (matched here).
-  const base = pathPart.split("/").pop() ?? "";
-  if (basenameToSiteRoute.has(base)) {
-    return `${basenameToSiteRoute.get(base)!}${suffix}`;
-  }
-
-  // Case 2: anything else that is a repo-relative path (in-tree-but-unsynced, or
-  // an escape like `../../bin/README.md`) -> absolute GitHub URL on the branch.
-  // `resolved` is already normalized relative to the repo root.
-  return `https://github.com/${owner}/${repo}/blob/${branch}/${resolved}${suffix}`;
+  return rewriteSharedLinkTarget(target, {
+    sourceRepoPath,
+    blobBase,
+    resolveSyncedRoute,
+  });
 }
 
 // Apply link rewriting to a file's markdown content. Handles inline links
 // `[text](target)` and reference-style definitions `[id]: target`.
 function rewriteLinks(content: string, sourceRepoPath: string): string {
-  // Inline links: [text](target) and [text](target "title").
-  // The target is everything up to the first unescaped space (before an optional
-  // title) or the closing paren.
-  let out = content.replace(
-    /(\]\()(\s*)([^)\s]+)([^)]*)(\))/g,
-    (_full, open, lead, targetRaw, rest, close) => {
-      const rewritten = rewriteLinkTarget(targetRaw, sourceRepoPath);
-      return `${open}${lead}${rewritten}${rest}${close}`;
-    }
-  );
-
-  // Reference-style link definitions: `[id]: target` (optionally followed by a
-  // title) at the start of a line.
-  out = out.replace(
-    /^(\s*\[[^\]]+\]:\s*)(\S+)(.*)$/gm,
-    (_full, prefix, targetRaw, rest) => {
-      const rewritten = rewriteLinkTarget(targetRaw, sourceRepoPath);
-      return `${prefix}${rewritten}${rest}`;
-    }
-  );
-
-  return out;
+  return rewriteMarkdownLinks(content, {
+    sourceRepoPath,
+    blobBase,
+    resolveSyncedRoute,
+  });
 }
 
 // Exported for unit testing (see scripts/sync-hive-docs.test.ts).

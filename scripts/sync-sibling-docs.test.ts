@@ -98,7 +98,7 @@ describe("rewriteLinks", () => {
   it("sends other relative links to the file's own repo", () => {
     const tutorial = spek.files.find(f => f.target === "getting-started.md")!;
     expect(rewriteLinks("[x](../foo.md)", spek, tutorial)).toBe(
-      "[x](https://github.com/hivecommons/spektacular-website/blob/main/../foo.md)"
+      "[x](https://github.com/hivecommons/spektacular-website/blob/main/src/content/foo.md)"
     );
     expect(rewriteLinks("[lic](LICENSE)", spek)).toBe(
       "[lic](https://github.com/hivecommons/spektacular/blob/main/LICENSE)"
@@ -145,5 +145,57 @@ describe("rewriteLinks", () => {
   it("leaves absolute and anchor image sources alone", () => {
     const src = "![a](https://x.y/a.png) ![b](/img/b.png)";
     expect(rewriteLinks(src, spek)).toBe(src);
+  });
+
+  it("resolves ../ links against the source file's directory", () => {
+    const kb = spek.files.find(f => f.target === "knowledge-base.md")!;
+    expect(rewriteLinks("[readme](../README.md#install)", spek, kb)).toBe(
+      "[readme](/docs/spektacular/readme#install)"
+    );
+    expect(rewriteLinks("[cmd](../cmd/main.go)", spek, kb)).toBe(
+      "[cmd](https://github.com/hivecommons/spektacular/blob/main/cmd/main.go)"
+    );
+    expect(rewriteLinks("[sib](./other.md)", spek, kb)).toBe(
+      "[sib](https://github.com/hivecommons/spektacular/blob/main/docs/other.md)"
+    );
+  });
+
+  it("keeps a ?query suffix and still routes synced pages", () => {
+    expect(
+      rewriteLinks("[kb](docs/knowledge-base.md?plain=1#tags)", spek)
+    ).toBe("[kb](/docs/spektacular/knowledge-base?plain=1#tags)");
+    expect(rewriteLinks("[lic](LICENSE?plain=1)", spek)).toBe(
+      "[lic](https://github.com/hivecommons/spektacular/blob/main/LICENSE?plain=1)"
+    );
+  });
+
+  it("rewrites reference-style link definitions", () => {
+    const kb = spek.files.find(f => f.target === "knowledge-base.md")!;
+    const md =
+      'See [readme] and [cmd].\n\n[readme]: ../README.md\n[cmd]: ../cmd/main.go "entry"\n[site]: https://spektacular.dev\n';
+    expect(rewriteLinks(md, spek, kb)).toBe(
+      'See [readme] and [cmd].\n\n[readme]: /docs/spektacular/readme\n[cmd]: https://github.com/hivecommons/spektacular/blob/main/cmd/main.go "entry"\n[site]: https://spektacular.dev\n'
+    );
+  });
+
+  it("resolves ../ and keeps ?query on raw image sources", () => {
+    const kb = spek.files.find(f => f.target === "knowledge-base.md")!;
+    expect(rewriteLinks("![d](../assets/d.svg?raw=1)", spek, kb)).toBe(
+      "![d](https://raw.githubusercontent.com/hivecommons/spektacular/main/assets/d.svg?raw=1)"
+    );
+  });
+
+  it("rewrites inline links with a title", () => {
+    expect(rewriteLinks('[kb](docs/knowledge-base.md "KB")', spek)).toBe(
+      '[kb](/docs/spektacular/knowledge-base "KB")'
+    );
+  });
+
+  it("is idempotent", () => {
+    const kb = spek.files.find(f => f.target === "knowledge-base.md")!;
+    const md =
+      "[a](../README.md) [b](../cmd/main.go) ![c](img.png)\n[d]: ../LICENSE\n";
+    const once = rewriteLinks(md, spek, kb);
+    expect(rewriteLinks(once, spek, kb)).toBe(once);
   });
 });

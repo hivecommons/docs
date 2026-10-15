@@ -15,6 +15,7 @@
  */
 import fs from "fs";
 import path from "path";
+import { rewriteMarkdownLinks } from "./link-rewrite";
 import { normalizeFences } from "./markdown-fences";
 import { convertMdxToMarkdown } from "./mdx-to-markdown";
 import { scrubLegacyBranding } from "./scrub-legacy-branding";
@@ -401,13 +402,17 @@ export function syncedHeader(p: ProjectSync, f: SyncedFile): string {
 }
 
 /**
- * Rewrite links authored for GitHub's file browser:
- *  - a relative link to a markdown file that IS synced here becomes the
- *    site-absolute extension-less route (/docs/<project>/<target-sans-md>)
+ * Rewrite links authored for GitHub's file browser (via the shared
+ * scripts/link-rewrite.ts, also used by sync-hive-docs.ts). Relative targets
+ * are resolved against the source file's directory (`./`, `../`), keeping any
+ * `#fragment` / `?query`:
+ *  - a link to a markdown file that IS synced here becomes the site-absolute
+ *    extension-less route (/docs/<project>/<target-sans-md>)
  *  - any other relative link (source files, directories, unsynced markdown)
  *    becomes an absolute GitHub URL so it keeps working
  *  - relative image sources become raw.githubusercontent URLs
  *  - absolute URLs and pure anchors are left untouched
+ * Inline links and reference-style `[id]: target` definitions are handled.
  */
 export function rewriteLinks(
   content: string,
@@ -422,21 +427,13 @@ export function rewriteLinks(
     );
   }
   const r = f ? fileRepo(p, f) : p;
-  const blobBase = `https://github.com/${r.owner}/${r.repo}/blob/${r.branch}`;
-  const rawBase = `https://raw.githubusercontent.com/${r.owner}/${r.repo}/${r.branch}`;
-
-  return content.replace(
-    /(!?)\[([^\]]*)\]\(([^)\s]+)\)/g,
-    (match, bang: string, text: string, href: string) => {
-      if (/^(https?:|mailto:|#|\/)/i.test(href)) return match;
-      const clean = href.replace(/^\.\//, "");
-      if (bang === "!") return `![${text}](${rawBase}/${clean})`;
-      const [linkPath, anchor] = clean.split("#");
-      const route = syncedRoutes.get(linkPath.toLowerCase());
-      if (route) return `[${text}](${route}${anchor ? `#${anchor}` : ""})`;
-      return `[${text}](${blobBase}/${clean})`;
-    }
-  );
+  return rewriteMarkdownLinks(content, {
+    // Without a file, resolve relative to the repo root.
+    sourceRepoPath: f?.source ?? "README.md",
+    blobBase: `https://github.com/${r.owner}/${r.repo}/blob/${r.branch}`,
+    rawBase: `https://raw.githubusercontent.com/${r.owner}/${r.repo}/${r.branch}`,
+    resolveSyncedRoute: resolved => syncedRoutes.get(resolved.toLowerCase()),
+  });
 }
 
 function rawUrl(r: RepoRef, source: string): string {
