@@ -1,0 +1,1 @@
+- Rewrote the Hive Commons landing page with a plain-language Hive introduction, hub/spoke explanation, and project-fit FAQ.

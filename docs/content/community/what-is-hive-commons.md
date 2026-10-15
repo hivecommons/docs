@@ -1,80 +1,75 @@
 # What is Hive Commons?
 
-**Hive Commons is the umbrella community for Hive** — an AI-agent fleet
-orchestration system that runs governed swarms of coding agents against real
-repositories — and for the family of tools that grew up around it.
+Hive Commons is a family of open source tools for getting real work out of AI coding agents. Hive is the flagship: it runs governed agents against real project work. The rest of the family is listed at the bottom.
 
-Our founding premise: **human judgment is the scarce resource.** Agents are
-tooling. Every decision, every merge, and every identity belongs to a named
-human, and governance is enforced in code rather than in prose.
+## What Hive is
 
-## What Hive does
+Hive is a co-maintainer for your GitHub project that never sleeps. Point it at a repo and it watches the things that pile up — issues, pull requests, failing CI, CVEs, dependabot alerts — and sends AI coding agents (Claude, Copilot, Gemini, Goose...) to deal with them: triage, fixes, reviews, releases. You decide how much it is allowed to do. Humans keep every decision that matters; agents do the chores.
 
-Hive is a control layer for running governed fleets of AI coding agents.
-Agents pick up issues, open pull requests, review code, repair CI, and answer
-contributors — under a six-level maturity model (ACMM, the AI Codebase
-Maturity Model) that decides exactly what they may do and enforces
-it with matching least-privilege GitHub token scopes.
+## "I already use an agent. How is this different?"
 
-- **Hub and spokes.** A single Go binary that runs as a Kubernetes workload, a
-  Docker Compose stack, or Podman Quadlet units. An optional hub coordinates
-  many self-hosted spoke hives, with a public registry and cross-hive
-  leaderboards.
-- **Governance in code.** Trust is dialed up one capability at a time, from
-  advisory-only (L1) through to merging on green CI (L6).
-- **Audited and accountable.** A deterministic pipeline handles filtering,
-  classification, and merge-gating before any LLM sees the work; agents only
-  handle judgment calls, and every action lands in the audit log.
+A terminal agent is a power tool: you hold it, aim it, and it stops when you stop. Hive is the workshop that runs the power tools for you — on three rules the industry is only now discovering:
 
-Hive is used in production by KubeStellar Console, tunaos.org, and Project
-Bluefin; see [ADOPTERS.md](https://github.com/hivecommons/hive/blob/v5/ADOPTERS.md)
-for the current list.
+1. **Short-lived agents.** Every task starts a fresh agent with a clean context and ends it. No "long-running" agent drifting for hours.
+2. **External context.** What the agent needs to know lives outside the model — in your repo, your knowledge base, your audit trail — and is re-injected each time, so nothing is forgotten and nothing is hallucinated from stale memory.
+3. **Prompts driven by deterministic facts.** The instructions an agent gets are templates filled from real data (the issue, the CI log, the diff, the trust level), not hand-tuned prose.
 
-## The project family
+Around that, Hive:
 
-Hive is the orchestration system and the delivery surface for the family.
-Each tool beside it removes a specific piece of friction from working with
-agents, and each is useful on its own.
+- **Picks the work** from your real queue, not from a chat prompt.
+- **Sets the limits in code.** Six trust levels ([ACMM](/docs/hive/acmm-policy-matrix)): L1 advise-only → L6 merge on green CI. Each level gets exactly the GitHub permissions it needs and no more.
+- **Checks before and after.** Deterministic filters decide what an agent may see; gates (tests, coverage, review, security) decide what may land. The model only makes the judgment calls in between.
+- **Writes it all down.** Every action in an audit log, owned by a named human.
+- **Runs around the clock** across many repos and many agents.
+
+Deterministic where it can be, a model only where it must be — that hybrid is what makes the output trustworthy. Same agents you use today — governed, scheduled, scoped and accountable. The payoff: a solo or three-person project keeps up with a busy queue (the boring stuff shifts left), and a new contributor can start on curated work in minutes instead of spending weeks learning the codebase.
+
+## Hub and spoke
+
+- **Spoke** — one running Hive, serving your repo(s). It's where agents actually work. Runs on your Kubernetes cluster, Podman, or Docker Compose.
+- **Hub** — the control plane for many spokes: registers, provisions, upgrades and watches them; fleet view, leaderboards, routes contributor compute to the hives that need it.
+
+A spoke works alone. A hub is how you see and manage a fleet of them.
+
+## Hive the project vs the hosted service
+
+- **Hive the project**: Apache-2.0 code in the [hivecommons/hive](https://github.com/hivecommons/hive) repository. Run it yourself.
+- **Hive the hosted service**: [hive.hivecommons.dev](https://hive.hivecommons.dev) — a hub we operate so you can onboard a spoke without a cluster. Same software, one deployment of it.
+
+## Does Hive fit my project?
+
+**Do I need a paid agent subscription?** No. Hive drives the agent CLIs you already have (Claude, Copilot, Gemini, Goose) *or* any OpenAI-compatible model through its [Model Gateway](/docs/hive/agent-configuration#methods-subscription-clis-vs-self-hosted-inference) (OpenRouter key, no CLI login). Contributors can bring their own.
+
+**Who tells it what to work on?** Your backlog does. The [Governor](/docs/hive/governor) reads your issues/PRs/CI, filters them deterministically (labels, areas, complexity), and only hands agents work you have allowed. You choose the areas (e.g. CI, deps, security, packaging) and the trust level. Nothing is invented.
+
+**We require design discussion before non-trivial PRs.** That is a trust level, not a workaround: [*Measured* mode](/docs/hive/acmm-policy-matrix#policy-modes) = agents may only file findings and proposals as issues — no code, no PRs — so the discussion happens first; *Holdgated* = PRs are opened with a `hold` label and a human must review and release; *Full* (L6) = merge on green. Start at Measured. You never have to move up.
+
+**Can it open PRs to our upstream repo?** Yes, if you install it there. Or run it on a fork ([`upstream_watch`](https://github.com/hivecommons/hive/blob/v5/src/docs/upstream-watch.md) keeps the fork current) and push reviewed PRs upstream yourself.
+
+**Do maintainers have to run it?** A maintainer configures it (or uses the hosted hub). Optionally, outside contributors can work your curated queue through Hive's [contributor lane](/docs/hive/contributor-relay) with their own models, under your prompts and limits, without repo permissions.
+
+**We already use AI PR reviewers (Copilot, cubic).** Keep them. Hive isn't a reviewer — it's the thing that does the maintenance work (triage, fixes, CI repair, deps, CVEs) that then gets reviewed.
+
+**Our AI policy needs an "Assisted-by" trailer.** [`governor.attribution_trailer`](/docs/hive/governor) (default on) stamps AI-assistance attribution on every commit.
+
+**Showcase in 5 steps:** fork → pick one clear issue → set Hive to Holdgated on that area → review the PR it opens → push upstream if you like it. That is the intended first run.
+
+## The rest of the family
 
 | Project | What it does | Docs |
 |---|---|---|
-| [**Hive**](https://github.com/hivecommons/hive) — flagship | A control layer for running governed fleets of AI coding agents against real repositories. | [Hive docs](/docs/hive/overview/introduction) |
-| [**Spektacular (Spek)**](https://github.com/hivecommons/spektacular) — newest member | Spec-driven development for AI coding agents. A markdown spek becomes a reviewed plan and an agent-driven implementation, each step a resumable state machine. | [Spektacular docs](/docs/spektacular/overview/introduction) · [spektacular.dev](https://spektacular.dev) |
+| [**Hive**](https://github.com/hivecommons/hive) — flagship | Governed agents that work real GitHub queues. | [Hive docs](/docs/hive/overview/introduction) |
+| [**Spektacular (Spek)**](https://github.com/hivecommons/spektacular) | Spec-driven development: markdown spek → reviewed plan → agent implementation. | [Spektacular docs](/docs/spektacular/overview/introduction) · [spektacular.dev](https://spektacular.dev) |
 | [**hotshot**](https://github.com/hivecommons/hotshot) | Screenshots that land directly in an AI coding assistant's terminal. | [hotshot docs](/docs/hotshot/overview/introduction) |
 | [**pluk**](https://github.com/hivecommons/pluk) | Structured event streaming for tmux sessions running AI coding agents. | [pluk docs](/docs/pluk/overview/introduction) |
 | [**promptargs**](https://github.com/hivecommons/promptargs) | Template expansion for prompts across Claude Code, Copilot, Goose, Bob, and others. | [promptargs docs](/docs/promptargs/overview/introduction) |
 | [**rationguard**](https://github.com/hivecommons/rationguard) | Detects and rebuts rationalization patterns in agent output. | [rationguard docs](/docs/rationguard/overview/introduction) |
-| [**dibs**](https://github.com/hivecommons/dibs) | A contributor attribution layer for the AI-agent era. Your idea, your credit, their code. | [README](https://github.com/hivecommons/dibs#readme) |
+| [**dibs**](https://github.com/hivecommons/dibs) | Contributor attribution for the AI-agent era: your idea, your credit, their code. | [README](https://github.com/hivecommons/dibs#readme) |
 
-### How the pieces fit
+## Where next
 
-Spek handles **one feature at a time**: spec → plan → implement, with
-a human review between each step. Hive is where that work is **scaled up** —
-it orchestrates fleets of agents across repositories with the governance and
-audit trail that running agents at that scale demands. A Spek workflow
-is the unit of work a fleet orchestrator schedules. hotshot, pluk, promptargs,
-rationguard and dibs sit alongside both, making the individual agent session
-more observable, more reproducible, and properly attributed.
-
-## An open community
-
-Every repository in the organization is Apache 2.0 licensed, requires DCO
-sign-off on every commit, and follows the CNCF Code of Conduct. Hive is
-maintained by a Maintainer Committee spanning multiple organizations, with a
-documented contributor ladder and explicit governance for AI-agent
-contributions. The Commons lets contributors subscribe to multiple hives, rank
-where their compute should go, and route work by `ranked`, `spread`, or
-`neediest` strategies. Hive Commons has applied for the
-[CNCF Sandbox](https://github.com/cncf/sandbox/issues/516).
-
-- [Governance](https://github.com/hivecommons/.github/blob/main/GOVERNANCE.md) · [Maintainers](https://github.com/hivecommons/.github/blob/main/MAINTAINERS.md) · [Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md) · [Security policy](https://github.com/hivecommons/.github/blob/main/SECURITY.md)
-- **Mailing list:** [hivecommons-dev@googlegroups.com](https://hivecommons.dev/join) — joining adds the community meeting to your calendar
-- **Community meeting:** every other Thursday, 10:00 AM ET — [meeting page](/docs/community/meetings) · [agenda and notes](https://hivecommons.dev/agenda) · [recordings](https://hivecommons.dev/tv)
-- **Chat:** [Discord](https://hivecommons.dev/discord)
-- **Website:** [hivecommons.dev](https://hivecommons.dev)
-
-## Is your project a fit?
-
-If you maintain an open source project that removes friction from working
-with AI coding agents and you share these values, we'd like to hear from you.
-See [Join Hive Commons](/docs/community/join-hive-commons).
+- [Getting started](/docs/hive/getting-started)
+- [Hive introduction](/docs/hive/overview/introduction)
+- [Architecture](/docs/hive/architecture)
+- [Join Hive Commons](/docs/community/join-hive-commons)
+- [CNCF Sandbox application](https://github.com/cncf/sandbox/issues/516)
