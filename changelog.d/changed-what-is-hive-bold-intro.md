@@ -1,0 +1,1 @@
+- "What is Hive Commons?" opening: bold emphasis on Hive Commons / Hive / governed agents against real project work (community feedback).
