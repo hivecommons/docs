@@ -17,7 +17,7 @@ A terminal agent is a power tool: you hold it, aim it, and it stops when you sto
 Around that, Hive:
 
 - **Picks the work** from your real queue, not from a chat prompt.
-- **Sets the limits in code.** Six trust levels ([ACMM](/docs/hive/acmm-policy-matrix)): L1 advise-only → L6 merge on green CI. Each level gets exactly the GitHub permissions it needs and no more.
+- **Sets the limits in code.** Six trust levels from the **AI Codebase Maturity Model (ACMM)** — a framework for how much autonomy a codebase is ready to give agents ([levels](/docs/hive/acmm-policy-matrix) · [paper](https://arxiv.org/abs/2604.09388)): L1 advise-only → L6 merge on green CI. Each level gets exactly the GitHub permissions it needs and no more.
 - **Checks before and after.** Deterministic filters decide what an agent may see; gates (tests, coverage, review, security) decide what may land. The model only makes the judgment calls in between.
 - **Writes it all down.** Every action in an audit log, owned by a named human.
 - **Runs around the clock** across many repos and many agents.
