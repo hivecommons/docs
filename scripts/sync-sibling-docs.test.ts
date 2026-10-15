@@ -129,9 +129,13 @@ describe("rewriteLinks", () => {
   });
 
   it("uses the file's own repo for image sources of website-sourced pages", () => {
+    // Resolved against the page's own directory, as GitHub would.
     const tutorial = spek.files.find(f => f.target === "getting-started.md")!;
     expect(rewriteLinks("![shot](img/shot.png)", spek, tutorial)).toBe(
-      "![shot](https://raw.githubusercontent.com/hivecommons/spektacular-website/main/img/shot.png)"
+      "![shot](https://raw.githubusercontent.com/hivecommons/spektacular-website/main/src/content/tutorials/img/shot.png)"
+    );
+    expect(rewriteLinks("![shot](../../img/shot.png)", spek, tutorial)).toBe(
+      "![shot](https://raw.githubusercontent.com/hivecommons/spektacular-website/main/src/img/shot.png)"
     );
   });
 
