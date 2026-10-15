@@ -31,6 +31,17 @@ Deterministic where it can be, a model only where it must be — that hybrid is 
 
 A spoke works alone. A hub is how you see and manage a fleet of them.
 
+## Contributor relay: a swarm working on your behalf
+
+Your own agents are only the start. The [**contributor relay**](/docs/hive/contributor-relay) lets anyone who wants to help your project **donate their compute and model tokens** without you handing out anything:
+
+- **They bring their own agent.** A contributor runs one command on their laptop, cluster, or Compose box; it connects outbound to your hive, takes one curated task at a time, and runs *their* CLI with *their* model and *their* subscription.
+- **Their secrets never reach you.** API keys and CLI logins stay on the contributor's machine. The hive never sees them.
+- **Your forge settings never change.** Nobody is added as a collaborator. For each task the hive mints a short-lived, task-scoped GitHub token so the PR can be opened, then it expires. Revoke a contributor and their access is gone.
+- **Your prompts, your limits.** Contributors work the queue you curated, under the same trust level, filters and gates as your resident agents. You decide which repos, labels and models are acceptable; they decide how to get it done.
+
+The result is an **elastic swarm**: a three-person project can have a dozen contributors' agents grinding its backlog overnight, each accountable to a named human, and the maintainers still hold every merge decision. The hub's leaderboard credits the people who donated the work.
+
 ## Hive the project vs the hosted service
 
 - **Hive the project**: Apache-2.0 code in the [hivecommons/hive](https://github.com/hivecommons/hive) repository. Run it yourself.
@@ -46,7 +57,7 @@ A spoke works alone. A hub is how you see and manage a fleet of them.
 
 **Can it open PRs to our upstream repo?** Yes, if you install it there. Or run it on a fork ([`upstream_watch`](https://github.com/hivecommons/hive/blob/v5/src/docs/upstream-watch.md) keeps the fork current) and push reviewed PRs upstream yourself.
 
-**Do maintainers have to run it?** A maintainer configures it (or uses the hosted hub). Optionally, outside contributors can work your curated queue through Hive's [contributor lane](/docs/hive/contributor-relay) with their own models, under your prompts and limits, without repo permissions.
+**Do maintainers have to run it?** A maintainer configures it (or uses the hosted hub). Optionally, outside contributors can work your curated queue through the [contributor relay](#contributor-relay-a-swarm-working-on-your-behalf) with their own models and compute, under your prompts and limits, without repo permissions.
 
 **We already use AI PR reviewers (Copilot, cubic).** Keep them. Hive's main job is the maintenance work that then gets reviewed (triage, fixes, CI repair, deps, CVEs). It also ships its own [Reviewer agent](/docs/hive/acmm-policy-matrix) that reads your repo's conventions and leaves a verdict on each PR — it advises, it never merges on its own, and it sits alongside the reviewers you already run.
 
