@@ -11,3 +11,18 @@ Spektacular (Spek) is Hive Commons' spec-driven workflow tool; the specs it prod
 ## Infrastructure thanks
 
 Hive Commons thanks Akamai (Linode), Oracle Cloud (OKE), Cloudflare, GitHub Copilot and Bluehost.
+
+## Docs
+
+- [Hive](https://docs.hivecommons.dev/docs/hive/overview/introduction): autonomous AI agent fleets for your repositories
+- [hotshot](https://docs.hivecommons.dev/docs/hotshot/overview/introduction): screenshots straight into your AI coding terminal
+- [pluk](https://docs.hivecommons.dev/docs/pluk/overview/introduction): pub-sub event streaming for AI agent tmux sessions
+- [rationguard](https://docs.hivecommons.dev/docs/rationguard/overview/introduction): detect and rebut rationalization patterns in AI agent output
+- [promptargs](https://docs.hivecommons.dev/docs/promptargs/overview/introduction): template expansion for AI prompts
+- [dibs](https://docs.hivecommons.dev/docs/dibs/overview/introduction): claim ideas so contributors get credit when agents implement them
+- [Spektacular (Spek)](https://docs.hivecommons.dev/docs/spektacular/overview/introduction): spec-driven development for AI coding agents
+
+## Community
+
+- [What is Hive Commons](https://docs.hivecommons.dev/docs/community/what-is-hive-commons)
+- [Join Hive Commons](https://docs.hivecommons.dev/docs/community/join-hive-commons)
