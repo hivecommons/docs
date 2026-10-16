@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { rewriteLinkTarget, rewriteLinks } from "./sync-hive-docs";
+import {
+  resolveSyncTarget,
+  rewriteLinkTarget,
+  rewriteLinks,
+} from "./sync-hive-docs";
 
 // The source file being synced, expressed as its real repo path. Links inside
 // the content are resolved relative to this file's directory.
@@ -201,5 +205,42 @@ describe("sync-hive-docs.ts — sync-root prefix drift guard", () => {
     // migration). Widen if a legitimate reason to reference `v2/docs`
     // ever returns.
     expect(SOURCE).not.toContain("v2/docs");
+  });
+});
+
+describe("resolveSyncTarget", () => {
+  const root = "/site/docs/content/hive";
+
+  it("joins a plain target under the root", () => {
+    expect(resolveSyncTarget(root, "architecture.md")).toBe(
+      "/site/docs/content/hive/architecture.md"
+    );
+  });
+
+  it("joins a nested target under the root", () => {
+    expect(resolveSyncTarget(root, "adr/0001.md")).toBe(
+      "/site/docs/content/hive/adr/0001.md"
+    );
+  });
+
+  it.each(["../escape.md", "adr/../../escape.md"])(
+    "refuses %s, which escapes the root",
+    target => {
+      expect(() => resolveSyncTarget(root, target)).toThrow(
+        `refusing to write outside Hive docs root: ${target}`
+      );
+    }
+  );
+
+  it("refuses a sibling directory that shares the root prefix", () => {
+    expect(() => resolveSyncTarget(root, "../hive-evil/x.md")).toThrow(
+      "refusing to write outside Hive docs root: ../hive-evil/x.md"
+    );
+  });
+
+  it.each(["", "."])("refuses the root itself (%j)", target => {
+    expect(() => resolveSyncTarget(root, target)).toThrow(
+      "refusing to write outside Hive docs root"
+    );
   });
 });

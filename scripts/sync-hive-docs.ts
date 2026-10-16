@@ -220,14 +220,20 @@ async function fetchText(url: string): Promise<string> {
   return response.text();
 }
 
+/** Resolve a sync target under docsRoot, refusing anything that escapes it. */
+export function resolveSyncTarget(root: string, target: string): string {
+  const targetPath = path.join(root, target);
+  if (!targetPath.startsWith(root + path.sep)) {
+    throw new Error(`refusing to write outside Hive docs root: ${target}`);
+  }
+  return targetPath;
+}
+
 async function main() {
   for (const file of files) {
     const target = file.target || file.source;
     const sourceURL = `${rawBase}/${file.source}`;
-    const targetPath = path.join(docsRoot, target);
-    if (!targetPath.startsWith(docsRoot + path.sep)) {
-      throw new Error(`refusing to write outside Hive docs root: ${target}`);
-    }
+    const targetPath = resolveSyncTarget(docsRoot, target);
     const content = await fetchText(sourceURL);
     // Rewrite GitHub-relative links so they resolve on the docs site.
     const overlaid = applyLocalHiveOverlays(content, file.source);
