@@ -100,6 +100,35 @@ describe("sitemap generated from fixture content", () => {
     expect(byUrl.has(`${SITE_URL}/docs/hive/unlinked/page`)).toBe(false);
   });
 
+  it("falls back to the current time when a linked file cannot be stat'ed", () => {
+    fixtureRoot = fs.mkdtempSync(path.join(realCwd, ".sitemap-stat-"));
+    const archPath = write("docs/content/hive/architecture.md");
+    vi.spyOn(process, "cwd").mockReturnValue(fixtureRoot);
+    const realStat = fs.statSync;
+    vi.spyOn(fs, "statSync").mockImplementation(((
+      p: fs.PathLike,
+      ...rest: unknown[]
+    ) => {
+      if (String(p) === archPath) {
+        throw Object.assign(new Error("EACCES"), { code: "EACCES" });
+      }
+      return (realStat as (...a: unknown[]) => fs.Stats)(p, ...rest);
+    }) as typeof fs.statSync);
+
+    const before = Date.now();
+    const entries = sitemap();
+    const after = Date.now();
+    const arch = entries.find(
+      entry => entry.url === `${SITE_URL}/docs/hive/overview/architecture`
+    );
+
+    expect(arch).toBeDefined();
+    expect(arch?.lastModified).toBeInstanceOf(Date);
+    const stamp = (arch?.lastModified as Date).getTime();
+    expect(stamp).toBeGreaterThanOrEqual(before);
+    expect(stamp).toBeLessThanOrEqual(after);
+  });
+
   it("omits generated routes for missing content while retaining project roots", () => {
     fixtureRoot = fs.mkdtempSync(path.join(realCwd, ".sitemap-empty-"));
     vi.spyOn(process, "cwd").mockReturnValue(fixtureRoot);

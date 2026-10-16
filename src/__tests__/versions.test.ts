@@ -111,6 +111,19 @@ describe("getVersionFromBranch", () => {
   it("returns null for docs/* branches with no matching version entry", () => {
     expect(getVersionFromBranch("docs/9.9.9")).toBeNull();
   });
+
+  it("maps hive release branches to their version keys", () => {
+    // v5 feeds the `stable` channel and is the sync-hive-docs default ref;
+    // if it stops resolving, the version selector loses its default entry.
+    expect(getVersionFromBranch("v5")).toBe("latest");
+    expect(getVersionFromBranch("v6")).toBe("v6");
+    expect(getVersionFromBranch("v4")).toBe("v4");
+  });
+
+  it("maps docs/<version-key> branches to the version key", () => {
+    expect(getVersionFromBranch("docs/v6")).toBe("v6");
+    expect(getVersionFromBranch("docs/latest")).toBe("latest");
+  });
 });
 
 describe("isVersionBranch", () => {
