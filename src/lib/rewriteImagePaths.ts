@@ -35,7 +35,10 @@ export function rewriteRelativeImagePaths(
       }
       // Pure string normalisation (this module may run in the browser).
       const segments: string[] = [];
-      const parts = [...(baseDir ? baseDir.split("/") : []), ...trimmed.split("/")];
+      const parts = [
+        ...(baseDir ? baseDir.split("/") : []),
+        ...trimmed.split("/"),
+      ];
       for (const part of parts) {
         if (part === "" || part === ".") continue;
         if (part === "..") {

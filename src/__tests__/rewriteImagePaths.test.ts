@@ -83,7 +83,9 @@ describe("rewriteRelativeImagePaths", () => {
   it("leaves ../ that escapes docs/content unchanged", () => {
     const md = "![logo](../../../etc/logo.png)";
     expect(rewriteRelativeImagePaths(md, "hive/guides")).toBe(md);
-    expect(rewriteRelativeImagePaths("![x](../x.png)", "")).toBe("![x](../x.png)");
+    expect(rewriteRelativeImagePaths("![x](../x.png)", "")).toBe(
+      "![x](../x.png)"
+    );
   });
 
   it("preserves a double-quoted title", () => {
