@@ -17,9 +17,10 @@ If that describes your project, we invite you to propose joining the family.
 - **Maintained.** At least one active maintainer willing to show up at the
   biweekly community meeting while the project settles in.
 
-Projects do not need to depend on Hive. hotshot, pluk, promptargs and dibs are
-all useful entirely on their own — they belong here because they solve
-adjacent problems for the same people.
+Projects do not need to depend on Hive. hotshot, pluk, promptargs, dibs and
+Spektacular are all useful entirely on their own, and rationguard needs only
+pluk — they belong here because they solve adjacent problems for the same
+people.
 
 ## What you get
 

@@ -75,7 +75,7 @@ The result is an **elastic swarm**: a three-person project can have a dozen cont
 | [**pluk**](https://github.com/hivecommons/pluk) | Structured event streaming for tmux sessions running AI coding agents. | [pluk docs](/docs/pluk/overview/introduction) |
 | [**promptargs**](https://github.com/hivecommons/promptargs) | Template expansion for prompts across Claude Code, Copilot, Goose, Bob, and others. | [promptargs docs](/docs/promptargs/overview/introduction) |
 | [**rationguard**](https://github.com/hivecommons/rationguard) | Detects and rebuts rationalization patterns in agent output. | [rationguard docs](/docs/rationguard/overview/introduction) |
-| [**dibs**](https://github.com/hivecommons/dibs) | Contributor attribution for the AI-agent era: your idea, your credit, their code. | [README](https://github.com/hivecommons/dibs#readme) |
+| [**dibs**](https://github.com/hivecommons/dibs) | Contributor attribution for the AI-agent era: your idea, your credit, their code. | [dibs docs](/docs/dibs/overview/introduction) |
 
 ## Where next
 
