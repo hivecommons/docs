@@ -242,3 +242,27 @@ describe("convertMdxToMarkdown — options and frontmatter fallbacks", () => {
     expect(out.notes).toEqual([]);
   });
 });
+
+describe("convertMdxToMarkdown — linked images", () => {
+  it("rewrites a linked image as an image and the enclosing link as a link", () => {
+    const r = convertMdxToMarkdown(
+      "---\ntitle: T\n---\n\n[![Badge](/images/badge.png)](/docs/guide)\n",
+      { siteBase: "https://example.dev", rewriteImage: s => `RAW${s}` }
+    );
+    expect(r.images).toEqual(["/images/badge.png"]);
+    expect(r.markdown).toContain(
+      "[![Badge](RAW/images/badge.png)](https://example.dev/docs/guide)"
+    );
+  });
+
+  it("still rewrites a plain image and a plain link independently", () => {
+    const r = convertMdxToMarkdown(
+      "See [guide](/docs/guide) and ![solo](/images/solo.png)\n",
+      { siteBase: "https://example.dev", rewriteImage: s => `RAW${s}` }
+    );
+    expect(r.images).toEqual(["/images/solo.png"]);
+    expect(r.markdown).toContain(
+      "See [guide](https://example.dev/docs/guide) and ![solo](RAW/images/solo.png)"
+    );
+  });
+});

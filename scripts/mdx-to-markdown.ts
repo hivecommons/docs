@@ -314,19 +314,20 @@ export function convertMdxToMarkdown(
       notes.push(`removed inline tag ${m.trim()} (<${name}>)`);
       return "";
     });
-    // Links and images.
+    // Images first so a linked image is rewritten before the enclosing link.
     s = s.replace(
-      /(!?)\[([^\]]*)\]\(([^)\s]+)((?:\s+"[^"]*")?)\)/g,
-      (m, bang, alt, href, tail) => {
-        if (bang === "!" && href.startsWith(imagePrefix)) {
-          images.push(href);
-          return `![${alt}](${rewriteImage(href)}${tail})`;
-        }
-        if (bang !== "!" && href.startsWith("/")) {
-          return `[${alt}](${siteBase}${href}${tail})`;
-        }
-        return m;
+      /!\[([^\]]*)\]\(([^)\s]+)((?:\s+"[^"]*")?)\)/g,
+      (m, alt, href, tail) => {
+        if (!href.startsWith(imagePrefix)) return m;
+        images.push(href);
+        return `![${alt}](${rewriteImage(href)}${tail})`;
       }
+    );
+    // Links; the text may be an already-rewritten image.
+    s = s.replace(
+      /(?<!!)\[((?:!\[[^\]]*\]\([^)]*\)|[^\]])*)\]\(([^)\s]+)((?:\s+"[^"]*")?)\)/g,
+      (m, text, href, tail) =>
+        href.startsWith("/") ? `[${text}](${siteBase}${href}${tail})` : m
     );
     // Stray braces would be parsed as MDX expressions.
     s = s.replace(/[{}]/g, c => (c === "{" ? "&#123;" : "&#125;"));

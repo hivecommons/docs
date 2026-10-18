@@ -1,0 +1,1 @@
+- MDX-to-Markdown sync now rewrites a linked image (`[![alt](/images/x.png)](/docs/...)`) as an image plus a link, so the asset is self-hosted and the link target points at the sibling site (hivecommons/docs#368).
