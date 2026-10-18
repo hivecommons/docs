@@ -19,7 +19,11 @@ export function rewriteRelativeImagePaths(
   return content.replace(
     /!\[([^\]]*)\]\(([^)]+)\)/g,
     (match, alt: string, src: string) => {
-      const trimmed = src.trim();
+      const raw = src.trim();
+      // Split an optional CommonMark title (` "..."` or ` '...'`) off the destination.
+      const titleMatch = /^(\S+)(\s+(?:"[^"]*"|'[^']*'))$/.exec(raw);
+      const trimmed = titleMatch ? titleMatch[1] : raw;
+      const title = titleMatch ? titleMatch[2] : "";
       // Leave absolute URLs, absolute paths, data URIs, and anchor-only refs unchanged.
       if (
         trimmed.startsWith("/") ||
@@ -29,11 +33,20 @@ export function rewriteRelativeImagePaths(
       ) {
         return match;
       }
-      const normalised = trimmed.replace(/^\.\//, "");
-      const apiPath = baseDir
-        ? `/docs-images/${baseDir}/${normalised}`
-        : `/docs-images/${normalised}`;
-      return `![${alt}](${apiPath})`;
+      // Pure string normalisation (this module may run in the browser).
+      const segments: string[] = [];
+      const parts = [...(baseDir ? baseDir.split("/") : []), ...trimmed.split("/")];
+      for (const part of parts) {
+        if (part === "" || part === ".") continue;
+        if (part === "..") {
+          // Escapes docs/content: leave the original reference unchanged.
+          if (segments.length === 0) return match;
+          segments.pop();
+        } else {
+          segments.push(part);
+        }
+      }
+      return `![${alt}](/docs-images/${segments.join("/")}${title})`;
     }
   );
 }

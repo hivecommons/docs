@@ -73,4 +73,34 @@ describe("rewriteRelativeImagePaths", () => {
     const twice = rewriteRelativeImagePaths(once, "console");
     expect(twice).toBe(once);
   });
+
+  it("resolves ../ against baseDir", () => {
+    expect(
+      rewriteRelativeImagePaths("![logo](../images/logo.png)", "hive/guides")
+    ).toBe("![logo](/docs-images/hive/images/logo.png)");
+  });
+
+  it("leaves ../ that escapes docs/content unchanged", () => {
+    const md = "![logo](../../../etc/logo.png)";
+    expect(rewriteRelativeImagePaths(md, "hive/guides")).toBe(md);
+    expect(rewriteRelativeImagePaths("![x](../x.png)", "")).toBe("![x](../x.png)");
+  });
+
+  it("preserves a double-quoted title", () => {
+    expect(
+      rewriteRelativeImagePaths('![logo](images/logo.png "Logo")', "hive")
+    ).toBe('![logo](/docs-images/hive/images/logo.png "Logo")');
+  });
+
+  it("preserves a single-quoted title", () => {
+    expect(
+      rewriteRelativeImagePaths("![logo](./images/logo.png 'Logo')", "hive")
+    ).toBe("![logo](/docs-images/hive/images/logo.png 'Logo')");
+  });
+
+  it("still rewrites a plain relative path without a title", () => {
+    expect(rewriteRelativeImagePaths("![a](images/a.png)", "")).toBe(
+      "![a](/docs-images/images/a.png)"
+    );
+  });
 });

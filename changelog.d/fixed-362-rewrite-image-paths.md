@@ -1,0 +1,1 @@
+- Fixed `rewriteRelativeImagePaths` so `../` image references resolve inside docs/content (instead of 403) and titled images (`![alt](img.png "Title")`) no longer 404.
