@@ -124,6 +124,33 @@ describe("LanguageSwitcher dropdown variant", () => {
     expect(screen.queryByRole("listbox")).toBeNull();
   });
 
+  it("logs and recovers when navigation throws, leaving the menu open", async () => {
+    const boom = new Error("router exploded");
+    replaceMock.mockImplementation(() => {
+      throw boom;
+    });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      render(<LanguageSwitcher />);
+      fireEvent.click(trigger());
+      fireEvent.click(screen.getByText(localeNames.ja));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(200);
+      });
+
+      expect(replaceMock).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledWith("Failed to change language:", boom);
+      // The catch arm skips setIsOpen(false); finally still clears the spinner.
+      expect(screen.getByRole("listbox")).toBeTruthy();
+      expect(screen.queryByText("Switching...")).toBeNull();
+      expect(trigger().hasAttribute("disabled")).toBe(false);
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
   it("closes without navigating when the current locale is re-selected", () => {
     render(<LanguageSwitcher />);
     fireEvent.click(trigger());
