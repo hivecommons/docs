@@ -5,6 +5,10 @@ on:
     branches: [main]
   push:
     branches: [main]
+  # Dispatched by meeting-recordings-refresh.yml: PRs it opens with GITHUB_TOKEN
+  # never get pull_request runs, so it triggers this workflow on the PR branch
+  # instead (#335, #337).
+  workflow_dispatch:
 
 permissions: read-all # default read; writes scoped to job below
 

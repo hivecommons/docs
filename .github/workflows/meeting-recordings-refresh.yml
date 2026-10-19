@@ -8,16 +8,21 @@ on:
 permissions:
   contents: read
 
+env:
+  REFRESH_BRANCH: automation/meeting-recordings-refresh
+  # Workflows whose jobs are the required status checks on main. Each must
+  # declare `on: workflow_dispatch` so this run can trigger them on the PR
+  # branch (see "Trigger required checks" below).
+  REQUIRED_CHECK_WORKFLOWS: build.yml typecheck.yml vitest.yml npm-audit.yml
+
 jobs:
   refresh:
     permissions:
+      actions: write # dispatch the CI workflows on the PR branch
       contents: write
       pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      # `secrets.*` is not allowed in `if:`; expose presence via env instead.
-      HAS_APP_SECRETS: ${{ secrets.MEETING_REFRESH_APP_ID != '' && secrets.MEETING_REFRESH_APP_PRIVATE_KEY != '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -32,24 +37,19 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npx tsx scripts/update-meeting-recordings.ts
-      - name: Mint App token so the PR triggers pull_request workflows
-        id: app-token
-        # Until MEETING_REFRESH_APP_ID / MEETING_REFRESH_APP_PRIVATE_KEY are
-        # provisioned this step is skipped and the PR falls back to GITHUB_TOKEN.
-        if: env.HAS_APP_SECRETS == 'true'
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        with:
-          app-id: ${{ secrets.MEETING_REFRESH_APP_ID }}
-          private-key: ${{ secrets.MEETING_REFRESH_APP_PRIVATE_KEY }}
       - name: Open PR with recording feed snapshot
+        id: pr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          # PRs created with GITHUB_TOKEN never get pull_request runs, so Build and
-          # npm audit silently never report on the head SHA (#293, #296). Use the
-          # App token when provisioned; fall back to GITHUB_TOKEN until then.
-          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          # Pushes and PRs made with GITHUB_TOKEN never create pull_request
+          # runs (#293, #296, #335, #337). Rather than requiring a GitHub App
+          # and two extra secrets, the step below dispatches the CI workflows
+          # on the PR branch; workflow_dispatch runs *are* allowed from
+          # GITHUB_TOKEN and report check-runs on the branch head SHA, which
+          # satisfies the required status checks on main.
+          token: ${{ secrets.GITHUB_TOKEN }}
           signoff: true
-          branch: automation/meeting-recordings-refresh
+          branch: ${{ env.REFRESH_BRANCH }}
           delete-branch: true
           add-paths: data/meeting-recordings.json
           commit-message: "docs: refresh community meeting recordings"
@@ -57,7 +57,28 @@ jobs:
           body: |
             Automated daily refresh of `data/meeting-recordings.json`.
 
+            This PR was opened with `GITHUB_TOKEN`, so GitHub does not start
+            `pull_request` workflows for it. The refresh run instead dispatches
+            Build, TypeScript & Lint Check, Vitest and npm audit on the PR
+            branch; their check-runs land on the head SHA as usual.
+
+            Refresh run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
             The hive sweep merges this PR once CI is green.
+      - name: Trigger required checks on the PR branch
+        # Only after the branch was (re)pushed; a no-op refresh has nothing new
+        # to verify and would just re-run the same checks on the same SHA.
+        if: steps.pr.outputs.pull-request-operation == 'created' || steps.pr.outputs.pull-request-operation == 'updated'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.pr.outputs.pull-request-head-sha }}
+        run: |
+          set -euo pipefail
+          echo "Dispatching required checks on $REFRESH_BRANCH @ $HEAD_SHA"
+          for wf in $REQUIRED_CHECK_WORKFLOWS; do
+            gh workflow run "$wf" --repo "$GITHUB_REPOSITORY" --ref "$REFRESH_BRANCH"
+            echo "  dispatched $wf"
+          done
       - name: Trigger Netlify rebuild
         if: env.NETLIFY_BUILD_HOOK_URL != ''
         env:
