@@ -5,34 +5,58 @@ import sitemap from "../app/sitemap";
 
 const SITE_URL = "https://docs.hivecommons.dev";
 
+const PROJECT_IDS = [
+  "hive",
+  "hotshot",
+  "pluk",
+  "rationguard",
+  "promptargs",
+  "dibs",
+  "spektacular",
+];
+const REDIRECT_ONLY_URLS = [
+  SITE_URL,
+  `${SITE_URL}/en`,
+  `${SITE_URL}/docs`,
+  ...PROJECT_IDS.map(id => `${SITE_URL}/docs/${id}`),
+];
+
 describe("sitemap", () => {
-  it("uses absolute production URLs for marketing and docs landing routes", () => {
+  it("uses absolute production URLs for docs routes", () => {
     const urls = sitemap().map(entry => entry.url);
 
-    expect(urls).toContain(SITE_URL);
-    expect(urls).toContain(`${SITE_URL}/en`);
-    expect(urls).toContain(`${SITE_URL}/docs`);
-    expect(
-      urls.every(url => url.startsWith(`${SITE_URL}/`) || url === SITE_URL)
-    ).toBe(true);
+    expect(urls.every(url => url.startsWith(`${SITE_URL}/docs/`))).toBe(true);
   });
 
-  it("includes project roots and markdown-backed docs routes", () => {
+  it("omits redirect-only URLs", () => {
     const urls = sitemap().map(entry => entry.url);
 
+    expect(urls).not.toEqual(expect.arrayContaining([SITE_URL]));
+    for (const url of REDIRECT_ONLY_URLS) {
+      expect(urls).not.toContain(url);
+    }
+  });
+
+  it("includes canonical targets with carried-over priorities and no duplicates", () => {
+    const entries = sitemap();
+    const urls = entries.map(entry => entry.url);
+    const byUrl = new Map(entries.map(entry => [entry.url, entry]));
+
+    expect(
+      byUrl.get(`${SITE_URL}/docs/community/what-is-hive-commons`)?.priority
+    ).toBe(1.0);
+    for (const project of PROJECT_IDS) {
+      expect(
+        byUrl.get(`${SITE_URL}/docs/${project}/overview/introduction`)?.priority
+      ).toBe(0.9);
+    }
     expect(urls).toEqual(
       expect.arrayContaining([
-        `${SITE_URL}/docs/hive`,
         `${SITE_URL}/docs/hive/overview/architecture`,
         `${SITE_URL}/docs/hive/reference/architecture-decision-records/0001-record-architecture-decisions`,
-        `${SITE_URL}/docs/hotshot`,
-        `${SITE_URL}/docs/pluk`,
-        `${SITE_URL}/docs/rationguard`,
-        `${SITE_URL}/docs/promptargs`,
-        `${SITE_URL}/docs/dibs`,
-        `${SITE_URL}/docs/spektacular`,
       ])
     );
+    expect(new Set(urls).size).toBe(urls.length);
   });
 
   it("includes shared general sections once and omits unlinked file-path routes", () => {
@@ -89,10 +113,9 @@ describe("sitemap generated from fixture content", () => {
     const byUrl = new Map(entries.map(entry => [entry.url, entry]));
     const arch = byUrl.get(`${SITE_URL}/docs/hive/overview/architecture`);
 
-    expect(byUrl.get(SITE_URL)?.priority).toBe(1.0);
-    expect(byUrl.get(`${SITE_URL}/en`)?.changeFrequency).toBe("monthly");
-    expect(byUrl.get(`${SITE_URL}/docs`)?.priority).toBe(0.9);
-    expect(byUrl.get(`${SITE_URL}/docs/hive`)?.priority).toBe(0.9);
+    for (const url of REDIRECT_ONLY_URLS) {
+      expect(byUrl.has(url)).toBe(false);
+    }
     expect(arch?.priority).toBe(0.7);
     expect(arch?.changeFrequency).toBe("weekly");
     expect(arch?.lastModified).toEqual(fs.statSync(archPath).mtime);
@@ -129,28 +152,15 @@ describe("sitemap generated from fixture content", () => {
     expect(stamp).toBeLessThanOrEqual(after);
   });
 
-  it("omits generated routes for missing content while retaining project roots", () => {
+  it("omits generated routes and redirect-only URLs for missing content", () => {
     fixtureRoot = fs.mkdtempSync(path.join(realCwd, ".sitemap-empty-"));
     vi.spyOn(process, "cwd").mockReturnValue(fixtureRoot);
 
-    const entries = sitemap();
+    const urls = sitemap().map(entry => entry.url);
 
-    expect(entries.some(entry => entry.url.includes("/docs/hive/"))).toBe(
-      false
-    );
-    expect(entries.map(entry => entry.url)).toEqual(
-      expect.arrayContaining([
-        SITE_URL,
-        `${SITE_URL}/en`,
-        `${SITE_URL}/docs`,
-        `${SITE_URL}/docs/hive`,
-        `${SITE_URL}/docs/hotshot`,
-        `${SITE_URL}/docs/pluk`,
-        `${SITE_URL}/docs/rationguard`,
-        `${SITE_URL}/docs/promptargs`,
-        `${SITE_URL}/docs/dibs`,
-        `${SITE_URL}/docs/spektacular`,
-      ])
-    );
+    expect(urls.some(url => url.includes("/docs/hive/"))).toBe(false);
+    for (const url of REDIRECT_ONLY_URLS) {
+      expect(urls).not.toContain(url);
+    }
   });
 });

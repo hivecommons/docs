@@ -8,17 +8,28 @@ const SITE_URL = "https://docs.hivecommons.dev";
 
 /** Weekly update frequency for docs content */
 const DOCS_CHANGE_FREQ = "weekly" as const;
-/** Monthly update frequency for marketing pages */
-const MARKETING_CHANGE_FREQ = "monthly" as const;
 
-/** Priority for the homepage */
+/** Priority for the effective site landing page */
 const HOMEPAGE_PRIORITY = 1.0;
-/** Priority for top-level marketing pages */
-const MARKETING_PRIORITY = 0.8;
-/** Priority for docs landing / project root pages */
+/** Priority for project landing pages */
 const DOCS_ROOT_PRIORITY = 0.9;
 /** Priority for individual docs pages */
 const DOCS_PAGE_PRIORITY = 0.7;
+
+/**
+ * `/`, `/en`, `/docs` and `/docs/<project>` only redirect, so the canonical
+ * redirect targets carry their priority instead.
+ */
+const PRIORITY_OVERRIDES = new Map<string, number>([
+  [`${SITE_URL}/docs/community/what-is-hive-commons`, HOMEPAGE_PRIORITY],
+  ...Object.values(PROJECTS).map(
+    project =>
+      [
+        `${SITE_URL}/docs/${project.basePath}/overview/introduction`,
+        DOCS_ROOT_PRIORITY,
+      ] as [string, number]
+  ),
+]);
 
 type PageMapNode = {
   route?: string;
@@ -54,34 +65,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
   const seen = new Set<string>();
 
-  // --- Homepage ---
-  entries.push({
-    url: SITE_URL,
-    lastModified: new Date(),
-    changeFrequency: MARKETING_CHANGE_FREQ,
-    priority: HOMEPAGE_PRIORITY,
-  });
-
-  // --- Marketing / locale pages ---
-  const marketingPages = ["/en"];
-
-  for (const page of marketingPages) {
-    entries.push({
-      url: `${SITE_URL}${page}`,
-      lastModified: new Date(),
-      changeFrequency: MARKETING_CHANGE_FREQ,
-      priority: MARKETING_PRIORITY,
-    });
-  }
-
-  // --- Docs landing page ---
-  entries.push({
-    url: `${SITE_URL}/docs`,
-    lastModified: new Date(),
-    changeFrequency: DOCS_CHANGE_FREQ,
-    priority: DOCS_ROOT_PRIORITY,
-  });
-
   // --- Project-specific docs ---
   const projectIds: ProjectId[] = [
     "hive",
@@ -94,14 +77,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   for (const projectId of projectIds) {
-    // Add project root entry
-    entries.push({
-      url: `${SITE_URL}/docs/${PROJECTS[projectId].basePath}`,
-      lastModified: new Date(),
-      changeFrequency: DOCS_CHANGE_FREQ,
-      priority: DOCS_ROOT_PRIORITY,
-    });
-
     const { pageMap, routeMap, contentPath } = buildPageMap(projectId);
     const projectPrefix = `/docs/${PROJECTS[projectId].basePath}/`;
 
@@ -122,7 +97,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
           path.join(isProjectRoute ? contentPath : docsContentPath, file)
         ),
         changeFrequency: DOCS_CHANGE_FREQ,
-        priority: DOCS_PAGE_PRIORITY,
+        priority: PRIORITY_OVERRIDES.get(url) ?? DOCS_PAGE_PRIORITY,
       });
     }
   }
