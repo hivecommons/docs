@@ -29,6 +29,7 @@ let headerRules: HeaderRule[];
 let rewrites: Rewrite[];
 let redirects: Redirect[];
 let pageExtensions: string[];
+let poweredByHeader: boolean | undefined;
 let siteHeaders: Map<string, string>;
 let csp: Map<string, string[]>;
 
@@ -38,6 +39,7 @@ beforeAll(async () => {
   rewrites = (await config.rewrites!()) as Rewrite[];
   redirects = (await config.redirects!()) as Redirect[];
   pageExtensions = config.pageExtensions!;
+  poweredByHeader = config.poweredByHeader;
 
   const siteWide = headerRules.find(r => r.source === "/(.*)");
   expect(siteWide, "a site-wide header rule for /(.*)").toBeDefined();
@@ -72,6 +74,12 @@ describe("next.config.ts site-wide security headers", () => {
     for (const feature of ["camera", "microphone", "geolocation"]) {
       expect(permissions).toContain(`${feature}=()`);
     }
+  });
+
+  it("does not advertise the framework via x-powered-by", () => {
+    // Next.js defaults poweredByHeader to true; the flag must be set
+    // explicitly to false, not merely left undefined.
+    expect(poweredByHeader).toBe(false);
   });
 
   it("sends HSTS for at least one year with includeSubDomains and preload", () => {

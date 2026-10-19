@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["@/components"],
   },
   pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
+  // Do not advertise the framework on every response (x-powered-by).
+  poweredByHeader: false,
   async headers() {
     // Content-Security-Policy for the docs site.
     // - default-src 'self': blocks all unlisted resource types by default.
