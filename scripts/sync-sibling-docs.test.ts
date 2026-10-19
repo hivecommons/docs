@@ -116,6 +116,18 @@ describe("rewriteLinks", () => {
     );
   });
 
+  it("strips .mdx as well as .md from a synced target's route", () => {
+    const mdx: ProjectSync = {
+      ...spek,
+      files: [
+        { source: "docs/guide.md", target: "guide.mdx", required: false },
+      ],
+    };
+    expect(rewriteLinks("[g](docs/guide.md#top)", mdx)).toBe(
+      "[g](/docs/spektacular/guide#top)"
+    );
+  });
+
   it("matches synced pages case-insensitively", () => {
     expect(rewriteLinks("[kb](Docs/Knowledge-Base.MD)", spek)).toBe(
       "[kb](/docs/spektacular/knowledge-base)"

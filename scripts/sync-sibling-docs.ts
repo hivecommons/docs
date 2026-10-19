@@ -423,7 +423,7 @@ export function rewriteLinks(
   for (const s of p.files) {
     syncedRoutes.set(
       s.source.toLowerCase(),
-      `/docs/${p.project}/${s.target.replace(/\.md$/i, "")}`
+      `/docs/${p.project}/${s.target.replace(/\.mdx?$/i, "")}`
     );
   }
   const r = f ? fileRepo(p, f) : p;
