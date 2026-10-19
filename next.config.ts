@@ -29,8 +29,8 @@ const nextConfig: NextConfig = {
     //   that does not break existing functionality. 'unsafe-eval' is excluded
     //   (not needed by any current dependency). 'wasm-unsafe-eval' allows
     //   the Mermaid WASM renderer.
-    // - style-src 'unsafe-inline': required by Tailwind CSS and inline styles
-    //   injected by Three.js.
+    // - style-src 'unsafe-inline': required by Tailwind CSS and the inline
+    //   <style> blocks Mermaid injects into rendered SVGs.
     // - img-src includes data: for base64-encoded diagrams and blob: for
     //   canvas snapshots; https: covers external avatars/badges in docs content.
     // - connect-src covers the docs search API, GitHub API (for version data),
