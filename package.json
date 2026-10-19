@@ -52,7 +52,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^10",
-    "eslint-config-next": "^16.4.0",
+    "eslint-config-next": "^16.4.2",
     "eslint-plugin-react": "^7.37.5",
     "jsdom": "^30.1.2",
     "markdownlint": "^0.42.0",
