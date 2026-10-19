@@ -1,0 +1,1 @@
+- List ADRs 0018–0024 in the hive docs sidebar and add a test that fails when the ADR sync list and sidebar navigation drift apart.

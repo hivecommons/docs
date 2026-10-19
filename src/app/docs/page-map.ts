@@ -174,6 +174,12 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
         { '0015 CSP style-src scope': 'adr/0015-csp-style-src-scope.md' },
         { '0016 CSP script-src scope': 'adr/0016-csp-script-src-scope.md' },
         { '0017 Podman Quadlet lifecycle': 'adr/0017-podman-quadlet-lifecycle.md' },
+        { '0018 Dashboard design tokens': 'adr/0018-dashboard-design-tokens.md' },
+        { '0019 Escalation over stalling': 'adr/0019-escalation-over-stalling.md' },
+        { '0020 Spek continuous convergence': 'adr/0020-spek-continuous-convergence.md' },
+        { '0022 Opt-in earned Codex reset redemption': 'adr/0022-opt-in-earned-codex-reset-redemption.md' },
+        { '0023 Trusted-author automerge': 'adr/0023-trusted-author-automerge.md' },
+        { '0024 Provider credential lifecycle': 'adr/0024-provider-credential-lifecycle.md' },
       ] },
       { 'Environment variable reference': 'env-vars.md' },
     ]
