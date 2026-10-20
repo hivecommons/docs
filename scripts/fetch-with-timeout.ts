@@ -34,17 +34,14 @@ async function fetchWithDeadline<T>(
 ): Promise<TimedResponse<T>> {
   const controller = new AbortController();
   let timedOut = false;
-  let expire: () => void = () => {};
   // Raced against both the fetch and the body read: the body stream of a
   // fetch stub may ignore the abort signal, and the deadline must hold anyway.
-  const deadline = new Promise<never>((_resolve, reject) => {
-    expire = () => reject(controller.signal.reason);
-  });
+  const { promise: deadline, reject: expire } = Promise.withResolvers<never>();
   deadline.catch(() => {});
   const timer = setTimeout(() => {
     timedOut = true;
     controller.abort();
-    expire();
+    expire(controller.signal.reason);
   }, timeoutMs);
   let response: Response | undefined;
   try {
