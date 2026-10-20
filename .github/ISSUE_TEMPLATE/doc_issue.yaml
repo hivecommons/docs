@@ -12,10 +12,12 @@ body:
         Before opening a new issue, look for an overlapping issue that
         you could contribute to.
 
-        Remember that documentation sources for the website are
-        intended to [also render nicely when viewed directly on
-        GitHub](https://github.com/hivecommons/kubestellar/blob/main/docs/README.md#dual-use-documentation-sources),
-        _to the degree possible_.
+        Most project pages (Hive, hotshot, pluk, rationguard, promptargs,
+        dibs and Spektacular) are synced from each project's own
+        repository at build time — see [How content is
+        sourced](https://github.com/hivecommons/docs#how-content-is-sourced).
+        Fixes to that content land in the project repository; this
+        repository owns site code, navigation and layout.
 
         Here is how you can help us serve you better:
 

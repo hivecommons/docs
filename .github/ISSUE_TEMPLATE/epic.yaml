@@ -40,10 +40,10 @@ body:
     attributes:
       label: Stories
       placeholder: |
-        - [ ] (Example) Add new API group
-        - [ ] (Example) Add Widget API type
-        - [ ] (Example) Add WidgetController
-        - [ ] (Example) **stretch-goal:** Add Widgets to `kubectl kcp` plugin
-        - Out-of-scope (prototype x): Send Widgets to space
+        - [ ] (Example) Add the new section to the sidebar
+        - [ ] (Example) Sync the section's pages from the project repo
+        - [ ] (Example) Index the new pages in search
+        - [ ] (Example) **stretch-goal:** Add a landing page for the section
+        - Out-of-scope: Redesign the site theme
     validations:
       required: false
