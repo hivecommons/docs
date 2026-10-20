@@ -115,7 +115,10 @@ describe("update-meeting-recordings (in-process)", () => {
 
     await runInProcess();
 
-    expect(fetch).toHaveBeenCalledWith(FEED_URL);
+    expect(fetch).toHaveBeenCalledWith(
+      FEED_URL,
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
     expect(logSpy).toHaveBeenCalledWith("meeting recordings: 2");
     const data = readData();
     expect(data.source).toBe(FEED_URL);

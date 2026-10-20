@@ -32,10 +32,9 @@ export async function fetchWithTimeout(
     return await fetchImpl(url, { ...init, signal: controller.signal });
   } catch (error) {
     if (timedOut) {
-      throw new Error(
-        `timed out after ${timeoutMs / 1000}s fetching ${url}`,
-        { cause: error }
-      );
+      throw new Error(`timed out after ${timeoutMs / 1000}s fetching ${url}`, {
+        cause: error,
+      });
     }
     throw error;
   } finally {
