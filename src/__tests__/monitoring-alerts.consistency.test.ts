@@ -8,7 +8,8 @@
 //     (including the `_bucket`/`_sum`/`_count` series of the histogram);
 //   - every label matcher and `by (...)` grouping must use a label that
 //     series carries, and `route` / `status_class` values must be ones
-//     recordApiRequest can produce (ApiRoutes and the fixed status classes);
+//     recordApiRequest can produce (ApiRoutes, and the status_class values the registry
+//     really emits when probed with 2xx/3xx/4xx/5xx/other statuses);
 //   - every rule links a runbook section that exists, and every runbook
 //     section belongs to a rule, so on-call never lands on a missing anchor.
 import { existsSync, readFileSync } from "node:fs";
@@ -21,7 +22,6 @@ const RULES_PATH = join(REPO_ROOT, "monitoring", "docs-api-alerts.yml");
 const RULES_TEXT = readFileSync(RULES_PATH, "utf8");
 
 const RUNBOOK_URL_PREFIX = "https://github.com/hivecommons/docs/blob/main/";
-const STATUS_CLASSES = new Set(["2xx", "3xx", "4xx", "5xx", "other"]);
 const SEVERITIES = new Set(["warning", "critical"]);
 
 interface AlertRule {
@@ -128,14 +128,41 @@ export function exportedSeries(exposition: string): Map<string, Set<string>> {
   return series;
 }
 
-async function emittedSeries(): Promise<Map<string, Set<string>>> {
+/** Distinct values of one label across the exposition. */
+export function labelValues(exposition: string, label: string): Set<string> {
+  const values = new Set<string>();
+  const re = new RegExp(`[{,]${label}="([^"]*)"`, "g");
+  for (const raw of exposition.split("\n")) {
+    if (raw === "" || raw.startsWith("#")) continue;
+    for (const m of raw.matchAll(re)) values.add(m[1]);
+  }
+  return values;
+}
+
+// One status per class statusClass() distinguishes, including the fallthrough.
+const PROBE_STATUSES = [200, 301, 404, 503, 999];
+
+async function emitted(): Promise<{
+  series: Map<string, Set<string>>;
+  statusClasses: Set<string>;
+}> {
   metricsRegistry.resetMetrics();
-  recordApiRequest("search", "GET", 200, 5);
+  for (const status of PROBE_STATUSES) {
+    recordApiRequest("search", "GET", status, 5);
+  }
   try {
-    return exportedSeries(await metricsRegistry.metrics());
+    const exposition = await metricsRegistry.metrics();
+    return {
+      series: exportedSeries(exposition),
+      statusClasses: labelValues(exposition, "status_class"),
+    };
   } finally {
     metricsRegistry.resetMetrics();
   }
+}
+
+async function emittedSeries(): Promise<Map<string, Set<string>>> {
+  return (await emitted()).series;
 }
 
 const rules = parseAlertRules(RULES_TEXT);
@@ -200,7 +227,8 @@ describe("monitoring/docs-api-alerts.yml", () => {
     }
   });
 
-  it("only matches route and status_class values recordApiRequest can produce", () => {
+  it("only matches route and status_class values recordApiRequest can produce", async () => {
+    const { statusClasses } = await emitted();
     const routes = new Set<string>(ApiRoutes);
     for (const rule of rules) {
       for (const ref of metricReferences(rule.expr)) {
@@ -212,8 +240,8 @@ describe("monitoring/docs-api-alerts.yml", () => {
         }
         if ("status_class" in ref.matchers) {
           expect(
-            STATUS_CLASSES.has(ref.matchers.status_class),
-            `${rule.name}: status_class="${ref.matchers.status_class}" is never emitted`
+            statusClasses.has(ref.matchers.status_class),
+            `${rule.name}: status_class="${ref.matchers.status_class}" is never emitted (have ${[...statusClasses].join(", ")})`
           ).toBe(true);
         }
       }
@@ -324,6 +352,12 @@ describe("metricReferences / groupingLabels / exportedSeries", () => {
       groupingLabels("sum by (le, route) (x) + sum without(job) (y)")
     ).toEqual(["le", "route", "job"]);
     expect(groupingLabels("sum by () (x)")).toEqual([]);
+  });
+
+  it("collects distinct label values from the exposition", () => {
+    expect(
+      [...labelValues('m{a="1",b="2"} 1\nm{a="3"} 1\n# m{a="x"} 1', "a")].sort()
+    ).toEqual(["1", "3"]);
   });
 
   it("maps exposition lines to their label names and skips comments", () => {
