@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { fetchWithTimeout } from "./fetch-with-timeout";
+import { fetchTextWithTimeout } from "./fetch-with-timeout";
 
 const DATA_PATH = path.join(process.cwd(), "data", "meeting-recordings.json");
 const FEED_URL =
@@ -124,10 +124,10 @@ async function main() {
   let fetched: Recording[] = [];
 
   try {
-    const response = await fetchWithTimeout(FEED_URL);
+    const response = await fetchTextWithTimeout(FEED_URL);
     if (!response.ok)
       throw new Error(`YouTube feed returned ${response.status}`);
-    fetched = parseFeed(await response.text());
+    fetched = parseFeed(response.body);
   } catch (error) {
     console.warn(
       `meeting recordings feed unavailable; keeping committed data: ${error instanceof Error ? error.message : String(error)}`

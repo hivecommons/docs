@@ -15,7 +15,10 @@
  */
 import fs from "fs";
 import path from "path";
-import { fetchWithTimeout } from "./fetch-with-timeout";
+import {
+  fetchBytesWithTimeout,
+  fetchTextWithTimeout,
+} from "./fetch-with-timeout";
 import { rewriteMarkdownLinks } from "./link-rewrite";
 import { normalizeFences } from "./markdown-fences";
 import { convertMdxToMarkdown } from "./mdx-to-markdown";
@@ -442,15 +445,15 @@ function rawUrl(r: RepoRef, source: string): string {
 }
 
 async function fetchFile(r: RepoRef, source: string): Promise<string | null> {
-  const res = await fetchWithTimeout(rawUrl(r, source));
+  const res = await fetchTextWithTimeout(rawUrl(r, source));
   if (!res.ok) return null;
-  return res.text();
+  return res.body;
 }
 
 async function fetchBinary(r: RepoRef, source: string): Promise<Buffer | null> {
-  const res = await fetchWithTimeout(rawUrl(r, source));
+  const res = await fetchBytesWithTimeout(rawUrl(r, source));
   if (!res.ok) return null;
-  return Buffer.from(await res.arrayBuffer());
+  return res.body;
 }
 
 /**
