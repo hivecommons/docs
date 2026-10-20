@@ -52,6 +52,7 @@ User-visible changes also need a changelog fragment under `changelog.d/`
 offline, set `DOCS_SYNC_OPTIONAL=1` (for example
 `DOCS_SYNC_OPTIONAL=1 npm run build`) to keep the committed content instead.
 CI and Netlify always use the strict behavior.
+Sync fetches time out after 30s by default; set `DOCS_SYNC_FETCH_TIMEOUT_MS` (milliseconds) to change that.
 
 ## Code review requirements
 

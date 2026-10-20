@@ -4,6 +4,7 @@ import {
   rewriteLinkTarget as rewriteSharedLinkTarget,
   rewriteMarkdownLinks,
 } from "./link-rewrite";
+import { fetchWithTimeout } from "./fetch-with-timeout";
 import { normalizeFences } from "./markdown-fences";
 import { scrubLegacyBranding } from "./scrub-legacy-branding";
 
@@ -217,7 +218,7 @@ function applyLocalHiveOverlays(content: string, source: string): string {
 }
 
 async function fetchText(url: string): Promise<string> {
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url);
   if (!response.ok) {
     throw new Error(
       `failed to fetch ${url}: ${response.status} ${response.statusText}`

@@ -1,0 +1,1 @@
+- Prebuild content sync steps now fail fast with a clear "timed out" error instead of hanging the build when a remote host stalls; tune with `DOCS_SYNC_FETCH_TIMEOUT_MS` (default 30000).

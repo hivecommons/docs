@@ -15,6 +15,7 @@
  */
 import fs from "fs";
 import path from "path";
+import { fetchWithTimeout } from "./fetch-with-timeout";
 import { rewriteMarkdownLinks } from "./link-rewrite";
 import { normalizeFences } from "./markdown-fences";
 import { convertMdxToMarkdown } from "./mdx-to-markdown";
@@ -441,13 +442,13 @@ function rawUrl(r: RepoRef, source: string): string {
 }
 
 async function fetchFile(r: RepoRef, source: string): Promise<string | null> {
-  const res = await fetch(rawUrl(r, source));
+  const res = await fetchWithTimeout(rawUrl(r, source));
   if (!res.ok) return null;
   return res.text();
 }
 
 async function fetchBinary(r: RepoRef, source: string): Promise<Buffer | null> {
-  const res = await fetch(rawUrl(r, source));
+  const res = await fetchWithTimeout(rawUrl(r, source));
   if (!res.ok) return null;
   return Buffer.from(await res.arrayBuffer());
 }
