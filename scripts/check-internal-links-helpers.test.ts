@@ -228,6 +228,120 @@ describe("parseNavStructures", () => {
     expect(sections).toEqual(["ops"]);
   });
 
+  it("prefixes nested array-valued items as folder slugs (mirrors buildPageMap)", () => {
+    // NavItem permits `{ 'Folder': NavItem[] }`; buildPageMap turns that into
+    // a sub-folder segment. The parser must do the same, or every link into
+    // a nested sidebar group would be reported as broken.
+    const src = `
+      const NAV_STRUCTURE_HIVE: X = [
+        { title: 'Operations', items: [
+            { 'Agent Runtime': [
+                { 'Terminal window': 'agent-terminal.md' },
+                { 'Deep Dive': [
+                    { 'Env Pairs': 'env-pairs.md' },
+                ] },
+            ] },
+            { 'Top Level': 'top.md' },
+        ] },
+]
+    `;
+    const entries = parseNavStructures(src);
+    expect(entries.map(e => [e.sectionSlug, e.slug])).toEqual([
+      ["operations/agent-runtime", "terminal-window"],
+      ["operations/agent-runtime/deep-dive", "env-pairs"],
+      ["operations", "top-level"],
+    ]);
+  });
+
+  it("accepts identifier (unquoted) keys as entry titles", () => {
+    const src = `
+      const NAV_STRUCTURE_HIVE: X = [
+        { title: 'Overview', items: [
+            { Roadmap: 'roadmap.md' },
+            { Nested: [{ Child: 'child.md' }] },
+        ] },
+]
+    `;
+    const entries = parseNavStructures(src);
+    expect(entries).toEqual<NavAliasEntry[]>([
+      {
+        navName: "HIVE",
+        base: "docs/hive",
+        sectionSlug: "overview",
+        slug: "roadmap",
+        title: "Roadmap",
+        file: "roadmap.md",
+      },
+      {
+        navName: "HIVE",
+        base: "docs/hive",
+        sectionSlug: "overview/nested",
+        slug: "child",
+        title: "Child",
+        file: "child.md",
+      },
+    ]);
+  });
+
+  it("routes general-section files (contributing/, community/, news/) under bare docs by basename", () => {
+    const src = `
+      const NAV_STRUCTURE_HIVE: X = [
+        { title: 'Community', items: [
+            { 'Community meetings': 'community/meetings.md' },
+            { 'How to contribute': 'contributing/how-to.mdx' },
+            { 'Latest news': 'news/2026-01.md' },
+            { 'Project local': 'local.md' },
+        ] },
+]
+    `;
+    const entries = parseNavStructures(src);
+    expect(entries.map(e => [e.base, e.slug])).toEqual([
+      ["docs", "meetings"],
+      ["docs", "how-to"],
+      ["docs", "2026-01"],
+      ["docs/hive", "project-local"],
+    ]);
+  });
+
+  it("ignores non-.md files, non-literal values, and malformed categories", () => {
+    const src = `
+      const notConst = 1;
+      let NAV_STRUCTURE_HIVE_LET: X = [{ title: 'Let', items: [{ 'A': 'a.md' }] }];
+      const NAV_STRUCTURE_HIVE: X = [
+        'not-an-object',
+        { items: [{ 'No Title': 'no-title.md' }] },
+        { title: someIdentifier, items: [{ 'Dyn Title': 'dyn.md' }] },
+        { title: 'No Items' },
+        { title: 'Bad Items', items: 'not-an-array' },
+        { title: 'Real', items: [
+            'stray-string',
+            { ...spread },
+            { 'Image': 'diagram.png' },
+            { 'Computed': someCall() },
+            { 'Kept': 'kept.md' },
+        ] },
+      ];
+    `;
+    const entries = parseNavStructures(src);
+    expect(entries.map(e => [e.sectionSlug, e.slug])).toEqual([
+      ["real", "kept"],
+    ]);
+  });
+
+  it("skips const declarations that are not array literals or not identifiers", () => {
+    const src = `
+      const NAV_STRUCTURE_HIVE = buildNav();
+      const { NAV_STRUCTURE_PLUK } = navs;
+      const NAV_STRUCTURE_HOTSHOT: X = [{ title: 'Ops', items: [{ 'Run': 'run.md' }] }];
+    `;
+    const entries = parseNavStructures(src);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      navName: "HOTSHOT",
+      base: "docs/hotshot",
+    });
+  });
+
   it("honors a custom projectForNav override", () => {
     const src = `
       const NAV_STRUCTURE_HIVE: X = [
