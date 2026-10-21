@@ -19,7 +19,6 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "analyze": "ANALYZE=true npm run build",
-    "export": "next export",
     "clean": "rm -rf .next out",
     "test": "vitest run",
     "test:watch": "vitest",
