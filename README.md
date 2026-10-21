@@ -32,8 +32,11 @@ Hive, hotshot, pluk, rationguard, promptargs, dibs, and Spektacular docs are
   `RATIONGUARD_DOCS_REF`, `PROMPTARGS_DOCS_REF`, `DIBS_DOCS_REF`, or `SPEKTACULAR_DOCS_REF`.
 
 Edit the canonical source in the project repository — not the synced copies under
-`docs/content/`. If a sync source is unreachable at build time, the committed copies
-are used as a fallback.
+`docs/content/`. If a sync source is unreachable at build time, the build fails so
+stale content is never deployed silently. For offline local work, set
+`DOCS_SYNC_OPTIONAL=1` to keep the committed copies instead (CI and Netlify always use
+the strict behavior). Only the meeting-recordings refresh always falls back to its
+committed data.
 
 ## Development
 
