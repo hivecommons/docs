@@ -2,10 +2,10 @@ name: Internal Links
 
 # Fails the build when a markdown link under docs/content/** points at an
 # internal route that does not exist (a 404). This catches renames, bad Hive
-# syncs, and version bumps (v5, v6, ...) at PR time instead of shipping a 404.
-# Only INTERNAL links are checked (relative + root-absolute /docs/... paths);
-# external links are intentionally out of scope to keep the gate deterministic
-# and free of network flakiness.
+# syncs, bad sibling syncs, and version bumps (v5, v6, ...) at PR time instead
+# of shipping a 404. Only INTERNAL links are checked (relative + root-absolute
+# /docs/... paths); external links are intentionally out of scope to keep the
+# gate deterministic and free of network flakiness.
 
 on:
   pull_request:
@@ -13,6 +13,8 @@ on:
     paths:
       - "docs/content/**"
       - "scripts/sync-hive-docs.ts"
+      - "scripts/sync-sibling-docs.ts"
+      - "scripts/link-rewrite.ts"
       - "scripts/markdown-fences.ts"
       - "scripts/scrub-legacy-branding.ts"
       - "scripts/check-internal-links.ts"
@@ -25,6 +27,8 @@ on:
     paths:
       - "docs/content/**"
       - "scripts/sync-hive-docs.ts"
+      - "scripts/sync-sibling-docs.ts"
+      - "scripts/link-rewrite.ts"
       - "scripts/markdown-fences.ts"
       - "scripts/scrub-legacy-branding.ts"
       - "scripts/check-internal-links.ts"
@@ -60,6 +64,12 @@ jobs:
       # Non-fatal if offline in a fork: fall back to the committed content.
       - name: Sync Hive docs
         run: npm run sync-hive-docs || echo "sync skipped (network unavailable); checking committed content"
+
+      # Same for the sibling-project docs (hotshot, pluk, rationguard,
+      # promptargs, dibs, Spektacular): their synced pages carry internal
+      # /docs/<project>/... links that the committed snapshot alone cannot gate.
+      - name: Sync sibling docs
+        run: npm run sync-sibling-docs || echo "sibling sync skipped (network unavailable); checking committed content"
 
       - name: Check internal links
         run: npm run check-links
