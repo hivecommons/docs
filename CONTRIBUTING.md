@@ -29,6 +29,8 @@ npm run format        # Prettier; CI runs format:check, so run this before pushi
 npm run build         # production build and doc-sync scripts
 ```
 
+The Internal Links CI gate re-syncs Hive docs with `npm run sync-hive-docs` and sibling-project docs with `npm run sync-sibling-docs` before running `npm run check-links`, so a local `check-links` alone validates only the committed snapshot. To reproduce the gate exactly, run the sync scripts first (both require network access; they fall back to the committed content offline).
+
 The Vitest workflow runs `npx vitest run --coverage`, which fails if coverage
 falls below the thresholds in `vitest.config.ts` (lines, functions, branches,
 statements) across `src/`, `scripts/` and `netlify/`. Add tests alongside new
