@@ -1,0 +1,1 @@
+- Skip Netlify deploy previews for bot branches (`scanner/*`, `quality/*`, `hive/*`, `dependabot/*`) to reduce build-minute quota consumption (#419).
