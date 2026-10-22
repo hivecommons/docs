@@ -1,0 +1,1 @@
+- Upgrade `next` to 16.4.1 so the production dependency audit gate passes (#420).
