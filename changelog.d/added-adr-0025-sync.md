@@ -1,0 +1,1 @@
+- Sync Hive ADR 0025 (central stage engine) to the docs site and list it in the ADR nav.

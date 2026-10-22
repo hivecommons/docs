@@ -82,6 +82,7 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
   { source: "adr/0022-opt-in-earned-codex-reset-redemption.md" },
   { source: "adr/0023-trusted-author-automerge.md" },
   { source: "adr/0024-provider-credential-lifecycle.md" },
+  { source: "adr/0025-central-stage-engine.md" },
 ];
 
 const localHiveDocs: Array<{ source: string; target?: string }> = [

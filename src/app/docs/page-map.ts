@@ -180,6 +180,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
         { '0022 Opt-in earned Codex reset redemption': 'adr/0022-opt-in-earned-codex-reset-redemption.md' },
         { '0023 Trusted-author automerge': 'adr/0023-trusted-author-automerge.md' },
         { '0024 Provider credential lifecycle': 'adr/0024-provider-credential-lifecycle.md' },
+        { '0025 Central stage engine': 'adr/0025-central-stage-engine.md' },
       ] },
       { 'Environment variable reference': 'env-vars.md' },
     ]
