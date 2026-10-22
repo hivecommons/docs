@@ -1,0 +1,2 @@
+- Upgrade `next` 16.3.8 → 16.4.1 to clear the production dependency audit (GHSA-2464-fhr4-w9xw, GHSA-p3m5-59mp-jv5r).
+- Raise the `dompurify` `package.json` override `>=3.4.16` → `>=3.4.17` so the transitive dependency is on the patched line for GHSA-cg2g-xh64-v4q7 (critical) and GHSA-mrv2-3pqr-j5jr (high), which the production `npm audit` gate also flags.

@@ -1,1 +1,0 @@
-- Upgrade `next` to 16.4.1 to clear the production dependency audit (GHSA-2464-fhr4-w9xw, GHSA-p3m5-59mp-jv5r).
