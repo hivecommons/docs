@@ -102,4 +102,23 @@ describe("rewriteMarkdownLinks", () => {
       })
     ).toBe(`[![b](${RAW}/docs/guide/b.svg)](/docs/p/intro)`);
   });
+
+  it("rewrites relative HTML <img src> to raw URLs when a raw base is given", () => {
+    const html =
+      '<p align="center">\n  <img src="docs/assets/logo.svg" alt="L" width="120">\n  <img alt="A" src=\'./x.png\'>\n  <img src="https://cdn.example/l.png">\n</p>';
+    expect(
+      rewriteMarkdownLinks(html, {
+        ...opts,
+        sourceRepoPath: "README.md",
+        rawBase: RAW,
+      })
+    ).toBe(
+      `<p align="center">\n  <img src="${RAW}/docs/assets/logo.svg" alt="L" width="120">\n  <img alt="A" src='${RAW}/x.png'>\n  <img src="https://cdn.example/l.png">\n</p>`
+    );
+  });
+
+  it("leaves HTML <img src> alone when no raw base is given", () => {
+    const html = '<img src="docs/assets/logo.svg">';
+    expect(rewriteMarkdownLinks(html, opts)).toBe(html);
+  });
 });

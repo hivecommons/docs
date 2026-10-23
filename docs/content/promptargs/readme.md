@@ -1,8 +1,14 @@
 > **Synced from promptargs.** This page is pulled from [hivecommons/promptargs@main](https://github.com/hivecommons/promptargs/blob/main/README.md) during the docs build. Edit the canonical source in the promptargs repository.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/hivecommons/promptargs/main/docs/assets/promptargs-logo.svg" alt="Promptargs" width="120" height="120">
+</p>
+
 # promptargs 🏴‍☠️
 
-**Template arguments for AI prompts.**
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/hivecommons/promptargs/blob/main/LICENSE)
+
+Template arguments for AI prompts.
 
 You write a prompt with blanks (`{{like_this}}`), and promptargs fills them in.
 
@@ -24,6 +30,8 @@ Works as a **CLI** and as a **skill** in Claude Code, Copilot, Goose, and Bob.
 
 ## Install
 
+Requires Node.js 22 or newer.
+
 ### CLI
 
 ```bash
@@ -36,9 +44,31 @@ Or just run it without installing:
 npx @hivecommons/promptargs help
 ```
 
-### As a Slash Command / Skill
+### As an Agent Skill
 
-This repo ships skill files for multiple AI coding tools. Install the one(s) you use:
+promptargs ships an [Agent Skill](https://agentskills.io/specification) at [`skills/promptargs/SKILL.md`](https://github.com/hivecommons/promptargs/blob/main/skills/promptargs/SKILL.md), loaded by GitHub Copilot (CLI, cloud agent, VS Code agent mode) and Claude Code.
+
+**With the GitHub CLI** (2.90.0 or later):
+
+```bash
+gh skill install hivecommons/promptargs promptargs
+```
+
+**Manually** (copy the `skills/promptargs/` directory):
+
+```bash
+# Copilot
+mkdir -p ~/.copilot/skills
+cp -r skills/promptargs ~/.copilot/skills/
+
+# Claude Code
+mkdir -p ~/.claude/skills
+cp -r skills/promptargs ~/.claude/skills/
+```
+
+Use `.github/skills/` or `.claude/skills/` inside a project instead to share it with your team.
+
+### As a Slash Command (other tools)
 
 **Claude Code:**
 
@@ -63,8 +93,6 @@ mkdir -p ~/.bob/skills
 curl -o ~/.bob/skills/promptargs.md \
   https://raw.githubusercontent.com/hivecommons/promptargs/main/.bob/skills/promptargs.md
 ```
-
-**Copilot:** Automatically detected from `.github/copilot-instructions.md` when you clone this repo.
 
 ---
 
@@ -121,7 +149,15 @@ A blank looks like this: `{{name}}`
 
 A blank with a default looks like this: `{{name=hello}}` (promptargs extension)
 
-That's the basics. You also get the full Mustache spec — comments (`{{! ignore me}}`), sections, partials, and more.
+Padding inside the braces is fine too — `{{ name }}` and `{{ name=hello }}` mean the same thing.
+
+Names may use letters, digits, `_` and `-` (`{{file-name}}`). Dotted names such as `{{repo.owner}}` are rejected with an error — use `{{repo_owner}}`; the switch names `no-interactive`, `cross`, `json`, `status` and `help` are also rejected, as they are reserved for CLI switches. Likewise, the template file names `help`, `env`, `ui`, `init`, `list` and `show` are reserved for the subcommands of the same name; such a template is listed as unreachable by `promptargs list` (and `show` warns), because the subcommand always wins.
+
+A default may appear on any occurrence of a blank (`{{name}} … {{name=hello}}`); if two occurrences give different defaults, the first one wins.
+
+That's the basics. Mustache comments (`{{! ignore me}}`) work as documented and are safe to use.
+
+Mustache **sections** (`{{#flag}}...{{/flag}}`) and **partials** (`{{>name}}`) are parsed too, but aren't practically usable yet: promptargs only resolves plain `{{name}}` / `{{name=default}}` tags from `--flag=value`, auto-detected context, defaults, or interactive fill — a section's condition name is never filled this way (so its content is always dropped, or always kept for an inverted `{{^name}}` section), and partial content is never supplied, so `{{>name}}` always expands to nothing. Stick to plain blanks and comments; avoid sections and partials for now.
 
 ### Red means "you need to fill this in"
 
@@ -217,6 +253,34 @@ promptargs "Review {{file}} for {{focus}}" \
 ✅ [3/3]: file=db.go    focus=correctness
 ```
 
+When arrays have different lengths, the number of runs is the length of the longest array, and shorter arrays repeat (cycle around):
+
+```bash
+promptargs "Review {{file}} for {{focus}}" \
+  --file=api.go,auth.go,db.go \
+  --focus=security
+```
+
+```text
+✅ [1/3]: file=api.go   focus=security
+✅ [2/3]: file=auth.go  focus=security
+✅ [3/3]: file=db.go    focus=security
+```
+
+Or with two unequal arrays:
+
+```bash
+promptargs "Review {{file}} for {{focus}}" \
+  --file=a.go,b.go,c.go \
+  --focus=x,y
+```
+
+```text
+✅ [1/3]: file=a.go  focus=x
+✅ [2/3]: file=b.go  focus=y
+✅ [3/3]: file=c.go  focus=x
+```
+
 **Cross-product mode (`--cross`):** every combination of every value:
 
 ```bash
@@ -251,11 +315,19 @@ promptargs "Review {{file}} for {{focus}}" \
 
 Project templates override personal ones with the same name.
 
+Symlinked `*.md` entries are followed only when their real target is inside the same `.prompts/` directory (a sub-directory is fine); a symlink whose target escapes the directory is listed with an error and refused when run, so a cloned repo cannot make `promptargs` read files elsewhere on your machine. Symlinks to directories and dangling symlinks are skipped. The project `.prompts/` entry itself must be a real directory: if it is a symlink, it is refused with a diagnostic on stderr (`loader_dir_symlink` under `PROMPTARGS_LOG=json`) and no project templates are loaded (`~/.prompts/` is yours and may be a symlink).
+
 ---
 
 ## Auto-Magic Variables ✨
 
 promptargs discovers variables from two sources:
+
+Run `promptargs env` any time to preview exactly what's auto-detected in your current shell before you run a template:
+
+```bash
+promptargs env
+```
 
 ### 1. Git context (always detected)
 
@@ -282,16 +354,20 @@ promptargs "Connect to {{DATABASE_URL}} in {{AWS_REGION}}"
 
 In the **Builder UI** (`promptargs ui`), click "Show terminal env" to see all available env vars from your shell. Click any one to insert it at the cursor.
 
-Common useful env vars: `NODE_ENV`, `AWS_REGION`, `DATABASE_URL`, `GITHUB_TOKEN`, `CI`, `USER`, `EDITOR`, `PATH`.
+Common useful env vars: `NODE_ENV`, `AWS_REGION`, `CI`, `USER`, `EDITOR`, `PATH`, `SHELL`.
+
+Credential-looking names are intentionally **excluded** from auto-detection: anything containing `TOKEN`, `SECRET`, `PASSWORD`/`PASSWD`/`PASSPHRASE`, `CREDENTIAL`, `API_KEY`/`ACCESS_KEY`/`PRIVATE_KEY`, `BEARER`, `COOKIE`, `WEBHOOK`, `JWT`, `HMAC`, `OAUTH`, `CONNECTION_STRING`, or the `_`-delimited words `AUTH`, `KEY`/`KEYS`, `PWD`, `PAT`, `PASS`, `DSN` (so `GITHUB_TOKEN`, `SIGNING_KEY`, `MYSQL_PWD`, `GITHUB_PAT` and `SLACK_WEBHOOK_URL` are all refused, while `PATH`, `PWD`, `KEYBOARD` and `AUTHOR` still work). Credential-**shaped** values are excluded whatever the name: URLs with a password in them (`postgres://user:pass@host/db`), PEM blocks, JWTs, and well-known token prefixes (`ghp_`, `github_pat_`, `glpat-`, `sk-`, `xoxb-`, `AKIA…`, `npm_…`, …). A repo-controlled template can therefore never expand `{{GITHUB_TOKEN}}` or `{{DATABASE_URL}}` into a secret, even though an explicit `--flag=value` can still pass any value you choose. This also applies to the Builder UI's "Show terminal env" list.
 
 ### Priority
 
 You can always override any auto-detected value with a flag. The order is:
 
 1. `--flag=value` (explicit, always wins)
-2. Interactive prompt (if no flag and not `--no-interactive`)
-3. Auto-detect from environment
-4. Template default (`{{name=fallback}}`)
+2. Auto-detect from environment (git context and terminal env vars)
+3. Template default (`{{name=fallback}}`)
+4. Interactive prompt — only for variables still unfilled, and only without `--no-interactive`
+
+A variable that auto-detects or has a default is never prompted for; pass `--name=value` to override it.
 
 ---
 
@@ -329,7 +405,7 @@ Don't want to memorize flags? Open the visual builder:
 promptargs ui
 ```
 
-Opens a browser at `http://localhost:3700` with:
+Opens a browser at `http://localhost:3700/?t=<token>` — the token is random per run and printed at startup — with:
 
 - **Preset examples** — 8 clickable templates (review, explain, fix, test, migrate, security, docs, refactor)
 - **Template editor** — type your template, variables auto-populate below
@@ -345,6 +421,41 @@ Use `--port=N` if 3700 is taken:
 ```bash
 promptargs ui --port=4000
 ```
+
+---
+
+## Privacy & Diagnostics
+
+promptargs does not collect or export telemetry. There is no telemetry SDK, metrics endpoint, or observability backend configured anywhere in this package — nothing you run ever phones home.
+
+All runtime diagnostics are human-readable console output (CLI status/errors, UI startup/port messages). The **Builder UI** (`promptargs ui`) binds to loopback only (`127.0.0.1`), rejects requests with a non-local `Host` header, and only serves the page to a client presenting the random per-run token in the URL it prints at startup, so the page — including the auto-detected Git and terminal environment values it embeds (see [Auto-Magic Variables](#auto-magic-variables-)) — is never reachable from other machines on your network, nor from other accounts sharing the same machine's loopback interface.
+
+**Opt-in structured diagnostics:** set `PROMPTARGS_LOG=json` to make diagnostics (CLI errors and iteration progress, UI Host and token rejections, asset failures, unreadable or symlinked prompts directories, and one line per UI request) print as JSON lines on stderr with a fixed field set: `event`, plus `status`, `duration_ms`, `error_class` (`usage`, `not_found`, `io`, `port_in_use`, `unknown`), `count`, `current`, `total` where relevant. Template contents, argument values, paths and error messages are never logged. When unset, output is unchanged. Nothing is sent over the network.
+
+If observability is ever added in the future, it will be explicit opt-in, bounded to local diagnostics, and will exclude environment values, template/prompt content, file paths, diffs, and user identifiers. No network exporter will be added unless you explicitly configure a backend yourself.
+
+---
+
+## Use as a Library
+
+The package also exports its building blocks as an ES module (Node.js 22+). Install it first with `npm install @hivecommons/promptargs`.
+
+```js
+import { parseVars, expand } from '@hivecommons/promptargs';
+
+const template = 'Review {{file}} for {{focus=correctness}} issues.';
+
+parseVars(template);
+// [{ name: 'file', ... }, { name: 'focus', defaultValue: 'correctness', ... }]
+
+expand(template, { file: 'src/app.ts', focus: 'security' });
+// 'Review src/app.ts for security issues.'
+
+expand(template, { file: 'src/app.ts' });
+// 'Review src/app.ts for correctness issues.'  (defaults fill missing values)
+```
+
+Variables with no value and no default are left as `{{name}}` in the output. Other exports: `autodetect`, `autodetectAll`, `AUTODETECT_VARS`, `loadTemplates`, `findTemplate`, `resolve` and `renderStatus`.
 
 ---
 
@@ -385,13 +496,13 @@ promptargs review --file=src/main.ts --no-interactive | claude -p "do this revie
 # Goose
 promptargs review --file=src/main.ts --no-interactive | goose run
 
-# Copilot
-promptargs review --file=src/main.ts --no-interactive | gh copilot explain
+# Copilot CLI (needs the standalone `copilot` CLI, installed and signed in)
+copilot -p "$(promptargs review --file=src/main.ts --no-interactive)"
 ```
 
 ### As a skill inside your AI tool
 
-If you installed the skill (see [Install](#as-a-skill)), use it directly inside your session:
+If you installed the skill (see [Install](#as-an-agent-skill)), use it directly inside your session:
 
 **Claude Code:**
 
@@ -401,7 +512,7 @@ If you installed the skill (see [Install](#as-a-skill)), use it directly inside 
 
 **Goose / Bob:** The skill is automatically available after install — ask your agent to "use promptargs" or run a template.
 
-**Copilot:** The instructions in `.github/copilot-instructions.md` teach Copilot about promptargs when you're in a repo that has it.
+**Copilot:** Installed skills load automatically; ask Copilot to use promptargs.
 
 ---
 
@@ -416,6 +527,7 @@ If you installed the skill (see [Install](#as-a-skill)), use it directly inside 
 | `promptargs review --file=x` | Run template with flags |
 | `promptargs review` | Run template interactively |
 | `promptargs "inline {{var}}"` | Use inline template |
+| `promptargs env` | Show auto-detected variable values |
 | `--no-interactive` | Skip questions, use defaults only |
 | `--cross` | Cross-product mode (all combinations) |
 | `--json` | Output as JSON |
@@ -423,8 +535,23 @@ If you installed the skill (see [Install](#as-a-skill)), use it directly inside 
 | `... \| claude -p "do this"` | Pipe to Claude |
 | `... \| goose run` | Pipe to Goose |
 
+The switch names `no-interactive`, `cross`, `json`, `status` and `help` are reserved and cannot be used as template variable names. Switches take no value: `--json=false` is rejected with a usage error. A flag that names no blank in the template (e.g. a typo like `--fiel=x`) is also an error. So is a blank left unfilled under `--no-interactive` or piped stdin: `promptargs` exits 1 with `Missing value for {{name}}: ...` rather than printing the raw placeholder.
+
+---
+
+## Contributing & Community
+
+promptargs is part of [Hive Commons](https://hivecommons.dev), a family of tools for working with AI agents.
+
+- Want to contribute? See [CONTRIBUTING.md](https://github.com/hivecommons/promptargs/blob/main/CONTRIBUTING.md) for setup, checks, and pull request guidelines.
+- Found a bug or have an idea? Open an [issue](https://github.com/hivecommons/promptargs/issues).
+- Reporting a security vulnerability? Follow [SECURITY.md](https://github.com/hivecommons/promptargs/blob/main/SECURITY.md) to report it privately, not through public issues.
+- Please follow the [Hive Commons Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md).
+
 ---
 
 ## License
 
 Apache-2.0
+
+Pirate flag icon: [Twemoji](https://twemoji.twitter.com/), [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).

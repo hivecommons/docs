@@ -1,185 +1,126 @@
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/public-knowledge-mcp.md) during the docs build. Edit the canonical source in the Hive repository.
+
 # Public knowledge MCP endpoint
 
-Hive can publish a small, anonymous MCP endpoint for operational knowledge that
-other agents can read without joining the hive. Use it when you want a
-troubleshooting assistant, local coding agent, or support script to reason from
-the hive's accumulated fixes, regressions, and integration notes instead of
-only from model training data.
+A hive accumulates operational knowledge — gotchas, patterns, regressions,
+integration notes — as its agents work. Normally that knowledge is reachable
+only with a hub session, the dashboard token, or a contributor registration
+token (`/api/knowledge/*`, `hivectl knowledge export`).
 
-The endpoint is `POST /mcp/knowledge` on the spoke. It is available in
-Hive v5.134.0 and later, shipped for
-[hivecommons/hive#10615](https://github.com/hivecommons/hive/issues/10615)
-by [hivecommons/hive#10621](https://github.com/hivecommons/hive/pull/10621).
+The **public knowledge** switch lets a hive owner open a second, strictly
+**read-only** surface so *any* agent — Goose, Claude Desktop/Code, Copilot
+CLI, a shell script — can consult the hive without credentials. The
+motivating case is a distro's troubleshooting assistant reasoning from the
+project's own accumulated fixes instead of only what its model was trained on
+([#10615](https://github.com/hivecommons/hive/issues/10615)).
 
-> **Note:** this is currently controlled by environment variables. There is no
-> dashboard toggle yet; a separate follow-up is tracking that operator UI.
+## Owner switch
 
-## Turn it on or off
+Owners can use the dashboard instead of editing environment variables:
 
-| Variable | Default | Effect |
-| --- | --- | --- |
-| `HIVE_PUBLIC_KNOWLEDGE` | disabled | Set to `1`, `true`, `yes`, or `on` to enable `POST /mcp/knowledge`. Any other value makes the path return `404`, even to the owner. |
-| `HIVE_PUBLIC_KNOWLEDGE_TAGS` | all public-type facts | Optional comma-separated tag allow-list. When set, only facts carrying at least one listed tag are served. |
+- **Knowledge** section header: `Public read-only MCP: Off/On`.
+- **Settings → Knowledge → Knowledge sharing**: the same control, plus tags
+  and a copyable endpoint URL.
 
-Hive reads both variables on every request, so an owner can close the surface
-instantly by unsetting or changing `HIVE_PUBLIC_KNOWLEDGE`; a spoke restart is
-not required.
+The dashboard setting is persisted in `hive.yaml` and takes precedence over
+the environment variables below. If no dashboard setting has been saved, the
+legacy env-only behavior remains unchanged.
 
-Example Kubernetes patch:
+| Variable | Effect |
+|---|---|
+| `HIVE_PUBLIC_KNOWLEDGE=1` (`true`/`yes`/`on`) | Enables `POST /mcp/knowledge`. Unset or anything else → the path returns **404**, even to the owner. |
+| `HIVE_PUBLIC_KNOWLEDGE_TAGS=linux,troubleshooting` | Optional. Only facts carrying at least one listed tag are served. |
 
-```sh
-kubectl -n hive set env deploy/hive HIVE_PUBLIC_KNOWLEDGE=1
-kubectl -n hive set env deploy/hive HIVE_PUBLIC_KNOWLEDGE_TAGS=troubleshooting,linux
-```
+Both the dashboard setting and env fallback are resolved on every request, so
+the surface can be closed instantly without restarting the spoke.
 
-To close it:
+## What is exposed
 
-```sh
-kubectl -n hive set env deploy/hive HIVE_PUBLIC_KNOWLEDGE-
-```
+Only operational fact types leave the hive:
 
-## What public means
+`pattern`, `gotcha`, `regression`, `test_scaffold`, `integration`,
+`coverage_rule`, `general`
 
-Only operational fact types are eligible:
+Ideation and governance types (`idea`, `vision`, `constitution`,
+`requirement`, `constraint`, `stakeholder`, `decision`) are never served,
+and a request for one by slug answers "not found" rather than "forbidden".
 
-- `pattern`
-- `gotcha`
-- `regression`
-- `test_scaffold`
-- `integration`
-- `coverage_rule`
-- `general`
+Each public fact carries `slug`, `title`, `type`, `body`, `tags`, `related`
+and (only when scored) `confidence`. Sources (PR, comment, author), usage
+counters, confidence reasoning, and lifecycle phase are stripped.
 
-Ideation and governance facts are never served: `idea`, `vision`,
-`constitution`, `requirement`, `constraint`, `stakeholder`, and `decision`.
-Requests for a non-public slug return "not found" rather than revealing that a
-private fact exists.
+## What is *not* possible
 
-Public facts include only `slug`, `title`, `type`, `body`, `tags`, `related`,
-and scored `confidence`. Hive strips source links, authors, usage counters,
-confidence reasoning, and lifecycle phase. A fact's `related` list is also
-filtered to slugs that are public under the same rules.
+There is no write method on this surface. The endpoint serves the MCP
+handshake (`initialize`, `ping`, `notifications/*`), `tools/list`, and
+`tools/call` for four tools. Nothing in the handler reaches
+`CreateFact`, `UpdateFact`, `DeleteFact`, import, promotion, or vault
+mutation. Anonymous callers cannot alter a knowledge base, and every tool is
+annotated `readOnlyHint: true` so MCP clients run them without confirmation.
 
-## MCP protocol and limits
+Other hard limits: POST only (no SSE stream), 64 KiB request body, one
+JSON-RPC request per POST (batch arrays are answered with `-32600`; the
+endpoint speaks MCP `2025-06-18`, which dropped batching), and
+`knowledge_search` returns at most 50 results per call.
 
-The endpoint speaks MCP protocol `2025-06-18` over Streamable HTTP with plain
-JSON responses.
+A fact's `related` list is filtered to public slugs, so a public fact cannot
+disclose even the name of a private one. `knowledge_get` and
+`knowledge_export` return complete bodies; `knowledge_search` results do too,
+re-read per hit.
 
-| Limit | Value |
-| --- | --- |
-| HTTP method | `POST` only |
-| Request body | 64 KiB maximum |
-| JSON-RPC batching | Not supported |
-| Search results | `knowledge_search` returns at most 50 facts |
-| Writes | No write tools or mutation path |
-
-The exposed tools are marked with `readOnlyHint: true`.
+## Tools
 
 | Tool | Arguments | Returns |
-| --- | --- | --- |
-| `knowledge_search` | `query` required; optional `type`, `limit` | JSON `{query, count, results[]}` |
-| `knowledge_get` | `slug` required | One public fact, or an MCP tool error saying the fact was not found |
-| `knowledge_export` | none | Markdown export of the public base, grouped by type, with `_meta.etag` and `_meta.facts` |
+|---|---|---|
+| `knowledge_search` | `query` (required), `type`, `limit` (default 10, max 50) | JSON `{query, count, results[]}` |
+| `knowledge_toc` | `type`, `repo`, `limit` (all optional; default 50, max 200) | A compact table of contents of public facts — `id`, `title`, `type`, `layer`, `repo`, `tags`, `status`, `updated`, `size_bytes` — with `total`/`returned`/`truncated`, no bodies and no source URLs. Read a chosen `id` with `knowledge_get` |
+| `knowledge_get` | `slug` (required) | One public fact as JSON, or an `isError` "fact not found" |
+| `knowledge_export` | none | The whole public base as one Markdown document, grouped by type; `_meta.etag` and `_meta.facts` |
 
-## Connect agents
+## Client configuration
 
-Replace `https://hive.example.org` with the public URL for your spoke.
+The endpoint speaks MCP Streamable HTTP with plain JSON responses.
 
-### Goose
-
-Add a Streamable HTTP extension to `~/.config/goose/config.yaml`:
+**Goose** (`~/.config/goose/config.yaml`):
 
 ```yaml
 extensions:
-  project-hive:
+  bluefin-hive:
     type: streamable_http
     uri: https://hive.example.org/mcp/knowledge
     enabled: true
 ```
 
-### Claude Desktop and Claude Code
-
-Claude Code can register the HTTP MCP server directly:
+**Claude Code**:
 
 ```sh
-claude mcp add --transport http project-hive https://hive.example.org/mcp/knowledge
+claude mcp add --transport http bluefin-hive https://hive.example.org/mcp/knowledge
 ```
 
-For Claude Desktop, add the same URL as an HTTP MCP server in the app's MCP
-server configuration and restart the app so it reloads the configuration.
-
-### Copilot CLI
-
-Add the server to `~/.copilot/mcp-config.json`:
+**Copilot CLI** (`~/.copilot/mcp-config.json`):
 
 ```json
-{
-  "mcpServers": {
-    "project-hive": {
-      "type": "http",
-      "url": "https://hive.example.org/mcp/knowledge"
-    }
-  }
-}
+{ "mcpServers": { "bluefin-hive": { "type": "http", "url": "https://hive.example.org/mcp/knowledge" } } }
 ```
 
-### Raw curl
-
-Initialize the MCP session:
+**curl**:
 
 ```sh
 curl -s https://hive.example.org/mcp/knowledge \
   -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"1.0.0"}}}'
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"knowledge_search","arguments":{"query":"bluetooth"}}}'
 ```
 
-List the tools:
+## Hub-fronted spokes
 
-```sh
-curl -s https://hive.example.org/mcp/knowledge \
-  -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
-```
+On hosted hives the hub's nginx `auth_request` gate waves `/mcp/knowledge`
+through (same mechanism as `/api/knowledge/export`, #8294) so an agent with
+no browser session is not bounced to the login page. This opens nothing by
+itself: the spoke re-checks the dashboard setting (or
+`HIVE_PUBLIC_KNOWLEDGE` when no setting exists) and 404s when it is off.
 
-Search public knowledge:
-
-```sh
-curl -s https://hive.example.org/mcp/knowledge \
-  -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"knowledge_search","arguments":{"query":"bluetooth regression","limit":5}}}'
-```
-
-## Verify it is working
-
-1. With `HIVE_PUBLIC_KNOWLEDGE` unset, `POST /mcp/knowledge` should return
-   `404`.
-2. Set `HIVE_PUBLIC_KNOWLEDGE=1`.
-3. Run the `tools/list` curl command above and confirm the three knowledge
-   tools are present.
-4. Run a `knowledge_search` for a tag or phrase you know exists.
-5. If `HIVE_PUBLIC_KNOWLEDGE_TAGS` is set, search for an unlisted tag and
-   confirm those facts are absent.
-6. Unset `HIVE_PUBLIC_KNOWLEDGE` and confirm the endpoint returns `404` again
-   without restarting the spoke.
-
-## Security posture
-
-This surface is anonymous but read-only. It exposes no create, update, delete,
-import, promotion, vault, or GitHub write path, and it does not expose source
-attribution or author data. Hosted hub front doors can pass `/mcp/knowledge`
-through without a browser session, but the spoke still re-checks
-`HIVE_PUBLIC_KNOWLEDGE` and returns `404` when the owner switch is off.
-
-Treat the response body as public information. Before enabling the endpoint,
-consider tag scoping with `HIVE_PUBLIC_KNOWLEDGE_TAGS`, review which operational
-facts should be public, and use a reverse-proxy allow-list if only specific
-agent networks should reach the endpoint.
-
-## Related references
+## Related
 
 - [Environment variable reference](/docs/hive/env-vars)
-- [Knowledge system ADR](/docs/hive/adr/0011-knowledge-system)
-- [Upstream public knowledge MCP doc](https://github.com/hivecommons/hive/blob/v5/src/docs/public-knowledge-mcp.md)
+- [Knowledge curator](https://github.com/hivecommons/hive/blob/v5/src/docs/knowledge-curator.md) — how facts are produced and promoted
 - [Knowledge system design](https://github.com/hivecommons/hive/blob/v5/src/docs/design/knowledge-system.md)
-- [hivecommons/hive#10615](https://github.com/hivecommons/hive/issues/10615)
-- [hivecommons/hive#10621](https://github.com/hivecommons/hive/pull/10621)

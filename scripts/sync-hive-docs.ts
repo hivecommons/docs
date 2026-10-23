@@ -58,6 +58,7 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
   { source: "integrations/work-source-providers.md" },
   { source: "integrations/clanker-flue.md" },
   { source: "integrations/spektacular.md" },
+  { source: "public-knowledge-mcp.md" },
   { source: "adr/README.md", target: "adr/readme.md" },
   { source: "adr/0001-record-architecture-decisions.md" },
   { source: "adr/0002-mitm-proxy-network-enforcement.md" },
@@ -85,9 +86,9 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
   { source: "adr/0025-central-stage-engine.md" },
 ];
 
-const localHiveDocs: Array<{ source: string; target?: string }> = [
-  { source: "public-knowledge-mcp.md" },
-];
+// Hive pages authored in this repo (docs/content/hive/) rather than synced,
+// listed so links from synced pages resolve to their site routes.
+const localHiveDocs: Array<{ source: string; target?: string }> = [];
 
 // ---------------------------------------------------------------------------
 // Brand scrub

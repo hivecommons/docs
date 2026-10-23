@@ -1,6 +1,14 @@
 > **Synced from dibs.** This page is pulled from [hivecommons/dibs@main](https://github.com/hivecommons/dibs/blob/main/README.md) during the docs build. Edit the canonical source in the dibs repository.
 
-# Dibs — a marketplace of ideas
+<p align="center">
+  <img src="https://raw.githubusercontent.com/hivecommons/dibs/main/docs/assets/dibs-logo.svg" alt="Dibs" width="120" height="120">
+</p>
+
+# Dibs
+
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/hivecommons/dibs/blob/main/LICENSE)
+
+Marketplace of ideas for connecting ideators with hive-managed repositories.
 
 > **Your idea, your credit, their code.**
 >
@@ -49,11 +57,20 @@ deployments also work.
 | `pkg/server` | HTTP server, base-path routing, embedded UI |
 | `pkg/auth` | Auth bridge — validates the hive hub session cookie against the hub |
 | `pkg/store` | Idea model + JSON file store (atomic writes, no external DB), offer/settlement state machine |
+| `pkg/fsutil` | Shared atomic JSON persistence helper (temp file + rename, mode 0600) used by the file stores |
 | `pkg/api` | Idea CRUD + matching/offer/feed/decide/notification API (author-scoped, private ideas never leak) |
 | `pkg/registry` | Hive-managed repo profiles + "accepting ideas" opt-in |
 | `pkg/match` | LLM idea↔repo scoring via litellm gateway, cached TLDRs, "✨ Embellish" draft refinement, deterministic keyword fallback |
 | `pkg/settle` | Settlement — prefilled GitHub new-issue URL the ideator files themselves (`ideated` label, 🐝 Dibs footer, URL-length budget) + issue-URL confirmation; legacy token mode. Ideas can target ANY GitHub repo: non-hive targets skip acceptance and their issues carry a "request a hive" growth CTA |
 | `pkg/notify` | In-app notification feed (bell): matches, offers, decisions, issues |
+| `pkg/mcpserver` | Streamable HTTP MCP endpoint exposing Dibs tools (see [Submit ideas from your agent](#submit-ideas-from-your-agent)) |
+| `pkg/intake` | Extracts idea text from uploaded documents or transcribed audio |
+| `pkg/game` | Gamification layer — points, levels, badges — recomputed from stored idea state, never a mutable counter |
+| `pkg/catalog` | Builds and searches a separate CNCF project catalog |
+| `pkg/history` | Backfills public GitHub activity for hive-managed repos; persists daily counts for repo index charts |
+| `pkg/indexformula` | Weighted composite behind the repo market index |
+| `pkg/news` | Turns recent merged PRs into repo news cards |
+| `pkg/deps` | Single place declaring the subsystem dependencies the HTTP server, JSON API, and MCP endpoint are wired with |
 
 ### Configuration
 
@@ -61,18 +78,27 @@ deployments also work.
 |---|---|---|
 | `DIBS_BASE_PATH` | `/` | Base path every route/asset is served under (set e.g. `/ideas` for path-prefixed proxying) |
 | `DIBS_ADDR` | `:8080` | Listen address |
+| `DIBS_METRICS_ADDR` | (unset) | Internal Prometheus `/metrics` listener (e.g. `:9090`); unset keeps it off. See [`deploy/`](https://github.com/hivecommons/dibs/blob/main/deploy/README.md) |
 | `HUB_URL` | `https://hive.hivecommons.dev` | Hive hub for session validation & repo sync |
 | `DATA_DIR` | `/data` | JSON store directory |
 | `REPOS_SEED_FILE` | (unset) | Static JSON seed of repo profiles for dev/demo |
 | `DIBS_LLM_BASE_URL` | (unset) | OpenAI-compatible gateway (hive litellm), e.g. `http://litellm:4000/v1`. Unset → deterministic keyword matcher |
 | `DIBS_LLM_API_KEY` | (unset) | Bearer token for the LLM gateway |
 | `DIBS_LLM_MODEL` | `gpt-4o-mini` | Model name routed by the gateway |
-| `DIBS_GITHUB_TOKEN` | (unset) | **Legacy mode only.** When set, Dibs opens the credited issue server-side on accept. Unset (default), the ideator files a prefilled GitHub issue themselves — native attribution |
+| `DIBS_GITHUB_TOKEN` | (unset) | **Legacy mode only** for issue creation: when set, Dibs opens the credited issue server-side on accept. Unset (default), the ideator files a prefilled GitHub issue themselves — native attribution. Also used, when present, to authenticate the GitHub lookup that verifies a confirmed issue URL (anonymous otherwise) |
+| `DIBS_ADMINS` | (unset) | Comma-separated, case-insensitive GitHub logins granted admin access (idea-moderation endpoints) |
+| `DIBS_CLANKER_MARKERS` | `hive: agent=,hivecommons-hive[bot]` | Comma-separated, case-insensitive markers matched against PR branch/labels/body/author to classify agent activity |
+| `DIBS_INTAKE_MAX_MB` | `25` | Max upload size (MB) accepted for idea-intake file uploads |
+| `DIBS_STT_URL` | (unset) | Speech-to-text gateway URL; when set, enables voice/audio idea submission |
+| `DIBS_STT_KEY` | (unset) | API key for the STT gateway |
+| `DIBS_STT_MODEL` | (unset) | Model name routed by the STT gateway |
 
 Legacy `IDEATE_*` names (the pre-rename prefix) are still honored as
 fallbacks for every `DIBS_*` variable.
 
 ### Roadmap
+
+See [ROADMAP.md](https://github.com/hivecommons/dibs/blob/main/ROADMAP.md) for what is planned next. Delivery history:
 
 - **Wave 1 (done):** scaffold, hub auth bridge, idea CRUD, repo registry.
 - **Wave 2 (done):** LLM matching + TLDRs, swipe UX ("offer" / "pass"), issue settlement (credited GitHub issues), notifications.
@@ -95,10 +121,21 @@ hub-cookie prerequisites.
 |---|---|
 | `GET /` | Landing page (pitch + sign-in) — signed-in users get the full app |
 | `GET /api/credits` | Credit wall data: settled ideas only (handle, title, TLDR, repo, issue URL) |
-| `GET /healthz` | Health + embedded git version |
+| `GET /api/leaderboard` | Aggregate ideator scores/levels/badges |
+| `GET /api/ticker` | Public idea ticker tape for the logged-out landing page |
+| `GET /api/board` | Live-markets board shown on the logged-out landing page |
+| `GET /api/stats` | Aggregate, non-identifying counts |
+| `GET /api/repos/{org}/{repo}/index` | Repo value-index chart series |
+| `GET /api/repos/{org}/{repo}/news` | Repo news feed |
+| `GET /api/repos/{org}/{repo}/qr.png` | Repo QR code |
+| `GET /healthz` | Liveness check + embedded git version |
+| `GET /readyz` | Readiness check — verifies the data store is accessible/writable |
 
 Everything else requires a hive hub session; signed-in ideators additionally
 get `GET /api/me/stats` (ideas posted / offered / accepted / settled).
+
+For response schemas, eligibility/privacy rules, settlement actions, rewards,
+and stability levels, see the [credit-wall consumer API](https://github.com/hivecommons/dibs/blob/main/docs/credit-wall-api.md).
 
 ## Submit ideas from your agent
 
@@ -112,7 +149,7 @@ Available tools:
 |---|---|---|
 | `submit_idea(title, description, tags?)` | Required | Creates a private draft idea owned by you and returns its id and API URL |
 | `list_my_ideas()` | Required | Lists your ideas with lifecycle phase/status |
-| `get_idea(id)` | Optional for public ideas; required for your private ideas | Shows detail, matches, offers, and settlement state |
+| `get_idea(id)` | Optional for public ideas; required for private ideas (author, or owner of a repo holding a pending or accepted offer) | Shows detail, matches, offers, and settlement state |
 | `list_repos()` | Not required | Lists registered repo venues |
 
 ### Token
@@ -147,6 +184,39 @@ one, and `submit_idea` needs it.
 
 ChatGPT: Settings -> Connectors -> Add custom connector (available on plans
 where custom MCP connectors are enabled), using the same URL and header.
+
+### GitHub Copilot CLI and VS Code
+
+**Copilot CLI** has a one-line command to add a remote MCP server:
+
+```sh
+copilot mcp add --transport http \
+  --header "Authorization: Bearer <your-token-or-hive_hub_user-cookie-value>" \
+  dibs https://dibs.hivecommons.dev/mcp
+```
+
+This writes to `~/.copilot/mcp-config.json` using the same `mcpServers` / `type: "http"` shape as the Generic MCP JSON block below.
+
+**VS Code** reads `~/.copilot/mcp-config.json` (shared with Copilot CLI) and workspace `.mcp.json` files. Both use the same `mcpServers` format. For more details, see the [Copilot CLI documentation](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers) and [VS Code MCP server documentation](https://code.visualstudio.com/docs/agent-customization/mcp-servers).
+
+### Cursor
+
+Cursor reads MCP configuration from `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project-level). Use the `mcpServers` format with `url` and `headers`:
+
+```json
+{
+  "mcpServers": {
+    "dibs": {
+      "url": "https://dibs.hivecommons.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:DIBS_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+Cursor supports `${env:NAME}` interpolation in headers, so you can set `DIBS_TOKEN` as an environment variable rather than storing it in the file. For details, see the [Cursor MCP documentation](https://cursor.com/docs/mcp).
 
 ## Recall ideas you never acted on
 
@@ -185,15 +255,58 @@ still call `prompts/get` directly.
 }
 ```
 
+## Operations and further reading
+
+- [MCP Registry publishing](https://github.com/hivecommons/dibs/blob/main/docs/mcp-registry.md): listing manifest and operator steps for DNS authentication, publication, and verification.
+- [Runbooks](https://github.com/hivecommons/dibs/blob/main/runbooks/): [incident response](https://github.com/hivecommons/dibs/blob/main/runbooks/incident-response.md), [release rollback](https://github.com/hivecommons/dibs/blob/main/runbooks/release-rollback.md), [data recovery](https://github.com/hivecommons/dibs/blob/main/runbooks/data-recovery.md), [SLOs](https://github.com/hivecommons/dibs/blob/main/runbooks/slo.md), and a [postmortem template](https://github.com/hivecommons/dibs/blob/main/runbooks/postmortem-template.md).
+- [CONTRIBUTING.md](https://github.com/hivecommons/dibs/blob/main/CONTRIBUTING.md): DCO sign-off, CI requirements, and code conventions.
+- [Idea intake trust and abuse controls](https://github.com/hivecommons/dibs/blob/main/docs/idea-intake-trust.md): a proposed design, not yet implemented.
+
 ## Development
 
 ```sh
-go build ./...
 go test -race -count=1 ./...
 go run ./cmd/dibs            # serves on :8080 at /
+go build -o dibs ./cmd/dibs  # builds the binary (plain `go build ./...` writes none)
 ./dibs --version             # prints the embedded commit
+```
+
+### Running locally with sign-in
+
+Every route except the [public surface](#public-surface-no-sign-in-required)
+needs a hive hub session. For local work, [`hack/fakehub`](https://github.com/hivecommons/dibs/blob/main/hack/fakehub/main.go)
+is a dev-only stand-in for the hub: it accepts any non-empty `hive_hub_user`
+cookie as that user and serves a small static repo list. Run it in one
+terminal, then point Dibs at it in another:
+
+```sh
+go run ./hack/fakehub        # listens on :9999 (override with FAKEHUB_ADDR)
+HUB_URL=http://127.0.0.1:9999 DATA_DIR=./data go run ./cmd/dibs
+curl -H 'Cookie: hive_hub_user=dev' http://127.0.0.1:8080/api/me
+```
+
+To load richer repo profiles than fakehub's two entries, also set
+`REPOS_SEED_FILE=hack/seed-repos.example.json`.
+
+### Smoke-testing the container image
+
+`docker build` only proves the image compiles. [`hack/smoke.sh`](https://github.com/hivecommons/dibs/blob/main/hack/smoke.sh)
+runs it the way [`deploy/deployment.yaml`](https://github.com/hivecommons/dibs/blob/main/deploy/deployment.yaml) does
+(uid 65532, read-only root filesystem, only `/data` writable, all
+capabilities dropped) and checks `--version` is stamped, `/healthz` and
+`/readyz` answer 200, the landing page serves with `HUB_URL` substituted
+and the security headers set, the auth wall answers 401/502 around the
+public API, `/metrics` exposes the `dibs_*` series the alerts query
+(labelled by the route groups just exercised), and SIGTERM drains to
+exit 0:
+
+```sh
+docker build --build-arg GIT_HASH="$(git rev-parse HEAD)" -t dibs:smoke .
+hack/smoke.sh dibs:smoke "$(git rev-parse HEAD)"
 ```
 
 ## License
 
 Apache-2.0 — see [LICENSE](https://github.com/hivecommons/dibs/blob/main/LICENSE).
+
+Handshake icon: [Twemoji](https://github.com/twitter/twemoji), [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).

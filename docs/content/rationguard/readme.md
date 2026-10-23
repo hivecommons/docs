@@ -1,8 +1,14 @@
 > **Synced from rationguard.** This page is pulled from [hivecommons/rationguard@main](https://github.com/hivecommons/rationguard/blob/main/README.md) during the docs build. Edit the canonical source in the rationguard repository.
 
-# rationguard
+<p align="center">
+  <img src="https://raw.githubusercontent.com/hivecommons/rationguard/main/docs/assets/rationguard-logo.svg" alt="RationGuard" width="120" height="120">
+</p>
 
-**Detect and rebut rationalization patterns in AI agent output.**
+# RationGuard
+
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/hivecommons/rationguard/blob/main/LICENSE)
+
+Detect and rebut rationalization patterns in AI agent output.
 
 AI agents make excuses. "Standing by for instructions." "Too complex to fix." "I'll handle it next pass." These sound reasonable but mean the agent stopped working.
 
@@ -10,11 +16,26 @@ rationguard catches these patterns and provides rebuttals — in real-time via [
 
 ---
 
+## Prerequisites
+
+- Node.js 20 or newer (`engines.node` in `package.json`)
+- [pluk](https://www.npmjs.com/package/@hivecommons/pluk), installed alongside rationguard below
+- `tmux`, for `rationguard attach` and for watching live sessions
+- The AI CLI you want to supervise (`claude`, `copilot`, `gemini`, `goose` or `codex`), already installed and authenticated
+
+`rationguard check` and `rationguard prompt` only need Node.js.
+
 ## Install
 
 ```bash
 npm install -g @hivecommons/rationguard @hivecommons/pluk
 ```
+
+---
+
+## Releases
+
+Releases ship from a version-bump PR: on merge to `main`, the Auto Release workflow creates the `v<version>` tag and dispatches the publish workflow (a manual `v*` tag push also works; see [CONTRIBUTING.md](https://github.com/hivecommons/rationguard/blob/main/CONTRIBUTING.md#releases)). The publish workflow runs the test gate, then publishes `@hivecommons/rationguard` to npm with provenance via [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers) (GitHub Actions OIDC, `npm` environment) — no long-lived npm token is stored in the repository.
 
 ---
 
@@ -43,7 +64,26 @@ rationguard attach my-agent --cli=copilot --rebuttal=send
 
 # Pass extra CLI arguments
 rationguard attach my-agent --cli=claude --cli-args="--model opus" --dangerous
+
+# Don't open a terminal window, and print debug output for each step
+rationguard attach my-agent --cli=claude --no-open --verbose
+
+# Launch a custom executable instead of the default resolved from --cli
+rationguard attach my-agent --command=/usr/local/bin/my-claude-wrapper
+
+# Omit raw terminal bytes from the pluk event log
+rationguard attach my-agent --cli=claude --no-raw
 ```
+
+`attach` also accepts:
+
+- `--command=<path>` — override the CLI executable/command to launch, bypassing
+  the default resolved from `--cli`.
+- `--no-raw` — don't include raw terminal bytes in the pluk event log (omits
+  `--include-raw` from the internal `pluk watch` invocation).
+- `--rationguard-bin=<cmd>` — override the rationguard command pluk launches
+  (defaults to the running executable; `PLUK_RATIONGUARD_BIN` is honoured when
+  the flag is absent).
 
 ### `--dangerous` flag
 
@@ -54,6 +94,8 @@ Maps to the correct permission-skip flag per CLI:
 | `claude` | `--dangerously-skip-permissions` |
 | `codex` | `--full-auto` |
 | `goose` | `--non-interactive` |
+
+For other CLIs (`copilot`, `gemini`, or any `--command` wrapper) `--dangerous` is a no-op: no flag is added, so pass the CLI's own auto-approve option via `--cli-args`. If the tmux session already exists, `attach` does not restart the CLI; it prints a warning with the command to restart it with the flag.
 
 ### Already have sessions running?
 
@@ -68,6 +110,28 @@ helper           claude    idle      ●     45s ago       892
 # Watch one
 rationguard watch scanner --rebuttal=send
 ```
+
+`sessions` and `watch` look for pluk logs in pluk's default run directory
+(`$XDG_RUNTIME_DIR/pluk`, else `<tmpdir>/pluk-<uid>`). Point them
+elsewhere with `--run-dir=/path/to/pluk/run` or by setting the `PLUK_RUN_DIR`
+environment variable (the flag takes precedence if both are set). Add
+`--verbose` to `watch` to print debug output, and `--patterns-dir=<path>`
+to override pluk's CLI pattern directory. A pluk-send failure that falls
+back to tmux is always logged as one line; add `--log-format=json` to emit
+bounded JSON lines (`event`, `session`, `delivery`, `timestamp`) on stderr
+instead.
+
+`check --log-format=json` likewise writes one bounded JSON line per match to
+stderr (`event`, `category`, `confidence`, `matched` count; never the text).
+Library users can pass `check(text, config, { onEvent })` to receive the same
+events and feed their own counters.
+
+Add `--diagnostics` (or `--diagnostics=<seconds>`, a positive number; anything else is rejected) to `watch` for opt-in,
+local-only health visibility on a long-running session: a bounded JSON
+summary (flush/match/rebuttal counts) is printed to stderr on a fixed
+interval (default 60s) and once more when the watcher stops. It never
+includes the session name, raw output, or excuse text — only fixed counter
+categories — and nothing is sent anywhere.
 
 When rationguard detects an excuse, it prints the match and sends the rebuttal directly to the agent:
 
@@ -101,7 +165,12 @@ rationguard watch my-agent --rebuttal=send
 
 # JSON output for dashboards
 rationguard watch my-agent --json
+
+# Classify stdin through pluk's pattern matcher instead of tailing the JSONL log
+rationguard watch my-agent --mode=watch
 ```
+
+`--mode` accepts `subscribe` (default: tail the pluk JSONL log) or `watch` (classify stdin via pluk's `watch()`); any other value exits with an error.
 
 ### Mode 2: Post-response detection
 
@@ -119,7 +188,12 @@ echo "$AGENT_RESPONSE" | rationguard check
 
 # JSON output
 rationguard check --json "I will defer this to next pass"
+
+# Gate a pipeline or hook on detections
+rationguard check --fail-on-match --file=agent-output.txt || echo "rationalization detected"
 ```
+
+Exit codes: `0` = clean (or matches found without `--fail-on-match`), `1` = usage/input error, `2` = matches found with `--fail-on-match`. Boolean flags reject values other than `true`/`false` (e.g. `--fail-on-match=tru` exits 1).
 
 ```text
 ✗ Found 2 rationalization pattern(s):
@@ -136,15 +210,63 @@ rationguard check --json "I will defer this to next pass"
                scan for issues, or find work proactively.
 ```
 
+#### As a Claude Code `Stop` hook
+
+Claude Code runs [`Stop` hooks](https://code.claude.com/docs/en/hooks) each time Claude finishes a response. The hook receives the response text as `last_assistant_message` on stdin, and exiting with code 2 keeps Claude working with the hook's stderr as feedback. That gives you Mode 2 without tmux or pluk:
+
+```bash
+#!/usr/bin/env bash
+# .claude/hooks/rationguard-stop.sh — requires jq
+input=$(cat)
+
+# Challenge each response at most once: skip turns this hook already continued.
+[ "$(jq -r '.stop_hook_active' <<<"$input")" = "true" ] && exit 0
+
+message=$(jq -r '.last_assistant_message // empty' <<<"$input")
+[ -n "$message" ] || exit 0
+
+result=$(printf '%s' "$message" | rationguard check --json) || exit 0
+
+# Same guards `watch --rebuttal=send` applies before sending: the 0.7 confidence
+# floor, and never forward project-local excuses — ./.rationguard/ belongs to the
+# checkout, so a cloned repo must not get to put text in front of Claude.
+rebuttals=$(jq -r '.matches[] | select(.confidence >= 0.7 and .excuse.source != "project") | "rationguard: \(.excuse.category) — \(.excuse.rebuttal)"' <<<"$result")
+[ -n "$rebuttals" ] || exit 0
+
+echo "$rebuttals" >&2
+exit 2
+```
+
+Make it executable (`chmod +x .claude/hooks/rationguard-stop.sh`) and register it in `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/rationguard-stop.sh" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+For example, a response ending "This is too complex to fix right now" matches `too complex to fix` at 100% confidence, so Claude receives that pattern's rebuttal and continues. Lower-confidence keyword matches pass through, and so do matches against project-local excuses (`source: "project"`): those still count as detections, but — exactly as in `watch --rebuttal=send` — their rebuttal text is never handed to the agent, because the working directory is untrusted. Each run records eligible sightings, just like running `rationguard check` by hand.
+
 ### Mode 3: System prompt prevention
 
 Generate a defense table and inject it into your agent's system prompt. The agent self-polices against known excuses.
 
 ```bash
 rationguard prompt
+
+# Output as a YAML block instead of markdown
+rationguard prompt --format=yaml
 ```
 
-Outputs a markdown table you paste into CLAUDE.md, system prompt, or instructions file.
+Outputs a markdown table by default (or a YAML block with `--format=yaml`; `--format` accepts `markdown` or `yaml`) you paste into CLAUDE.md, system prompt, or instructions file.
 
 ---
 
@@ -174,7 +296,11 @@ rationguard add "synergizing the deliverables" \
 rationguard sightings
 ```
 
-Custom excuses live in `.rationguard/custom-excuses.json` (per-project) or `~/.rationguard/custom-excuses.json` (global).
+`rationguard add` and `rationguard sightings` always use the trusted per-user `~/.rationguard/` store. `add` records sightings in `~/.rationguard/sightings.json`; after 3 sightings of the same pattern, it promotes the pattern into `~/.rationguard/custom-excuses.json`. `sightings` lists the recorded sightings.
+
+Auto-learning from `check` and `watch` is best-effort: if `~/.rationguard/` cannot be written (read-only HOME, permission denied), detection and rebuttals still work and the sighting is skipped silently. See `runbooks/learned-excuses-store.md` to diagnose a store that stops accumulating sightings.
+
+A project-local `./.rationguard/custom-excuses.json` is read-only to the CLI and untrusted: its excuses are used for detection/display, but their rebuttals are never auto-sent and matches on them never count toward auto-promotion.
 
 ---
 
@@ -213,15 +339,31 @@ const block = generatePromptBlock();
 | Command | What it does |
 |---------|-------------|
 | `rationguard attach <session> --dangerous` | Start agent + pluk + rationguard + terminal (skip permissions) |
+| `rationguard <command> --help` (or `-h`) | Show usage from any position, without running the command |
 | `rationguard sessions` | List active pluk-monitored agent sessions |
 | `rationguard watch <session>` | Real-time detection via pluk |
 | `rationguard watch <session> --rebuttal=send` | Detect and auto-rebut (30s cooldown + 60s quiet period) |
 | `rationguard check <text>` | Check for excuse patterns |
 | `rationguard check --file=<path>` | Check file contents |
+| `rationguard check --fail-on-match` | Exit 2 when any pattern matches |
 | `rationguard prompt` | Generate defense table for system prompts |
+| `rationguard prompt --format=markdown\|yaml` | Generate defense table as markdown (default) or yaml |
+| `rationguard sessions --run-dir=<path>` / `watch --run-dir=<path>` | Point at pluk logs elsewhere (or set `PLUK_RUN_DIR`) |
+| `rationguard attach <session> --no-open --verbose` | Skip opening a terminal window and print debug output |
 | `rationguard add "excuse" --category=...` | Record an excuse sighting |
 | `rationguard list` | Show all known excuses |
 | `rationguard sightings` | Show recorded sightings and counts |
+
+---
+
+## Runbooks
+
+Operational procedures live in [`runbooks/`](https://github.com/hivecommons/rationguard/blob/main/runbooks/):
+
+- [`watch-session-degraded.md`](https://github.com/hivecommons/rationguard/blob/main/runbooks/watch-session-degraded.md) — `rationguard watch` is quiet or rebuttals are not arriving
+- [`learned-excuses-store.md`](https://github.com/hivecommons/rationguard/blob/main/runbooks/learned-excuses-store.md) — learned excuses or sightings disappeared
+- [`release-rollback.md`](https://github.com/hivecommons/rationguard/blob/main/runbooks/release-rollback.md) — rolling back a bad release
+- [`postmortem-template.md`](https://github.com/hivecommons/rationguard/blob/main/runbooks/postmortem-template.md) — incident postmortem template
 
 ---
 
@@ -237,6 +379,19 @@ const block = generatePromptBlock();
 rationguard was extracted from the [Hive](https://github.com/hivecommons/hive) multi-agent orchestration system. Hive runs 5+ AI agents continuously and discovered that agents rationalize inaction with predictable patterns. The original excuse-rebuttal tables (49 excuses across 5 agents) were built empirically — every excuse was observed in production before it was catalogued.
 
 The 15 default excuses in rationguard are the universal patterns that apply to any AI agent, not just Hive's.
+
+---
+
+## Contributing & Community
+
+rationguard is part of [Hive Commons](https://hivecommons.dev), a family of tools for working with AI agents.
+
+- Want to contribute? See [CONTRIBUTING.md](https://github.com/hivecommons/rationguard/blob/main/CONTRIBUTING.md) for local setup, the test and coverage gates, and pull request guidelines.
+- rationguard flagged text that is not an excuse, missed one that is, or you want to propose a new default excuse? Open an [excuse pattern report](https://github.com/hivecommons/rationguard/issues/new?template=excuse_pattern.yml).
+- Found a bug or have an idea? Open an [issue](https://github.com/hivecommons/rationguard/issues/new/choose).
+- Reporting a security vulnerability? Follow [SECURITY.md](https://github.com/hivecommons/rationguard/blob/main/SECURITY.md) to report it privately, not through public issues.
+- Questions? Join the [Hive Commons Discord](https://hivecommons.dev/discord).
+- Please follow the [Hive Commons Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md).
 
 ---
 

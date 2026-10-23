@@ -122,6 +122,15 @@ export function rewriteMarkdownLinks(
         return `${open}${lead}${rewritten}${rest}${close}`;
       }
     );
+
+    // Raw HTML `<img src="...">` (README logos are usually written this way
+    // for width/height control). Relative sources otherwise resolve against
+    // the site route and 404.
+    out = out.replace(
+      /(<img\b[^>]*?\ssrc=)(["'])([^"']+)\2/gi,
+      (_full, prefix, quote, src) =>
+        `${prefix}${quote}${rewriteImageTarget(src, opts.sourceRepoPath, rawBase)}${quote}`
+    );
   }
 
   // Inline links: [text](target) and [text](target "title"). The target is
