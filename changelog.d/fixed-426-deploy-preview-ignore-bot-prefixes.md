@@ -1,0 +1,1 @@
+- Skip Netlify deploy previews for `sec/*`, `outreach/*`, `ops/*` and `automation/*` bot branches as well (#426).

@@ -66,6 +66,10 @@ describe("netlify.toml [context.deploy-preview] ignore", () => {
     "arch/docs",
     "scanner/fix-419",
     "quality/test-netlify-ignore",
+    "sec/fix-markdown-it-15-0-3",
+    "outreach/docs-issue-forms",
+    "ops/runbook-healthz-field",
+    "automation/meeting-recordings-refresh",
     "hive/forward-merge",
     "dependabot/npm_and_yarn/next-16.4.1",
   ])("skips the preview for bot branch %s", head => {
@@ -81,6 +85,7 @@ describe("netlify.toml [context.deploy-preview] ignore", () => {
     // the patterns are anchored to the start of the branch name.
     "feat/scanner/dashboard",
     "myquality/notes",
+    "myops/notes",
   ])("builds the preview for non-bot branch %s", head => {
     expect(runIgnore(ignore!, { HEAD: head, BRANCH: head })).toBe(BUILD);
   });
