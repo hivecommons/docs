@@ -2,16 +2,22 @@
 
 # Hive introduction
 
-Hive is a governed fleet of AI coding agents for maintaining real GitHub and forge repositories. A hive helps with triage, fixes, reviews, release operations, and operational follow-up by watching the work a project already has — issues, pull requests, review queues, and health signals — then routing appropriate tasks to agents while deterministic guardrails handle filtering, permissions, merge eligibility, audit trails, and policy. Maintainers set the autonomy boundary through the Governor and ACMM levels, so Hive can range from advisory triage to carefully gated fixes and reviews without turning repository control over to an unconstrained model.
+Hive is a co-maintainer for your GitHub project that never sleeps. Point it at a repo and it watches the things that pile up — issues, pull requests, failing CI, CVEs, dependabot alerts — then sends AI coding agents (Claude, Copilot, Codex, Antigravity, Goose…) to deal with them: triage, fixes, reviews, releases.
 
-Hive is for maintainers of busy open source projects who need help keeping queues moving, and for platform teams that want a repeatable operations plane for agent work across many repositories. It is especially useful when the hard part is not invoking one agent, but coordinating many agents with clear ownership, safety checks, and a path for human oversight.
+You decide how much it is allowed to do. Humans keep every decision that matters; agents do the chores.
+
+A terminal agent is a power tool: you hold it, aim it, and it stops when you stop. Hive is the workshop that runs the power tools for you on three rules:
+
+1. **Short-lived agents.** Every task starts a fresh agent with a clean context and ends it.
+2. **External context.** What the agent needs to know lives outside the model and is re-injected each time.
+3. **Prompts driven by deterministic facts.** Instructions are templates filled from real data, not hand-tuned prose.
 
 ## Core concepts
 
 - **[Hive and spoke](/docs/hive/architecture#8-hub--spoke):** a spoke is the running hive that serves repositories; a hub can register, provision, and observe multiple spokes.
 - **[Agents](/docs/hive/agent-configuration):** configured AI workers with scopes, models, cadences, and permissions for specific lanes of work.
 - **[Governor](/docs/hive/architecture#3-the-governor-loop--from-queue-depth-to-a-kick):** the scheduler and policy loop that decides what work is actionable and when agents should be kicked.
-- **[ACMM levels](/docs/hive/acmm-policy-matrix):** the autonomy model that maps project maturity to what agents may observe, propose, open, review, or merge.
+- **[ACMM levels](/docs/hive/acmm-policy-matrix):** the **AI Codebase Maturity Model** — six levels that map how mature a codebase's tests, reviews and security posture are to what agents may observe, propose, open, review, or merge ([paper](https://arxiv.org/abs/2604.09388)).
 - **[Hub](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md):** the hosted or self-hosted control plane for onboarding hives, heartbeats, fleet views, and hosted-spoke lifecycle.
 - **[Contributors and ClankeR relay](/docs/hive/contributor-relay):** a way for trusted contributors to donate compute and run delegated work through hub-mediated roles.
 
@@ -25,7 +31,7 @@ Hive is for maintainers of busy open source projects who need help keeping queue
 ## Ways to run Hive
 
 - **Hosted Hive Hub:** start at [`https://hive.hivecommons.dev`](https://hive.hivecommons.dev) and follow the [hosted onboarding guide](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md) for the no-cluster path.
-- **Self-hosted:** run your own spoke on [Kubernetes](https://github.com/hivecommons/hive/blob/v5/README.md#kubernetes-deployment) or [Podman](https://github.com/hivecommons/hive/blob/v5/README.md#quick-start-podman), or operate a [self-hosted hub](https://github.com/hivecommons/hive/blob/v5/src/docs/hub-deployment.md) for a fleet.
+- **Self-hosted:** run your own spoke on [Kubernetes](https://github.com/hivecommons/hive/blob/v5/src/docs/kubernetes-deployment.md), [Docker Compose](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-docker-compose.md), or [Podman](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-podman.md), or operate a [self-hosted hub](https://github.com/hivecommons/hive/blob/v5/src/docs/hub-deployment.md) for a fleet.
 
 ## Get started
 
@@ -36,11 +42,16 @@ Start with [Zero to Automation: Getting Started with Hive](/docs/hive/getting-st
 - [Architecture](/docs/hive/architecture)
 - [Getting started](/docs/hive/getting-started)
 - [Operator reference](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference.md)
+- [GitHub webhooks: cadence, patch and reconcile](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md) — polling fallback, webhook patch and reconcile, and the state-accuracy guarantees.
+- [Dashboard sections explained](/docs/hive/dashboard-sections) — what each dashboard section shows and what to do about it.
+- [Hive on your iPhone Home Screen](https://github.com/hivecommons/hive/blob/v5/src/docs/ios-widget.md) — a Home Screen widget with issue/PR counts and sparklines (Scriptable, no server change).
+- [Dashboard settings explained](https://github.com/hivecommons/hive/blob/v5/src/docs/settings.md) — what each Settings tab controls and where each setting is documented.
 - [Maintainer commands](https://github.com/hivecommons/hive/blob/v5/src/docs/maintainer-commands.md) — slash commands for un-parking
   issues, requesting help, confirming fixes, reopening issues, and using label
   or assignment helpers.
 - [Release channels](/docs/hive/release-channels) — what `stable`, `candidate`, and `edge` each mean and what to expect from them.
-- [Security model](/docs/hive/security-model)
+- [Security model](/docs/hive/security-model) — agent safety control inventory, threats, enforcement modes, residual gaps and operator audit checklist.
+- Security docs rule: `SECURITY.md` and every `src/docs/security*.md` / `ioscan*.md` page, plus `landscape.md`, must score Flesch-Kincaid grade 11 or lower (CI: `src/scripts/check-security-docs-readability.sh`).
 - [Data collection and telemetry](https://github.com/hivecommons/hive/blob/v5/src/docs/telemetry.md)
 - [Securing your hive: a first-time operator's guide](/docs/hive/securing-your-hive)
 - [Community and support](https://github.com/hivecommons/hive/blob/v5/src/docs/community.md)

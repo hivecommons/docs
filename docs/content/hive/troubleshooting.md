@@ -37,6 +37,10 @@ journalctl --user -u hive-gateway.service -n 100 --no-pager
 
 The process also writes `hive.log` under the configured logs directory (default `/data/logs`, from `governor.logging.dir`, falling back to `data.logs_dir`), and tees the same lines to stdout — so `docker compose logs` / `kubectl logs` show everything the file does. The older per-agent `AGENT_LOG_FILE` heartbeat file from v1 is not used.
 
+### No shell on the host?
+
+Operators without direct host shell access can read Hive's logs, auth proxy output, early startup output, request logs, agent terminal and kick logs, and restart/crash/memory evidence through the admin MCP (available on v6). Start with `log_sources` and `log_read` in [`admin-mcp.md`](https://github.com/hivecommons/hive/blob/v6/src/docs/admin-mcp.md). See also [`admin-mcp.md` § What still needs a host shell](https://github.com/hivecommons/hive/blob/v6/src/docs/admin-mcp.md#what-still-needs-a-host-shell).
+
 ## Config fails to load or save
 
 Hive reads `/etc/hive/hive.yaml` by default, or `HIVE_CONFIG`/`--config` when set. Startup logs `failed to load config` when `config.LoadWithDashboardOverlay` fails. Common validation strings in `src/pkg/config/config.go` include:
@@ -327,6 +331,71 @@ Read what the PR-request watcher itself concluded. It probes the repository and 
 kubectl -n hive logs deploy/hive | grep 'pr-request watcher'
 ```
 
+## "HIVE_AGENT_TOKEN_CACHE unset, no read credential available"
+
+This advisory means an agent tried to read the primary GitHub repository with
+`gh`/Git and no scoped App token (or native-install `gh` login) was available.
+It is **not** expected on normal per-UID Kubernetes deployments: those agents
+inherit `HIVE_AGENT_TOKEN_CACHE`, the entrypoint pre-creates the cache, and the
+manager mints it before launch. Writes can still work through the hive's App
+write gate while reads fail, because advisory agents do not receive
+`GITHUB_TOKEN` directly.
+
+Common causes:
+
+- **The persisted UID map is empty or truncated.** The boot log shows
+  `[entrypoint] WARN: Failed to build UID map` (older images) or
+  `WARN: persisted UID map /data/.hive/uid-map.json unreadable … rebuilding`,
+  followed by `no UID map found, agents will share dev UID`. A 0-byte
+  `/data/.hive/uid-map.json` is what an unsynced rename leaves behind when the
+  node crashes mid-boot (seen on CephFS-backed `/data`). Current images recover
+  automatically from directory ownership; on older images delete the empty
+  file and restart the pod:
+
+  ```sh
+  kubectl -n <ns> exec deploy/hive -c hive -- sh -c 'test -s /data/.hive/uid-map.json || rm -f /data/.hive/uid-map.json'
+  kubectl -n <ns> rollout restart deploy/hive
+  ```
+
+  A Kubernetes or Podman hive in this state also reports a failing
+  `uid_isolation` health check (dashboard health summary and
+  `/api/health/deep`), which the hub surfaces as a `health-check-failing`
+  fleet alert ([#11713](https://github.com/hivecommons/hive/issues/11713)).
+
+- The agent is running in a deployment that does not use the per-UID manager
+  path (native/systemd, Compose/Quadlet, or a Kubernetes pod whose UID
+  isolation did not initialize), so `HIVE_AGENT_TOKEN_CACHE` is legitimately
+  absent and the native `gh auth login` fallback must be used instead.
+- The cache file exists but is empty, unreadable, or was not pre-created by the
+  entrypoint as `dev:hive-<agent> 0640`.
+- The GitHub App is not installed on the repo, or token minting failed for the
+  installation/repository. A hosted hive whose `project.org` is still the slot
+  placeholder (`available-…`) logs `app <id> has no installation for
+  "available-…"` every poll and runs with no GitHub credentials at all; set the
+  real org in the dashboard so installation auto-discovery can succeed.
+- On GitHub Enterprise (for example `github.ibm.com`), the hive is missing the
+  enterprise host setting, so `gh`/Git are looking at the wrong host credential.
+
+Check from inside the hive container:
+
+```sh
+su -s /bin/sh hive-<agent> -c 'printf "%s\n" "${HIVE_AGENT_TOKEN_CACHE:-unset}"; test -r "$HIVE_AGENT_TOKEN_CACHE" && echo readable || echo MISSING'
+```
+
+Never print the file contents. If this says `unset` on a native/shared-UID
+deployment, check that the launch environment has the shared App token available
+to the launcher (`HIVE_GITHUB_TOKEN`) and that `gh auth status --hostname
+github.ibm.com` succeeds after launch. For GitHub Enterprise, set the primary
+GitHub host/base URL so agents inherit `GH_HOST=github.ibm.com`, and
+install/authorize the GitHub App on the target repo (`Jaedon-Paget/kie` in the
+reported case). On per-UID Kubernetes, `unset` or `MISSING` points to a broken
+entrypoint/UID-isolation setup; restart the pod and inspect the boot log for the
+agent token-cache creation lines.
+
+The wrapper intentionally does **not** fall back to the shared full-privilege
+App token: doing so would let an advisory agent read/write with fleet-wide
+installation permissions instead of its tier-scoped credential.
+
 ## An agent says "Please run /login" but logging in changes nothing
 
 Check whether the same line carries **`API Error: 403`**. If it does, the agent is
@@ -341,6 +410,12 @@ renders like this:
   to access model. This team can only access models=['gemini-2.5-pro',
   'gcp/gemini-3.1-pro-preview', 'aws/claude-sonnet-4-6', ...]"}}
 ```
+
+While Claude Code is still retrying, its TUI clips this line to one pane row and
+shares it with a right-aligned `Retrying in Ns · attempt N/M` countdown, so the
+message is cut off until every retry is exhausted. Hive's inference proxy built
+that message, so the agent's dashboard card shows the **full** text it returned
+(the red inference-backend banner) as soon as the failure happens (#11761).
 
 The status is the tell:
 
@@ -489,7 +564,7 @@ A kick is recorded when the prompt is *delivered*, not when the agent produces a
 | Card | What happened | What the hive does |
 |---|---|---|
 | **asked for direction** | The agent ended its turn asking the operator what to do (`What should I focus on?`, `Awaiting your kick or specific task assignment.`). The kick already told it; this is a defect. | Re-kicks the agent ~5 minutes later instead of waiting out the cadence — once per hour, so a model that answers every kick with a question cannot turn the cadence into a loop. |
-| **blocked** — `policy stand-down: …` | The agent stood down on a policy condition (`STAND DOWN.`). A legitimate refusal. | Recorded as blocked with the stand-down line as the reason; the cadence is unchanged — fix the condition it names. |
+| **blocked** — `policy stand-down: …` | The agent stood down on a policy condition (`STAND DOWN.`). A legitimate refusal. | Recorded as blocked with the stand-down line as the reason; the cadence is unchanged — fix the condition it names. The reviewer lane (`role: reviewer`, the L5/L6 `adjudicator`) is the exception: when it is dormant or has nothing to adjudicate its scheduled kick is skipped rather than sent, so an empty needs-human queue leaves it idle, not blocked ([#11046](https://github.com/hivecommons/hive/issues/11046)). |
 | **no-op** | The agent reported `no issue opened, no PR opened, no bead created` without standing down. | Recorded as a no-op. |
 
 The verdict is also stamped on the kick history (`outcome` / `outcomeReason` on each entry), so the 🕘 *past kicks* list distinguishes a kick that produced work from one that did not. A turn with none of these signatures is recorded as `ended` — which means only that no no-op was recognised, not that work was done. The hive can prove from a pane that nothing happened; it cannot prove that something did.
@@ -597,6 +672,30 @@ One related status is also nginx-origin but never wears this body: **429** on
 `/api/auth/token` and the `/api/gh-user-auth/` device-flow paths is the
 gateway's `limit_req` rate limiter, not a service failure — back off and
 retry after the window.
+
+## The dashboard shows `issue request stuck` or `effect ledger op stuck`
+
+These are self-report classes (see [fleet-report.md](https://github.com/hivecommons/hive/blob/v5/src/docs/fleet-report.md)) for
+work the hive is silently not doing: a relay request file that keeps failing,
+or a journaled external effect the mutation boundary refuses to retry because
+its last attempt ended `Unknown`. Both appear on the Fleet report card and,
+when self-reporting is enabled, as a `[selfreport]` issue.
+
+- **`issue_request_stuck`** — the key is the request file name under the
+  issue-requests queue
+  (`kubectl -n hive exec deploy/hive -- ls /var/run/hive-metrics/issue-requests/`).
+  Read the sibling `.result.json` for the last error. A placeholder or
+  malformed request (`repo: "owner/repo"`, title `t`) will never succeed: move
+  it aside (`mv x.json x.failed`) and the condition clears on the next scan.
+- **`effect_ledger_op_stuck`** — the key is the op's logical ID in the
+  mutation journal (`/data/convergence/mutation/journal.json` in the pod). Check whether the effect
+  exists on GitHub; the owning call site reconciles it on its next pass, or
+  the op resolves once the request behind it is removed. A watcher retrying
+  a doomed request keeps the op pinned, so fix the request first.
+- **`unclassified_error_repeated`** — any WARN/ERROR line repeated five times
+  in ten minutes. The report's message is the normalised line; grep the log
+  for it (`kubectl -n hive logs deploy/hive | grep -F "<message>"`) to find
+  the component.
 
 ## Health endpoints
 

@@ -4,13 +4,13 @@
 
 # Spektacular
 
-> Spektacular — Spek for short. The specs it produces are called speks.
+Spektacular — **Spek** for short. The specs it produces are called **speks**.
 
-Agent-agnostic CLI tool for spec-driven development, providing skills and integrations for coding agents (Claude, Bob, Codex) to plan and implement work from a written spek.
+Agent-agnostic CLI tool for spec-driven development, providing skills and integrations for coding agents (Claude, Bob, Codex, GitHub Copilot CLI) to plan and implement work from a written spek.
 
 > **Status:** early development — see the [releases page](https://github.com/hivecommons/spektacular/releases) for the latest version.
 
-## What is Spektacular?
+## What is Spektacular (Spek)?
 
 Spek is a self-contained Go binary that brings spec-driven development to AI coding agents. You write a markdown spek; Spek turns it into a reviewed implementation plan and then drives a coding agent to implement it — keeping your intent reviewable at every stage.
 
@@ -18,7 +18,7 @@ Its core competencies:
 
 - **Self-contained binary plus installed agent skills.** A single binary that, on `init`, installs the skills (and commands) your coding agent needs to run the Spek workflows.
 - **State-machine-driven workflow.** Spec, plan, and implement each run as a stepwise state machine. Spek hands the agent one per-step prompt at a time (`new` / `goto` / `steps`), so every stage is resumable — stop, inspect, edit, and resume without losing work.
-- **Agent-agnostic, multi-agent support.** Works with claude, bob, and codex; pick the one your team already uses, or register your own.
+- **Agent-agnostic, multi-agent support.** Works with claude, bob, codex, copilot, and oh-my-pi (omp); pick the one your team already uses, or register your own.
 - **Project knowledge base.** A searchable, layered store of conventions, architecture, gotchas, and learnings that feeds context into planning.
 - **Project design documents.** The worked design a feature is built to (an API shape, a user-facing flow, a data format) kept wherever your team already keeps it and referenced by the spek that needs it, so speks stay readable and planning is bound to the design that was agreed.
 
@@ -30,16 +30,37 @@ Spek follows a three-stage workflow — **spec → plan → implement** — each
 2. **Plan.** `plan new` explores your codebase, asks clarifying questions, and writes a detailed implementation plan — `plan.md`, `research.md`, and `context.md`.
 3. **Implement.** `implement new` drives the coding agent through each phase of the plan and validates the result against your acceptance criteria.
 
-Workflow progress can be inspected without reading Spek's state files directly. `spektacular spec status` and `spektacular plan status` keep reporting the single in-progress workflow. Passing an artifact name switches the commands to per-artifact status:
+Where a piece of work stands can be inspected without reading Spek's state files directly. One command reports everything, from the epic down to each task:
 
 ```bash
-spektacular spec status <name>
-spektacular plan status <name>
+spektacular status <name>                 # readable tree (--format pretty, the default)
+spektacular status <name> --format json   # the same report as structured data
+spektacular status                        # every workflow in progress, if any
+spektacular status [name] --watch         # keep the readable tree on screen, scrollable, refreshed every --interval (2s)
 ```
 
-Both take the bare artifact name with no extension (`20260922132517-a3f9c0de-git-commit`, not `20260922132517-a3f9c0de-git-commit.md`), the same name `state.json` records in `data.name`. The status payload also returns `artifact_id`; external orchestrators should use that field as the join key across spec, plan and changelog artifacts. For new timestamp-generated artifacts `artifact_id` is the timestamp plus random-suffix name. Older counter-prefixed names remain readable aliases during migration, but projects that still choose `spec.id_method: counter` must not treat the numeric counter prefix as globally unique across branches. `plan status <name>` reports the plan's `plan.md` only, not the plan's other documents.
+`<name>` is a bare artifact name with no extension (`20260922132517-a3f9c0de-git-commit`, not `20260922132517-a3f9c0de-git-commit.md`), the same name `state.json` records in `data.name`, and may be an epic, a spec or a plan. A spec that belongs to an epic, or that spec's plan, reports the whole epic, with the spec asked for named in `requested`; a standalone spec reports on its own. The JSON report always has the same shape, so callers never branch on kind: `epic` (null for a standalone spec, otherwise its document status and a roll-up of specs implemented and tasks complete), and `specs`, one entry per spec carrying its derived `state` (`missing`, `stale`, `specified`, `planned`, `in_progress` or `implemented`), `document_status`, `current_step`, `depends_on`, `ready`, `blocked_by` and its `plan`. A plan reports its `document_status`, `current_step`, task `progress`, and every task under `specs[].plan.tasks` with its `id`, `title`, `milestone`, `repo`, `depends_on`, `execution`, `completed` and `acceptance_criteria` counts; a plan without task structure omits `progress` and `tasks`.
 
-The named form returns JSON with the artifact kind, name, document status, workflow step when that artifact is currently in progress, completed steps, `created_at`, `closed_at`, and the `spec` / `plan` frontmatter cross-references (surfaced when present, but rarely populated today). Two timestamps are kept apart: `updated_at` is workflow activity and appears only while that artifact has the in-progress workflow, so its absence means nothing is live; `modified_at` is the store's modification time for the artifact and moves on any write, including a checkout or a reformat. Frontmatter dates are stored as `YYYY-MM-DD` and are emitted as RFC3339 midnight UTC timestamps. `spec file list` and `plan file list` carry `modified_at` per entry, so polling many artifacts is one list call. When `plan.strict_spec_changes` is true, `plan status <name>` reports `document_status: "stale"` and `current_step: "stale"` once the linked spec is modified after a final plan; `implement new` and subsequent implement steps refuse that plan until it is replanned and re-approved. With the default non-strict setting, a later spec edit does not invalidate an existing plan.
+`current_step` is the live workflow step when that artifact's workflow is in progress, `finished` for a closed document, `stale` for a stale plan, and empty otherwise. The report carries a `workflow` block (`kind`, `name`, `current_step`, `completed_steps`, `updated_at`) when the workflow in progress belongs to one of the reported specs or plans, and `null` otherwise. With no name, `status` reports every workflow in progress: the shared one, and each run kept in its own lane under `.spektacular/workflows/` (an implement run in its own worktrees, or a run an epic's orchestrator started). `workflows` lists them, the shared one first and then the lanes, most recently updated first; `workflow` is the first, carrying `orchestrated: true` when an orchestrator started it, and the report shows its epic or spec in full, with the same `run` view as naming it. When an orchestrator started that first run, the report is its epic's and no single spec is `requested`. In the readable tree, the requested spec is expanded to its milestones and tasks; with no spec requested, every spec being implemented is expanded instead. With nothing in progress it is `{"workflow": null}`. The readable tree is coloured on a terminal and plain text when piped or when `NO_COLOR` is set. Long dependency lists wrap to the terminal, and task titles too wide for their columns are cut to fit. `--watch` keeps it on screen, redrawn in place every `--interval` (default `2s`, at least `200ms`) until `q`, Esc or Ctrl+C; a tree taller than the screen scrolls with the arrow keys, `j`/`k`, PgUp/PgDn, `g`/`G` and the mouse wheel, and keeps its place across a refresh; it is refused with `--format json` (`status_watch_format_unsupported`), and a shorter interval is refused with `status_interval_invalid`. An unknown name is refused with `artifact_not_found`, and an unsupported `--format` with `status_format_unsupported`; failures are always JSON, whatever format was asked for. Frontmatter dates are emitted as RFC3339 midnight UTC timestamps. `spec file list` and `plan file list` carry `modified_at` per entry, so polling many artifacts is one list call.
+
+When `plan.strict_spec_changes` is true, `status` reports a plan's `document_status: "stale"` and `current_step: "stale"`, and its spec's state as `stale`, once the linked spek is modified after a final plan; `implement new` and subsequent implement steps refuse that plan until it is replanned and re-approved. With the default non-strict setting, a later spek edit does not invalidate an existing plan. A spek change recorded with `spektacular spec amend` during an implement run does not make the plan stale in either mode; any other edit to the spek's body still does under the strict setting.
+
+**Epics.** When a piece of work is split into an epic, ask your agent to *plan this epic*, review the plans, then *implement this epic*. Independent specs are worked on in parallel, each spec is built in its own worktree and merged before the specs that depend on it, and repeating either request picks up where it stopped. Naming an epic in `status` adds a `run` view that says, for planning and for implementing, what each spec still needs and what blocks the epic. See [Epics](https://spektacular.dev/epics/).
+
+### Addressing specs, plans and changelog records
+
+Every document a feature produces is addressed by the feature's bare name, the same name the workflow records in `data.name`, with no file extension:
+
+```bash
+spektacular spec file read 000059_normalise-artifact-addressing
+spektacular plan file list 000059_normalise-artifact-addressing      # plan, context, research, test-plan
+spektacular plan file read 000059_normalise-artifact-addressing plan
+spektacular changelog file read 000059_normalise-artifact-addressing [--repo <name>]
+```
+
+Every `name` a list prints is accepted unchanged by read, write, delete and set-document-status. `path` is where the store keeps the document, relative to the folder holding the configuration file that declares the store (`specs/<name>.md`, `plans/<name>/plan.md`, or `changelog/<project>/<name>.md` in a repo's changelog). The workflow commands' `new` and `goto` results report the plan the same way: `plan_name` and `plan_document` (always `plan`) are its address, and `plan_path` is its config-relative location, never a host path; `spec_path` follows the same convention.
+
+A name with an extension, or a plan written as one path (`<name>/plan.md`), is refused with `unexpected_extension`; `plan file read <name>` with no document is refused with `document_required`. Both refusals' `next_action` shows the correct command, and a missing document's `not_found` points at the matching list command.
 
 For the full pipeline, see the [how-it-works documentation](https://spektacular.dev/how-it-works/).
 
@@ -55,23 +76,23 @@ brew install hivecommons/homebrew-repo/spektacular
 go install github.com/hivecommons/spektacular@latest
 ```
 
-Or download a pre-built binary from the [releases page](https://github.com/hivecommons/spektacular/releases). See the [install docs](https://spektacular.dev/install/) for apt and other methods. You also need a supported coding agent CLI (claude, bob, or codex) installed and configured.
+Or download a pre-built binary from the [releases page](https://github.com/hivecommons/spektacular/releases). See the [install docs](https://spektacular.dev/install/) for apt and other methods. You also need a supported coding agent CLI (claude, bob, codex, copilot, or omp) installed and configured.
 
 Once installed, the minimal path is initialise → spec → plan → implement:
 
 ```bash
-# 1. Initialise your project for a coding agent (claude, bob, or codex)
+# 1. Initialise your project for a coding agent (claude, bob, codex, copilot, or omp)
 spektacular init claude
 
-# 2. Scaffold a spec, then fill in your requirements
+# 2. Scaffold a spek, then fill in your requirements
 spektacular spec new --data '{"name":"auth-feature"}'
 $EDITOR .spektacular/specs/<returned-spec-name>.md
 
 # 3. Generate an implementation plan
 spektacular plan new --data '{"name":"<returned-spec-name>"}'
 
-# 4. Implement the plan
-spektacular implement new --data '{"name":"<plan-name>"}'
+# 4. Implement the spec
+spektacular implement new --data '{"name":"<spec-name>"}'
 ```
 
 Spek names are normalised and prefixed by the CLI, so use the returned `spec_name` and `spec_path` for follow-up commands rather than the name you passed.
@@ -80,11 +101,67 @@ Speks are plain markdown with a small set of structured sections (overview, requ
 
 ## Supported agents
 
-Spek ships with three coding-agent integrations. `spektacular init <agent>` runs the chosen agent's install step, writing its workflow skills (and, where the agent has no skill mechanism, command wrappers) into your project:
+Spek ships with five coding-agent integrations. `spektacular init <agent>` runs the chosen agent's install step, writing its workflow skills (and, where the agent has no skill mechanism, command wrappers) into your project:
 
 - **claude** — installs the workflow skills under `.claude/skills/` and ensures the project's `CLAUDE.md` imports `@AGENTS.md`, so the Spek agent rules take effect.
 - **bob** — installs skills under `.bob/skills/` and command wrappers under `.bob/commands/`.
 - **codex** — installs skills under `.agents/skills/`.
+- **copilot** — GitHub Copilot CLI; installs the eight workflow skills under `.github/skills/` and the same standing rules in root `AGENTS.md`, with no command wrappers or extra instruction files.
+- **omp** — installs the same six skills under `.omp/skills/`, Markdown wrappers and native input-preserving handlers under `.omp/commands/`, and eight always-applied `spek-*.md` rules under `.omp/rules/`. The rules mirror only Spektacular's sections of root `AGENTS.md`, keeping them visible even when omp selects another instruction file. Other project instructions, rules, skills and settings are left alone.
+
+### GitHub Copilot CLI
+
+Install [Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli), then run:
+
+```bash
+cd my-project
+spektacular init copilot
+copilot
+```
+
+Inside the interactive session, start a workflow with `/spek-new add user auth`,
+`/spek-plan`, `/spek-implement`, `/spek-knowledge`, `/spek-manage-repos`, or
+`/spek-design`. Epic workflows are available through `/spek-plan-epic` and
+`/spek-implement-epic`. Text after a command is passed to its skill. Start Copilot in the
+project's top folder: Spektacular commands do not search parent directories.
+Command names in non-interactive prompts such as `copilot -p "/spek-new add user auth"`
+are **not expanded**; start workflows inside a session instead. This integration
+covers the CLI, not editor Copilot or the cloud agent.
+
+On shared projects, Copilot discovers each named skill once and prefers its
+`.github/skills/` copy over `.agents/skills/` and `.claude/skills/`. Setup keeps
+other agents' files and the project's own instruction files. A top-level
+`CLAUDE.md` importing `@AGENTS.md` (as Claude setup creates) causes Copilot to
+receive the standing rules twice: it reads `AGENTS.md` directly and follows the
+import. Copilot-only setup does not create that import.
+
+`init copilot` makes `copilot` the project's recorded agent. `migrate` refreshes
+only that agent's files on upgrade; other agents' copies can fall behind. After
+upgrading a shared project, run `spektacular init <agent>` once for **each** agent.
+The last init determines the recorded agent.
+
+If you previously ran `init claude` or `init codex` only as a Copilot workaround,
+run `spektacular init copilot`. The old agent's files remain and may be removed
+manually if that agent is unused. Keep the shared `AGENTS.md`. Rules remain
+doubled for as long as a `CLAUDE.md` importing it remains.
+
+### Using oh-my-pi
+
+Install and configure [oh-my-pi](https://omp.sh), then run:
+
+```bash
+cd my-project
+spektacular init omp
+omp
+```
+
+In omp, start a workflow with `/spek-new add user auth to the admin pages`, or use `/skill:spek-new`. The same forms work for `spek-plan`, `spek-implement`, `spek-knowledge`, `spek-manage-repos`, and `spek-design`. Text after each plain command is forwarded unchanged, including quotes and whitespace. Skills remain available with foreign providers disabled.
+
+**Start omp in the project's top folder.** Spektacular's commands only work there, and omp only discovers the plain commands there. Once root `AGENTS.md` exists, omp does not read root `CLAUDE.md`; put instructions omp should see in `AGENTS.md` instead. Spektacular does not create or overwrite `.omp/AGENTS.md` or `.omp/RULES.md`.
+
+**Shared projects:** `spektacular init omp` records omp as the project's agent without removing another agent's files. Migration refreshes only the recorded agent's files; the other agent's copies fall behind and omp may list both current and stale skills. After upgrading, run `spektacular init` once for **each** agent to refresh every copy. Identical skill copies are listed once by omp.
+
+Build a versioned binary with `make build`, then run the credential-free runtime regression check with `python3 tests/omp_smoke.py ./bin/spektacular` and omp on `PATH`. It checks actual command discovery, all six command inputs, instruction conflicts, deduplication, shared projects and disabled foreign providers. Verified against omp **18.6.0**; it uses isolated temporary settings and a closed local model endpoint rather than a model service.
 
 Each integration is deliberately small: an agent implements a narrow `Agent` interface — `Name()` (its CLI identifier) and `Install()` (which writes its workflow artefacts) — and registers itself with the agent package from an `init()` function. Adding a new agent means implementing those two methods and registering the type.
 
@@ -188,7 +265,7 @@ command: spektacular
 agent: claude
 auto_commit: "off"                  # off | workflow | full: automatic git commits (local only)
 debug:
-  enabled: false
+  enabled: false                    # true records every command and response to a session log; SPEKTACULAR_SESSION_LOG=off leaves one call out
 spec:
   provider: file
   id_method: timestamp              # timestamp + random suffix; counter is legacy and branch-local
@@ -196,7 +273,7 @@ spec:
     directory: specs                # relative to the folder holding config.yaml
 plan:
   provider: file
-  strict_spec_changes: false        # true marks final plans stale after later spec edits
+  strict_spec_changes: false        # true marks final plans stale after later spec edits (recorded amendments excepted)
   config:
     directory: plans                # relative to the folder holding config.yaml
 changelog:
@@ -226,7 +303,7 @@ design:
 
 Each repo entry needs a slug-safe unique `name` and a `location`: the folder holding that repo's `repo.yaml` (`local` is still accepted and means the same thing). A relative location is resolved from the folder holding `config.yaml`, and nothing is appended to it, so the project's own footprint is `.` and a repo folder in the project is `../repos/<name>`. A repo is normally added through a guided flow: you are asked which repo to add, and its name, description, role and tags are each proposed for you from what the repo says about itself, one question at a time, with a plain-language confirmation before anything is written. Spek's files go inside the repo being added unless it cannot take them or you say otherwise, in which case they live in a folder under the project and the repo is left with only its code. An add can be started and finished while a spec or plan is already in progress. A caller that already knows every detail can still register a repo in a single command with `repo add`. Where the code lives is declared in the repo's own `repo.yaml` as `source`; the old `address` key is no longer read, and a config that still carries it fails to load with an error saying where the value now goes. `description`, `role`, and `tags` are optional metadata, also in `repo.yaml`, that cross-repo planning uses to attribute requirements to the right repo. Add to the registry with `spektacular repo new`, or `spektacular repo add` when every detail is already known, and inspect it with `spektacular repo list`; removal is a manual config edit. Cloned repos are never fetched or pulled automatically; a stale clone produces a warning only.
 
-**Relative locations everywhere in `config.yaml` share one base: the folder holding `config.yaml`.** That covers a repos entry's `location`, a `knowledge.sources` entry's `config.location`, a `design.sources` entry's `config.location`, and the `spec`, `plan` and `changelog` store directories, so `..` is the project's own root and `../team-kb` a folder beside it. The store directories default to `specs`, `plans` and `changelog`, which land in `.spektacular/specs`, `.spektacular/plans` and `.spektacular/changelog`; a store directory outside the project is refused with the corrected value to write. An absolute location is used as written. A knowledge source that does not resolve to a directory fails fast, naming the store, the path it resolved to, and the base it resolved from; when the store is found where the pre-1.0 rule would have put it, the error also names the exact corrected value to write. A design source behaves the same way and fails fast with the same three facts, with one deliberate difference from the store directories: a design source's location is allowed to resolve outside the project, and is written back exactly as declared rather than re-expressed, because a design source points at a folder the team already keeps.
+**Relative locations everywhere in `config.yaml` share one base: the folder holding `config.yaml`.** That covers a repos entry's `location`, a `knowledge.sources` entry's `config.location`, a `design.sources` entry's `config.location`, and the `spec`, `plan` and `changelog` store directories, so `..` is the project's own root and `../team-kb` a folder beside it. The store directories default to `specs`, `plans` and `changelog`, which land in `.spektacular/specs`, `.spektacular/plans` and `.spektacular/changelog`; a store directory outside the project is refused with the corrected value to write. An absolute location is used as written. A knowledge source that does not resolve to a directory fails fast, naming the store, the path it resolved to, and the base it resolved from; when the store is found where the pre-1.0 rule would have put it, the error also names the exact corrected value to write. A design source behaves the same way and fails fast with the same three facts, with one deliberate difference from the store directories: a design source's location is allowed to resolve outside the project, and is written back exactly as declared rather than re-expressed, because a design source points at a folder the team already keeps. Locations the CLI reports for stored documents (a list's `path`, status `plan_path`) use the same base, so they read the way the store directory is written, for example `specs/<name>.md`.
 
 ### Repo configuration (`repo.yaml`)
 
@@ -291,7 +368,7 @@ go test ./...   # or: make test
 #### Install Harbor
 
 ```bash
-uv tool install harbor
+make harbor-install    # runs: uv tool install --upgrade harbor
 ```
 
 #### Run the oracle (scripted) tests
@@ -330,6 +407,7 @@ Makefile wrappers run the suites for you, building the binary and wiring up the 
 make harbor-test-spec            # spec workflow (claude)
 make harbor-test-spec-codex      # spec workflow (codex)
 make harbor-test-plan            # plan workflow (claude)
+make harbor-test-implement       # implement workflow (claude)
 make harbor-test-repo            # guided repo add, answering each question (claude)
 make harbor-test-repo-delegated  # guided repo add, handing the whole set over (claude)
 ```
@@ -390,6 +468,7 @@ make cross
 | `make lint` | Run `go vet ./...` |
 | `make clean` | Remove build artefacts |
 | `make install-local` | Build and copy the binary to `/usr/local/bin` |
+| `make harbor-install` | Install (or upgrade) the harbor CLI with uv |
 | `make cross` | Cross-compile for darwin/linux/windows (amd64 + arm64) |
 
 ## Contributing

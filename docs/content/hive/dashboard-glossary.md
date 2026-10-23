@@ -16,7 +16,7 @@ For a plain-language explanation of every dashboard section — what it shows, h
 | Governor | Policy engine that decides cadence, autonomy, budgets, and merge/apply gates. | Use for the overview/governance surface and settings that control automation policy. |
 | Fleet | The set of agents or contributor agents under observation in an operational context. | Use for aggregate operational controls and live monitoring. |
 | Issue band | A display-only group in a repository card's issue column, named for the operator's action: Unclaimed, Claimed, Needs triage (agent-filed and not yet acknowledged by a human), Needs human, or Confirm & close. | Use for Projects card grouping; do not imply scheduler eligibility changed. Hover a band header, Overview slice, or legend row for its rule. |
-| Pill legend | The collapsible Projects-section key explaining pill colours, borders, glyphs, and badges as a colour key plus captioned issue, pull-request, review, link, and action pills. The aligned repository-card rows keep the left chip for the issue band or PR review class and align actions in fixed slots. | Use for the compact legend above project cards. |
+| Pill legend | The collapsible Projects-section key explaining pill colours, borders, glyphs, and badges as a colour key plus captioned issue, pull-request, review, link, and action pills, including the red sentinel pill for PRs that carry the configured sentinel alert label. The aligned repository-card rows keep the left chip for the issue band or PR review class and align actions in fixed slots. | Use for the compact legend above project cards. |
 | PR band | A display-only group in a repository card's pull-request column: Needs human, Merge-eligible, Blocked, In review, Open, or Draft. | Use for Projects card grouping; do not imply merge queue, hold, or review eligibility changed. |
 | Stale issue | An actionable repository-card issue whose `updated_at` activity is older than the configured `dashboard.issue_bands.stale_days` threshold. | Use for the `N no activity > Nd` counter and `🕒` badge. |
 | Stale PR | A repository-card PR whose `updated_at` activity is older than the configured `dashboard.issue_bands.stale_days` threshold. | Use for the PR `🕒` badge. |
@@ -32,8 +32,8 @@ The operator sidebar keeps the existing destinations, IDs, `data-action` handler
 | Dashboard | Overview, Governor, Throughput |
 | Agents | Dynamic agent tree, `+ Add agent`, `+ Group` |
 | Resources | Projects, Contributors |
-| Intelligence | Advisory, ACMM Eval, Inception, Knowledge, Strategy Lab |
-| Admin | Tokens, Cost, Review Queue, Agents, Audit Log, Diagnostics |
+| Intelligence | Advisory, ACMM Eval, Inception, Knowledge, Experiment Lab |
+| Admin | Tokens, Cost, Review, Agents, Agent activity, Audit Log, Diagnostics |
 | Help | FAQ, Getting Started, API Spec (Redoc), Getting Started Guide, Join our Discord, Report an Issue |
 
 On the v6 line the sidebar also lists Runs and Platform. Sections hidden by the ACMM level or a feature setting are hidden from the sidebar too.

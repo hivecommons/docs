@@ -100,7 +100,7 @@ binary, persistent netfilter lock contention) still exits `1`, since neither
 fix below would help those.
 
 The escape hatch is the same as always: set `HIVE_PROXY_ADVISORY_OK=true` to
-start anyway in advisory-only mode (see [security-model.md](/docs/hive/security-model#forced-proxy-egress-and-cap_net_admin)),
+start anyway in advisory-only mode (see [security-model.md](/docs/hive/security-model#5-network-and-credentials)),
 or grant the capability per the section below for the full gate.
 
 ### Kernel netfilter modules (the second exit-77 cause)

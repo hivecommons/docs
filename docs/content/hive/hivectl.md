@@ -137,6 +137,8 @@ The `knowledge` group is also available under the alias `wiki`.
 
 ```bash
 hivectl knowledge search "user journey" --limit 20
+hivectl knowledge list --limit 200 --offset 0 -o json  # first page across all layers
+hivectl knowledge list --limit 200 --offset 200 -o json # next page
 hivectl knowledge list --layer project        # layer: personal|project|org|community
 hivectl knowledge get project create-project
 hivectl knowledge stats
@@ -150,11 +152,56 @@ hivectl knowledge import --file ux-wiki.md --format markdown --layer project
 hivectl knowledge delete project create-project --yes
 ```
 
+Without `--layer`, `knowledge list` returns one page: `--limit` defaults to 50
+(1–200), and `--offset` defaults to 0. The response includes `total`, `limit`,
+`offset`, and `has_more`; while `has_more` is true, request the next page by
+increasing `--offset` by `--limit`. `--type` applies before pagination.
+With `--layer`, the command still lists the entire layer; combining `--layer`
+with `--limit` or `--offset` is an error.
+
 `graph` reads the knowledge graph (`--root` optional; `--depth` defaults to 2
 and must be greater than zero). `import` posts Markdown or structured content
 from `--file` or `--stdin` (`--format` defaults to `markdown`, `--layer` to
 `project`) and, like the other knowledge writes, needs the layer's wiki `url`
 configured — see [Running against a local Hive](#running-against-a-local-hive).
+
+`state` changes an entry's lifecycle state (`draft`, `approved`, `deprecated`
+or `superseded`) in the local channel that holds it, via
+`PUT /api/knowledge/entry/{id}/state`. It is owner-only, and the change is
+recorded in the audit log together with `--reason`. `superseded` requires
+`--superseded-by`, which names the replacement entry in the same channel. See
+[Knowledge lifecycle states](https://github.com/hivecommons/hive/blob/v5/src/docs/knowledge-lifecycle.md#changing-state-over-the-api).
+
+```bash
+hivectl knowledge state old-relay deprecated --reason "relay removed"
+hivectl knowledge state old-relay superseded --superseded-by relay-v2 --reason "relay rewritten"
+```
+
+`suggest` lets an agent propose a knowledge change without changing what other
+agents see. It runs locally against a repository checkout (no dashboard call):
+it writes the change under `.hive/wiki/` (`--dir`, `--repo-root`) and prints
+the branch, PR title and PR body to open a pull request with. The suggestion
+becomes approved knowledge only when a human merges that PR; closing the PR
+rejects it.
+
+```bash
+hivectl knowledge suggest --title "Retry relay uploads" --body-file note.md \
+  --source https://github.com/acme/app/pull/12 --reason "learned while fixing #12" \
+  --type gotcha --repo acme/app --layer project --tags relay,ops --pr-body-file pr.md
+hivectl knowledge suggest --action replace --target old-relay --title "Relay v2" --stdin \
+  --source acme/app#40 --reason "relay rewritten"
+hivectl knowledge suggest --action deprecate --target old-relay --source acme/app#41 --reason "relay removed"
+```
+
+`--action` is `add` (default), `update` (rewrite `--target` in place),
+`replace` (new entry; `--target` is marked `status: superseded` with
+`superseded_by`, and the new entry records `supersedes`) or `deprecate`
+(`--target` is marked `status: deprecated`). `--source` (PR/issue URL or
+`owner/repo#N`) and `--reason` are always required. `--status` is the proposed
+lifecycle status once merged (`draft`, `approved` — the default — or
+`deprecated`). Existing entries with a similar title are written to the
+entry's `related` front matter and listed in the PR body as possible
+duplicates, and every entry carries a `dedupe_key`.
 
 ### bead — work items
 
@@ -197,6 +244,92 @@ own (default 4h for a person, 2h for an agent kick, 30m for a relay task — con
 `hive.yaml`) and a relay's claim is released the moment its task finishes or is revoked. The hive mirrors each
 transition onto the GitHub issue as a `🔒`/`🔁`/`🔓` comment with a machine-readable `<!-- hive:claim … -->`
 marker and a `claimed` label, so a human, a script or another hive can see the hold without asking the API.
+
+### review — review evidence
+
+```bash
+hivectl review evidence hivecommons/hive#11061                  # newest bundle as JSON on stdout
+hivectl review evidence hivecommons/hive#11061 --head 1a2b3c4   # a specific head (unique 7+ char prefix)
+hivectl review evidence hivecommons/hive#11061 -o bundle.json   # save the bundle
+hivectl review evidence hivecommons/hive#11061 --zip -o ev.zip  # bundle + verdict reports + review links
+hivectl review evidence verify bundle.json --pubkey <hex>       # offline: hash + Ed25519 signature
+hivectl review evidence verify ev.zip                           # uses the public key carried in the zip
+```
+
+`review evidence` reads `GET /api/review/evidence` and needs owner or merger role. A bundle removed by retention
+fails with `evidence expired`, not a generic not-found. `verify` needs no hive access: it recomputes the canonical
+hash, then checks the signature with `--pubkey` (hex, base64, or a file holding either) or, when omitted, the public
+key embedded in the file (a zip manifest's `public_key`). Unsigned bundles, hash mismatches and bad signatures exit
+non-zero. See [Review evidence bundle](https://github.com/hivecommons/hive/blob/v5/src/docs/review-evidence.md).
+
+### evidence — export stored bundles
+
+```bash
+hivectl evidence export                                            # every PR, JSON Lines on stdout
+hivectl evidence export --since 168h --format csv --out ev.csv     # last 7 days as CSV
+hivectl evidence export --since 2026-10-01T00:00:00Z --repo hivecommons/hive
+hivectl evidence export --root ./evidence --format csv | column -ts,
+```
+
+`evidence export` reads the schema v1 bundles under `--root` (default `/data/evidence`, layout
+`<org>/<repo>/<pr>/<sha>.json`) directly from the filesystem — no hive session, no network — and emits one row per
+pull request, folding every bundle of the PR (verdicts from the newest bundle; outcome, links and open time from
+whichever bundle recorded them) exactly as `GET /api/evidence/summary` does, so the numbers reconcile with the
+dashboard Evidence charts.
+`--since` takes an RFC3339 timestamp or a Go duration (`72h`) and keeps PRs opened at or after it; `--repo` narrows
+to one `owner/name` (case-insensitive); `--format` is `jsonl`
+(default) or `csv`; `--out FILE` writes a file instead of stdout. Rows are ordered by repo then PR number. Bundles that
+do not parse or are not schema v1 are skipped and counted on stderr, never fabricated.
+
+Columns: `repo`, `pr`, `head_sha`, `bundle_id`, `author_login`, `author_kind`, `author_model`, `acmm_level`,
+`perspectives`, `reviewer_models`, `verdicts` (per perspective: perspective, verdict, model, backend, confidence),
+`ci_conclusion`, `ci_captured_at`, `outcome` (`merged`, `closed` when a backfilled bundle records a close without merge, else `open`),
+`merged_at`, `revert_of`, `reverted_by`, `followup_of`, `followed_up_by`, `shadow_review_would_have_held`,
+`shadow_intent_would_have_blocked` (empty/`null` when the gate was not evaluated), `sentinel_hits`, `signed`,
+`created_at`, `updated_at`, `opened_at`. In CSV, lists join with `;` and each verdict is `perspective:verdict:model:backend:confidence`.
+Reporting only: nothing here reads into or alters merge eligibility. See
+[Review evidence bundle](https://github.com/hivecommons/hive/blob/v5/src/docs/review-evidence.md#exporting).
+
+### evidence — backfill bundles from GitHub history
+
+```bash
+hivectl evidence backfill --repo ublue-os/bluefin --since 2025-01-01 --dry-run          # counts only, writes nothing
+hivectl evidence backfill --repo ublue-os/bluefin --since 2025-01-01 --root ./evidence   # write schema v1 bundles
+hivectl evidence backfill --repo hivecommons/console --since 2026-03-01 --until 2026-05-01 --acmm-level 3
+hivectl evidence backfill --repo hivecommons/hive --since 2026-06-01 --flag hive_on_hive
+hivectl evidence backfill --repo ublue-os/bluefin --since 2025-01-01 --refresh-fields merge.opened_at  # fill a field on old bundles
+```
+
+`evidence backfill` reconstructs evidence bundles from GitHub pull-request history for PRs created in
+`[--since, --until)` and writes them under `--root` (default: the hive's `/data/evidence`) at
+`<owner>/<repo>/<pr>/<head_sha>.json`. It talks to the GitHub API directly (token from `$GITHUB_TOKEN`,
+`$GH_TOKEN` or `gh auth token`; `--github-api` for GHES), not to a hive. Only what history records is written —
+author with a documented kind heuristic (`--agent-login` names logins to count as agents), merged / closed / open
+with timestamps, merger, and revert / follow-up links under the live recorder's rules — and every bundle is marked
+`backfilled: true`; verdicts, CI, sentinel and shadow fields are left absent, never fabricated. Pre-registration
+exclusions are stamped as `backfill.flags` (`--flag placeholder_hive|hive_on_hive|under_min_merged`; `hive_on_hive`
+and `under_min_merged` are added automatically), never applied by dropping PRs. Bundles that already exist are
+skipped, so re-running is safe; `--skip-mergers` saves one request per merged PR; `--signing-key-file` signs the
+output. `--refresh-fields <list>` additionally fills the named fields (currently `merge.opened_at`) on bundles an
+earlier backfill already wrote, only where absent and only from the list page (no per-PR requests, ~1 call per 100
+PRs); nothing else on those bundles changes, bundles that already have the field are not rewritten, and live
+(non-backfilled) bundles are never touched. The summary reports `to_refresh` / `refreshed`. Record-only: nothing here reads into or alters merge eligibility. See
+[Review evidence bundle, Backfilled bundles](https://github.com/hivecommons/hive/blob/v5/src/docs/review-evidence.md#backfilled-bundles) and the run plan in
+[`research/backfill.md`](https://github.com/hivecommons/hive/blob/v5/src/docs/research/backfill.md).
+
+`hivectl evidence backfill-issues --repo <owner/repo> --since <date> [--until <date>] [--root <dir>] [--agent-login <login>] [--dry-run]`
+records GitHub issues opened and closed in the range as ISO-week files at
+`<root>/<owner>/<repo>/issues/<year>-W<week>.json`. GitHub's issues endpoint also
+contains pull requests; these are excluded. The command scans older issues too,
+so a close in the range is counted even if the issue opened earlier. Each file
+includes zero-count weeks, event times for exact custom summary windows, and
+coverage bounds. Re-run it to refresh recent weeks. The files are reporting data
+for operators and downstream readers. The dashboard work-balance card reads the
+series for weeks before collector coverage and keeps the collector-maintained
+rollup authoritative from its first covered Monday. For a collector starting
+midweek, set the exclusive `--until` to the following Monday to cover the whole
+boundary week; a shorter backfill retains audit fallback there. Neither path
+affects merge eligibility.
 
 ### observe — read-only metrics
 
@@ -693,6 +826,12 @@ hivectl hives enable acme                                     # resume without r
 hivectl hives web                                             # loopback web UI for The Commons
 hivectl hives rename acme acme-prod
 hivectl hives remove acme                                     # confirm, or --yes
+hivectl hives hub add commons --url https://hub.example.org   # track a hub
+hivectl hives hub show commons                                # advertised Hives, onboarded or not
+hivectl hives hub adopt commons --follow current --yes         # review and enroll its Hives
+hivectl hives hub follow commons --mode current-and-future-repos # future enrollment policy only
+hivectl hives hub refresh commons --yes                        # refresh additions/removals
+hivectl hives hub remove commons                              # keep enrolled Hive profiles
 ```
 
 `hives` is the one command group that does **not** talk to a dashboard API:
@@ -711,7 +850,65 @@ profiles:
       registration_token: <secret>
       session: review          # optional: HIVE_SESSION for this profile
       added_at: 2026-09-21T10:00:00Z
+      selection:               # optional: absent preserves legacy unrestricted scope
+        mode: selected         # selected | all-current
+        repositories: [github/github.com/acme/component]
+        include: [github/github.com/acme/personal-addition]
+        exclude: [github/github.com/acme/excluded]
+        membership_snapshot: [] # accepted membership for all-current
+        follow_new_repositories: false
+        sources: [ecosystem]
+presets:                       # optional local review history, not an export
+    - id: ecosystem
+      source: https://ecosystem.example/hive-preset.yaml
+      reviewed_revision: "2026-10-17"
+      accepted_at: 2026-10-17T10:00:00Z
+hubs:                          # optional: tracked hubs, no credentials
+    - name: commons
+      url: https://hub.example.org
+      follow: "off"            # off | current | current-and-future-repos
+      reviewed: []              # normalized Hive origins from the last review
 ```
+
+Repository identities are lower-case `<forge>/<host>/<owner>/<name>` (forge:
+`github`, `gitlab`, or `gitea`; nested GitLab namespaces are preserved).
+`selected` uses `repositories`; `all-current` uses the saved
+`membership_snapshot`, not live discovery. Personal `include` entries are added,
+then canonical `exclude` entries win across scoped appearances. An explicit
+empty selection means **no repositories**, not unrestricted. Future following
+is off by default; recording it does not itself discover or accept new members.
+Selection and review history stay in the local store, not profile bundles or
+printed profile exports. Schema version remains 1.
+
+`hivectl hives hub show NAME` is read-only discovery from `GET HUB/api/hives`.
+`hub adopt NAME` reviews every advertised Hive, reuses matching profiles by
+normalized HTTP origin, and registers only new Hives after confirmation. Use
+`--hive URL` more than once to narrow the review; a narrowed adoption merges
+the selected Hives into `hubs[].reviewed` and keeps every Hive reviewed by an
+earlier run, so a later `hub refresh` never re-enrolls a Hive you reviewed and
+then removed with `hives remove`. `--follow off` leaves a new
+profile without a repository selection; `--follow current` snapshots
+`GET /api/contribute/repositories`; `--follow current-and-future-repos` also
+records permission to follow future repository additions. Without `--yes`,
+enrollment requires a terminal and an explicit `y`/`yes`; EOF, a pipe, or any
+other answer saves nothing and makes no registration request.
+
+`hub follow NAME --mode MODE` changes only the saved policy. It never changes
+current repository membership. `hub refresh [NAME]` compares the current
+advertisement with `hubs[].reviewed`, reports newly advertised and
+`no longer advertised` Hives, and retains removed profiles. Follow policies
+other than `off` enroll new Hives automatically; `off` requires confirmation.
+Successful registrations are committed even when another Hive is unavailable
+or its registration fails, so a later adopt or refresh retries only what is
+still missing.
+
+Discovery/onboarding helpers resolve Hive identity by the HTTP origin of its
+hub URL: `wss` maps to `https`, `ws` to `http`, hosts are lower-case, default
+ports are omitted, and paths do not distinguish Hives. Overlapping discovery
+paths reuse the saved endpoint, contributor ID, token and personal consent.
+Unrelated origins require separate credentials. Deliberate legacy profiles
+with different contributor IDs at the same origin remain separate; onboarding
+must ask which identity to use instead of silently merging them.
 
 `~/.config/hive/contributor.env` becomes a **generated projection** of that
 file. The relay, `src/compose-contributor.yaml` and `just contribute-k8s` keep
@@ -725,8 +922,30 @@ projection does not own —
 across rather than dropped, and the previous file is kept at
 `contributor.env.bak`.
 
-The first `hivectl hives` command on a machine that still has the old
-positional `contributor.env` migrates it: entries are named after their hub
+The projection also includes an aligned `HIVE_REPO_SCOPE` with one entry per
+hub, in `HIVE_HUB` order and separated by `,`: `*` for a legacy profile,
+otherwise that hub's sorted canonical repository IDs joined by `;`, with an
+empty entry for no repositories. The whole value is wrapped in a literal pair
+of single quotes so the separators survive `source`; the relay's env-file
+parser strips them. For example, a legacy hub followed by a scoped hub with two
+repositories projects as:
+
+```sh
+HIVE_REPO_SCOPE='*,github/github.com/hivecommons/hive;github/github.com/hivecommons/promptargs'
+```
+
+Readers must split on `,` first (aligned with `HIVE_HUB`) and only then on `;`
+within one entry; splitting the whole value on `;` would merge hubs.
+`HIVE_REPO_SCOPE_VERSION` is persisted as `repo_scope_version` and incremented
+on every profile-store commit (including retries after projection failure).
+These fields provide local state for the repository-scope protocol; they do
+**not** by themselves enforce filtering on older relays/Hives. Scoped execution
+requires the companion relay/Hive acknowledgement and admission work in
+[#12570](https://github.com/hivecommons/hive/issues/12570). Operator admission,
+trust and quota gates remain authoritative.
+
+The first `hivectl hives` command (except the strictly read-only `hives tree`)
+on a machine that still has the old positional `contributor.env` migrates it: entries are named after their hub
 host, and the first hub in the legacy list stays active, so a running relay is
 unaffected. Migration alone does not rewrite `contributor.env` — the
 projection is written only when a command actually changes your hives. A
@@ -735,6 +954,100 @@ guessed at, because pairing a token with the wrong hub points a live
 credential at the wrong hive; fix the file (or re-run
 `just contribute-setup`) and try again.
 
+### Inspecting the contribution tree (read-only)
+
+```bash
+hivectl hives tree
+hivectl hives tree -o json
+hivectl hives tree -o yaml
+```
+
+Reads saved `profiles.yml` without migration, network requests, registration,
+projection writes, or relay signals. Subscriptions currently appear under
+**Direct Hives**: wiring persisted hub discovery into this command follows the
+hub-entry work in #13174 / #13189. The shared `BuildContributionTree` read model
+already accepts hub and repository discovery snapshots for TUI/Web adapters;
+shared hub appearances reference one subscription and rollups count it once.
+Separate profiles at one origin are never merged.
+
+Selection, follow policy, readiness, and activity are separate. Without current
+discovery the tree says **Membership incomplete**, never **All current**.
+Absent repository selections are **Unrestricted — legacy**, not selected empty
+snapshots. Explicitly empty consent remains off. Cross-profile repository
+exclusions list their source subscription names and do not narrow legacy
+profiles. Disabled subscriptions retain saved selections and follow policy.
+Runtime readiness is unknown (or disabled); activity is unavailable, not zero.
+No credentials or contributor identities are included in JSON/YAML output.
+Selection source IDs are selection-level provenance, not repository ownership.
+Profile-name keys identify the current snapshot only, not durable history.
+
+### Editing repository selections
+
+`hivectl hives repos <hive>` displays saved repository consent and each entry's
+source (reviewed membership, snapshot, preset, or personal override). It never
+prints registration tokens. JSON/YAML output includes excluded entries with
+`selected: false` and distinguishes legacy unrestricted consent from an empty
+selection.
+
+```bash
+hivectl hives repos acme
+hivectl hives repos acme --select all-current  # review today's eligible membership
+hivectl hives repos acme --exclude org/repo
+hivectl hives repos acme --include other/project
+hivectl hives repos acme --toggle-exclude org/repo
+hivectl hives repos acme --clear org/repo      # clear both personal overrides
+hivectl hives repos acme --deselect-current    # clear current consent, keep follow policy
+hivectl hives repos acme --select none         # select nothing and stop following
+hivectl hives repos acme --follow-new-repos     # allow additions on supported refresh
+hivectl hives repos acme --follow-new-repos=false # stop following, keep current consent
+hivectl hives repos acme --reset --yes         # restore legacy unrestricted consent
+```
+
+`all-current` snapshots the public `GET /api/contribute/repositories` response;
+it does not follow future additions. Discovery errors (including an older Hive
+without this endpoint) leave the saved selection unchanged. Personal additions
+and exclusions survive a new snapshot; exclusions always win, even over an
+explicit inclusion. `none` clears membership and additions, turns following off,
+and retains exclusions so later snapshots cannot silently restore excluded work.
+`--deselect-current` also clears reviewed membership (including any all-current
+snapshot) and personal additions, but retains the independently accepted follow
+policy, exclusions, sources, and preset review history. It performs no discovery
+or registration. The saved scope becomes empty, never unrestricted; a later
+refresh within an approved follow scope may select repositories again. It refuses
+legacy unrestricted profiles rather than silently migrating them: review an
+`all-current` snapshot first, or explicitly use `--select none` to select nothing
+and stop following. `--follow-new-repos` changes only that refresh policy; `--follow-new-repos=false`
+stops following without removing any currently accepted repository. Neither flag
+fetches or adds membership, clears exclusions, or converts legacy unrestricted
+profiles. Following uses the applicable preset/discovery refresh source, not a
+background poller or wildcard. Use only one selection-edit operation per invocation.
+Only `--reset --yes` drops the entire selection. To exclude from a legacy
+unrestricted profile, first accept an `all-current` snapshot: an unreviewed
+"all except one" wildcard is not a supported selection.
+
+Repository arguments accept `owner/name` (defaults: `--forge github --host
+github.com`) or canonical `forge/host/owner/name` IDs. Bare names are refused;
+IDs are normalized to lower case. GitLab nested namespaces are supported.
+`hives list` and the Hives overlay show the saved effective scope as `all`,
+`N repos`, or `none`. In the overlay, **x** opens a repository exclusion toggle;
+enter an ID (or GitHub `owner/name`) and press enter. This is the same operation
+as `--toggle-exclude`, preserving personal additions when an exclusion is lifted.
+Initialize snapshots or reset consent using the CLI.
+
+Every selection write uses `ProfileStore.Commit` and then the existing relay
+signal path. Adding/removing a Hive also signals the relay, including from the
+TUI. If no relay is running, the receipt says the change applies on next start.
+An already executing task keeps its original Hive credentials and lease.
+
+**Compatibility:** these commands edit local consent and its generated
+projection, not operator admission policy. Runtime scope negotiation,
+fail-closed enforcement, and remote `unsupported` telemetry are companion work
+in #12805 and #12806. A relay that does not understand `HIVE_REPO_SCOPE` cannot
+enforce a saved repository selection; do not rely on this editor alone as an
+execution boundary. Upgrade the Hive and relay together before relying on live
+repository filtering. The scope column describes saved consent, not an
+acknowledgement from the remote Hive.
+
 Notes:
 
 - **The same list is in the TUI.** `just contribute-tui` (or `hivectl tui --hives`) opens the
@@ -742,6 +1055,15 @@ Notes:
   with `enter` to switch, `[`/`]` to rank, `s` to cycle the strategy, `e` to enable/disable and
   `a`/`d`/`r` to add, remove and rename. It calls these same functions, so
   either surface leaves the files in the same state.
+- **The contribution tree is in the TUI too.** In the Hives overlay, `t` opens the
+  same Hub → Hive → Repository tree as `hivectl hives web`, with the same staged
+  edits, diff and Saved / Relay reload / Acknowledged receipt. `space` selects,
+  `x` excludes or clears an exclusion, `f` follows, `e` enables, `R` reviews and
+  restricts a legacy profile, `/` searches (keeping ancestry), `A` reviews and
+  applies, `D` discards and `ctrl+r` refreshes without losing staged edits. Hub
+  and Hive actions show affected counts before staging. Nothing is written until
+  Apply; a review whose profiles changed elsewhere must be discarded and reviewed
+  again, and leaving or quitting with unapplied edits asks first.
 - **Disable instead of removing a hive to pause it.** `hivectl hives disable <name>`
   (or `just contribute-hives disable <name>`) preserves its URL, registration token,
   contributor ID and rank. `enable <name>` restores eligibility without registration
@@ -768,10 +1090,38 @@ Notes:
 - **The Commons web UI is local-only.** `hivectl hives web` prints a
   tokenized `http://127.0.0.1:<port>/` URL, serves only on loopback, and backs
   the page with the same `profiles.yml` / generated `contributor.env` store as
-  the CLI and TUI. The page can subscribe (register) a hive, unsubscribe, drag
-  rows or use ↑/↓ to rank them, and choose `ranked`, `spread` or `neediest`.
-  The API and HTML never return registration tokens; the printed URL carries a
-  short-lived local UI token and should not be shared.
+  the CLI and TUI. Its Hub → Hive → Repository tree reads saved consent without
+  migrating legacy profiles. **Refresh membership** discovers public membership
+  without registering or enrolling anything; failed discovery remains incomplete.
+  Selection, exclusions, follow rules, enable/disable and **Review and restrict**
+  are staged through the shared contribution editor. **Apply** commits the reviewed
+  diff; **Discard** drops unsaved edits. Shared branches and cross-Hive exclusions
+  are named in the diff. An empty explicit selection stays idle; legacy scope
+  remains labelled **Unrestricted — legacy** until explicitly restricted.
+  **Saved**, **Relay reload**, and **Acknowledged** are separate receipt fields.
+  A partial projection failure requires retrying Apply; a successful reload signal
+  is not acknowledgement. Readiness and activity remain **unavailable** until
+  evidence is integrated. Existing subscription, rank and strategy controls save
+  separately after an explicit Apply; pending tree edits must be applied or
+  discarded first.
+  Arrow keys expand/collapse and move through the tree, Space stages selection,
+  and Tab reaches search, row actions, Apply and Discard. Search keeps ancestry;
+  refreshing a staged review preserves edits and focus. Back, in-page navigation
+  and **Leave page** use a styled discard dialog. Browser toolbar reload and tab
+  close cannot show a custom dialog and abandon unsaved browser reviews; there is
+  no native confirmation prompt. Reviews are process-local, bounded to 64 tabs,
+  and abandoned reviews can expire after eight hours.
+  The API and HTML never return registration tokens, provider credentials or
+  GitHub tokens. API calls require the local token header and valid loopback
+  Host/same-origin requests. The printed URL carries a process-lifetime local UI
+  token and should not be shared; the page removes it from browser history.
+  No third-party assets are loaded.
+- **Concurrent edits are never silently lost.** The CLI, the TUI and the web
+  UI all commit `profiles.yml` under a shared owner-only lock file
+  (`profiles.yml.lock`) and only if the file is still the revision they loaded.
+  If another surface changed it in the meantime, nothing is written: the CLI
+  and TUI ask you to re-run or retry, and the web UI answers `409` asking you
+  to reload and review the current hives.
 - **`use`, `move` and `strategy` switch a running relay.** They regenerate the
   projection, then signal the relay advertised in `contributor-relay.pid` (or
   its recorded docker/podman container) to reload `contributor.env`. The task
@@ -815,6 +1165,248 @@ Notes:
 - **Registration tokens are never printed**, in any `-o` format.
 - **`remove` discards a token the hub cannot reprint**, so it asks you to type
   the hive name unless `--yes` is given.
+
+#### Staged contribution edits and Apply receipts
+
+`pkg/hivectl.NewStagedEdits` is the shared staging layer for the contribution
+tree surfaces. It freezes the loaded profile revision and the hub/repository
+discovery snapshots used by `BuildContributionTree`. Opening a session, editing
+its tree, reviewing `Diff()`, and discarding unsaved edits perform no writes or
+relay signals. The TUI and Web tree adapters must use this layer's diff and
+receipt; adding those controls to the surfaces is separate integration work.
+
+Repository selection, exclusions, following, and subscription enablement are
+separate operations:
+
+- **Select current / Deselect current** affects the entire named Hive or hub
+  branch, regardless of search filters. Selection retains saved targets absent
+  from discovery and the approved refresh-source mode. Deselect current preserves
+  follow policy and exclusions; **Select none and stop following** remains the distinct CLI
+  `--select none` operation. Inclusion requires complete discovery. Saved
+  selections remain individually editable during an outage.
+- **Exclude / Clear exclusion** changes only the personal veto. Clearing one
+  preserves saved personal inclusions and does not approve an unselected target.
+  Parent selection and enable/disable operations never erase exclusions.
+- **Hive on/off** retains credentials, saved membership, and following. **Hub
+  off** disables its shared subscriptions and turns off that hub's future-Hive
+  enrollment. Re-enabling the hub does not resume future enrollment implicitly.
+- **Review and restrict** explicitly converts a legacy unrestricted profile to
+  the complete discovered snapshot, with following off. Failed discovery leaves
+  it unchanged. Ordinary repository and branch-selection actions cannot convert
+  legacy scope; disabling a legacy subscription does not convert it either.
+
+`Diff()` names selected/deselected subscription–repository pairs and counts them
+once per subscription, even when the subscription appears under multiple hubs.
+It separately records exclusions, follow policies, enablement, legacy
+conversions, and the linked hub appearances. Selection changes masked by a veto
+remain visible as saved-membership changes. Exclusion effects list the remaining
+veto sources, every scoped subscription with affected saved membership
+(including disabled ones), and enabled legacy unrestricted profiles that can
+still receive the repository. This reflects the existing cross-profile exclusion
+union in `ProfileSet.RepositoryScopes()`; it does not change its semantics.
+
+Apply uses `ProfileStore.CommitExpecting` followed by `SignalRunningRelay` and
+returns three independent status fields, plus the saved scope generation:
+
+| Field | Meaning |
+| --- | --- |
+| `Saved` | `profiles-and-projection-saved`, `profiles-saved/projection-failed`, `not-saved`, or `unchanged` for an empty diff. |
+| `RelayReload` | `notified`, `pending-failed`, `no-managed-relay-found — saved for next start`, or `not-requested` when no complete save occurred. |
+| `Acknowledged` | `pending` after a complete save; otherwise `unknown`. Notification alone never proves adoption. |
+
+An empty diff writes and signals nothing. A projection failure reports that
+profiles were already saved, keeps the reviewed diff, and allows an explicit
+Apply retry against that saved revision. Further edits and Discard are refused
+until projection repair completes: Discard cannot undo a save that happened.
+A concurrent edit causes `ErrStaleRevision`, marks the diff stale, and requires
+reloading profiles and reviewing a new session; neither retry nor Discard can
+silently merge or approve the old edits. Successful persistence consumes the diff
+even when notification fails; the saved selection governs the next relay start.
+
+No managed PID record is not proof that no relay exists. Until matching relay
+status evidence is available, show **Change saved — relay adoption pending**;
+do not claim that leasing stopped or an in-flight task was cancelled. Diffs and
+receipts contain no registration tokens, provider/GitHub credentials, raw relay
+command output, or credential-bearing endpoint queries.
+
+#### Contribution presets
+
+A contribution preset is a plain, credential-free document a project publishes
+at a public HTTPS URL (or ships as a local file) to recommend Hives and
+repositories to contribute to. It is a recommendation only: it grants nothing,
+and each Hive's operator admission gates (disabled repos, holds, trust tiers,
+model filters, quota) stay authoritative. It is unrelated to the encrypted
+`hives export` bundle, which carries a registration token.
+
+```yaml
+version: 1                                   # integer; any other major is refused
+name: Bluefin ecosystem
+description: Hives Bluefin depends on        # optional, display only
+revision: "2026-10-17"                       # optional, opaque publisher revision
+hives:
+  - url: https://bluefin-hive.example
+    description: Why we recommend this Hive  # optional
+    repositories: all-current                # or a list:
+  - url: https://dependency-hive.example
+    repositories:
+      - repo: dependency-org/component-a     # full owner/name (GitLab may nest groups)
+        forge: github                        # optional: github (default), gitlab, gitea
+        host: github.com                     # optional: github.com / gitlab.com; required for gitea
+        description: optional
+hubs:                                        # optional
+  - url: https://hub.example
+    hives: all-current                       # or a list of Hive URLs advertised by the hub
+```
+
+`all-current` selects the current membership only; there is no `all` or
+`follow` keyword, because following future additions is a personal setting,
+not something a publisher can switch on. Repositories are identified by
+`{forge, host, owner/name}` compared case-insensitively, and duplicates are
+collapsed.
+
+`hivectl` loads a preset from an `https://` URL or a local path and writes
+nothing. It refuses:
+
+- any scheme other than `https://` (including `file://`, `ws://`, `wss://`);
+  `http://` only for loopback hosts, and URLs with embedded credentials;
+- redirects that leave HTTPS; fetches send no credentials or cookies and time
+  out after 30 seconds;
+- documents larger than 256 KiB or with more than 1024 entries, multiple YAML
+  documents, and YAML aliases;
+- an unknown or missing `version`;
+- any unknown field. Fields that carry credentials, shell commands, local
+  execution settings or permission changes (`token`, `registration_token`,
+  `*_api_key`, `secret`, `password`, `env`, `command`, `script`, `hooks`,
+  `backend`, `model`, `session`, `permissions`, `allowed_tools`, …) are named
+  in the error;
+- repository entries that are not a full `owner/name` (display names are never
+  matched) or that name an unknown forge.
+
+##### Adopting and refreshing a preset
+
+```bash
+hivectl hives preset adopt https://bluefin.example/hive-preset.yml   # review, then confirm
+hivectl hives preset adopt ./preset.yml --hive acme --follow-new-repos --yes
+hivectl hives preset adopt ./preset.yml --onboard  # review destinations, then enroll missing Hives
+hivectl hives preset refresh                     # re-fetch recorded presets and review changes
+hivectl hives preset refresh --yes               # accept new recommendations
+hivectl hives preset refresh --accept-removals   # also drop what the preset no longer recommends
+```
+
+Without `--onboard`, `adopt` matches each preset Hive to an existing profile by normalized origin. It
+never registers or copies credentials: a Hive without a profile is reported as
+`not onboarded, skipped` (onboard it with `hives add` and adopt again). For each
+matched Hive it shows the review diff against your saved selection:
+
+- `+` recommendations that become selected once you confirm (`--yes` skips the
+  prompt). `all-current` snapshots the Hive's currently eligible repositories
+  through the same discovery as `hives repos --select all-current`.
+- `x` recommendations withheld by a personal exclusion. Exclusions always win
+  and are never cleared by a preset.
+- `-?` saved repositories the preset does not recommend. `adopt` keeps them.
+
+Confirming records the accepted membership, the preset as a selection source,
+and its provenance (`presets:` in `profiles.yml`: id, source, reviewed revision
+and time) through the same save, `contributor.env` projection and relay reload
+as `hives repos`. The reviewed revision is the publisher's `revision` plus a
+digest of the document. Re-adopting a revision with nothing new is a no-op and
+does not advance the scope generation. A recommendation of no repositories
+saves an explicit empty selection, which idles that Hive; it never becomes
+unrestricted. Without `--onboard`, hub entries are listed but not adopted.
+
+**One-flow enrollment.** `adopt --onboard` also works before any profiles exist.
+It fetches preset hubs' public `GET /api/hives` registries and snapshots the
+selected advertised Hives (`hives: all-current` or an explicit list). It does
+not recursively discover hubs. Duplicate origins share one profile and one
+registration; an explicit direct Hive recommendation takes precedence over a
+hub's whole-Hive recommendation. Existing credentials, disabled state, personal
+exclusions, backend/provider authentication and quota settings are preserved.
+
+Before registration, it shows the preset source, hub sources, effective Hive
+URLs, repository diff and follow policy. Confirmation is mandatory (`--yes`
+cannot be combined with `--onboard`); declining or reaching EOF without approval
+leaves both profile files and registration state unchanged, including legacy
+configuration. Browse/discovery requests may already have occurred. Missing
+profiles receive unique generated names and reuse `hives add`'s registration
+flow, using the current `gh` login or `--github-user LOGIN`. New profiles use
+WebSocket contributor URLs; saved credentials never go to the preset or hub
+publisher. Discovery refuses redirects and malformed/oversized hub responses.
+
+An unavailable Hive or one without repository-scope discovery is not enrolled.
+Registration failures are reported as pending and cause a nonzero exit; ready
+profiles and accepted scope are saved, so retrying the same command does not
+repeat successful registrations. Failed targets are not projected into the
+relay; rerun `adopt --onboard` to resolve them. An existing remote registration
+that returns no token still requires the supported `hives reissue` or import
+flow—onboarding never retrieves credentials from a directory hub.
+
+Hub membership is a current snapshot, not permission to enroll future Hives.
+`refresh` can review repository changes at already-adopted hub members, but
+never enrolls newly advertised Hives. Run `adopt --onboard` again to review those.
+`--follow-new-repos` affects only reviewed Hive repository selections, not hub
+membership. The command reloads an existing relay once after saving; it does
+not start another relay or launch contribution work itself.
+
+`refresh` re-fetches every recorded preset (or only `--hive <name>`) and diffs
+it against the saved selection:
+
+- **Additions** are applied automatically only at Hives that follow new
+  repositories; elsewhere they are shown as `+?` and need confirmation (`--yes`
+  or answering the prompt).
+- **Removals** are shown as `-?` and kept unless you confirm them at the prompt
+  or pass `--accept-removals`. `--yes` alone never removes anything.
+- **Outages**: if the preset cannot be fetched or a Hive's discovery fails, that
+  Hive is reported as `discovery unavailable`, its saved selection is left
+  untouched, nothing is broadened, and the command exits non-zero.
+- **Hubs**: for every recorded preset that lists hubs, including presets adopted
+  without `--onboard`, `refresh` re-reads each hub's public `GET /api/hives`
+  registry to review repository changes at hub members you already have
+  profiles for. This is a network call to the hub with no credentials attached.
+  An unreachable or malformed hub registry is reported as
+  `hub discovery unavailable`; the refresh is then incomplete, the reviewed
+  revision does not advance, and the command exits non-zero. Hub members
+  without a profile are never enrolled by `refresh`.
+
+The reviewed revision only advances when every Hive of the preset was reviewed
+and nothing is left pending.
+
+**Follow policy.** `--follow-new-repos` on `adopt` (off by default; pass
+`--follow-new-repos=false` to turn it off) stores `follow_new_repositories` on
+each adopted Hive's selection. It lets `refresh` include that Hive's new
+recommendations without a prompt. Personal exclusions still take precedence,
+and removals still need confirmation.
+
+#### Tracking hubs
+
+A hub runs a federation registry (`GET /api/hives`) that lists the Hives
+associated with it. `hivectl hives hub` records hubs in the `hubs:` key of
+`profiles.yml` and reads that registry, so you can see which Hives a hub
+advertises without editing YAML:
+
+```bash
+hivectl hives hub add commons --url https://hub.example.org
+hivectl hives hub list                 # -o json|yaml for scripts
+hivectl hives hub show commons         # each advertised Hive, onboarded or not
+hivectl hives hub remove commons       # stop tracking; Hive profiles are kept
+```
+
+Tracking a hub is **discovery only**. It stores no credentials, never calls
+`/api/contribute/register`, and never changes a profile's membership. Onboard
+an advertised Hive with `hivectl hives add`.
+
+- `add` rejects a name already in use (case-insensitively) and a URL whose
+  normalized origin is already tracked under another name. New hubs start with
+  `follow: off`; the other follow policies are reserved for bulk enrollment and
+  have no effect yet.
+- `show` keys each advertised Hive by the normalized origin of its `hub_url`
+  (the same identity rule as above) and marks it `onboarded as <profile>` when a
+  saved profile has that origin, otherwise `not onboarded`. Entries without a
+  usable `hub_url` are skipped, and a repeated origin is listed once.
+- Discovery sends no token, does not follow redirects, and caps the response
+  size. A redirect, a non-200 status, an unreachable hub, or a malformed body
+  reports the hub as **unavailable** and exits non-zero. It is never shown as
+  a hub with no Hives.
+- A `profiles.yml` without `hubs:` loads and saves exactly as before.
 
 ## Input and safety
 
