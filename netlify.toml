@@ -48,7 +48,7 @@
 # quota (#419). Production builds of main are unaffected: this rule only
 # applies in the deploy-preview context. exit 0 = skip, exit 1 = build.
 [context.deploy-preview]
-  ignore = "case \"${HEAD:-$BRANCH}\" in scanner/*|quality/*|hive/*|dependabot/*) exit 0;; *) exit 1;; esac"
+  ignore = "case \"${HEAD:-$BRANCH}\" in arch/*|scanner/*|quality/*|hive/*|dependabot/*) exit 0;; *) exit 1;; esac"
 
 # Enable branch deploys for documentation versioning
 # Version branches follow the pattern: docs/{version}

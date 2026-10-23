@@ -63,6 +63,7 @@ describe("netlify.toml [context.deploy-preview] ignore", () => {
   });
 
   it.each([
+    "arch/docs",
     "scanner/fix-419",
     "quality/test-netlify-ignore",
     "hive/forward-merge",
