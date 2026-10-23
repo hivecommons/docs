@@ -6,6 +6,21 @@ import { GridLines, StarField } from "../index";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 
+const SECURITY_POLICY_URL =
+  "https://github.com/hivecommons/.github/blob/main/SECURITY.md";
+
+export const POLICY_LINKS = [
+  {
+    label: "Apache 2.0 License",
+    href: "https://github.com/hivecommons/docs/blob/main/LICENSE",
+  },
+  { label: "Security Policy", href: SECURITY_POLICY_URL },
+  {
+    label: "Security Contacts",
+    href: `${SECURITY_POLICY_URL}#reporting-a-vulnerability`,
+  },
+] as const;
+
 export default function Footer() {
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme } = useTheme();
@@ -581,38 +596,24 @@ export default function Footer() {
               © {new Date().getFullYear()} Hive Commons. All rights reserved. Apache 2.0 Licence
             </p>
 
-            {/* Right side - policy links */}
+            {/* Right side - policy links. These pages are not published on
+                the docs site, so point at the canonical files on GitHub. */}
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 order-1 md:order-2">
-              <Link
-                href="/docs/contributing/license"
-                className={`text-xs sm:text-sm transition-colors duration-300 whitespace-nowrap ${
-                  isDark
-                    ? 'text-ink-3 hover:text-ink'
-                    : 'text-ink-2 hover:text-ink'
-                }`}
-              >
-                Apache 2.0 License
-              </Link>
-              <Link
-                href="/docs/contributing/security/policy"
-                className={`text-xs sm:text-sm transition-colors duration-300 whitespace-nowrap ${
-                  isDark
-                    ? 'text-ink-3 hover:text-ink'
-                    : 'text-ink-2 hover:text-ink'
-                }`}
-              >
-                Security Policy
-              </Link>
-              <Link
-                href="/docs/contributing/security/contacts"
-                className={`text-xs sm:text-sm transition-colors duration-300 whitespace-nowrap ${
-                  isDark
-                    ? 'text-ink-3 hover:text-ink'
-                    : 'text-ink-2 hover:text-ink'
-                }`}
-              >
-                Security Contacts
-              </Link>
+              {POLICY_LINKS.map(link => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-xs sm:text-sm transition-colors duration-300 whitespace-nowrap ${
+                    isDark
+                      ? 'text-ink-3 hover:text-ink'
+                      : 'text-ink-2 hover:text-ink'
+                  }`}
+                >
+                  {link.label}
+                </a>
+              ))}
             </div>
           </div>
         </div>

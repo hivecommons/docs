@@ -47,7 +47,7 @@ vi.mock("next/image", () => ({
   ),
 }));
 
-import DocsFooter from "@/components/docs/DocsFooter";
+import DocsFooter, { POLICY_LINKS } from "@/components/docs/DocsFooter";
 
 let alertSpy: ReturnType<typeof vi.spyOn>;
 
@@ -128,9 +128,12 @@ describe("DocsFooter content", () => {
 
   it("renders the policy links in the bottom bar", () => {
     render(<DocsFooter />);
-    expect(linkByHref("/docs/contributing/license")).toHaveLength(1);
-    expect(linkByHref("/docs/contributing/security/policy")).toHaveLength(1);
-    expect(linkByHref("/docs/contributing/security/contacts")).toHaveLength(1);
+    for (const link of POLICY_LINKS) {
+      const anchors = linkByHref(link.href);
+      expect(anchors).toHaveLength(1);
+      expect(anchors[0].textContent).toBe(link.label);
+      expect(anchors[0].getAttribute("target")).toBe("_blank");
+    }
   });
 });
 
