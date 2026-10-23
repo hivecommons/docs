@@ -1,6 +1,6 @@
 # macOS Support (launchd)
 
-> **Note:** on the current containerized hive the easiest way to run on macOS is Docker Compose — `cd hive/v2 && docker compose up -d` (see the [Introduction](readme.md)). This page documents the legacy **v1** host runtime mapped to launchd, which remains useful if you want to supervise agents natively on a Mac without a container.
+> **Note:** on the current containerized hive the easiest way to run on macOS is Docker Compose — `git clone https://github.com/hivecommons/hive && cd hive && docker compose -f src/docker-compose.yaml up -d` (see the [Introduction](readme.md) and the [Docker Compose quickstart](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-docker-compose.md)). This page documents the legacy **v1** host runtime mapped to launchd, which remains useful if you want to supervise agents natively on a Mac without a container.
 
 The hive v1 runtime was built on Linux/systemd, but the same concepts map cleanly to macOS using **launchd** — Apple's equivalent of systemd.
 
@@ -37,7 +37,8 @@ claude /login
 
 ```sh
 mkdir -p ~/.config/hive
-cp config/agent.env.example ~/.config/hive/agent.env
+# -m 600: agent.env will hold tokens — keep it unreadable to other local users
+install -m 600 config/agent.env.example ~/.config/hive/agent.env
 # Edit to match your setup:
 nano ~/.config/hive/agent.env
 ```
@@ -177,4 +178,4 @@ This pattern is simpler when:
 - You want the scanner to run even when the AI session is down
 - You want to decouple scan cadence from agent availability
 
-See `examples/worker.sh.example` for a reference implementation and `examples/hivecommons-fixer.md` for a full case study of this pattern in production.
+See [`examples/worker.sh.example`](https://github.com/hivecommons/hive/blob/v5/examples/worker.sh.example) for a reference implementation and [`examples/kubestellar-fixer.md`](https://github.com/hivecommons/hive/blob/v5/examples/kubestellar-fixer.md) for a full case study of this pattern in production.

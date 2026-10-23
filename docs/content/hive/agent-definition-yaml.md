@@ -2,16 +2,16 @@
 
 **The `AgentDefinition` YAML is hive's *portable* agent format — a single, self-contained document (`kind: AgentDefinition`) that describes one whole agent: its identity, its engine, its behavior, and even its work prompt. This is the file the dashboard's `+ agent → Import from URL` overlay points you at, and it is exactly the schema that overlay reads. This page documents every field, grouped to match the file's structure.**
 
-If you clicked **+ agent** in the dashboard and were sent to [`v2/examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v4/v2/examples/agents/customized-agent.yaml) for an example, this is the reference for that file. For the *other* way agents are configured — inline entries under `agents:` in `hive.yaml`, using snake_case keys — see [Agent Configuration](agent-configuration.md). The two describe the same underlying agent; they differ only in shape and casing (see [How this maps to `hive.yaml`](#how-this-maps-to-hiveyaml) below).
+If you clicked **+ agent** in the dashboard and were sent to [`src/examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v5/src/examples/agents/customized-agent.yaml) for an example, this is the reference for that file. For the *other* way agents are configured — inline entries under `agents:` in `hive.yaml`, using snake_case keys — see [Agent Configuration](agent-configuration.md). The two describe the same underlying agent; they differ only in shape and casing (see [How this maps to `hive.yaml`](#how-this-maps-to-hiveyaml) below).
 
-> **Which Hive does this document?** This page tracks the current **Hive `v4` branch** — the only maintained line (the `v2` branch was retired in August 2026). If a dashboard link sends you to `.../blob/v4/v2/examples/...`, that is *branch* `v4` plus the in-repo *path* `v2/examples/...` (the directory kept its historical name), not a typo — it is the current, supported example.
+> **Which Hive does this document?** This page tracks the current **Hive `v5` branch** — the active release line (`v4` is frozen; see [Release channels](release-channels.md)). The dashboard's **Import from URL** overlay links to the example at `https://github.com/hivecommons/hive/blob/HEAD/src/examples/agents/customized-agent.yaml`; `HEAD` resolves to the repository's default branch, which carries the same file.
 
 ## The document envelope
 
 Every AgentDefinition starts with the same four top-level keys:
 
 ```yaml
-apiVersion: hive.hivecommons.dev/v1
+apiVersion: hive.kubestellar.io/v1
 kind: AgentDefinition
 metadata:
   # identity & presentation
@@ -21,7 +21,7 @@ spec:
 
 | Field | Type | Required | Default | Meaning |
 |---|---|---|---|---|
-| `apiVersion` | string | recommended | — | Schema group/version. Use `hive.hivecommons.dev/v1`. |
+| `apiVersion` | string | recommended | — | Schema group/version. Use `hive.kubestellar.io/v1` — the identifier is kept stable across the KubeStellar → Hive Commons rename so existing definitions keep importing; new fields are additive and tracked by `metadata.specVersion` instead. |
 | `kind` | string | **required** | — | Must be exactly `AgentDefinition`, or the import is rejected. |
 | `metadata` | map | **required** | — | Identity and dashboard presentation. `metadata.name` is required. |
 | `spec` | map | required in practice | — | Everything the agent *does* — engine, behavior, triggers. |
@@ -44,7 +44,7 @@ metadata:
 | `description` | string | optional | empty | One-line summary of what the agent does; shown in the dashboard. |
 | `emoji` | string | optional | none (well-known names get a default) | Badge shown next to the agent in the dashboard. A single emoji. |
 | `color` | string | optional | none | Dashboard accent color as a hex string (e.g. `#e67e22`). |
-| `specVersion` | int | optional | unset | Reserved for future schema evolution of the definition format. Leave unset unless a newer Hive tells you otherwise. |
+| `specVersion` | int | optional | `0` | Schema level of the definition: `0` (or absent) = original fields only; `1` = the `channels`, `tools`, and `connections` blocks are in use. Exports from the dashboard set it for you. |
 
 ## `spec` — engine, behavior, and triggers
 
@@ -165,29 +165,20 @@ Bundling the prompt inline is what makes an AgentDefinition *portable*: config p
 
 ### `channels` — how the agent gets triggered
 
-Channels declare how an agent is triggered. When omitted, the agent uses the default governor timer kick. Declaring channels lets you trigger on webhooks, schedules, Discord, or beads instead of (or in addition to) the timer.
+Channels declare how an agent is triggered. When omitted, the agent uses the default governor timer kick; declaring an explicit `kick` channel just makes that intent visible.
 
 ```yaml
 spec:
   channels:
     - type: kick
-    - type: webhook
-      events: ["issues.opened"]
-    - type: schedule
-      schedule: "0 */4 * * *"
 ```
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
-| `type` | string | **required** | `kick` \| `webhook` \| `discord` \| `schedule` \| `bead`. |
+| `type` | string | **required** | `kick` — governor timer kicks on the agent's per-mode [cadences](#cadences--how-often-the-governor-kicks-it). This is the only supported type. |
 | `enabled` | bool | optional | Defaults to `true`; set `false` to declare-but-disable a channel. |
-| `events` | list of string | required for `webhook` | GitHub webhook events that fire this channel (e.g. `issues.opened`). |
-| `patterns` | list of string | required for `discord` | Message patterns that fire a `discord` channel. |
-| `schedule` | string (cron) | required for `schedule` | Cron expression (e.g. `0 */4 * * *`). |
-| `match` | map | required for `bead` | Match criteria that fire a `bead` channel. |
-| `repos` | list of string | optional | Restrict the channel to specific repositories. |
 
-> **Note:** Channels are a **current, supported feature.** (Older copies of the example labeled this `(v3 feature)`; that label is being removed — treat channels as available today.)
+> **Removed trigger types.** Older copies of the example listed `webhook`, `schedule`, `discord`, and `bead` channel types. They were declarative only — the runtime meant to serve them was never wired in and was removed ([hive#5591](https://github.com/hivecommons/hive/issues/5591)) — and declaring one used to silently suppress governor kicks, leaving the agent dormant. Config validation now **rejects** them. For event-driven work use the governor's webhook-aware eval cycle and [work sources](work-sources.md) instead; `on_demand: true` still overrides all scheduling.
 
 ### `tools` — declarative tool permissions
 
@@ -238,10 +229,10 @@ spec:
 
 ## Complete annotated example
 
-This mirrors the shipped [`v2/examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v4/v2/examples/agents/customized-agent.yaml). Import it from the dashboard via **+ agent → Import from URL**, or copy it as a starting point and edit the fields above.
+This mirrors the shipped [`src/examples/agents/customized-agent.yaml`](https://github.com/hivecommons/hive/blob/v5/src/examples/agents/customized-agent.yaml). Import it from the dashboard via **+ agent → Import from URL**, or copy it as a starting point and edit the fields above.
 
 ```yaml
-apiVersion: hive.hivecommons.dev/v1
+apiVersion: hive.kubestellar.io/v1
 kind: AgentDefinition
 metadata:
   name: customized-agent                # required — roster key & identifier
@@ -268,14 +259,11 @@ spec:
   aliases:                               # short dispatch names
     - cu
 
-  # Channels — how this agent gets triggered (supported feature).
-  # Omit to use governor timer kicks only.
+  # Channels — how this agent gets triggered. "kick" (governor timer
+  # kicks, the default) is the only supported type; declaring it just
+  # makes the default explicit.
   # channels:
   #   - type: kick
-  #   - type: webhook
-  #     events: ["issues.opened"]
-  #   - type: schedule
-  #     schedule: "0 */4 * * *"
 
   # Tools — declarative tool permissions (supported feature).
   # Present = governs instead of `mode`.

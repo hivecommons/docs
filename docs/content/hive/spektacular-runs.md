@@ -11,7 +11,7 @@ lease, with a human checkpoint between stages. Spek owns the artifacts
 (`.spektacular/specs/…`, `.spektacular/plans/…`); Hive owns the workflow (who
 holds the lease, when a stage is finished, when the next one is released).
 
-This guide covers Hive **v6**. The stage runner is OFF by default and
+This guide covers the Hive **v5** branch. The stage runner is OFF by default and
 existing direct-fix behaviour is unchanged until you turn it on.
 
 ## What you get
@@ -28,7 +28,7 @@ enforces that.
 
 ## Prerequisites
 
-1. **A Hive v6 hub** running at ACMM L3 or higher (you need agents that can
+1. **A Hive v5 hub** running at ACMM L3 or higher (you need agents that can
    claim work). See [Getting Started](/docs/hive/getting-started).
 2. **The `spektacular` binary reachable by the hub process.**
    Spek is **not** baked into the Hive image. Install it where the hub
@@ -36,9 +36,9 @@ enforces that.
 
    ```bash
    # Go
-   go install github.com/jumppad-labs/spektacular@latest
+   go install github.com/hivecommons/spektacular@latest
    # Homebrew (macOS hubs)
-   brew install jumppad-labs/homebrew-repo/spektacular
+   brew install hivecommons/homebrew-repo/spektacular
    ```
 
    For a containerised hub, bind-mount the binary and point
@@ -137,9 +137,9 @@ the lease (`triage_verdict`, `triage_rationale`) and shown in `GET /api/runs`.
      `stage_completed` hook, and advance the lease to `plan`. If
      `runs.checkpoints.spec` is `true` the run waits for an owner first.
 3. An agent claims `plan: …` and writes the plan. On `final`, Hive imports the
-   plan's tasks (`spektacular plan export <name> --format json`, falling back
-   to `<name>/tasks.json` or a `- [T1] …` task list in `plan.md`) into a DRAFT
-   epic keyed by the run.
+   plan's tasks (the structured task graph Spek reports — see
+   [Known gaps](#known-gaps) — falling back to `<name>/tasks.json` or a
+   `- [T1] …` task list in `plan.md`) into a DRAFT epic keyed by the run.
 4. An owner approves the plan — dashboard checkpoint, `!runs approve <key>` in
    chat, or `POST /api/plans/{id}/approve`. Only then does `implement` appear
    in the queue, one work item per plan task with the plan's dependencies
@@ -184,27 +184,31 @@ The Runs card on the dashboard and `!runs` in chat show the same data.
 | Stage leases exist but no agent claims them | `governor.work_source.run_stages` is not `true` |
 | `artifact_not_found` for a name the agent wrote | Hub cwd does not resolve the Spek project (prerequisite 4), or the name was passed with `.md` / a path — always the bare `000057_name` |
 | `unknown flag: --json` | Wrong Spek version; no verb takes `--json`, output is already JSON |
-| Plan reaches `final` but stays parked, `import error` in log | Plan has neither `tasks.json` nor a parseable `- [T1] …` list; `plan export` is not yet in your Spek build |
+| Plan reaches `final` but stays parked, `import error` in log | Plan has neither `tasks.json` nor a parseable `- [T1] …` list, and the structured task export could not be read from your Spek build |
 | `implement` never appears | The imported plan epic is still a DRAFT — approve it |
 | `runs.checkpoints.implement: false` is ignored | Hub is below ACMM L5; the implement checkpoint stays blocking |
 
-## Known gaps (v6, September 2026)
+## Known gaps
 
-- `spektacular plan export --format json` is an upstream request
-  ([spektacular#50](https://github.com/hivecommons/spektacular/issues/50));
-  until it ships, Hive uses the `tasks.json` / `plan.md` fallback.
+- The structured plan task graph requested in
+  [spektacular#50](https://github.com/hivecommons/spektacular/issues/50)
+  shipped in Spek (closed 2026-09-26), but as a `tasks` block under
+  `spektacular status <name> --format json` rather than a separate
+  `plan export` verb. Hive's runner still probes `plan export` first
+  and, when that verb is unknown, uses the `tasks.json` / `plan.md`
+  fallback — so keep writing `tasks.json` until the runner is updated.
 - The runner has no per-repo working directory; one hub serving several
   Spek projects depends on a `config.yaml` `repos:` list at the hub's
   cwd.
 - Spek is not shipped in the Hive image; installing or mounting it is
   the operator's job.
-- The in-tree acceptance test (`just runs-e2e-v6`) exercises a **fake**
+- The in-tree acceptance test (`just runs-e2e`) exercises a **fake**
   `spektacular` CLI. Run a real spek/plan on a scratch repo before turning the
   runner on for a repo you care about.
 
 ## Reference
 
-- [Spektacular stage runner](https://github.com/hivecommons/hive/blob/v6/src/docs/spektacular.md) — the full contract, receipt shape and fake-CLI scenarios
-- [Runs](https://github.com/hivecommons/hive/blob/v6/src/docs/runs.md) — `/api/runs`, checkpoint policy, acceptance tests
-- [Work sources](https://github.com/hivecommons/hive/blob/v6/src/docs/work-sources.md) — `run_stages: true` and the `<repo>!<runKey>:<stage>` key
+- [Spektacular stage runner](https://github.com/hivecommons/hive/blob/v5/src/docs/spektacular.md) — the full contract, receipt shape and fake-CLI scenarios
+- [Runs](https://github.com/hivecommons/hive/blob/v5/src/docs/runs.md) — `/api/runs`, checkpoint policy, acceptance tests
+- [Work sources](/docs/hive/work-sources) — `run_stages: true` and the `<repo>!<runKey>:<stage>` key
 - [Spektacular (Spek) README](/docs/spektacular/readme) and [How to use Spek](/docs/spektacular/getting-started) — the CLI itself

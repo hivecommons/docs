@@ -12,25 +12,27 @@ Once per `eval_interval_s` (default **300** seconds), the governor:
 
 1. Enumerates actionable GitHub work across `project.repos` — open issues, open PRs, held items, and SLA violations.
 2. Refreshes the token budget from lifetime usage and fires any budget alerts.
-3. Computes a **mode** from the actionable-issue count.
+3. Computes a **mode** from the queue depth — actionable issues **plus** open PRs.
 4. For each enabled, non-`on_demand` agent, checks whether its per-mode cadence has elapsed since its last kick, and kicks it if so.
 
 The cycle runs continuously as one of the container's processes. Changing `eval_interval_s` at runtime (including via an ACMM pack apply) takes effect on the next tick — the ticker resets itself. The valid range is **10–86400** seconds.
 
-> **Note:** mode is driven by the **actionable-issue count only**. Open PRs, held items, and SLA violations are recorded and shown on the dashboard, but they do not change the mode.
+> **Note:** mode is driven by **actionable issues + open PRs** summed across `project.repos`. Held items and SLA violations are recorded and shown on the dashboard, but they do not change the mode — held items are waiting on a human by definition, so faster kicks cannot move them.
 
 ---
 
 ## Modes and thresholds
 
-The governor has four modes. Queue depth (actionable issues) selects the highest mode whose threshold it exceeds:
+The governor has four modes. Queue depth (actionable issues + open PRs) selects the highest mode whose threshold it exceeds:
 
-| Mode | Default threshold | Meaning |
+| Mode | Default threshold (per repo) | Meaning |
 |---|---|---|
 | `surge` | depth > 20 | queue is deep — kick agents most aggressively |
 | `busy` | depth > 10 | steady workload |
 | `quiet` | depth > 2 | light workload |
 | `idle` | depth ≤ 2 | little or no work; slowest cadences |
+
+The defaults are **per-repo base values** multiplied by the number of repos in `project.repos` (`governor.threshold_scaling: linear | sqrt | none`, default `linear`), so a 3-repo hive surges at 60 and "surge" means the same thing at any hive size. A threshold you set yourself is used verbatim and never scaled. ACMM packs ship their own ladders (L3: 15/10/3; L4–L6: 10/5/2). Full details: [Governor mode thresholds and repo-count scaling](https://github.com/hivecommons/hive/blob/v5/src/docs/governor-thresholds.md).
 
 Thresholds are overridable per mode. A threshold left unset (or set to `0`) falls back to its built-in default, so an unset value never accidentally makes the queue surge:
 
@@ -75,7 +77,7 @@ governor:
 
 ## On-demand agents
 
-An agent with `on_demand: true` is skipped by the governor timer completely. It runs only when something triggers it explicitly — for example, the inception workflow drives the `brainstorm` agent this way. On-demand agents never appear in a mode's cadence list. See the agent `channels:` block in [Agent Configuration](agent-configuration.md#declarative-extensions) for the other non-timer trigger types (webhook, schedule, bead).
+An agent with `on_demand: true` is skipped by the governor timer completely. It runs only when something triggers it explicitly — a manual kick from the dashboard or `hivectl`, or a workflow such as inception driving the `brainstorm` agent. On-demand agents never appear in a mode's cadence list. (`kick` is the only supported `channels:` type; the former `webhook`/`schedule`/`bead` trigger types were removed in [hive#5591](https://github.com/hivecommons/hive/issues/5591) and are now rejected by config validation.)
 
 ---
 
