@@ -933,15 +933,52 @@ ServiceAccount-derivation caveat.
 
 The template also emits a read-only cluster-scoped `hive-node-health-reader-*`
 ClusterRole/ClusterRoleBinding so push-reported spokes can send node health in
-their outbound heartbeat. It grants `nodes get,list`, `nodes/proxy get`,
-`pods list`, and `metrics.k8s.io/nodes list`. If metrics-server is absent or
+their outbound heartbeat. It grants only `nodes get,list` and
+`metrics.k8s.io/nodes list`. It must not grant `nodes/proxy` (cross-tenant
+kubelet exec) or cluster-wide `pods list` (other tenants' pod specs).
+Live disk usage, pod/hive counts and request-based remaining hive capacity
+are unavailable with this safe tenant role; a pods-API 403 is expected partial
+health, not a reason to broaden access. If metrics-server is absent or
 that last rule is denied, the spoke still reports node count, vCPU, memory and
 disk capacity from the core Node API and carries the precise `node_health_error`
 reason to the hub.
 
 The template binds `hive-sa` on `RequiresSCC` (OpenShift) clusters and `default`
 elsewhere. Namespaces provisioned **before** either reader was added do not have
-it and need it applied retroactively.
+it and need it applied retroactively. Existing overbroad node-health roles are
+narrowed by the hub's startup/15-minute reconciliation on kubectl-reachable
+clusters. On push-reported clusters, a cluster administrator must replace the
+role's entire `rules` list with the safe rules below (do not merely append them),
+and inspect any orphaned `hive-node-health-reader-*` roles as well. A tenant
+pod upgrade does not revoke old ClusterRole permissions. For each affected
+namespace, an administrator with the cluster's kubeconfig can revoke the legacy
+grants immediately (repeat with the appropriate `NS` on every hosting cluster):
+
+```bash
+kubectl --request-timeout=15s patch clusterrole "hive-node-health-reader-${NS}" \
+  --type=merge -p '{"rules":[{"apiGroups":[""],"resources":["nodes"],"verbs":["get","list"]},{"apiGroups":["metrics.k8s.io"],"resources":["nodes"],"verbs":["list"]}]}'
+kubectl get clusterrole "hive-node-health-reader-${NS}" -o yaml
+```
+
+Verify the resulting role has only the two node rules; it must have no
+`nodes/proxy`, `pods`, wildcard resources, or aggregation rule. Also check
+other bindings to the tenant ServiceAccount: narrowing this role cannot undo
+grants from independently installed roles.
+
+Existing push-reported spokes also need the cluster identity that enables the
+heartbeat `cluster_health` block. If a hive was provisioned before
+`hub.cluster_id`/`HIVE_CLUSTER_ID` were emitted, patch the Deployment and then
+restart the pod (repeat for each namespace):
+
+```bash
+CLUSTER_ID=vllm-d
+kubectl --request-timeout=15s -n "${NS}" set env deploy/hive HIVE_CLUSTER_ID="${CLUSTER_ID}"
+kubectl --request-timeout=15s -n "${NS}" rollout restart deploy/hive
+```
+
+This is in addition to the read-only ClusterRole/ClusterRoleBinding above; RBAC
+alone cannot help if the spoke omits `cluster_health` because its cluster ID is
+blank.
 
 ---
 
@@ -1059,12 +1096,6 @@ rules:
 - apiGroups: [""]
   resources: ["nodes"]
   verbs: ["get","list"]
-- apiGroups: [""]
-  resources: ["nodes/proxy"]
-  verbs: ["get"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["list"]
 - apiGroups: ["metrics.k8s.io"]
   resources: ["nodes"]
   verbs: ["list"]
@@ -1205,6 +1236,7 @@ data:
     hub:
       enabled: true
       url: https://hive.hivecommons.dev
+      cluster_id: vllm-d
       dashboard_url: https://${ROUTE_HOST}
       hive_type: hosted
       is_public: false
@@ -1324,15 +1356,15 @@ spec:
       serviceAccountName: hive-sa
       # ── init containers — REQUIRED. The ConfigMap is mounted read-only at
       # /etc/hive-seed and copied into a WRITABLE emptyDir at /etc/hive. The hive
-      # process must WRITE /etc/hive/hive.yaml at runtime (the entrypoint seeds
-      # it, then merges the PVC overlay over it, and the dashboard's Save writes
-      # it). Mounting the ConfigMap DIRECTLY at /etc/hive makes it read-only and
+      # process must WRITE /etc/hive/hive.yaml at runtime (on first boot the entrypoint
+      # seeds it, then merges the PVC overlay over it; later boots restore it from
+      # /data/hive.yaml.runtime; the dashboard's Save writes it). Mounting the ConfigMap DIRECTLY at /etc/hive makes it read-only and
       # every config save fails with "open /etc/hive/hive.yaml: read-only file
       # system" — and dashboard-installed GitHub App auth / ACMM changes are lost.
       initContainers:
       - name: copy-config
         image: ${IMAGE}
-        command: ["sh","-c","cp /etc/hive-seed/hive.yaml /etc/hive/hive.yaml && echo configmap-copied; if [ -f /data/hive.yaml.runtime ]; then echo runtime-config-exists-for-recovery; elif [ -f /data/hive.yaml.bak ]; then echo legacy-runtime-config-exists-for-recovery; fi"]
+        command: ["sh","-c","if [ -s /data/hive.yaml.runtime ]; then echo runtime-config-exists-for-recovery; elif [ -s /data/hive.yaml.bak ]; then echo legacy-runtime-config-exists-for-recovery; else cp /etc/hive-seed/hive.yaml /etc/hive/hive.yaml && echo configmap-copied-first-boot; fi"]
         volumeMounts:
         - { name: config,          mountPath: /etc/hive-seed, readOnly: true }
         - { name: config-writable, mountPath: /etc/hive }
@@ -1542,11 +1574,17 @@ if it does not exist.
 
 ## Config precedence — the PVC overlay is authoritative
 
-At runtime the effective config is **not** the ConfigMap. The entrypoint:
+At runtime the effective config is **not** the ConfigMap. On the **first boot**
+(no non-empty `/data/hive.yaml.runtime` or legacy `/data/hive.yaml.bak`) the
+entrypoint:
 
-1. seeds `/etc/hive/hive.yaml` from the `hive-config` ConfigMap on boot, then
+1. seeds `/etc/hive/hive.yaml` from the `hive-config` ConfigMap, then
 2. merges the PVC dashboard overlay `/data/hive.yaml.dashboard` **over** it, and
 3. writes `/data/hive.yaml.runtime`.
+
+On **every later boot** it copies `/data/hive.yaml.runtime` over
+`/etc/hive/hive.yaml` and boots from that; the seed is not used and the overlay
+merge does not run. With neither file and no seed, it exits 1.
 
 The dashboard's `Config.Save()` writes the overlay. Therefore:
 

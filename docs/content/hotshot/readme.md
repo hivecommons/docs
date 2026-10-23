@@ -26,7 +26,7 @@ All platforms honor the same contract:
 | Clipboard: file URL / drop list | ✅ file URL | with CopyQ | ✅ file drop list |
 | CLI detection (focused terminal's processes) | `ps -t <tty>` | `/proc` descendants | Win32_Process tree |
 | Claude Code → typed `[path] ` | ✅ | ✅ | ✅ |
-| Copilot CLI / aider / OpenCode → bare escaped path | ✅ backslash-escaped | ✅ backslash-escaped | quoted if spaces |
+| Copilot CLI / aider / OpenCode → bare escaped path | ✅ backslash-escaped | ✅ backslash-escaped | double-quoted if it contains spaces or shell metacharacters; refused if it contains `"`, `$` or `` ` `` |
 | Unknown CLI → bracketed default | ✅ | ✅ | ✅ |
 
 The rest of this page documents the **macOS** app.
@@ -53,14 +53,29 @@ No dragging files around. No copy-pasting paths. No "here let me find where that
 
 Requires macOS 13+ and Swift (comes with Xcode or Xcode Command Line Tools).
 
+### Homebrew (recommended)
+
+```bash
+brew install hivecommons/hive/hotshot
+```
+
+The formula lives in the [`hivecommons/homebrew-hive`](https://github.com/hivecommons/homebrew-hive) tap and builds the tagged release from source on your machine. It installs the `hotshot` command only; for a double-clickable app see [Build as an app bundle](#build-as-an-app-bundle-optional). Upgrade later with `brew upgrade hotshot`.
+
+### From source
+
+Releases are tagged with `v`-prefixed semantic versions; see the [latest release](https://github.com/hivecommons/hotshot/releases/latest) (first release: [v0.1.0](https://github.com/hivecommons/hotshot/releases/tag/v0.1.0)) and the [CHANGELOG](https://github.com/hivecommons/hotshot/blob/main/CHANGELOG.md). Check out a release tag to build that version:
+
 ```bash
 git clone https://github.com/hivecommons/hotshot.git
 cd hotshot
+git checkout v0.1.0
 swift build -c release
 sudo cp .build/release/hotshot /usr/local/bin/
 ```
 
-Then just run it:
+### Run it
+
+Either way, just run it:
 
 ```bash
 hotshot
@@ -69,6 +84,19 @@ hotshot
 A small camera icon appears in your menu bar — that's hotshot running. It stays out of your way until you need it.
 
 > Tip: Run `hotshot &` to background it so it doesn't hold your terminal.
+
+### Build as an app bundle (optional)
+
+To get a double-clickable `Hotshot.app` (menu-bar only, no Dock icon) instead of a bare binary, run the bundle script from the repository root on macOS:
+
+```bash
+scripts/bundle.sh            # builds a release binary and creates ./Hotshot.app
+scripts/bundle.sh --install  # also stops any running hotshot, copies the app to /Applications and launches it
+```
+
+The script runs `swift build -c release`, so the same requirements as above apply.
+
+To go back to an earlier build after a bad update, see [runbooks/release-rollback.md](https://github.com/hivecommons/hotshot/blob/main/runbooks/release-rollback.md).
 
 ### First-time setup
 
@@ -85,7 +113,7 @@ hotshot remembers which terminal you last clicked on. It supports two injection 
 
 **Clipboard mode** (on by default):
 1. You take a screenshot to clipboard with ⌃⌘⇧3 or ⌃⌘⇧4
-2. hotshot detects the new image on the clipboard, saves it to your screenshot folder as `hotshot-YYYYMMDD-HHMMSS.png`, and rewrites the clipboard with the image **plus** the file's plain-text path and file URL
+2. hotshot detects the new image on the clipboard, saves it to your screenshot folder as `hotshot-YYYYMMDD-HHMMSS-mmm.png` (a `-N` suffix is added if that name is already taken), and rewrites the clipboard with the image **plus** the file's plain-text path and file URL
 3. Sends Ctrl-V to your last active terminal — Claude Code reads the image data; CLIs like GitHub Copilot CLI get the file path when you paste as text (⌘V)
 
 Both modes bring the terminal back to the front automatically. No servers, no browser extensions.
@@ -119,9 +147,9 @@ Click the camera icon in your menu bar. Everything is configurable:
 Any CLI tool that accepts image file paths as input:
 
 - [Claude Code](https://claude.ai/code)
-- [GitHub Copilot CLI](https://githubnext.com/projects/copilot-cli)
+- [GitHub Copilot CLI](https://github.com/github/copilot-cli)
 - [aider](https://aider.chat)
-- [OpenCode](https://github.com/anthropics/opencode)
+- [OpenCode](https://github.com/anomalyco/opencode)
 - Any tool where you can paste a file path and it reads the image
 
 ## FAQ
@@ -130,10 +158,13 @@ Any CLI tool that accepts image file paths as input:
 No — it works *with* them. Your normal ⌘⇧3/4/5 shortcuts work exactly as before (file mode). And ⌃⌘⇧3/4 clipboard shortcuts work with clipboard mode. hotshot watches for the results and injects automatically.
 
 **I took a screenshot and nothing appeared in my terminal.**
-Make sure hotshot is running (look for the camera icon in your menu bar). Also make sure you've clicked on a terminal window at least once since launching hotshot — it needs to know which terminal to target.
+Make sure hotshot is running (look for the camera icon in your menu bar). Also make sure you've clicked on a terminal window at least once since launching hotshot — it needs to know which terminal to target. If it still doesn't work, follow [runbooks/injection-failure.md](https://github.com/hivecommons/hotshot/blob/main/runbooks/injection-failure.md), which maps hotshot's diagnostic events to causes.
 
 **Where do the screenshots go?**
 By default, wherever your Mac saves screenshots (usually Desktop or Downloads). hotshot reads your macOS screenshot location setting automatically. You can override it from the menu bar > "Change screenshot folder..."
+
+**I downloaded an image into my screenshot folder and it was not injected.**
+That's on purpose. Watch mode only injects screenshots you took: files written by a browser, Mail, Messages or AirDrop carry macOS's quarantine attribute (`com.apple.quarantine`), which screen captures never do, so hotshot skips them rather than typing an image you didn't capture into your AI session. Use "Inject last screenshot" from the menu, or paste the path yourself, if you really want it.
 
 **What format is the path injected in?**
 hotshot inspects the processes on the target terminal session's tty (iTerm2 and Terminal.app) and picks the format that CLI understands: Claude Code gets `[/path/to/screenshot.png]`, while GitHub Copilot CLI, aider, and OpenCode get a bare backslash-escaped path (what Finder drag-and-drop inserts). If the CLI can't be determined, the historical bracketed format is used. The clipboard simultaneously carries the PNG image, a file URL, and the escaped plain-text path, so pasting (⌘V, or Ctrl-V in Claude Code) works everywhere.
@@ -144,15 +175,27 @@ Clipboard mode works with remote sessions (tmux, zellij, OpenShell) as long as t
 **Can I use it with VS Code's integrated terminal?**
 Not yet — VS Code's terminal isn't a standalone app. For VS Code, try [vscode-terminal-image-paste](https://github.com/cybersader/vscode-terminal-image-paste).
 
+**What does hotshot log, and where does it go?**
+Diagnostics stay local (Console.app / `stderr`, never sent anywhere) and normally omit screenshot directory paths, filenames, generated AppleScript, clipboard contents, and terminal names/bundle ids — just stable event names (the closed `DiagnosticEvent` set in `Sources/HotshotCore/Diagnostics.swift`) and severities, e.g. `Hotshot [WARN] injection.control_chars_refused`. Set `HOTSHOT_VERBOSE_LOGGING=1` before launching hotshot (or the Linux/Windows capture scripts) to include the redacted values for local debugging.
+
 ## Technical details
 
-Single Swift file (~600 lines), compiled to a native macOS binary. Zero dependencies — no frameworks, no packages, no runtime requirements. Just Apple's built-in APIs:
+A small Swift package (`HotshotCore` for pure logic, `HotshotApp` for the watchers and terminal injection, and the `hotshot` executable target), compiled to a native macOS binary. Zero dependencies — no frameworks, no packages, no runtime requirements. Just Apple's built-in APIs:
 
 - `DispatchSource` file system watcher for auto-detecting new screenshots
 - `NSPasteboard` polling for clipboard image detection
 - `NSWorkspace` notifications to track terminal focus
 - `NSAppleScript` to inject paths and keystrokes into terminal sessions
 - `UserDefaults` to persist your preferences
+
+## Contributing & community
+
+- **Contribute:** [CONTRIBUTING.md](https://github.com/hivecommons/hotshot/blob/main/CONTRIBUTING.md) covers setup, the checks CI runs on each platform, coverage floors and DCO sign-off.
+- **Where it's heading:** [ROADMAP.md](/docs/hotshot/roadmap) lists near-term work: package distribution, cross-platform parity, and more terminal and AI CLI targets.
+- **Report a problem or ask for support:** open a [bug report](https://github.com/hivecommons/hotshot/issues/new?template=bug_report.yml), a [terminal or AI CLI support request](https://github.com/hivecommons/hotshot/issues/new?template=target_request.yml), or a [feature request](https://github.com/hivecommons/hotshot/issues/new?template=feature_request.yml).
+- **Security:** please don't file vulnerabilities as public issues. Follow [SECURITY.md](https://github.com/hivecommons/hotshot/blob/main/SECURITY.md).
+- **Chat:** ask setup and contributor questions in the [Hive Commons Discord](https://hivecommons.dev/discord).
+- **Code of Conduct:** hotshot follows the [Hive Commons Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md).
 
 ## License
 

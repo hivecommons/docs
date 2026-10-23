@@ -4,7 +4,7 @@
 
 # Dealing with unknown criteria
 
-_How you can use a spec driven development flow when the criteria for a feature are unknown or incomplete._
+_How you can use a spec-driven development flow when the criteria for a feature are unknown or incomplete._
 
 A question I often ask myself when I am working on a project is "Should I be
 using spec driven development for this problem?". The answer is usually yes, but
@@ -12,28 +12,28 @@ sometimes I do not have a clear idea of what the criteria for the work are.
 
 ## Three kinds of work
 
-Broadly I think most of the activities that I carry out when coding fall into 
+Broadly I think most of the activities that I carry out when coding fall into
 the following three categories:
 1. I know what the criteria for the work are, and I can write a spek for
    it.
-2. Small bugs or minor changes where I have a fair idea of the problem and the 
+2. Small bugs or minor changes where I have a fair idea of the problem and the
    solution.
 3. Something is wrong and I don't know what the problem is or what the solution is.
 
 In the first case, I can use the Spektacular (Spek) workflow to write a spek
-and then implement it. In the second case, vibe coding is probably appropriate, 
+and then implement it. In the second case, vibe coding is probably appropriate,
 and way quicker than writing a specification. In the third case, the temptation
-is to start working with the agent to investigate and fix the problem. However, 
+is to start working with the agent to investigate and fix the problem. However,
 all of the detail around this work is not captured in a spek and plan
 and so it may not adhere to the team's coding standards and practices, and the
 code that is produced may not be maintainable or testable. I am basically vibe
 coding my way to another problem.
 
-## A bug in Spektacular
+## A bug in Spek
 
 Let's look at a concrete example. I was recently working on what I believed to be
 a bug in Spek when using the `new` mode to create specifications with
-the Bob agent. The way that Spek works is that internally the skills are 
+the Bob agent. The way that Spek works is that internally the skills are
 deliberately very simple: they only instruct the agent to do a single task.
 Further instructions are provided to the agent once it has completed the task.
 By following this approach, and using a state machine to control the flow of the
@@ -76,7 +76,7 @@ noticed that it got stuck in a loop, it was unable to advance to the next step
 and actually made a step up. Because of the state machine it was not able to
 progress so went into a loop to search and find out what the next step was, it
 did eventually find this but I don't understand why it needed to as the next
-steps are clearly marked. I have not seen this behaviour with Claude. 
+steps are clearly marked. I have not seen this behaviour with Claude.
 ```
 
 The agent examined the code and returned a fix:
@@ -138,7 +138,7 @@ something I had been thinking about myself.
 ## Non-Goals
 
 A debug or session action-log for reconstructing agent behavior after the fact
-is out of scope; it is left for a separate, future spec.
+is out of scope; it is left for a separate, future spek.
 ```
 
 So, whilst there is context for all of this, let's get the agent to write a

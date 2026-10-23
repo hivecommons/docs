@@ -4,7 +4,7 @@
 
 Hive is AI-agent orchestration for open-source projects. A single Go binary
 enumerates GitHub issues and PRs, classifies them, and dispatches work to AI
-coding agents (Claude, Copilot, Gemini, Goose) on adaptive cadences governed by
+coding agents (Claude, Copilot, Codex, Antigravity, Goose) on adaptive cadences governed by
 queue depth — with layered, technically-enforced guardrails between an agent and
 the outside world.
 
@@ -306,7 +306,7 @@ flowchart LR
 | L3 | Quality-Gated (Measured) | `quality` opens PRs gated by literal `hold` about testing gaps, coverage, and CI health; others advisory. This measurement foundation is what earns automation at higher levels |
 | L4 | Security-Aware (Adaptive) | All agents file issues; quality, ci-maintainer, and sec-check can open PRs gated by literal `hold` |
 | L5 | Semi-Autonomous (Semi-Automated) | All agents open PRs — every PR carries literal `hold` for human review |
-| L6 | Fully Autonomous | Agents open PRs and **auto-merge on green CI**; switching to L6 enables auto-merge for every active repo, owners may toggle repos afterward, non-outreach PRs have no level hold, outreach PRs remain held |
+| L6 | Fully Autonomous | Agents open PRs and **auto-merge on green CI**; switching to L6 enables auto-merge for every active repo, owners may toggle repos afterward, no level hold, except cross-repo outreach PRs (target repo not managed by this hive) remain held |
 
 `supervisor` is always advisory. The full matrix is in
 [`acmm-policy-matrix.md`](/docs/hive/acmm-policy-matrix).
@@ -394,6 +394,12 @@ flowchart LR
 ```
 
 - `/api/status` — full fleet + governor state (`BuildFrontendStatus`).
+- Dashboard timestamps are sent as machine-readable UTC/RFC3339 fields where the
+  UI needs absolute time (for example `governor.nextKickAt` and agent
+  `nextKickAt`) and formatted in the browser through the shared display-timezone
+  helper. Users can choose **Settings → Appearance → Display timezone**:
+  browser local time (default), the hive server timezone from `/api/status`,
+  UTC, or an IANA zone.
 - `/api/audit` — recent audit entries for read-write users: dashboard config changes, logins, GitHub App setup changes, and agent lifecycle events such as start, stop, launch failure, pause/resume/kick, add/remove, backend changes, and model changes. Entries are kept in memory and, when `/data` exists, appended to `/data/audit.jsonl` with lumberjack rotation (5 MB files, 3 backups, 90 days).
 - The machine-readable dashboard API reference is [dashboard/openapi.json](https://github.com/hivecommons/hive/blob/v5/dashboard/openapi.json).
 - `/api/events` — Server-Sent Events; the dashboard is pushed a fresh snapshot on

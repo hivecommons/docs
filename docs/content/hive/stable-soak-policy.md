@@ -36,7 +36,11 @@ The workflow moves `stable` to that build only when these hard gates pass:
 
 1. **Digest integrity:** all three image digests for the chosen generation still
    exist in GHCR and carry matching `org.opencontainers.image.revision` and
-   `io.hivecommons.hive.github-actions-run-number` labels.
+   `io.hivecommons.hive.github-actions-run-number` labels. When two successful
+   `docker.yml` runs built the same commit (a concurrent push pair, or push plus
+   `workflow_dispatch`), the shared short-SHA tag carries only one run's
+   generation; the other run is skipped as a duplicate rather than held, and the
+   run that owns the tag is evaluated as its own build (#11196).
 2. **Green release evidence:** build, lint, unit tests, changelog/release guards,
    and non-flaky required checks are passing or skipped by policy for the chosen
    build's commit.
@@ -47,12 +51,14 @@ The workflow moves `stable` to that build only when these hard gates pass:
    healthy heartbeat with zero crash restarts in the soak window. The preferred
    evidence is a maintained hive on the exact build being promoted. When `v5` is
    busy and the exact build has already been superseded, the workflow may use a
-   healthy maintained hive on the current, later `candidate` in the same
-   monotonic `v5` docker.yml lineage: surviving a later build is conservative
-   smoke evidence for an older build in the same line, and it is never used to
-   justify a younger build. If the hub is reachable but returns no maintained
-   hive summaries, the smoke-signal gate holds the selected build until evidence
-   is available.
+   healthy maintained hive on any later `candidate` build in the same monotonic
+   `v5` docker.yml lineage — not only the current one, since on a busy day
+   `candidate` moves faster than spokes auto-update (#10042). The hub reports
+   each candidate-channel hive's build generation; surviving a later build is
+   conservative smoke evidence for an older build in the same line, and it is
+   never used to justify a younger build. If the hub is reachable but returns no
+   maintained hive summaries, the smoke-signal gate holds the selected build
+   until evidence is available.
 
 If any hard gate fails, the run exits successfully without moving `stable` and
 prints which gate is holding which build. Those gates are the only normal reasons
@@ -69,7 +75,12 @@ later hourly run, `stable` moves again whenever another newer build crosses the
 Two promotion runs never execute at the same time: `promote-stable.yml` declares
 a GitHub Actions `concurrency` group (`stable-promotion-v5`,
 `cancel-in-progress: false`), so a scheduled or manually dispatched run waits
-for any in-progress run to finish before it starts. GitHub serialises the
+for any in-progress run to finish before it starts. Because repository-wide
+`schedule:` delivery is starved, the workflow also triggers on completion of
+`Tagged Release` (`workflow_run`, v5 only); a `gate` job skips the run when
+another run's `promote` job ran (or is running) within the last 30 minutes. Runs
+whose own gate skipped `promote` do not count, so skip-only runs cannot chain
+and starve promotion on a busy `v5` (#11196). GitHub serialises the
 runs; the workflow itself does not need an atomic primitive. As a second,
 independent guard, immediately before publishing the run re-reads each image's
 current `stable` generation and requires it to be unchanged from the decision
@@ -81,6 +92,10 @@ manual retag). If the re-read fails, the run exits successfully without moving
 
 The release captain records the promoted digest, selected build, stable tag, soak
 start/end time, and smoke evidence in the workflow summary or promotion PR.
+
+Promotion moves the `stable` tag; see
+[What happens to your hive after `stable` moves](/docs/hive/release-channels#what-happens-to-your-hive-after-stable-moves)
+for when an individual hive follows that tag.
 
 ## CI enforcement
 
@@ -113,7 +128,11 @@ resumes.
 
 The public GET endpoint exposes only non-secret channel state, `eligible_at`, an
 `eligible_build` object (`sha`, `generation`, `built_at`, and digest when known),
-and maintained-hive smoke summaries; the PUT toggle is hub-admin gated and audit
+maintained-hive smoke summaries, and the outcome of the latest GitHub
+`docker.yml` runs fetch (`last_runs_fetch_ok`, `last_runs_fetch_error`,
+`last_runs_fetch_at`). The runs fetch has one 30-second deadline, stops paging
+at the current stable build, and a fetch that fails part-way never drives
+eligibility; the last good run list keeps being served. The PUT toggle is hub-admin gated and audit
 logged. Stable-channel hive rows and spoke dashboards use this same `eligible_at`
 calculation for their "Next update" ETA. When there is no eligible or soaking
 build ahead of stable, they say that no update is queued instead of hiding the
@@ -143,8 +162,12 @@ rollback digest, and `emergency-followup-issue` must name the follow-up issue fo
 skipped soak or smoke evidence. The exception still requires the candidate to be
 current, required workflows to be green, no open `release-blocker`, and the
 monotonic generation guard to pass. When an emergency promotion succeeds, the
-workflow records the exception in the step summary and comments on the follow-up
-issue.
+workflow records the exception in the step summary, comments on the follow-up
+issue, and stamps the issue body with `<!-- hive:ops-tracking -->` and
+`<!-- hive:recheck-after <promotion + soak-hours> -->` so the hive's
+good-first-issue picker and contributor lane leave the checklist to the
+maintainer ([good-first-issue.md](https://github.com/hivecommons/hive/blob/v5/src/docs/good-first-issue.md#what-qualifies)); a
+hand-written follow-up should carry the same two markers.
 
 ### What the exception actually waives
 

@@ -78,7 +78,7 @@ Each row also carries the **commit timestamp** of the build it points at (`<sha>
 
 Distances are computed hub-side (`pkg/hub/channel_distance.go`) via GitHub's compare API and cached permanently: the distance between two fixed commits is immutable, and a moved channel is a new SHA pair, so entries become unreferenced rather than stale — there is no TTL after which a shown distance could be wrong.
 
-Both reads, like every other hub-originated `api.github.com` call (branch tips, commit messages, workflow runs), are made anonymously unless **`HIVE_HUB_GITHUB_TOKEN`** is set on the hub. The anonymous budget is 60 requests/hour per source IP and the branch poller alone exhausts it once the hub tracks more than a couple of branches; GitHub then answers `403`/`429`, the compares fail, and the distance column and timestamps silently disappear (the hub logs `channel distance: compare failed … HTTP 403`). Set the token (a fine-grained or classic token with public-repo read; 5000 requests/hour) and the rows come back on the next 5-minute channel refresh. See [`env-vars.md`](/docs/hive/env-vars).
+Both reads, like every other hub-originated `api.github.com` call (branch tips, commit messages, workflow runs), use the shared GitHub HTTP transport, so unchanged GitHub responses are revalidated with ETags and served from the hub cache on `304 Not Modified`. Configure **`HIVE_HUB_GITHUB_APP_ID`**, **`HIVE_HUB_GITHUB_INSTALLATION_ID`**, and **`HIVE_HUB_GITHUB_APP_KEY_FILE`** so those reads use the hub GitHub App installation quota. **`HIVE_HUB_GITHUB_TOKEN`** remains only as a legacy fallback; remove it after the App secret is mounted so the hub no longer spends an operator's personal PAT quota. See [`env-vars.md`](/docs/hive/env-vars).
 
 ## Persistence: the tracked channel is durable
 
@@ -93,7 +93,7 @@ A spoke running a channel image shows both delivery dimensions in its own dashbo
 
 The tooltip includes the running SHA, channel when present, built-from branch, authoritative Deployment image ref, and tracking mode. The spoke derives both channel and tracking mode server-side from its cached in-cluster Deployment image lookup; browser code does not infer mutability from tag strings. If the Deployment cannot be read (for example, during a plain `docker run`) or its image ref is malformed, the badge says `tracking unknown` and the API does not expose the untrusted ref. This preserves the distinction between unknown provenance and an intentional pin. The channel portion was introduced by [#3762](https://github.com/hivecommons/hive/pull/3762); the tracking detail is specified by [#6321](https://github.com/hivecommons/hive/issues/6321).
 
-On a self-hosted Podman Quadlet spoke there is no Kubernetes Deployment to read. `bin/hive-podman-setup.sh` therefore writes the unit's own image metadata into `hive.env`, which `hive.container` already loads through `EnvironmentFile=`: `HIVE_SELF_IMAGE` carries the `Image=` reference and `HIVE_SELF_IMAGE_TRACKING` is `registry` when Quadlet registry auto-update is enabled for a non-digest image, otherwise `pinned`. The spoke dashboard uses those variables only when the Deployment lookup is unavailable, so Kubernetes spokes keep the Deployment-derived behaviour above. A Quadlet spoke running `Image=ghcr.io/hivecommons/hive:candidate` with registry auto-update shows `candidate · tracking registry` in the header and `Channel: candidate` in the release-status panel; a digest-pinned Quadlet image shows pinned tracking and the digest while leaving the channel unresolved.
+On a self-hosted Podman Quadlet spoke there is no Kubernetes Deployment to read. `bin/hive-podman-setup.sh` therefore writes the unit's own image metadata into `hive.env`, which `hive.container` already loads through `EnvironmentFile=`: `HIVE_SELF_IMAGE` carries the `Image=` reference and `HIVE_SELF_IMAGE_TRACKING` is `registry` when Quadlet registry auto-update is enabled for a non-digest image, otherwise `pinned`. The spoke dashboard uses those variables only when the Deployment lookup is unavailable, so Kubernetes spokes keep the Deployment-derived behaviour above. A Quadlet spoke running `Image=ghcr.io/hivecommons/hive:candidate` with registry auto-update shows `candidate · tracking registry` in the header and `Channel: candidate` in the release-status panel; a digest-pinned Quadlet image shows pinned tracking and the digest while leaving the channel unresolved. If `hive.env` lacks `HIVE_SELF_IMAGE` (for example, an install that predates it), the panel shows the built-from branch the version menu shows and says to rerun `bin/hive-podman-setup.sh` or `bin/hive-podman-update.sh` to record the image reference. A hive with no hub configured does not show the "hub has not been reached" staleness warning, because there is no heartbeat to judge.
 
 ## Spoke self-service selector
 
@@ -101,12 +101,76 @@ Hosted spoke dashboards that are already following a release-channel tag show a 
 
 The spoke UI keeps reported state and intent separate: after a selection it continues to show the channel observed from the Deployment image, plus a pending "switch requested" note, until the rollout/heartbeat lands on the requested tag. Spokes that are self-hosted, pinned, branch-tracking, missing hub credentials, or otherwise unresolved show an honest "selection unavailable" explanation rather than a dead control.
 
+The panel's second row reports the last upgrade attempt (`releaseStatus.attempt` on `GET /api/version`). When the last spoke-side upgrade landed but the hive has since been rolled to a different commit outside the spoke upgrader — a `kubectl rollout restart`, a direct image bump, or a floating-tag pull — the row headlines the running commit as `↷ Running <sha> (rolled externally) · <age>`, where the age is the running build's start time (`runningSince`), not the superseded upgrade's. The superseded attempt moves to a secondary line, `Last spoke-side upgrade to <sha> superseded · <age>`, carrying its own timestamp; it is dimmed once it predates the running build. The two ages are never conflated: a hive restarted an hour ago reads "1h ago" even if its last spoke-side upgrade was a day earlier.
+
 For self-hosted Podman Quadlet spokes the selector is intentionally unavailable even when `HIVE_SELF_IMAGE` resolves a channel, because there is no hub-managed Deployment image to patch. The panel says to change `Image=` in `hive.container`; after editing, reload/restart through the Podman lifecycle so `hive.env` carries the updated `HIVE_SELF_IMAGE` and tracking mode.
+
+## What happens to your hive after `stable` moves
+
+When the hub says that `stable` moved, that means the channel tag now points at
+a newer image. Your hive still has to notice that target and roll onto it. The
+normal path is:
+
+1. **A build becomes eligible for `stable`.** The stable-promotion workflow runs
+   about hourly and promotes the newest `v5` build that passed the
+   [24-hour stable soak](/docs/hive/operations/stable-soak-and-promotion-policy). Moving `stable` is a retag of an
+   already-built image, not a rebuild.
+2. **The hub refreshes its channel answer.** The hub caches channel resolution
+   for up to 5 minutes. After that refresh, `stable` resolves to the new commit
+   in the hub's release-channel block and in per-hive upgrade targeting. If the
+   row cannot resolve, the hub does not guess; check the hub log for
+   `channel resolve:` warnings. For fast-moving branches, the deployable target
+   is the newest recent commit whose per-SHA image is already published on GHCR;
+   the branch head can still display as `building` until its own image lands.
+3. **Your hive's upgrade policy decides when the rollout may start.**
+   - **Hub-managed hosted spokes** are controlled by the hub. If upgrades are not
+     `paused`, the hub arms the target when the hive is behind and delivers the
+     instruction on the spoke's next heartbeat. Spokes heartbeat every 2 minutes.
+     Instant policies may still wait for the 5-minute auto-upgrade debounce
+     window, which collapses a burst of moving targets into one rollout. Daily
+     and weekly policies wait for their configured window (`schedule`,
+     `schedule_hour`, `schedule_timezone`, and, for weekly,
+     `schedule_weekday`).
+   - **Spoke-managed Kubernetes spokes** learn the `upgrade_to` target in their
+     heartbeat response and patch their own Deployment. A Deployment that tracks
+     `:stable` rolls by changing a pod-template annotation; with
+     `imagePullPolicy: Always`, the replacement pod re-pulls the moving tag.
+   - **Self-hosted Podman Quadlet spokes** follow the registry only when you opt
+     in to Podman's auto-update drop-in. That enables `podman-auto-update.timer`;
+     Podman's timer is daily by default.
+   - **Self-hosted Kubernetes deployments that are not receiving hub/spoke
+     upgrade instructions** do not roll just because a tag moved. The shipped
+     manifest uses `imagePullPolicy: Always`, so the next Deployment restart or
+     rollout re-pulls `:stable`.
+4. **What you see while waiting.** The spoke Version panel shows `Next update`,
+   `overdue since`, `none queued`, `paused`, or `unknown` from
+   `/api/version.autoUpdate.nextUpdateAt` and `nextUpdateStatus`. The navbar
+   version badge changes its short SHA only after the pod actually runs the new
+   image. If the hive is stuck, `/api/version` also exposes
+   `autoUpdate.state`; a retrying or failed upgrade includes the upgrade marker's
+   `attempts` and `lastError`. A dashboard-triggered Upgrade that is accepted
+   but produces no rollout or completion signal is marked failed after 15
+   minutes instead of showing `Upgrading…` forever. If a daily or weekly
+   window opened while the hive was behind but the hub held the upgrade (an
+   unresolved channel, a claim still being delivered, a pending earlier
+   upgrade, a full upgrade wave, the merge debounce, or a hive that has not
+   heartbeated recently), the panel shows a `Held` row with that reason from
+   `autoUpdate.heldReason` / `heldAt`, so a missed window is explained instead
+   of only showing the previous upgrade.
+5. **Need it now?** Once `stable` itself points at the desired build,
+   **Upgrade now** skips the automatic-upgrade wait for that hive and arms the
+   rollout immediately. It does not promote `stable`; it only follows the channel
+   value that already exists.
+
+Typical worst case after a fix merges is approximately: **24 hours of soak + up
+to 1 hour for the promotion tick + up to 5 minutes for hub channel resolution +
+up to one 2-minute heartbeat + the 5-minute debounce**, plus any paused/daily/
+weekly policy window you configured.
 
 ## Known limitations
 
 - **Bulk actions cannot set a channel.** The bulk *Switch branch* action validates against real branches only and rejects channel names (`unknown branch`); it also never writes the tracked channel. Switching to a channel is per-hive.
-- **A manual Upgrade on a channel-tracking hive resolves through the channel tag.** If `:stable`/`:candidate`/`:edge` already points at the commit the spoke is running, the hub refuses the click with a visible explanation instead of arming a no-op heartbeat upgrade. Operators who need a newer build must wait for the channel to advance or switch the hive to a newer channel/branch tag.
+- **A manual Upgrade on a channel-tracking hive resolves through the channel tag.** If `:stable`/`:candidate`/`:edge` already points at the commit the spoke is running, the hub answers `200 {"status":"current", ...}` — a clean "already up to date" no-op that arms nothing — rather than an error (a `409` here used to surface as "Upgrade failed" on both dashboards and was recorded as a failed self-upgrade on the spoke). Operators who need a newer build must wait for the channel to advance or switch the hive to a newer channel/branch tag.
 - **The spoke dashboard offer uses that same target.** `/api/version` keeps reporting the branch tip for provenance, but the `behind` flag, behind count, and Upgrade button are measured against the hub-delivered upgrade policy when present. A `:stable` spoke therefore does not offer "Upgrade available → `<branch tip>`" while `:stable` itself still points at the running commit.
 
 ## Channel-aware upgrade targeting
@@ -119,6 +183,7 @@ How targets are now resolved (`reachableUpgradeTarget`, used by the manual upgra
 
 - **Which channel a spoke is on:** the spoke's *reported image ref* leads, because it is what the kubelet will pull; the hub-side `tracked_channel` record is intent, and the two disagree exactly while a channel switch is still on the wire. `tracked_channel` remains the fallback only for spokes too old to report an image ref. Branch tags and SHA pins resolve to branch targeting, exactly as before.
 - **Channel → commit:** the hub walks GHCR from the channel tag to the image index, picks the `linux/amd64` platform manifest (buildx attaches `unknown/unknown` provenance descriptors to the same index, so position is not enough), and reads the `org.opencontainers.image.revision` OCI label from the config blob — the only commit identity that survives a retag. Answers are cached for 5 minutes (`channelDigestTTL`); when a refresh fails, the last good answer is served for up to 4× that (`channelRevisionStaleGrace`, 20 minutes) since a channel moves at most hourly, then resolution is treated as failed.
+- **Target = newest published image, not merely newest commit.** After resolving the channel's commit/branch, the hub checks the immutable short-SHA spoke image tags and advertises only the newest commit whose image is already present in GHCR. If the channel or branch pointer advances before `docker.yml` publishes that SHA, the hub walks back to the newest published ancestor; if none is verified, it withholds the upgrade and retries on the next poll. This makes a still-building image read as queued/waiting instead of a hard failed upgrade.
 - **Unresolved channel = hold, loudly.** If the channel does not resolve to a commit, the hub instructs *nothing* for that spoke and logs a WARN — falling back to branch HEAD would be exactly the bug. Grep the hub log for `auto-upgrade held — the spoke's release channel did not resolve to a commit` (sweep) or `heartbeat: upgrade instruction withheld — the spoke's release channel did not resolve to a commit` (heartbeat path). The next cycle retries.
 - **Downgrade guard.** A channel is a moving pointer, not a monotonic branch, so a spoke can legitimately sit *ahead* of the channel it tracks (rolled while the channel was further along, or switched from `candidate` moments ago). Such spokes are skipped rather than instructed to downgrade (`no upgrade — spoke is at or ahead of its release channel`).
 - **"Up to date" is judged through the tag too.** The stale-latch recovery clears a floating-tag hive's upgrade latch once it runs the newest build *its tag can deliver* (`clearing upgrade latch — floating-tag hive is at latest`). Judging a `:stable` spoke against branch HEAD instead kept it latched for the whole soak window — the failure mode measured above.
@@ -126,3 +191,9 @@ How targets are now resolved (`reachableUpgradeTarget`, used by the manual upgra
 ## Grouping hives by upgrade state
 
 The My Hives **GROUP BY** selector includes an `Upgrade state` dimension ([#3805](https://github.com/hivecommons/hive/pull/3805)) with three buckets: `Queued (ready, not yet upgrading)` (auto-upgrade on and a target armed), `Upgrading`, and `Up to date`. Note that `Queued` requires auto-upgrade to be enabled — a hive that is behind latest with auto-upgrade off sorts under `Up to date`.
+
+## Release notes between two revisions
+
+`GET /api/version/release-notes?from=<sha>&to=<channel-or-sha>` answers "what changes if I upgrade from here to there?" ([#11065](https://github.com/hivecommons/hive/issues/11065)). The dashboard reads `CHANGELOG.md` at both revisions (through the configured GitHub credential, falling back to the public raw endpoint) and returns the `## <date> (vX.Y.Z)` sections that exist at `to` but not at `from`, newest first, grouped Added / Changed / Fixed / Security / Deprecated. The diff comes from repo content, never version arithmetic, so channel and nightly heads work. When `to` is not a release tag, `changelog.d/` fragments that are new at `to` are listed under an `Unreleased (in this build)` section, categorised by filename prefix. If the notes cannot be fetched the endpoint still returns 200 with `source: "unavailable"` and a reason, so an upgrade is never blocked on it. Responses are cached per (from, to) pair for an hour (the cache holds at most 64 pairs, evicting the oldest) and capped at 400 entries (`truncated: true` when cut). Because each uncached build can cost a few hundred GitHub content reads against the hive's own credential, uncached builds are admitted at most 2 at a time and 8 per 10 minutes process-wide; a request past that limit still returns 200 with `source: "unavailable"` and a retry hint, while already-cached pairs keep being served.
+
+When a hub-managed spoke is upgraded without the operator clicking anything, its dashboard shows a dismissible banner at the top of the overview for owners and mergers: "Upgraded <old> → <new>: N releases. What changed ▸" ([#11067](https://github.com/hivecommons/hive/issues/11067)). Expanding it opens these release notes in a read-only modal. It appears once per upgrade per browser and never on a first visit. See [Dashboard-triggered standalone upgrades](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-standalone-upgrades.md#release-notes-before-and-after-an-upgrade).
