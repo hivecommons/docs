@@ -26,6 +26,15 @@ describe("PROJECTS", () => {
     expect(PROJECTS.map(p => p.project)).toEqual(SIBLING_PROJECTS);
   });
 
+  it("syncs the dibs roadmap and public reference pages but not internal notes", () => {
+    expect(project("dibs").files.map(f => [f.source, f.target])).toEqual([
+      ["README.md", "readme.md"],
+      ["ROADMAP.md", "roadmap.md"],
+      ["docs/credit-wall-api.md", "credit-wall-api.md"],
+      ["docs/mcp-registry.md", "mcp-registry.md"],
+    ]);
+  });
+
   it("requires a readme for every project", () => {
     for (const p of PROJECTS) {
       expect(p.files.some(f => f.target === "readme.md" && f.required)).toBe(

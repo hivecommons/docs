@@ -1,0 +1,1 @@
+- The dibs docs now include the Roadmap, Credit-wall API and MCP registry pages, synced from the dibs repo (hivecommons/docs#441).

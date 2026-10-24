@@ -242,6 +242,14 @@ const NAV_STRUCTURE_DIBS: Array<{ title: string; items: NavItem[] }> = [
     title: 'Overview',
     items: [
       { 'Introduction': 'readme.md' },
+      { 'Roadmap': 'roadmap.md' },
+    ]
+  },
+  {
+    title: 'Reference',
+    items: [
+      { 'Credit-wall API': 'credit-wall-api.md' },
+      { 'MCP registry': 'mcp-registry.md' },
     ]
   }
 ]

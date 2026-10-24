@@ -112,7 +112,12 @@ export const PROJECTS: ProjectSync[] = [
     owner: SIBLING_OWNER,
     repo: "dibs",
     branch: process.env.DIBS_DOCS_REF || "main",
-    files: [{ source: "README.md", target: "readme.md", required: true }],
+    files: [
+      { source: "README.md", target: "readme.md", required: true },
+      { source: "ROADMAP.md", target: "roadmap.md" },
+      { source: "docs/credit-wall-api.md", target: "credit-wall-api.md" },
+      { source: "docs/mcp-registry.md", target: "mcp-registry.md" },
+    ],
   },
   {
     // Canonical site is https://spektacular.dev. The repo README and

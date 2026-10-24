@@ -228,6 +228,31 @@ describe("sync-sibling-docs main()", () => {
     );
   });
 
+  it("syncs the dibs roadmap and docs/ reference pages with links resolved from docs/", async () => {
+    const responses = allReadmes();
+    responses["hivecommons/dibs/main/ROADMAP.md"] = "# Roadmap\n";
+    responses["hivecommons/dibs/main/docs/credit-wall-api.md"] =
+      "# Credit wall\n\nSee [server](../server.json) and [token](../README.md#token).\n";
+    responses["hivecommons/dibs/main/docs/mcp-registry.md"] = "# MCP\n";
+    stubFetch(responses);
+    await runSync();
+
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(fs.existsSync(outPath("dibs", "roadmap.md"))).toBe(true);
+    expect(fs.existsSync(outPath("dibs", "mcp-registry.md"))).toBe(true);
+    const api = fs.readFileSync(outPath("dibs", "credit-wall-api.md"), "utf8");
+    expect(
+      api.startsWith(
+        "> **Synced from dibs.** This page is pulled from [hivecommons/dibs@main](https://github.com/hivecommons/dibs/blob/main/docs/credit-wall-api.md)"
+      )
+    ).toBe(true);
+    expect(api).toContain(
+      "[server](https://github.com/hivecommons/dibs/blob/main/server.json)"
+    );
+    expect(api).toContain("[token](/docs/dibs/readme#token)");
+    expect(fs.existsSync(outPath("dibs", "casefold-gate.md"))).toBe(false);
+  });
+
   it("honours *_DOCS_REF overrides when choosing the branch to fetch", async () => {
     const responses = allReadmes();
     delete responses["hivecommons/pluk/main/README.md"];
