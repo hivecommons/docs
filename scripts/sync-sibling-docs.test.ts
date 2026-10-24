@@ -114,6 +114,26 @@ describe("rewriteLinks", () => {
     );
   });
 
+  it("only routes to synced pages from the same repo as the file", () => {
+    const other = { owner: "hivecommons", repo: "other", branch: "main" };
+    const multi = {
+      ...spek,
+      files: [
+        { source: "README.md", target: "readme.md" },
+        { source: "README.md", target: "other-readme.md", repo: other },
+      ],
+    };
+    expect(rewriteLinks("[r](README.md)", multi, multi.files[0])).toBe(
+      "[r](/docs/spektacular/readme)"
+    );
+    expect(rewriteLinks("[r](README.md)", multi, multi.files[1])).toBe(
+      "[r](/docs/spektacular/other-readme)"
+    );
+    expect(rewriteLinks("[r](docs/x.md)", multi, multi.files[1])).toBe(
+      "[r](https://github.com/hivecommons/other/blob/main/docs/x.md)"
+    );
+  });
+
   it("leaves absolute and anchor links alone", () => {
     const src = "[a](https://x.y) [b](#c) [d](/docs/hive)";
     expect(rewriteLinks(src, spek)).toBe(src);

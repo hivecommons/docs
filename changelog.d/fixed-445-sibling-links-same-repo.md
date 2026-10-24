@@ -1,0 +1,1 @@
+- Synced sibling-project pages now only route relative links to synced pages from the same source repository (hivecommons/docs#445). Previously a same-named path in another repo could capture the link.

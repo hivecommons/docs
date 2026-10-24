@@ -428,14 +428,18 @@ export function rewriteLinks(
   p: ProjectSync,
   f?: SyncedFile
 ): string {
+  const r = f ? fileRepo(p, f) : p;
+  // Source paths are only meaningful within their own repo, so only files from
+  // the same repo as the one being rewritten can be link targets.
   const syncedRoutes = new Map<string, string>();
   for (const s of p.files) {
+    const sr = fileRepo(p, s);
+    if (sr.owner !== r.owner || sr.repo !== r.repo) continue;
     syncedRoutes.set(
       s.source.toLowerCase(),
       `/docs/${p.project}/${s.target.replace(/\.mdx?$/i, "")}`
     );
   }
-  const r = f ? fileRepo(p, f) : p;
   return rewriteMarkdownLinks(content, {
     // Without a file, resolve relative to the repo root.
     sourceRepoPath: f?.source ?? "README.md",
