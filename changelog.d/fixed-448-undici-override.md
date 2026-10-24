@@ -1,0 +1,1 @@
+- Bump transitive undici to 8.12.3 (via jsdom, dev-only) to clear GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472 and GHSA-xjj6-f33q-929c from `npm audit`.
