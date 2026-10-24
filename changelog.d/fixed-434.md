@@ -1,0 +1,1 @@
+Bump transitive zod to 4.6.7 to clear GHSA-mrhx-c7xc-m3w5 in the production dependency audit.
