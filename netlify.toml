@@ -47,8 +47,10 @@
 # Skip deploy previews for bot branches so they do not drain the build-minute
 # quota (#419). Production builds of main are unaffected: this rule only
 # applies in the deploy-preview context. exit 0 = skip, exit 1 = build.
+# CI checks Bot-authored PR heads against this exact rule (#439). Add new bot
+# lanes here when that gate fails; prefixes also match human-authored branches.
 [context.deploy-preview]
-  ignore = "case \"${HEAD:-$BRANCH}\" in arch/*|guide/*|scanner/*|quality/*|sec/*|outreach/*|ops/*|automation/*|hive/*|dependabot/*) exit 0;; *) exit 1;; esac"
+  ignore = "case \"${HEAD:-$BRANCH}\" in arch/*|guide/*|scanner/*|quality/*|sec/*|outreach/*|ops/*|automation/*|hive/*|dependabot/*|reviewer/*|feat/*|fix/*|generated/*|docs-rot-*) exit 0;; *) exit 1;; esac"
 
 # Enable branch deploys for documentation versioning
 # Version branches follow the pattern: docs/{version}

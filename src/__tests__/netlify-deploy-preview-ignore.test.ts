@@ -1,6 +1,6 @@
 // Guards the `[context.deploy-preview] ignore` rule in netlify.toml (#419).
 // The rule is a shell `case` statement embedded in a TOML string, and Netlify
-// is the only thing that ever runs it, after merge. Its failure mode is
+// and the CI drift gate both run it. Its failure mode is
 // silent: Netlify skips the build only on exit 0, so a quoting slip or a
 // dropped alternative does not break anything visible — it just lets the bot
 // previews it was meant to suppress start draining build minutes again.
@@ -10,24 +10,10 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { readDeployPreviewIgnore } from "../../scripts/check-deploy-preview-ignore";
 
 const REPO_ROOT = join(__dirname, "..", "..");
 const NETLIFY_TOML = readFileSync(join(REPO_ROOT, "netlify.toml"), "utf8");
-
-// netlify.toml only uses flat `key = "value"` tables. The ignore value is a
-// TOML basic string, so `\"` and `\\` escapes have to be undone before the
-// command is handed to a shell exactly as Netlify would.
-export function readDeployPreviewIgnore(toml: string): string | undefined {
-  const lines = toml.split("\n").map(l => l.trim());
-  const start = lines.indexOf("[context.deploy-preview]");
-  if (start === -1) return undefined;
-  for (const line of lines.slice(start + 1)) {
-    if (line.startsWith("[")) break;
-    const m = line.match(/^ignore\s*=\s*"(.*)"\s*$/);
-    if (m) return m[1].replace(/\\(["\\])/g, "$1");
-  }
-  return undefined;
-}
 
 // Mirrors what Netlify does with the ignore command: run it through `sh`
 // with the deploy context's environment. HEAD is the PR head branch on a
@@ -73,6 +59,11 @@ describe("netlify.toml [context.deploy-preview] ignore", () => {
     "automation/meeting-recordings-refresh",
     "hive/forward-merge",
     "dependabot/npm_and_yarn/next-16.4.1",
+    "reviewer/docs",
+    "feat/new-page",
+    "fix/typo",
+    "generated/update",
+    "docs-rot-2026-10-24",
   ])("skips the preview for bot branch %s", head => {
     expect(runIgnore(ignore!, { HEAD: head, BRANCH: head })).toBe(SKIP);
   });
@@ -80,11 +71,12 @@ describe("netlify.toml [context.deploy-preview] ignore", () => {
   it.each([
     "main",
     "feature/new-landing",
-    "fix/typo",
     "docs/v1.2",
     // A human branch that merely contains a bot prefix must still build:
     // the patterns are anchored to the start of the branch name.
-    "feat/scanner/dashboard",
+    "feature/scanner/dashboard",
+    "mydocs-rot-update",
+    "docs-rotation",
     "myquality/notes",
     "myops/notes",
     "myguide/notes",
