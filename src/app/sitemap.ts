@@ -66,15 +66,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const seen = new Set<string>();
 
   // --- Project-specific docs ---
-  const projectIds: ProjectId[] = [
-    "hive",
-    "hotshot",
-    "pluk",
-    "rationguard",
-    "promptargs",
-    "dibs",
-    "spektacular",
-  ];
+  const projectIds = Object.keys(PROJECTS) as ProjectId[];
 
   for (const projectId of projectIds) {
     const { pageMap, routeMap, contentPath } = buildPageMap(projectId);

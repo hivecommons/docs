@@ -2,18 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import fs from "fs";
 import path from "path";
 import sitemap from "../app/sitemap";
+import { PROJECTS, type ProjectId } from "../config/versions";
 
 const SITE_URL = "https://docs.hivecommons.dev";
 
-const PROJECT_IDS = [
-  "hive",
-  "hotshot",
-  "pluk",
-  "rationguard",
-  "promptargs",
-  "dibs",
-  "spektacular",
-];
+const PROJECT_IDS = Object.keys(PROJECTS);
 const REDIRECT_ONLY_URLS = [
   SITE_URL,
   `${SITE_URL}/en`,
@@ -26,6 +19,17 @@ describe("sitemap", () => {
     const urls = sitemap().map(entry => entry.url);
 
     expect(urls.every(url => url.startsWith(`${SITE_URL}/docs/`))).toBe(true);
+  });
+
+  it("lists pages for every project in PROJECTS", () => {
+    const urls = sitemap().map(entry => entry.url);
+
+    for (const projectId of Object.keys(PROJECTS) as ProjectId[]) {
+      const projectBasePath = PROJECTS[projectId].basePath;
+      expect(
+        urls.some(url => url.startsWith(`${SITE_URL}/docs/${projectBasePath}/`))
+      ).toBe(true);
+    }
   });
 
   it("omits redirect-only URLs", () => {
