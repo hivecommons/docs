@@ -63,6 +63,14 @@ A PR merges once it passes the CI gates defined in `.github/workflows/` — Buil
 Internal Links, Markdown Lint, TypeScript & Lint Check, and Vitest — and every
 commit is DCO-signed (`git commit -s`).
 
+Build also checks that a Bot-authored PR's head branch is skipped by
+`netlify.toml`'s `[context.deploy-preview].ignore` rule. If a new bot lane fails
+this check, add its pattern to that rule and a case to
+`src/__tests__/netlify-deploy-preview-ignore.test.ts`. Human-authored PRs are
+exempt from the CI gate; Netlify itself still matches branch patterns regardless
+of author. This check detects drift but cannot cancel a preview already started
+by Netlify's PR integration.
+
 The PR template's Security Considerations checklist is scoped to this repo's
 actual security-sensitive surface: the Netlify serverless function in
 `netlify/nps-relay/` (the NPS relay — see the `[functions]` comment in

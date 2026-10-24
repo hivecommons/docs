@@ -34,6 +34,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check bot deploy-preview ignore coverage
+        if: github.event_name == 'pull_request'
+        env:
+          PR_AUTHOR_TYPE: ${{ github.event.pull_request.user.type }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: npx tsx scripts/check-deploy-preview-ignore.ts
+
       # Lint and unit tests are gated by typecheck.yml and vitest.yml
       # respectively (vitest.yml additionally enforces coverage
       # thresholds); running them again here just duplicates those jobs.
