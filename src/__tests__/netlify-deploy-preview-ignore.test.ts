@@ -64,6 +64,7 @@ describe("netlify.toml [context.deploy-preview] ignore", () => {
 
   it.each([
     "arch/docs",
+    "guide/adr-0025-walkthrough",
     "scanner/fix-419",
     "quality/test-netlify-ignore",
     "sec/fix-markdown-it-15-0-3",
@@ -86,6 +87,7 @@ describe("netlify.toml [context.deploy-preview] ignore", () => {
     "feat/scanner/dashboard",
     "myquality/notes",
     "myops/notes",
+    "myguide/notes",
   ])("builds the preview for non-bot branch %s", head => {
     expect(runIgnore(ignore!, { HEAD: head, BRANCH: head })).toBe(BUILD);
   });
