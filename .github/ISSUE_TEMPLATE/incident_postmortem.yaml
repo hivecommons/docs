@@ -55,7 +55,7 @@ body:
     id: mitigation
     attributes:
       label: Mitigation / rollback performed
-      description: Reference the runbook step(s) followed, e.g. runbooks/deploy-rollback.md.
+      description: Reference the runbook step(s) followed, e.g. runbooks/site-rollback.md.
     validations:
       required: false
 

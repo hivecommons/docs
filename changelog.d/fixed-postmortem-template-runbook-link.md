@@ -1,0 +1,1 @@
+- The incident postmortem issue template now points at the existing `runbooks/site-rollback.md` instead of a runbook that does not exist.
