@@ -243,7 +243,9 @@ describe("MeetingsPage recordings (committed data)", () => {
     expect(document.querySelector("iframe")).toBeNull();
 
     const first = matching[0];
-    const watchLink = screen.getAllByRole("link", { name: "Watch on YouTube" })[0];
+    const watchLink = screen.getAllByRole("link", {
+      name: "Watch on YouTube",
+    })[0];
     expect(watchLink.getAttribute("href")).toBe(first.url);
     expect(watchLink.getAttribute("href")).not.toBe(
       COMMUNITY_MEETINGS.recordingsUrl
