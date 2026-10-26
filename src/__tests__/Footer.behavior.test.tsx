@@ -224,7 +224,10 @@ describe("back-to-top button", () => {
 
     unmount();
 
-    expect(windowRemoveSpy).toHaveBeenCalledWith("scroll", expect.any(Function));
+    expect(windowRemoveSpy).toHaveBeenCalledWith(
+      "scroll",
+      expect.any(Function)
+    );
     expect(buttonRemoveSpy).toHaveBeenCalledWith("click", expect.any(Function));
   });
 });
