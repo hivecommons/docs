@@ -218,25 +218,13 @@ describe("back-to-top button", () => {
   });
 
   it("removes scroll and click listeners on unmount", () => {
-    const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
+    const windowRemoveSpy = vi.spyOn(window, "removeEventListener");
     const { unmount } = render(<Footer />);
-
-    expect(removeEventListenerSpy).not.toHaveBeenCalled();
+    const buttonRemoveSpy = vi.spyOn(button(), "removeEventListener");
 
     unmount();
 
-    expect(removeEventListenerSpy).toHaveBeenCalledWith(
-      "scroll",
-      expect.any(Function)
-    );
-    const buttonSpy = vi.spyOn(button(), "removeEventListener");
-    // Re-render to get fresh spy after unmount; verify the handler was attached
-    render(<Footer />);
-    cleanup();
-    // After cleanup, the effect cleanup runs
-    expect(removeEventListenerSpy).toHaveBeenCalledWith(
-      "scroll",
-      expect.any(Function)
-    );
+    expect(windowRemoveSpy).toHaveBeenCalledWith("scroll", expect.any(Function));
+    expect(buttonRemoveSpy).toHaveBeenCalledWith("click", expect.any(Function));
   });
 });
