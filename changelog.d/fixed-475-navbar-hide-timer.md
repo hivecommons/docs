@@ -1,1 +1,0 @@
-- Keep navbar dropdowns and the language switcher open when the pointer leaves through the menu and quickly returns (fixes #475).
