@@ -103,7 +103,10 @@ describe("project list and highlighting", () => {
     useSharedConfigMock.mockReturnValue({
       config: configWith([
         { title: "Hive", href: "/docs/hive/overview/introduction" },
-        { title: "rationguard", href: "/docs/rationguard/overview/introduction" },
+        {
+          title: "rationguard",
+          href: "/docs/rationguard/overview/introduction",
+        },
       ]),
     });
     render(<RelatedProjects />);
