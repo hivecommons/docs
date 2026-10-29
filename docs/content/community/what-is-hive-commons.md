@@ -76,6 +76,7 @@ The result is an **elastic swarm**: a three-person project can have a dozen cont
 | [**promptargs**](https://github.com/hivecommons/promptargs) | Template expansion for prompts across Claude Code, Copilot, Goose, Bob, and others. | [promptargs docs](/docs/promptargs/overview/introduction) |
 | [**rationguard**](https://github.com/hivecommons/rationguard) | Detects and rebuts rationalization patterns in agent output. | [rationguard docs](/docs/rationguard/overview/introduction) |
 | [**dibs**](https://github.com/hivecommons/dibs) | Contributor attribution for the AI-agent era: your idea, your credit, their code. | [dibs docs](/docs/dibs/overview/introduction) |
+| [**Crux**](https://github.com/hivecommons/crux) | Runs AI coding agents for you: starts, monitors, and stops them across Claude, Copilot, Gemini, Goose, Codex, Aider and Bob. The engine inside Hive, usable on its own. | [Crux docs](/docs/crux/overview/introduction) |
 
 ## Where next
 
