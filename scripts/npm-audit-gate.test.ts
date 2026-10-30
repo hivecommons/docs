@@ -422,7 +422,9 @@ describe("main", () => {
     expect(exitSpy).not.toHaveBeenCalled();
     const out = logSpy.mock.calls.flat().join("\n");
     expect(out).toMatch(/Acknowledged 1 advisory/);
-    expect(out).toMatch(/::warning::Unused npm audit exception GHSA-zzzz-zzzz-zzzz \(nope\)/);
+    expect(out).toMatch(
+      /::warning::Unused npm audit exception GHSA-zzzz-zzzz-zzzz \(nope\)/
+    );
     expect(out).toMatch(/Ignoring 1 advisory/);
     expect(out).toMatch(/passed at level "high"/);
   });
