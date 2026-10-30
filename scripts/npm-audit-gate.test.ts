@@ -198,8 +198,12 @@ describe("evaluateAudit", () => {
   it("honours one scoped exception per package for the same GHSA", () => {
     const report = {
       vulnerabilities: {
-        "pkg-a": { via: [{ name: "pkg-a", url: BRACES_URL, severity: "high" }] },
-        "pkg-b": { via: [{ name: "pkg-b", url: BRACES_URL, severity: "high" }] },
+        "pkg-a": {
+          via: [{ name: "pkg-a", url: BRACES_URL, severity: "high" }],
+        },
+        "pkg-b": {
+          via: [{ name: "pkg-b", url: BRACES_URL, severity: "high" }],
+        },
       },
     };
     const r = evaluateAudit(
@@ -216,8 +220,12 @@ describe("evaluateAudit", () => {
   it("lets a scoped exception and an unscoped one for the same GHSA coexist", () => {
     const report = {
       vulnerabilities: {
-        "pkg-a": { via: [{ name: "pkg-a", url: BRACES_URL, severity: "high" }] },
-        "pkg-b": { via: [{ name: "pkg-b", url: BRACES_URL, severity: "high" }] },
+        "pkg-a": {
+          via: [{ name: "pkg-a", url: BRACES_URL, severity: "high" }],
+        },
+        "pkg-b": {
+          via: [{ name: "pkg-b", url: BRACES_URL, severity: "high" }],
+        },
       },
     };
     const r = evaluateAudit(
