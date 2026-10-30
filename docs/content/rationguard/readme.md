@@ -413,6 +413,7 @@ const fullBlock = generatePromptBlock({ excuses: getAllExcuses() });
 Operational procedures live in [`runbooks/`](https://github.com/hivecommons/rationguard/blob/main/runbooks/):
 
 - [`watch-session-degraded.md`](https://github.com/hivecommons/rationguard/blob/main/runbooks/watch-session-degraded.md) — `rationguard watch` is quiet or rebuttals are not arriving
+- [`attach-startup-failing.md`](https://github.com/hivecommons/rationguard/blob/main/runbooks/attach-startup-failing.md) — `rationguard attach` fails to start or leaves the agent unmonitored
 - [`learned-excuses-store.md`](https://github.com/hivecommons/rationguard/blob/main/runbooks/learned-excuses-store.md) — learned excuses or sightings disappeared
 - [`release-rollback.md`](https://github.com/hivecommons/rationguard/blob/main/runbooks/release-rollback.md) — rolling back a bad release
 - [`postmortem-template.md`](https://github.com/hivecommons/rationguard/blob/main/runbooks/postmortem-template.md) — incident postmortem template
