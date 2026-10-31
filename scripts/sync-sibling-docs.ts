@@ -3,9 +3,11 @@
  *
  * Same single-sourcing model as scripts/sync-hive-docs.ts: the repos own the
  * markdown; this script pulls it at build time (prebuild) so the site never
- * drifts from the source. Only readme.md is required per project — optional
- * pages that 404 are skipped with a warning so a repo layout change cannot
- * break the docs build.
+ * drifts from the source. Only readme.md is required per project and fails
+ * the build when missing. For optional pages a definite 404 removes the
+ * previously synced docs/content copy (with a warning) so a page deleted
+ * upstream does not linger here; any other non-OK response (429/5xx) keeps
+ * the committed copy rather than unpublish a live page.
  *
  * A project may pull pages from more than one repository (Spektacular's
  * tutorials live in the spektacular-website Astro site), and a page may be
