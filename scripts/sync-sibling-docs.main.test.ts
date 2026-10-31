@@ -259,11 +259,19 @@ describe("sync-sibling-docs main()", () => {
     const outside = path.join(caseDir, "docs", "escape.png");
     const sibling = outPath("pluk", "images/pluk.png");
     const dir = outPath("hotshot", "images/dir");
+    // Where the URL refs below would land if localImageRefs stopped skipping
+    // them: the scheme/host segments become path components under outDir.
+    const schemeAsPath = outPath("hotshot", "https:/example.com/remote.png");
+    const protoAsPath = outPath("hotshot", "cdn.example.com/remote.png");
     fs.mkdirSync(path.dirname(stale), { recursive: true });
     fs.mkdirSync(path.dirname(sibling), { recursive: true });
     fs.mkdirSync(dir, { recursive: true });
+    fs.mkdirSync(path.dirname(schemeAsPath), { recursive: true });
+    fs.mkdirSync(path.dirname(protoAsPath), { recursive: true });
     fs.writeFileSync(outside, "png");
     fs.writeFileSync(sibling, "png");
+    fs.writeFileSync(schemeAsPath, "png");
+    fs.writeFileSync(protoAsPath, "png");
     fs.writeFileSync(
       stale,
       [
@@ -287,6 +295,8 @@ describe("sync-sibling-docs main()", () => {
     expect(warn).toContain("removed stale hotshot/linux.md");
     expect(fs.existsSync(outside)).toBe(true);
     expect(fs.existsSync(sibling)).toBe(true);
+    expect(fs.existsSync(schemeAsPath)).toBe(true);
+    expect(fs.existsSync(protoAsPath)).toBe(true);
     expect(fs.statSync(dir).isDirectory()).toBe(true);
   });
 
