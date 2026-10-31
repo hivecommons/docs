@@ -57,188 +57,188 @@ Hover text follows one budget: one sentence of state in plain words, at most 40 
 
 How many issues and pull requests Hive is tracking right now, and how many of them it can work on.
 
-Full entry: [Overview](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#overview).
+Full entry: [Overview](/docs/hive/dashboard-sections/overview-and-metrics#overview).
 
 ## Governor
 
 How busy Hive thinks your projects are right now, and how often it wakes its workers as a result.
 
-Full entry: [Governor](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#governor).
+Full entry: [Governor](/docs/hive/dashboard-sections/overview-and-metrics#governor).
 
 ## PRs by model
 
 Which AI models wrote the pull requests Hive opened, how well each model's work landed, and how the models rank against each other.
 
-Full entry: [PRs by model](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#prs-by-model).
+Full entry: [PRs by model](/docs/hive/dashboard-sections/overview-and-metrics#prs-by-model).
 
 ## Advisory
 
 Reports, advice and suggestions Hive has written about your projects and about how it is running.
 
-Full entry: [Advisory](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#advisory).
+Full entry: [Advisory](/docs/hive/dashboard-sections/overview-and-metrics#advisory).
 
 ## Advisory Digest
 
 The open findings Hive's workers have written down, such as bugs, ideas and advice, grouped by who wrote them.
 
-Full entry: [Advisory Digest](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#advisory-digest).
+Full entry: [Advisory Digest](/docs/hive/dashboard-sections/overview-and-metrics#advisory-digest).
 
 ## Hive Advice
 
 A short weekly list of things Hive recommends you do to keep work moving on your projects.
 
-Full entry: [Hive Advice](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#hive-advice).
+Full entry: [Hive Advice](/docs/hive/dashboard-sections/overview-and-metrics#hive-advice).
 
 ## Fleet Report Preview
 
 Problems Hive has noticed in itself that it would report to the Hive maintainers, and problems that have since gone away.
 
-Full entry: [Fleet Report Preview](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#fleet-report-preview).
+Full entry: [Fleet Report Preview](/docs/hive/dashboard-sections/overview-and-metrics#fleet-report-preview).
 
 ## Ready to level up?
 
 Whether Hive thinks you could safely let it do more on its own, and what still has to be true first.
 
-Full entry: [Ready to level up?](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#ready-to-level-up).
+Full entry: [Ready to level up?](/docs/hive/dashboard-sections/overview-and-metrics#ready-to-level-up).
 
 ## Lifecycle Timeline
 
 A timeline of recent pull requests, from when they were opened to when they were merged or got stuck.
 
-Full entry: [Lifecycle Timeline](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#lifecycle-timeline).
+Full entry: [Lifecycle Timeline](/docs/hive/dashboard-sections/overview-and-metrics#lifecycle-timeline).
 
 ## Throughput
 
 How many pull requests were opened, merged and closed over a chosen time window, and who did the work.
 
-Full entry: [Throughput](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#throughput).
+Full entry: [Throughput](/docs/hive/dashboard-sections/overview-and-metrics#throughput).
 
 ## Tokens
 
 How much text the AI models read and wrote for Hive recently, broken down by model and by worker.
 
-Full entry: [Tokens](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#tokens).
+Full entry: [Tokens](/docs/hive/dashboard-sections/overview-and-metrics#tokens).
 
 ## Cost
 
 What Hive's use of AI models would cost at public per-token list prices; an estimate, not a bill.
 
-Full entry: [Cost](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/overview-and-metrics.md#cost).
+Full entry: [Cost](/docs/hive/dashboard-sections/overview-and-metrics#cost).
 
 ## Projects
 
 One card per repository Hive looks after, listing its open issues and pull requests grouped by what each one needs next.
 
-Full entry: [Projects](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#projects).
+Full entry: [Projects](/docs/hive/dashboard-sections/workflow-and-agents#projects).
 
 ## ACMM Eval
 
 How ready your repositories are for Hive to work on them alone, scored against a published checklist.
 
-Full entry: [ACMM Eval](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#acmm-eval).
+Full entry: [ACMM Eval](/docs/hive/dashboard-sections/workflow-and-agents#acmm-eval).
 
 ## Approvals
 
 Actions Hive wants to take that are waiting for you to approve or reject them.
 
-Full entry: [Approvals](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#approvals).
+Full entry: [Approvals](/docs/hive/dashboard-sections/workflow-and-agents#approvals).
 
 ## Audit Log
 
 A searchable record of everything Hive has done, newest first. The collapsed “sensitive” badge opens a 24h sensitive-only view, matching the server-side risk count.
 
-Full entry: [Audit Log](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#audit-log).
+Full entry: [Audit Log](/docs/hive/dashboard-sections/workflow-and-agents#audit-log).
 
 ## Review
 
 Review Pipeline shows pull requests by stage first; Review Queue lists the same open pull requests in Hive's suggested review order.
 
-Full entry: [Review](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#review).
+Full entry: [Review](/docs/hive/dashboard-sections/workflow-and-agents#review).
 
 ## Review Pipeline
 
 Each open PR in the stage the review pipeline derived for it (GET /api/review/pipeline), with reviewers, P0–P3 findings, the fix-loop counter and the next action.
 
-Full entry: [Review Pipeline](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#review-pipeline).
+Full entry: [Review Pipeline](/docs/hive/dashboard-sections/workflow-and-agents#review-pipeline).
 
 ## Queue
 
 Every open PR across the governed repos in one deterministic rank order (GET /api/review/queue), regardless of author type, with the reasons for each position.
 
-Full entry: [Queue](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#queue).
+Full entry: [Queue](/docs/hive/dashboard-sections/workflow-and-agents#queue).
 
 ## Experiment Lab
 
 An experimental planner that tries out code changes in your repositories and records what it learned.
 
-Full entry: [Experiment Lab](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#experiment-lab).
+Full entry: [Experiment Lab](/docs/hive/dashboard-sections/workflow-and-agents#experiment-lab).
 
 ## Inception
 
 A step-by-step guide that turns a new project idea into a first set of files and planned work.
 
-Full entry: [Inception](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#inception).
+Full entry: [Inception](/docs/hive/dashboard-sections/workflow-and-agents#inception).
 
 ## Knowledge
 
 The facts Hive has learned about your projects, where they came from, and how much Hive trusts each one.
 
-Full entry: [Knowledge](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#knowledge).
+Full entry: [Knowledge](/docs/hive/dashboard-sections/workflow-and-agents#knowledge).
 
 ## Contributors
 
 The people who lend their computers or AI helpers to your projects, and how far Hive trusts each of them.
 
-Full entry: [Contributors](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#contributors).
+Full entry: [Contributors](/docs/hive/dashboard-sections/workflow-and-agents#contributors).
 
 ## Diagnostics
 
 Health checks for Hive itself, such as its connections, credentials and safety switches, to help you find out why something is not working.
 
-Full entry: [Diagnostics](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#diagnostics).
+Full entry: [Diagnostics](/docs/hive/dashboard-sections/workflow-and-agents#diagnostics).
 
 ## Agent Logs
 
 The raw text output of each worker, for following what it is doing line by line.
 
-Full entry: [Agent Logs](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#agent-logs).
+Full entry: [Agent Logs](/docs/hive/dashboard-sections/workflow-and-agents#agent-logs).
 
 ## Agents
 
 Each worker Hive runs, what it is doing now, and buttons to pause, restart or configure it.
 
-Full entry: [Agents](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/workflow-and-agents.md#agents).
+Full entry: [Agents](/docs/hive/dashboard-sections/workflow-and-agents#agents).
 
 ## Hive activity monitor
 
 A progress strip per open issue and pull request showing which step of the pipeline it is on and who must act next.
 
-Full entry: [Hive activity monitor](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/activity-monitor.md#hive-activity-monitor).
+Full entry: [Hive activity monitor](/docs/hive/dashboard-sections/activity-monitor#hive-activity-monitor).
 
 ### Let hive decide
 
-The monitor's decision feature has its own entry: [Let hive decide](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/activity-monitor.md#let-hive-decide).
+The monitor's decision feature has its own entry: [Let hive decide](/docs/hive/dashboard-sections/activity-monitor#let-hive-decide).
 
 ## Agent activity
 
 One line per worker showing what it is doing now, how long since it last acted, and which issues it has reserved.
 
-Full entry: [Agent activity](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/activity-monitor.md#agent-activity).
+Full entry: [Agent activity](/docs/hive/dashboard-sections/activity-monitor#agent-activity).
 
 ## FAQ
 
 Short answers to the questions people ask once a hive is running, each linking to the guide that explains it fully.
 
-Full entry: [FAQ](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/activity-monitor.md#faq).
+Full entry: [FAQ](/docs/hive/dashboard-sections/activity-monitor#faq).
 
 ## Runs
 
 Longer pieces of work Hive is carrying out in stages, and which ones are waiting for you.
 
-Full entry: [Runs](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/activity-monitor.md#runs).
+Full entry: [Runs](/docs/hive/dashboard-sections/activity-monitor#runs).
 
 ## Platform
 
 Which code hosting service Hive is connected to and which optional platform services are switched on.
 
-Full entry: [Platform](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-sections/activity-monitor.md#platform).
+Full entry: [Platform](/docs/hive/dashboard-sections/activity-monitor#platform).
