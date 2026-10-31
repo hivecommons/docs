@@ -254,6 +254,42 @@ describe("sync-sibling-docs main()", () => {
     expect(fs.existsSync(shared)).toBe(true);
   });
 
+  it("never prunes paths a removed page references outside its directory, by URL, or that are not files", async () => {
+    const stale = outPath("hotshot", "linux.md");
+    const outside = path.join(caseDir, "docs", "escape.png");
+    const sibling = outPath("pluk", "images/pluk.png");
+    const dir = outPath("hotshot", "images/dir");
+    fs.mkdirSync(path.dirname(stale), { recursive: true });
+    fs.mkdirSync(path.dirname(sibling), { recursive: true });
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(outside, "png");
+    fs.writeFileSync(sibling, "png");
+    fs.writeFileSync(
+      stale,
+      [
+        "![up](../../escape.png)",
+        "![other](../pluk/images/pluk.png)",
+        "![abs](https://example.com/remote.png)",
+        "![proto](//cdn.example.com/remote.png)",
+        "![anchor](#not-an-image)",
+        "![data](data:image/png;base64,AAAA)",
+        "![gone](images/already-gone.png)",
+        "![dir](images/dir)",
+        "",
+      ].join("\n")
+    );
+    stubFetch(allReadmes());
+    const { warn, err } = await runSync();
+
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(err).toBe("");
+    expect(fs.existsSync(stale)).toBe(false);
+    expect(warn).toContain("removed stale hotshot/linux.md");
+    expect(fs.existsSync(outside)).toBe(true);
+    expect(fs.existsSync(sibling)).toBe(true);
+    expect(fs.statSync(dir).isDirectory()).toBe(true);
+  });
+
   it.each([429, 500])(
     "keeps a previously synced optional page when its source answers %i",
     async status => {
