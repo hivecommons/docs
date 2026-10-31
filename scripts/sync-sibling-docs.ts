@@ -546,7 +546,13 @@ async function main() {
       if (body === null) {
         const msg = `sync-sibling-docs: ${r.owner}/${r.repo}@${r.branch}/${f.source} not found`;
         if (f.required) throw new Error(msg);
-        console.warn(`${msg} — skipped`);
+        const stale = path.join(outDir, f.target);
+        if (fs.existsSync(stale)) {
+          fs.rmSync(stale);
+          console.warn(`${msg} — removed stale ${p.project}/${f.target}`);
+        } else {
+          console.warn(`${msg} — skipped`);
+        }
         continue;
       }
       const page = await renderPage(p, f, body, outDir);

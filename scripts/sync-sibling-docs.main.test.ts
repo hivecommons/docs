@@ -208,6 +208,34 @@ describe("sync-sibling-docs main()", () => {
     );
   });
 
+  it("removes a previously synced optional page once its upstream source 404s", async () => {
+    const stale = outPath("hotshot", "linux.md");
+    fs.mkdirSync(path.dirname(stale), { recursive: true });
+    fs.writeFileSync(stale, "stale upstream copy\n");
+    stubFetch(allReadmes());
+    const { warn } = await runSync();
+
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(fs.existsSync(stale)).toBe(false);
+    expect(warn).toContain(
+      "hivecommons/hotshot@main/linux/README.md not found — removed stale hotshot/linux.md"
+    );
+  });
+
+  it("keeps a required page's existing copy and still fails when its source 404s", async () => {
+    const existing = outPath("pluk", "readme.md");
+    fs.mkdirSync(path.dirname(existing), { recursive: true });
+    fs.writeFileSync(existing, "existing\n");
+    const responses = allReadmes();
+    delete responses["hivecommons/pluk/main/README.md"];
+    stubFetch(responses);
+    const { err } = await runSync();
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(err).toContain("hivecommons/pluk@main/README.md not found");
+    expect(fs.existsSync(existing)).toBe(true);
+  });
+
   it("writes markdown pages with the synced header and rewritten links", async () => {
     const responses = allReadmes();
     responses["hivecommons/pluk/main/ROADMAP.md"] =
