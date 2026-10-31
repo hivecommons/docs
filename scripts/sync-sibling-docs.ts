@@ -460,10 +460,12 @@ function rawUrl(r: RepoRef, source: string): string {
   return `https://raw.githubusercontent.com/${r.owner}/${r.repo}/${r.branch}/${source}`;
 }
 
-async function fetchFile(r: RepoRef, source: string): Promise<string | null> {
+async function fetchFile(
+  r: RepoRef,
+  source: string
+): Promise<{ status: number; body: string | null }> {
   const res = await fetchTextWithTimeout(rawUrl(r, source));
-  if (!res.ok) return null;
-  return res.body;
+  return { status: res.status, body: res.ok ? res.body : null };
 }
 
 async function fetchBinary(r: RepoRef, source: string): Promise<Buffer | null> {
@@ -542,12 +544,14 @@ async function main() {
 
     for (const f of p.files) {
       const r = fileRepo(p, f);
-      const body = await fetchFile(r, f.source);
+      const { status, body } = await fetchFile(r, f.source);
       if (body === null) {
         const msg = `sync-sibling-docs: ${r.owner}/${r.repo}@${r.branch}/${f.source} not found`;
         if (f.required) throw new Error(msg);
         const stale = path.join(outDir, f.target);
-        if (fs.existsSync(stale)) {
+        // Only a definite 404 means the upstream source is gone; a 429/5xx
+        // must keep the committed copy rather than unpublish a live page.
+        if (status === 404 && fs.existsSync(stale)) {
           fs.rmSync(stale);
           console.warn(`${msg} — removed stale ${p.project}/${f.target}`);
         } else {
