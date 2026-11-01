@@ -701,6 +701,10 @@ describe("POST /api/nps (submit)", () => {
     });
     const res = await handleRelayRequest(submit(GOOD), deps());
     expect(res.status).toBe(429);
+    const installRec = store.data.get(
+      `${INSTALL_RATE_PREFIX}${hive.installId}`
+    ) as { times: number[] };
+    expect(installRec.times).toHaveLength(MAX_PER_INSTALL_PER_WINDOW);
     const ipRecords = [...store.data.entries()].filter(([k]) =>
       k.startsWith(IP_RATE_PREFIX)
     );
