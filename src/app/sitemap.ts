@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import fs from "fs";
 import path from "path";
 import { PROJECTS, type ProjectId } from "@/config/versions";
 import { buildPageMap, docsContentPath } from "@/app/docs/page-map";
@@ -49,17 +48,6 @@ function collectPageRoutes(nodes: PageMapNode[], routes: string[] = []) {
   return routes;
 }
 
-/**
- * Get the last modified date for a file, falling back to current date.
- */
-function getLastModified(filePath: string): Date {
-  try {
-    const stats = fs.statSync(filePath);
-    return stats.mtime;
-  } catch {
-    return new Date();
-  }
-}
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
@@ -85,9 +73,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
       entries.push({
         url,
-        lastModified: getLastModified(
-          path.join(isProjectRoute ? contentPath : docsContentPath, file)
-        ),
         changeFrequency: DOCS_CHANGE_FREQ,
         priority: PRIORITY_OVERRIDES.get(url) ?? DOCS_PAGE_PRIORITY,
       });
