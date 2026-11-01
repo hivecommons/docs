@@ -503,10 +503,7 @@ describe("POST /api/nps/register", () => {
           ? { modified: false }
           : store.setJSON(k, v, o),
     };
-    const res = await handleRelayRequest(
-      register(),
-      deps({ store: losing })
-    );
+    const res = await handleRelayRequest(register(), deps({ store: losing }));
     expect(res.status).toBe(409);
     expect(store.data.get(dayKey)).toEqual({ count: 0 });
     const ipRecords = [...store.data.entries()].filter(([k]) =>
