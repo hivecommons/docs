@@ -675,14 +675,23 @@ describe("POST /api/nps (submit)", () => {
   });
 
   it("releases the per-IP slot when the install limit refuses the submission", async () => {
-    // The pre-check read lags one slot behind, so it passes and only the
-    // install reservation refuses; the IP slot taken just before must go back.
+    // The pre-check read (plain get) lags one slot behind, so it passes and
+    // only the install reservation (conditional read via getWithMetadata)
+    // refuses; the IP slot taken just before must go back.
     const stale = new (class extends MemoryStore {
       async get(key: string): Promise<unknown> {
         const rec = await super.get(key);
         if (!key.startsWith(INSTALL_RATE_PREFIX) || !rec) return rec;
         const { times } = rec as { times: number[] };
         return { times: times.slice(1) };
+      }
+
+      async getWithMetadata(
+        key: string
+      ): Promise<{ data: unknown; etag?: string } | null> {
+        const data = await super.get(key);
+        if (data === null) return null;
+        return { data, etag: this.etags.get(key) };
       }
     })();
     store = stale;
