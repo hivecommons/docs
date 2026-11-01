@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
-import path from "path";
 import { PROJECTS, type ProjectId } from "@/config/versions";
-import { buildPageMap, docsContentPath } from "@/app/docs/page-map";
+import { buildPageMap } from "@/app/docs/page-map";
 
 const SITE_URL = "https://docs.hivecommons.dev";
 
@@ -48,7 +47,6 @@ function collectPageRoutes(nodes: PageMapNode[], routes: string[] = []) {
   return routes;
 }
 
-
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
   const seen = new Set<string>();
@@ -57,7 +55,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const projectIds = Object.keys(PROJECTS) as ProjectId[];
 
   for (const projectId of projectIds) {
-    const { pageMap, routeMap, contentPath } = buildPageMap(projectId);
+    const { pageMap, routeMap } = buildPageMap(projectId);
     const projectPrefix = `/docs/${PROJECTS[projectId].basePath}/`;
 
     for (const route of collectPageRoutes(pageMap as PageMapNode[])) {

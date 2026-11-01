@@ -109,7 +109,7 @@ describe("sitemap generated from fixture content", () => {
 
   it("maps navigation-linked files to routes, priorities, and frequencies", () => {
     fixtureRoot = fs.mkdtempSync(path.join(realCwd, ".sitemap-fixture-"));
-    const archPath = write("docs/content/hive/architecture.md");
+    write("docs/content/hive/architecture.md");
     write("docs/content/hive/unlinked/page.md");
     vi.spyOn(process, "cwd").mockReturnValue(fixtureRoot);
 
