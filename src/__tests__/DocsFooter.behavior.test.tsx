@@ -93,10 +93,14 @@ describe("DocsFooter content", () => {
       screen.getByText(/Cloud Native Computing Foundation sandbox project/)
     ).toBeTruthy();
     expect(
-      screen.getByRole("link", { name: "Trademark Usage page" }).getAttribute("href")
+      screen
+        .getByRole("link", { name: "Trademark Usage page" })
+        .getAttribute("href")
     ).toBe("https://www.linuxfoundation.org/trademark-usage");
     expect(
-      screen.getByText(/Code is licensed under Apache 2\.0\. Security contact: security@hivecommons\.dev\./)
+      screen.getByText(
+        /Code is licensed under Apache 2\.0\. Security contact: security@hivecommons\.dev\./
+      )
     ).toBeTruthy();
     expect(
       screen.getByRole("img", { name: "Cloud Native Computing Foundation" })
