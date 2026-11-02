@@ -621,9 +621,9 @@ export default function Footer() {
                 <p className={`text-xs sm:text-sm ${
                   isDark ? 'text-ink-3' : 'text-ink-2'
                 }`}>
-                  © {new Date().getFullYear()} The Linux Foundation / The Hive Commons authors. The Linux Foundation has registered trademarks and uses trademarks. For a list of TLF trademarks, see{" "}
+                  © {new Date().getFullYear()} The Linux Foundation / The Hive Commons authors. Code is licensed under Apache 2.0. Security contact: security@hivecommons.dev. The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our{" "}
                   <a
-                    href="https://www.linuxfoundation.org/legal/trademark-usage"
+                    href="https://www.linuxfoundation.org/trademark-usage"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`underline transition-colors ${
@@ -632,7 +632,7 @@ export default function Footer() {
                         : 'text-ink-1 hover:text-ink'
                     }`}
                   >
-                    Trademark Usage
+                    Trademark Usage page
                   </a>
                   .
                 </p>
