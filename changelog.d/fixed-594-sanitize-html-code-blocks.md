@@ -1,0 +1,1 @@
+- `sanitizeHtmlForMdx` and `removeCommentPatterns` no longer rewrite fenced code blocks and inline code (for example `class=` shown as `className=` in published HTML examples); a new fence-invariance test covers every markdown transform (#594).
