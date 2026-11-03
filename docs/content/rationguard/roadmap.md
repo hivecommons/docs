@@ -2,7 +2,7 @@
 
 # rationguard Roadmap
 
-rationguard is pre-1.0 (see [CHANGELOG.md](CHANGELOG.md) for the current version). This page states what a 1.0 would require, which AI CLIs are supported at which level, and how detection patterns are contributed. It sets no dates; the criteria below are a proposed bar, not a commitment.
+rationguard is pre-1.0 (see [CHANGELOG.md](https://github.com/hivecommons/rationguard/blob/main/CHANGELOG.md) for the current version). This page states what a 1.0 would require, which AI CLIs are supported at which level, and how detection patterns are contributed. It sets no dates; the criteria below are a proposed bar, not a commitment.
 
 ---
 
