@@ -16,4 +16,20 @@ describe("hive ADR navigation stays in step with sync-hive-docs", () => {
     expect(synced.length).toBeGreaterThan(0);
     expect(inNav).toEqual(synced);
   });
+
+  it("lists every synced page in NAV_STRUCTURE_HIVE", () => {
+    const sync = fs.readFileSync(path.join(process.cwd(), "scripts/sync-hive-docs.ts"), "utf8");
+    const map = fs.readFileSync(path.join(process.cwd(), "src/app/docs/page-map.ts"), "utf8");
+    const start = map.indexOf("const NAV_STRUCTURE_HIVE");
+    const nav = map.slice(start, map.indexOf("const NAV_STRUCTURE_HOTSHOT", start));
+    const targets = [...sync.matchAll(/source:\s*"([^"]+)"(?:,\s*target:\s*"([^"]+)")?/g)].map(
+      m => m[2] ?? m[1],
+    );
+    // Pages intentionally reachable by URL only; add a comment per entry.
+    const urlOnly = new Set<string>([]);
+    expect(start).toBeGreaterThan(-1);
+    expect(targets.length).toBeGreaterThan(0);
+    const missing = targets.filter(t => !urlOnly.has(t) && !nav.includes(`'${t}'`));
+    expect(missing).toEqual([]);
+  });
 });
