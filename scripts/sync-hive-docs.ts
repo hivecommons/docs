@@ -301,7 +301,15 @@ export function healFilesList(
   list: SyncFile[],
   drift: DriftEntry[]
 ): SyncFile[] {
-  return [...list, ...drift.map(e => ({ source: e.source }))];
+  return [
+    ...list,
+    ...drift.map(e => {
+      const target = e.source.replace(/(^|\/)README\.md$/, "$1readme.md");
+      return target === e.source
+        ? { source: e.source }
+        : { source: e.source, target };
+    }),
+  ];
 }
 
 function describeDrift(e: DriftEntry): string {
@@ -357,9 +365,14 @@ async function listUpstreamDocs(): Promise<string[]> {
       `failed to list ${url}: ${response.status} ${response.statusText}`
     );
   }
-  const tree: Array<{ path: string; type: string }> = JSON.parse(
-    response.body
-  ).tree;
+  const parsed: {
+    tree: Array<{ path: string; type: string }>;
+    truncated?: boolean;
+  } = JSON.parse(response.body);
+  if (parsed.truncated) {
+    throw new Error(`upstream tree listing truncated: ${url}`);
+  }
+  const tree = parsed.tree;
   return tree
     .filter(t => t.type === "blob" && t.path.startsWith("src/docs/"))
     .map(t => t.path.slice("src/docs/".length));

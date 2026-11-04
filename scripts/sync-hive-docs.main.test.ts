@@ -41,6 +41,7 @@ let origEnv: Partial<Record<(typeof ENV_KEYS)[number], string | undefined>>;
 let fetched: string[];
 // Paths under upstream src/docs served by the trees API; null -> 404.
 let upstreamTree: string[] | null;
+let treeTruncated = false;
 let treeRequests: Array<{ url: string; init?: RequestInit }>;
 
 type Responder = (url: string) => string | null;
@@ -49,6 +50,7 @@ type Responder = (url: string) => string | null;
 function stubFetch(responder: Responder) {
   fetched = [];
   treeRequests = [];
+  treeTruncated = false;
   globalThis.fetch = (async (
     input: string | URL | Request,
     init?: RequestInit
@@ -68,7 +70,9 @@ function stubFetch(responder: Responder) {
         { path: "README.md", type: "blob" },
         { path: "src/docs/integrations", type: "tree" },
       ];
-      return new Response(JSON.stringify({ tree }), { status: 200 });
+      return new Response(JSON.stringify({ tree, truncated: treeTruncated }), {
+        status: 200,
+      });
     }
     fetched.push(url);
     const body = responder(url);
@@ -491,6 +495,23 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     expect(out).toContain(
       "- `new-root.md` — linked from integrations/forges.md"
     );
+  });
+
+  it("heal mode (--heal) fails when the upstream listing is truncated", async () => {
+    process.argv.push("--heal");
+    try {
+      upstreamTree = ["README.md"];
+      treeTruncated = true;
+      stubFetch(url => `# ${sourceOf(url)}\n`);
+
+      const { err } = await runSync();
+
+      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(err).toContain("upstream tree listing truncated");
+      expect(fs.existsSync(filesListPath())).toBe(false);
+    } finally {
+      process.argv.pop();
+    }
   });
 
   it("heal mode (--heal) fails when the upstream listing is unavailable", async () => {

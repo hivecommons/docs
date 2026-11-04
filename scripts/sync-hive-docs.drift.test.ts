@@ -156,6 +156,22 @@ describe("healFilesList", () => {
     ]);
     expect(list).toHaveLength(2);
   });
+
+  it("maps a README.md sibling to a lowercase target", () => {
+    const healed = healFilesList(
+      [],
+      [
+        {
+          source: "guides/README.md",
+          reason: "unlisted-sibling",
+          referencedBy: [],
+        },
+      ]
+    );
+    expect(healed).toEqual([
+      { source: "guides/README.md", target: "guides/readme.md" },
+    ]);
+  });
 });
 
 describe("formatDriftReport", () => {
