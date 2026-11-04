@@ -50,7 +50,6 @@ type Responder = (url: string) => string | null;
 function stubFetch(responder: Responder) {
   fetched = [];
   treeRequests = [];
-  treeTruncated = false;
   globalThis.fetch = (async (
     input: string | URL | Request,
     init?: RequestInit
@@ -116,6 +115,7 @@ function readOut(target: string): string {
 }
 
 beforeEach(() => {
+  treeTruncated = false;
   fs.mkdirSync(workRoot, { recursive: true });
   caseDir = fs.mkdtempSync(path.join(workRoot, "case-"));
 
@@ -501,8 +501,8 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     process.argv.push("--heal");
     try {
       upstreamTree = ["README.md"];
-      treeTruncated = true;
       stubFetch(url => `# ${sourceOf(url)}\n`);
+      treeTruncated = true;
 
       const { err } = await runSync();
 
