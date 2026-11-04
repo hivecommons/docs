@@ -9,7 +9,7 @@ function adrEntries(file: string): string[] {
   return [...new Set([...src.matchAll(ADR_RE)].map(m => m[1]))].sort();
 }
 
-describe("hive ADR navigation stays in step with sync-hive-docs", () => {
+describe("hive navigation stays in step with sync-hive-docs", () => {
   it("lists every synced ADR in NAV_STRUCTURE_HIVE", () => {
     const synced = adrEntries("scripts/sync-hive-docs.ts");
     const inNav = adrEntries("src/app/docs/page-map.ts");
@@ -27,16 +27,18 @@ describe("hive ADR navigation stays in step with sync-hive-docs", () => {
       "utf8"
     );
     const start = map.indexOf("const NAV_STRUCTURE_HIVE");
-    const nav = map.slice(
-      start,
-      map.indexOf("const NAV_STRUCTURE_HOTSHOT", start)
-    );
+    const end = map.indexOf("const NAV_STRUCTURE_HOTSHOT", start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const nav = map.slice(start, end);
+    // Scans every `source:` entry in the sync script, so this deliberately
+    // covers both the synced `files` list and `localHiveDocs`: local hive
+    // pages must be in the nav too.
     const targets = [
       ...sync.matchAll(/source:\s*"([^"]+)"(?:,\s*target:\s*"([^"]+)")?/g),
     ].map(m => m[2] ?? m[1]);
     // Pages intentionally reachable by URL only; add a comment per entry.
     const urlOnly = new Set<string>([]);
-    expect(start).toBeGreaterThan(-1);
     expect(targets.length).toBeGreaterThan(0);
     const missing = targets.filter(
       t => !urlOnly.has(t) && !nav.includes(`'${t}'`)
