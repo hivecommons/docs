@@ -535,7 +535,9 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     process.env.SYNC_HIVE_DOCS_HEAL = "1";
     upstreamTree = upstream;
     stubFetch(url =>
-      sourceOf(url) === "integrations/drift-sibling-a.md" ? null : `# ${sourceOf(url)}\n`
+      sourceOf(url) === "integrations/drift-sibling-a.md"
+        ? null
+        : `# ${sourceOf(url)}\n`
     );
 
     const { err } = await runSync();
