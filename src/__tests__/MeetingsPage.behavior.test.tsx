@@ -84,11 +84,7 @@ describe("MeetingsPage next-meeting hero", () => {
   });
 
   it("lists UPCOMING_COUNT (4) upcoming meetings matching the schedule library", () => {
-    const expected = getUpcomingMeetings(
-      COMMUNITY_MEETINGS,
-      4,
-      ANCHOR
-    );
+    const expected = getUpcomingMeetings(COMMUNITY_MEETINGS, 4, ANCHOR);
     renderAt(ANCHOR);
     const items = document.querySelectorAll(".hc-meeting-upcoming ol li");
     expect(items.length).toBe(4);
