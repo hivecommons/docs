@@ -389,7 +389,9 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
 
     // Report-only: the list is untouched and the link stays on GitHub.
     expect(fs.existsSync(filesListPath())).toBe(false);
-    expect(fs.existsSync(outPath("integrations/drift-sibling-b.md"))).toBe(false);
+    expect(fs.existsSync(outPath("integrations/drift-sibling-b.md"))).toBe(
+      false
+    );
     expect(readOut("landscape.md")).toContain(
       "[sibling-b](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/drift-sibling-b.md#gitlab)"
     );
@@ -451,7 +453,8 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     process.env.SYNC_HIVE_DOCS_HEAL = "1";
     process.env.GITHUB_TOKEN = "gh-t0ken";
     stubUpstream({
-      "integrations/drift-sibling-b.md": "# Forges\nSee [new](../new-root.md).\n",
+      "integrations/drift-sibling-b.md":
+        "# Forges\nSee [new](../new-root.md).\n",
     });
 
     const { out, err } = await runSync();
