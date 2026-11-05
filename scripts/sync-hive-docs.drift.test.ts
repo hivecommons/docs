@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  addToHiveNav,
   detectDrift,
   formatDriftReport,
   healFilesList,
@@ -253,5 +254,63 @@ describe("rewriteLinks unsynced-reference collection", () => {
       "integrations/work-source-providers.md",
       "landscape.md",
     ]);
+  });
+});
+
+describe("addToHiveNav", () => {
+  const pageMap = [
+    "const NAV_STRUCTURE_HIVE = [",
+    "  {",
+    "    title: 'Reference',",
+    "    items: [",
+    "      { 'Environment variable reference': 'env-vars.md' },",
+    "    ]",
+    "  }",
+    "]",
+    "",
+    "// hotshot Navigation Structure",
+    "const NAV_STRUCTURE_HOTSHOT = [",
+    "  { title: 'Other', items: [",
+    "    ] }",
+    "]",
+    "",
+  ].join("\n");
+
+  it("appends a new entry to the last section of the hive nav", () => {
+    const out = addToHiveNav(pageMap, [
+      { title: "Forges", target: "integrations/forges.md" },
+    ]);
+    expect(out).toContain(
+      "      { 'Environment variable reference': 'env-vars.md' },\n" +
+        "      { 'Forges': 'integrations/forges.md' },\n    ]\n  }\n]"
+    );
+    expect(out.split("NAV_STRUCTURE_HOTSHOT")[1]).toBe(
+      pageMap.split("NAV_STRUCTURE_HOTSHOT")[1]
+    );
+  });
+
+  it("does not duplicate a target already in the nav", () => {
+    const out = addToHiveNav(pageMap, [
+      { title: "Env", target: "env-vars.md" },
+    ]);
+    expect(out).toBe(pageMap);
+    const once = addToHiveNav(pageMap, [{ title: "A", target: "a.md" }]);
+    expect(addToHiveNav(once, [{ title: "A", target: "a.md" }])).toBe(once);
+  });
+
+  it("uses the README -> readme target from healFilesList", () => {
+    const [entry] = healFilesList(
+      [],
+      [{ source: "adr/README.md", reason: "unlisted-sibling", referencedBy: [] }]
+    );
+    const out = addToHiveNav(pageMap, [
+      { title: "ADR index", target: entry.target ?? entry.source },
+    ]);
+    expect(out).toContain("{ 'ADR index': 'adr/readme.md' },");
+  });
+
+  it("escapes quotes in titles", () => {
+    const out = addToHiveNav(pageMap, [{ title: "Don't", target: "d.md" }]);
+    expect(out).toContain("{ 'Don\\'t': 'd.md' },");
   });
 });
