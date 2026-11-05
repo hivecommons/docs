@@ -301,7 +301,13 @@ describe("addToHiveNav", () => {
   it("uses the README -> readme target from healFilesList", () => {
     const [entry] = healFilesList(
       [],
-      [{ source: "adr/README.md", reason: "unlisted-sibling", referencedBy: [] }]
+      [
+        {
+          source: "adr/README.md",
+          reason: "unlisted-sibling",
+          referencedBy: [],
+        },
+      ]
     );
     const out = addToHiveNav(pageMap, [
       { title: "ADR index", target: entry.target ?? entry.source },

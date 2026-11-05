@@ -333,7 +333,8 @@ export function addToHiveNav(
   const end = pageMap.indexOf("const NAV_STRUCTURE_HOTSHOT");
   if (start === -1 || end === -1 || end < start) return pageMap;
   const region = pageMap.slice(start, end);
-  const quote = (v: string) => `'${v.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+  const quote = (v: string) =>
+    `'${v.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
   const lines = pages
     .filter(p => !region.includes(quote(p.target)))
     .map(p => `      { ${quote(p.title)}: ${quote(p.target)} },\n`);
