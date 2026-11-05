@@ -230,8 +230,9 @@ export function resolveSyncTarget(root: string, target: string): string {
 // check is report-only: it prints the drift, appends it to
 // $GITHUB_STEP_SUMMARY when set, and never changes the exit code. Heal mode
 // (SYNC_HIVE_DOCS_HEAL=1 or --heal; the scheduled refresh) appends the drift
-// to scripts/sync-hive-docs.files.json and syncs the new pages, failing only
-// if that cannot be applied.
+// to scripts/sync-hive-docs.files.json, syncs the new pages and adds them to
+// NAV_STRUCTURE_HIVE in src/app/docs/page-map.ts (so the #616 nav guard keeps
+// passing), failing only if that cannot be applied.
 
 export interface DriftEntry {
   /** Path under src/docs, as used for `source` in the files list. */
@@ -338,7 +339,10 @@ export function addToHiveNav(
   const lines = pages
     .filter(p => !region.includes(quote(p.target)))
     .map(p => `      { ${quote(p.title)}: ${quote(p.target)} },\n`);
-  const close = region.lastIndexOf("    ]");
+  // Last line that is exactly the section closer (`    ]`); a plain
+  // substring search would also match a deeper-indented sub-list closer.
+  let close = -1;
+  for (const m of region.matchAll(/^ {4}\]$/gm)) close = m.index;
   if (!lines.length || close === -1) return pageMap;
   const at = start + close;
   return pageMap.slice(0, at) + lines.join("") + pageMap.slice(at);
@@ -367,7 +371,7 @@ export function formatDriftReport(opts: {
   }
   if (opts.healed?.length) {
     lines.push(
-      `Healed: appended ${opts.healed.length} page(s) to \`${FILES_LIST_PATH}\` and synced them:`,
+      `Healed: appended ${opts.healed.length} page(s) to \`${FILES_LIST_PATH}\`, synced them and added them to NAV_STRUCTURE_HIVE in \`${PAGE_MAP_PATH}\`:`,
       "",
       ...opts.healed.map(describeDrift),
       ""

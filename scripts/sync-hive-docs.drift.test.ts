@@ -221,7 +221,7 @@ describe("formatDriftReport", () => {
       "Upstream `src/docs` could not be listed; only linked pages were checked."
     );
     expect(report).toContain(
-      "Healed: appended 1 page(s) to `scripts/sync-hive-docs.files.json` and synced them:\n\n- `integrations/cline.md` — unlisted sibling of synced pages\n"
+      "Healed: appended 1 page(s) to `scripts/sync-hive-docs.files.json`, synced them and added them to NAV_STRUCTURE_HIVE in `src/app/docs/page-map.ts`:\n\n- `integrations/cline.md` — unlisted sibling of synced pages\n"
     );
     expect(report).toContain("No unlisted upstream pages.");
   });
@@ -313,6 +313,20 @@ describe("addToHiveNav", () => {
       { title: "ADR index", target: entry.target ?? entry.source },
     ]);
     expect(out).toContain("{ 'ADR index': 'adr/readme.md' },");
+  });
+
+  it("inserts after a trailing nested sub-list, not inside it", () => {
+    const nested = pageMap.replace(
+      "      { 'Environment variable reference': 'env-vars.md' },\n",
+      "      { 'Environment variable reference': 'env-vars.md' },\n" +
+        "      { title: 'ADRs', items: [\n" +
+        "        { '0001 First': 'adr/0001-first.md' },\n" +
+        "      ] },\n"
+    );
+    const out = addToHiveNav(nested, [{ title: "New", target: "new.md" }]);
+    expect(out).toContain(
+      "      ] },\n      { 'New': 'new.md' },\n    ]\n  }\n]"
+    );
   });
 
   it("escapes quotes in titles", () => {
