@@ -53,6 +53,27 @@ describe("escapeStrayBraces", () => {
     expect(out).toContain("ok \\{x\\}");
   });
 
+  it("protects every line of a multi-line fence, including unterminated ones", () => {
+    const src = [
+      "```sh",
+      "set -e",
+      "podman volume inspect hive-data --format '{{.Mountpoint}}'",
+      "echo {done}",
+      "```",
+      "",
+      "after {x}",
+      "",
+      "~~~",
+      "open {a}",
+      "still {b}",
+    ].join("\n");
+    const out = escapeStrayBraces(src);
+    expect(out).toContain("--format '{{.Mountpoint}}'");
+    expect(out).toContain("echo {done}");
+    expect(out).toContain("after \\{x\\}");
+    expect(out).toContain("open {a}\nstill {b}");
+  });
+
   it("is idempotent on already-escaped braces", () => {
     expect(escapeStrayBraces("a \\{b\\}")).toBe("a \\{b\\}");
   });
