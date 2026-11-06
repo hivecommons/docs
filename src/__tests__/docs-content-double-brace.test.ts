@@ -27,9 +27,11 @@ const KNOWN_MACROS = new Set([
 ]);
 
 // A code span is a backtick run closed by a run of the same length; it may
-// span lines. Fenced segments are removed first so a fence's backticks never
-// pair with a span's.
-const CODE_SPAN_RE = /(`+)[\s\S]*?\1/g;
+// span lines but, as in CommonMark, never a blank line — otherwise a stray
+// unmatched backtick would swallow every paragraph up to the next one and
+// hide the tokens in between. Fenced segments are removed first so a fence's
+// backticks never pair with a span's.
+const CODE_SPAN_RE = /(`+)(?:(?!\n[ \t]*\n)[\s\S])*?\1/g;
 const DOUBLE_BRACE_RE = /\{\{([^}]*)\}\}/g;
 
 export function unknownProseDoubleBraces(markdown: string): string[] {
@@ -66,6 +68,16 @@ describe("unknownProseDoubleBraces", () => {
       "",
     ].join("\n");
     expect(unknownProseDoubleBraces(md)).toEqual([]);
+  });
+
+  it("does not let a stray backtick hide tokens in a later paragraph", () => {
+    const md = [
+      "Don't type ` here.",
+      "",
+      "Use {{.Mountpoint}} then `code`.",
+      "",
+    ].join("\n");
+    expect(unknownProseDoubleBraces(md)).toEqual(["{{.Mountpoint}}"]);
   });
 
   it("allows the config.* macros, with or without padding", () => {
