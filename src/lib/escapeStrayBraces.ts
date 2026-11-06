@@ -19,7 +19,10 @@ export function escapeStrayBraces(input: string): string {
   };
 
   let s = input;
-  s = s.replace(/^( {0,3})(`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:\n {0,3}\2[`~]*[ \t]*(?=\n|$)|$)/gm, m => put(m));
+  s = s.replace(
+    /^( {0,3})(`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:\n {0,3}\2[`~]*[ \t]*(?=\n|$)|$)/gm,
+    m => put(m)
+  );
   s = s.replace(/(`+)(?!`)[\s\S]*?[^`]\1(?!`)/g, m => put(m));
   s = s.replace(/\{\/\*[\s\S]*?\*\/\}/g, m => put(m));
   s = s.replace(/<\/?[A-Za-z][^<>]*>/g, m => put(m));
