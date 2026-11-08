@@ -40,7 +40,8 @@ function navPaths(constName: string): string[] {
   // constant (NAV_STRUCTURE_GENERAL) is not attributed everything to EOF.
   const rest = source.slice(start + 1);
   const next = rest.search(/\n(?:export |const |function |let |var )/);
-  const block = next === -1 ? source.slice(start) : source.slice(start, start + 1 + next);
+  const block =
+    next === -1 ? source.slice(start) : source.slice(start, start + 1 + next);
   return [...block.matchAll(/:\s*'([^']+\.mdx?)'/g)].map(m => m[1]);
 }
 
