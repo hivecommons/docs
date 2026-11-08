@@ -22,6 +22,9 @@ const PROJECTS: Array<[ProjectId, string]> = [
   ["dibs", "NAV_STRUCTURE_DIBS"],
   ["crux", "NAV_STRUCTURE_CRUX"],
   ["spektacular", "NAV_STRUCTURE_SPEKTACULAR"],
+  // Shared Community section appended to every project's nav; its files are
+  // merged into filePaths for any project, so one project id covers it.
+  ["hive", "NAV_STRUCTURE_GENERAL"],
 ];
 
 const source = fs.readFileSync(
