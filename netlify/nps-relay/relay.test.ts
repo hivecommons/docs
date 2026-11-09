@@ -635,12 +635,8 @@ describe("POST /api/nps (submit)", () => {
     const nonce = "b".repeat(32);
     const timestampMs = T0 + SIGNATURE_MAX_SKEW_MS;
     expect(
-      (
-        await handleRelayRequest(
-          submit(GOOD, { nonce, timestampMs }),
-          deps()
-        )
-      ).status
+      (await handleRelayRequest(submit(GOOD, { nonce, timestampMs }), deps()))
+        .status
     ).toBe(201);
     // At exactly T0 + NONCE_RETENTION_MS, the nonce should still be live.
     now = T0 + NONCE_RETENTION_MS;
