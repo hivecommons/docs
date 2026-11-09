@@ -63,9 +63,7 @@ type MenuItem = React.ComponentProps<typeof DocsSidebar>["pageMap"][number];
 // accept either ordering so the assertion survives the dependency bump.
 function calcViewportMinus(offset: string): RegExp {
   const escaped = offset.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(
-    `^calc\\((100vh - ${escaped}|-${escaped} \\+ 100vh)\\)$`
-  );
+  return new RegExp(`^calc\\((100vh - ${escaped}|-${escaped} \\+ 100vh)\\)$`);
 }
 
 function renderSidebar(pageMap: MenuItem[], projectId = "hive") {
