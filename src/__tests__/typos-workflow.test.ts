@@ -25,9 +25,14 @@ describe("typecheck.yml typos pre-install", () => {
     "crate-ci/typos action pin"
   );
   const cacheKey = single(
-    /key: typos-(v\d+\.\d+\.\d+)-\$\{\{ runner\.os \}\}-x86_64\n/g,
+    /key: typos-(v\d+\.\d+\.\d+)-\$\{\{ runner\.os \}\}-x86_64-[0-9a-f]+\n/g,
     "actions/cache key"
   );
+  const cacheKeyHash = single(
+    /key: typos-v\d+\.\d+\.\d+-\$\{\{ runner\.os \}\}-x86_64-([0-9a-f]+)\n/g,
+    "actions/cache key hash suffix"
+  );
+  const sha256 = single(/TYPOS_SHA256: ([0-9a-f]{64})\n/g, "TYPOS_SHA256");
   const urlMatches = [
     ...workflow.matchAll(
       /https:\/\/github\.com\/crate-ci\/typos\/releases\/download\/(v\d+\.\d+\.\d+)\/typos-(v\d+\.\d+\.\d+)-x86_64-unknown-linux-musl\.tar\.gz/g
@@ -65,6 +70,13 @@ describe("typecheck.yml typos pre-install", () => {
 
   it("pins a sha256 for the downloaded tarball", () => {
     expect(workflow).toMatch(/TYPOS_SHA256: [0-9a-f]{64}\n/);
+  });
+
+  it("keys the cache on the pinned checksum", () => {
+    // A binary cached before the checksum pin (or under a different pin)
+    // would otherwise be served on cache hits without ever being verified.
+    expect(cacheKeyHash.length).toBeGreaterThanOrEqual(12);
+    expect(sha256.startsWith(cacheKeyHash)).toBe(true);
   });
 
   it("verifies the checksum before extracting the tarball", () => {
