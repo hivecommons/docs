@@ -62,4 +62,16 @@ describe("typecheck.yml typos pre-install", () => {
     );
     expect(workflow).toContain("id: typos-cache\n");
   });
+
+  it("pins a sha256 for the downloaded tarball", () => {
+    expect(workflow).toMatch(/TYPOS_SHA256: [0-9a-f]{64}\n/);
+  });
+
+  it("verifies the checksum before extracting the tarball", () => {
+    const step = workflow.slice(workflow.indexOf("- name: Install typos"));
+    const check = step.indexOf("sha256sum --check");
+    const extract = step.indexOf("tar -xz");
+    expect(check).toBeGreaterThan(-1);
+    expect(extract).toBeGreaterThan(check);
+  });
 });

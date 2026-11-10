@@ -55,10 +55,17 @@ jobs:
 
       - name: Install typos
         if: steps.typos-cache.outputs.cache-hit != 'true'
+        env:
+          # sha256 of the release asset below; bump together with the version.
+          TYPOS_SHA256: 6155d4114f9a0f5b8f6d4fda96266c9d5f6add71df80da7f684ee5e72eb14588
         run: |
+          set -euo pipefail
           curl --fail --location --retry 8 --retry-all-errors --retry-delay 5 \
-            https://github.com/crate-ci/typos/releases/download/v1.52.0/typos-v1.52.0-x86_64-unknown-linux-musl.tar.gz \
-            | tar -xz -C "$RUNNER_TEMP" ./typos
+            -o "$RUNNER_TEMP/typos.tar.gz" \
+            https://github.com/crate-ci/typos/releases/download/v1.52.0/typos-v1.52.0-x86_64-unknown-linux-musl.tar.gz
+          echo "$TYPOS_SHA256  $RUNNER_TEMP/typos.tar.gz" | sha256sum --check --strict
+          tar -xz -C "$RUNNER_TEMP" ./typos < "$RUNNER_TEMP/typos.tar.gz"
+          rm -f "$RUNNER_TEMP/typos.tar.gz"
           chmod +x "$RUNNER_TEMP/typos"
 
       # Spell check; config and allow-list in _typos.toml (#455).
