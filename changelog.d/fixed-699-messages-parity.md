@@ -1,0 +1,1 @@
+- Remove 30 stale translation keys that drifted from en.json and add a vitest guard for locale key and ICU placeholder parity (#699).
