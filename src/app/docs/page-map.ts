@@ -224,6 +224,8 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'The Tool-Approval Desk': 'design/tool-approval-desk.md' },
       { 'Fork PR stalled on Prow presubmits — recovery runbook': 'fork-pr-presubmit-stall-runbook.md' },
       { 'Red-team agent': 'redteam.md' },
+      { 'Benchmarks: publishing per-PR agent/model/runtime outcomes': 'benchmarks.md' },
+      { 'Workflow models': 'design/workflow-models.md' },
     ]
   }
 ]
