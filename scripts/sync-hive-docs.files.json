@@ -281,5 +281,11 @@
   },
   {
     "source": "redteam.md"
+  },
+  {
+    "source": "benchmarks.md"
+  },
+  {
+    "source": "design/workflow-models.md"
   }
 ]
