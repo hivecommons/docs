@@ -141,6 +141,11 @@ describe("next.config.ts Content-Security-Policy", () => {
     // production shared.json cross-origin on preview deploys.
     expect(csp.get("connect-src")).toContain("https://img.shields.io");
     expect(csp.get("connect-src")).toContain("https://docs.hivecommons.dev");
+    // GA4 routes beacons to regional endpoints (region1.google-analytics.com,
+    // *.analytics.google.com) and tag manager.
+    expect(csp.get("connect-src")).toContain("https://*.google-analytics.com");
+    expect(csp.get("connect-src")).toContain("https://*.analytics.google.com");
+    expect(csp.get("connect-src")).toContain("https://*.googletagmanager.com");
     expect(csp.get("frame-src")).toEqual(["https://www.youtube-nocookie.com"]);
     // Mermaid renders in a blob: worker and needs WASM, but not eval.
     expect(csp.get("worker-src")).toEqual(["blob:"]);
