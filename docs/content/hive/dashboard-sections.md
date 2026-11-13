@@ -186,6 +186,12 @@ The facts Hive has learned about your projects, where they came from, and how mu
 
 Full entry: [Knowledge](/docs/hive/dashboard-sections/workflow-and-agents#knowledge).
 
+## Inbox
+
+Voice recordings and dictations waiting for you to file them as an RFC, send to dibs, or keep as knowledge.
+
+Full entry: [Inbox](/docs/hive/dashboard-sections/workflow-and-agents#inbox).
+
 ## Contributors
 
 The people who lend their computers or AI helpers to your projects, and how far Hive trusts each of them.

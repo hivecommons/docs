@@ -287,5 +287,14 @@
   },
   {
     "source": "design/workflow-models.md"
+  },
+  {
+    "source": "api-reference/hub-server.md"
+  },
+  {
+    "source": "inbox-voice-sources.md"
+  },
+  {
+    "source": "workflows/techdocs-assessment.md"
   }
 ]
