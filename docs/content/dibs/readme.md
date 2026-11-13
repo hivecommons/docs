@@ -385,6 +385,19 @@ logs `budget_exhausted=true`; when Dibs answers HTTP 429 it logs
 wait for the next run. Descriptions are cut to the 64 KiB idea body limit. The helper never reads or
 copies Plaud's OAuth token (`~/.plaud/tokens-mcp.json`).
 
+The Plaud MCP server is third-party code that `npx` fetches from the registry
+on every start, so it is started with an allowlisted environment rather than
+the caller's: `PATH`, `HOME` (or `--home`), `USER`/`LOGNAME`, `SHELL`,
+`TMPDIR`, `TZ`, `TERM`, locale (`LANG`, `LC_*`), `XDG_*`, `NODE_*` and
+`npm_config_*` settings, proxy and CA variables (`HTTP(S)_PROXY`, `NO_PROXY`,
+`SSL_CERT_FILE`/`SSL_CERT_DIR`), `PLAUD_*`, `DIBS_PLAUD_*`, and the Windows
+basics. Anything else — `DIBS_TOKEN`, `GITHUB_TOKEN`, cloud or model-provider
+keys — never reaches it, and a name containing `TOKEN`, `SECRET`, `PASSWORD`,
+`CREDENTIAL` or `AUTH` is dropped even inside those prefixes (so
+`NODE_AUTH_TOKEN` is not forwarded). To stop `@latest` from pulling an
+unreviewed upstream release on each poll, pin it:
+`--mcp-command "npx -y @plaud-ai/mcp@<version>"` (or `$DIBS_PLAUD_MCP_COMMAND`).
+
 Future recording timestamps are clamped to the submission time in the cursor,
 so they do not move the next listing window into the future. Existing cursors
 already set in the future need their `newest` field corrected manually; retain
@@ -426,6 +439,66 @@ launchd (`~/Library/LaunchAgents/dev.hivecommons.dibs-plaud.plist`, load with
   <key>StartInterval</key><integer>900</integer>
 </dict></plist>
 ```
+
+## Capture ideas dictated with Wispr Flow
+
+**No setup needed for the common case.** Wispr Flow types into whatever field
+has focus, so dictating straight into the idea form at
+[dibs.hivecommons.dev](https://dibs.hivecommons.dev), or into an agent prompt
+that calls the Dibs MCP `submit_idea` tool, already works. The poller below
+is for ideas you dictate *elsewhere* (Notes, Slack, an editor) and want
+collected later.
+
+`dibs ingest wisprflow` reads Wispr Flow's local dictation history and
+submits the dictations meant as ideas as private draft ideas (tags
+`wisprflow,voice-note`). Wispr Flow has no dictation-history API, so it reads
+the desktop app's SQLite file read-only through the `sqlite3` CLI (ships with
+macOS): `~/Library/Application Support/Wispr Flow/flow.sqlite` on macOS,
+`%APPDATA%\Wispr Flow\flow.sqlite` on Windows. `--db` may instead point at
+a copy of that file or at an export folder of `.json`, `.ndjson`/`.jsonl`,
+`.csv` or `.md` files (one dictation per markdown file).
+
+Most dictations are not ideas, so only these are imported:
+
+- dictations that **start with a trigger phrase**, by default `dibs idea` or
+  `idea for dibs` (case and punctuation do not matter: "Dibs idea: …",
+  "Idea for Dibs — …"); the phrase is stripped from the idea;
+- and/or, with `--apps`, dictations made in an allowed app (bundle id or
+  name, e.g. `--apps com.apple.Notes` or `--apps Notes`); `--trigger ""`
+  with `--apps` imports every dictation made in those apps;
+- with at least `--min-words` words after the trigger.
+
+The idea title is the first ten words after the trigger; the description is
+the full dictation (your edit if you made one, otherwise Flow's formatted
+text) with a footer giving the dictation time and the app.
+
+```sh
+export DIBS_TOKEN=...                   # hub bearer token
+dibs ingest wisprflow --dry-run         # first time: see what would be submitted
+dibs ingest wisprflow                   # one pass, for cron/launchd
+dibs ingest wisprflow --interval 15m    # or keep polling
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--db` | `$DIBS_WISPRFLOW_DB` or the per-OS path above (none on Linux) | `flow.sqlite`, a copy of it, or an export folder |
+| `--trigger` | `dibs idea,idea for dibs` | Comma-separated phrases a dictation must start with; empty requires none (then `--apps` is required) |
+| `--apps` | all | Comma-separated app allow-list (bundle id substring or app name) |
+| `--min-words` | `5` | Minimum words after the trigger |
+| `--sqlite3` | `sqlite3` | sqlite3 command used to read `flow.sqlite` |
+| `--server`, `--token`, `--interval`, `--since-days`, `--max-per-hour` / `--max-per-day`, `--max`, `--dry-run` | as for `dibs ingest plaud` | Shared with `dibs ingest plaud` |
+| `--cursor` | `~/.dibs/wisprflow-cursor.json` | Submitted transcript ids, newest dictation read, recent submission times |
+| `--tags` | `wisprflow,voice-note` | Comma-separated tags |
+
+Each dictation is submitted once (dedupe on Wispr Flow's
+`transcriptEntityId`). The cursor follows the newest finalised dictation
+read, idea or not, and each run re-reads two hours behind it, because Flow
+updates a row in place when it finishes formatting. Archived dictations and
+the audio/screenshot columns are never read. Run it where Wispr Flow runs
+(your Mac or PC), from cron or launchd as for Plaud with `wisprflow` in place
+of `plaud`; on macOS the process reading `flow.sqlite` may need Full Disk
+Access. The table schema is community-documented and may change with a Wispr
+Flow release; the export-folder path is the fallback.
 
 ## Operations and further reading
 

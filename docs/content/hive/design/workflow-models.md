@@ -171,6 +171,22 @@ and `GET /api/workflows/{name}/{version}`:
   Duplicate (saves a copy under a new name at version 1, provenance `local`) and Delete; Delete is
   withheld while anything is bound (the API returns 409 anyway) and the row says `bound` instead.
   Export shows the model JSON in-app (copy to clipboard) for everyone.
+- **Derivation switch** — the Library header carries an owner-only toggle, *Derive stages from
+  bound models* (`renderWorkflowEnabledToggle`, `PUT /api/workflows/enabled {enabled}`), so a
+  hosted hive with no `hive.yaml` access can turn `workflow.enabled` on or off. Off: a binding
+  only changes the Activity Monitor's columns. On: a bound repository's stages are derived by its
+  model's rules and the model's labels are provisioned. Turning on asks for confirmation (it
+  changes derivation for every bound repository and creates labels in them); turning off is
+  immediate. The handler sets `Config.Workflow.Enabled`, saves `hive.yaml`, audits
+  `workflow_enabled` / `workflow_disabled`, and — on the way on — calls
+  `Dependencies.WorkflowProvisionLabels` for each binding (cmd/hive wires it to
+  `automerge.Engine.EnsureStageLabels`, the sweep's memoised `ensureStageLabels` path over the
+  shared stage-engine options and tracker), so the bound models' labels exist at once rather than
+  on the next PR that needs a label write; a repository that fails is returned in `warnings[]`
+  and the next sweep retries. No reload hook is needed: `stageEngineWorkflowFor` and the tracker
+  read `cfg.Workflow.Enabled` on every call, and the hive.yaml reloader mutates the same
+  `*Config` in place. The Repos binding row shows *columns only — turn on derivation in
+  Workflows* when a binding exists while the flag is off.
 - **Detail** — facts, the diagram, diagnostics, citations and the raw model/profile JSON.
   `workflowDiagramSvg(model, profile)` is a pure function: the compiled profile's columns are lanes
   in display order, each state is a chip carrying its padded stage number, transitions are bezier
@@ -730,7 +746,7 @@ no-op (`200`); different content under an existing key is `409`. The index carri
 publishedBy, sourceSHA?, newerIngestAvailable, adoption:{}, ratings:{}, benchmarks:{}}`;
 the last three are reserved and empty today. `ETag` is the sha256 of the index bytes.
 
-Routes (see [hub-server.md](https://github.com/hivecommons/hive/blob/v5/src/docs/api-reference/hub-server.md)):
+Routes (see [hub-server.md](/docs/hive/api-reference/hub-server)):
 
 | Route | Who | Notes |
 |---|---|---|
@@ -766,7 +782,7 @@ source document in `workflow.hivecommons.dev/source*` annotations and the elemen
 `citations`), drop it in that directory, and add rules-evaluator cases to
 `curated_test.go` — `TestLoadEmbedded` already refuses anything that does not compile
 clean. The first curated model is the CNCF TechDocs assessment,
-[docs/workflows/techdocs-assessment.md](https://github.com/hivecommons/hive/blob/v5/src/docs/workflows/techdocs-assessment.md).
+[docs/workflows/techdocs-assessment.md](/docs/hive/workflows/techdocs-assessment).
 
 **Refresh.** The corpus is the CNCF survey list, now embedded as
 `pkg/workflowmodel/ingest/corpus` (`corpus.json`, 262 projects / 299 repositories;

@@ -226,6 +226,9 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Red-team agent': 'redteam.md' },
       { 'Benchmarks: publishing per-PR agent/model/runtime outcomes': 'benchmarks.md' },
       { 'Workflow models': 'design/workflow-models.md' },
+      { 'Dashboard REST API reference — Hub server': 'api-reference/hub-server.md' },
+      { 'Inbox and voice sources': 'inbox-voice-sources.md' },
+      { 'CNCF TechDocs AI-assisted assessment — curated workflow model': 'workflows/techdocs-assessment.md' },
     ]
   }
 ]
