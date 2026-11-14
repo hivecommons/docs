@@ -229,6 +229,22 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Dashboard REST API reference — Hub server': 'api-reference/hub-server.md' },
       { 'Inbox and voice sources': 'inbox-voice-sources.md' },
       { 'CNCF TechDocs AI-assisted assessment — curated workflow model': 'workflows/techdocs-assessment.md' },
+      { 'Dashboard REST API reference — Auth and external accounts': 'api-reference/auth.md' },
+      { 'Dashboard REST API reference — Beads': 'api-reference/beads.md' },
+      { 'Dashboard REST API reference — Configuration': 'api-reference/configuration.md' },
+      { 'Dashboard REST API reference — Contribute': 'api-reference/contribute.md' },
+      { 'Dashboard REST API reference — Cost, tokens, telemetry': 'api-reference/cost-tokens-telemetry.md' },
+      { 'Dashboard REST API reference — Dashboard miscellaneous': 'api-reference/dashboard-misc.md' },
+      { 'Dashboard REST API reference — Health, status, events': 'api-reference/health-status-events.md' },
+      { 'Dashboard REST API reference — Hub SaaS': 'api-reference/hub-saas.md' },
+      { 'Dashboard REST API reference — Inception': 'api-reference/inception.md' },
+      { 'Dashboard REST API reference — Knowledge': 'api-reference/knowledge.md' },
+      { 'Dashboard REST API reference — Nous / strategy lab': 'api-reference/nous.md' },
+      { 'Dashboard REST API reference — Packs and ACMM': 'api-reference/packs-and-acmm.md' },
+      { 'Dashboard REST API reference — Sessions': 'api-reference/sessions.md' },
+      { 'Dashboard REST API reference — Snapshots and style': 'api-reference/snapshots-and-style.md' },
+      { 'Hive operator reference': 'operator-reference/readme.md' },
+      { 'Register a self-hosted hive on a hub': 'register-self-hosted-hive.md' },
     ]
   }
 ]
