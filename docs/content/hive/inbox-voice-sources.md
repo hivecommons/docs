@@ -93,7 +93,7 @@ allows additional redirect URIs for its client.
 
 ## API
 
-See [api-reference/knowledge.md](https://github.com/hivecommons/hive/blob/v5/src/docs/api-reference/knowledge.md) for
+See [api-reference/knowledge.md](/docs/hive/api-reference/knowledge) for
 `GET /api/inbox`, `POST /api/inbox/route`, `POST /api/inbox/dismiss`,
 `GET|POST /api/inbox/settings` and
 `POST /api/knowledge/connectors/{name}/auth/complete`.

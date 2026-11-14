@@ -296,5 +296,54 @@
   },
   {
     "source": "workflows/techdocs-assessment.md"
+  },
+  {
+    "source": "api-reference/auth.md"
+  },
+  {
+    "source": "api-reference/beads.md"
+  },
+  {
+    "source": "api-reference/configuration.md"
+  },
+  {
+    "source": "api-reference/contribute.md"
+  },
+  {
+    "source": "api-reference/cost-tokens-telemetry.md"
+  },
+  {
+    "source": "api-reference/dashboard-misc.md"
+  },
+  {
+    "source": "api-reference/health-status-events.md"
+  },
+  {
+    "source": "api-reference/hub-saas.md"
+  },
+  {
+    "source": "api-reference/inception.md"
+  },
+  {
+    "source": "api-reference/knowledge.md"
+  },
+  {
+    "source": "api-reference/nous.md"
+  },
+  {
+    "source": "api-reference/packs-and-acmm.md"
+  },
+  {
+    "source": "api-reference/sessions.md"
+  },
+  {
+    "source": "api-reference/snapshots-and-style.md"
+  },
+  {
+    "source": "operator-reference/README.md",
+    "target": "operator-reference/readme.md"
+  },
+  {
+    "source": "register-self-hosted-hive.md"
   }
 ]

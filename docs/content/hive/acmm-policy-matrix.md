@@ -78,7 +78,7 @@ level-specific qualifications, not just its template's `full` suffix.
 
 ### L1 — Inception (Assisted) (2 agents)
 
-A single interactive advisor helps with repo setup and architecture decisions. Guide agent makes advisory beads. Brainstorm agent handles project inception — turning raw ideas into structured KB facts and scaffold. No feedback loops. See the [Inception operator guide](https://github.com/hivecommons/hive/blob/v5/src/docs/inception.md) for the end-to-end workflow and API reference.
+A single interactive advisor helps with repo setup and architecture decisions. Guide agent makes advisory beads. Brainstorm agent handles project inception — turning raw ideas into structured KB facts and scaffold. No feedback loops. See the [Inception operator guide](/docs/hive/api-reference/inception) for the end-to-end workflow and API reference.
 
 | Agent | Mode | Template |
 |-------|------|----------|
