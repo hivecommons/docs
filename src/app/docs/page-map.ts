@@ -245,6 +245,11 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Dashboard REST API reference — Snapshots and style': 'api-reference/snapshots-and-style.md' },
       { 'Hive operator reference': 'operator-reference/readme.md' },
       { 'Register a self-hosted hive on a hub': 'register-self-hosted-hive.md' },
+      { 'Email to Inbox: a per-hive inbound address': 'design/email-inbox.md' },
+      { 'OpenBao Transit as the spoke keystore': 'integrations/openbao.md' },
+      { 'DCO provider unavailable on large forward merges': 'operator-reference/dco-provider-unavailable.md' },
+      { 'Hive operator reference': 'operator-reference/runtime-and-quota.md' },
+      { 'Hive operator reference': 'operator-reference/sweeps-and-operations.md' },
     ]
   }
 ]

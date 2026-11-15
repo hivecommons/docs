@@ -12,7 +12,9 @@ and keep the real compiler beside it as `go-real`. When `HIVE_AGENT` or
 inside the hive pod and points agents to CI instead, because those commands can
 read or mutate live `/data` state and have killed agent sessions. Human
 operators can debug inside the pod by setting `HIVE_ALLOW_LOCAL_GO_TEST=1`; all
-other Go subcommands pass through unchanged.
+other Go subcommands pass through unchanged. The image also ships pinned
+`govulncheck` and `gosec` for the sec-check lane; both load packages through
+`go list`, which the shim passes through, so they work in an agent pane.
 
 ## Abandoned contributor PRs
 
@@ -223,8 +225,8 @@ Top-level YAML keys accepted by `config.Config`:
 | `decisions.delegate` | "Let hive decide": the activity monitor's Decide… › *Let hive decide* action has the hive decide an issue or PR parked at *Needs human decision* itself, as the owner's delegate under the owner-delegate policy, recording it as a human decision would be (`/hive decision`, park lifted, queue approval on a PR) with an audit marker. | Default ON (`enabled: true`); `enabled: false` hides the action hive-wide; `repos.<owner/repo>.enabled` overrides per repository. `llm.enabled` (default OFF) consults the owner-delegate decider model for items the rules leave at the reversible default, on the governor reviewer endpoint; `llm.model` overrides the model. `effect_timeout` (default `30m`) is how long a recorded decision may go without its expected effect before a repeat click answers "decided, but it hasn't taken effect" with the plain reason and the next actions, and the hive posts one follow-up comment. Rails and policy in [Dashboard sections → Let hive decide](/docs/hive/dashboard-sections#let-hive-decide). |
 | `chat.grounded_answers` | Hive Chat grounded answers: a chat message that is not a bare command (`/agents stuck`, `/prs waiting on review`, "which agent completed last?") is answered by one read-only model turn over a capped snapshot of the hive state the dashboard already holds (agents, open PRs, actionable issues, decisions, governor, alerts, version), citing the items used or saying it does not have the data. Chat never takes actions on this path; every attempt is audited as `chat_grounded_answer`. | Default ON (`enabled: true`); `enabled: false` makes scoped questions answer with the command's usage instead. `model` overrides the governor reviewer model for the turn. See [Hive Chat](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard.md#hive-chat). |
 | `governor.first_timer_welcome` | First-time contributor welcome: when a human whose GitHub `author_association` is `FIRST_TIME_CONTRIBUTOR`/`FIRST_TIMER` opens a PR, post one comment (per author per repo, marker `<!-- hive:first-timer-welcome -->`) that thanks them and invites them to run their own hive — profile, leaderboard, trust-tier progression, offline review-fix/rebase handling. Bots, `author/clanker`/`author/hive` PRs, drafts and known relay contributors are skipped. | Default ON; `enabled: false` opts out; `template_path` overrides the text. Silent without a public dashboard URL. See [Welcoming first-time contributors](https://github.com/hivecommons/hive/blob/v5/src/docs/good-first-issue.md#welcoming-first-time-contributors). |
-| `sla` | Delivery SLA targets (`sla.targets.start_to_pr_h`, `pr_to_merge_h`, `open_to_merge_h`, hours; defaults 4 / 24 / 72) the dashboard's Throughput section colours its Delivery SLA spans against. | Metrics are derived from the lifecycle timeline; no extra GitHub calls. Also editable from **Settings → Thresholds**. See [Delivery SLA](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference/sweeps-and-operations.md#delivery-sla). |
-| `sentinel` | Suspicious-activity alerts: flags open PRs (any author) that touch sensitive files or look like security overrides, privilege escalation, or codebase damage. | Default ON; observe-and-alert only. See [Suspicious-activity alerts](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference/sweeps-and-operations.md#suspicious-activity-alerts-sentinel). |
+| `sla` | Delivery SLA targets (`sla.targets.start_to_pr_h`, `pr_to_merge_h`, `open_to_merge_h`, hours; defaults 4 / 24 / 72) the dashboard's Throughput section colours its Delivery SLA spans against. | Metrics are derived from the lifecycle timeline; no extra GitHub calls. Also editable from **Settings → Thresholds**. See [Delivery SLA](/docs/hive/operator-reference/sweeps-and-operations#delivery-sla). |
+| `sentinel` | Suspicious-activity alerts: flags open PRs (any author) that touch sensitive files or look like security overrides, privilege escalation, or codebase damage. | Default ON; observe-and-alert only. See [Suspicious-activity alerts](/docs/hive/operator-reference/sweeps-and-operations#suspicious-activity-alerts-sentinel). |
 
 ### Agent-runtime blocks (`config.AgentRuntimeConfig`)
 
@@ -470,7 +472,7 @@ fallback when the approval sweep is off or refused:
   approves a head's `pull_request` runs once when a verified owner or merger
   admitted that head from the dashboard or the PR author / triggering actor is
   the App or in `governor.ci.auto_approve_workflow_actors`
-  ([runtime-and-quota.md](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference/runtime-and-quota.md), hivecommons/hive#16603); and a
+  ([runtime-and-quota.md](/docs/hive/operator-reference/runtime-and-quota), hivecommons/hive#16603); and a
   contributor-lane PR whose author the **contributor registry**
   admitted at a `require_tiers` tier has its held runs approved once per head
   by the App (`auto_merge.contributor_lane.approve_held_runs_for_registry_trusted`,

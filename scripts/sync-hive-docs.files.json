@@ -345,5 +345,20 @@
   },
   {
     "source": "register-self-hosted-hive.md"
+  },
+  {
+    "source": "design/email-inbox.md"
+  },
+  {
+    "source": "integrations/openbao.md"
+  },
+  {
+    "source": "operator-reference/dco-provider-unavailable.md"
+  },
+  {
+    "source": "operator-reference/runtime-and-quota.md"
+  },
+  {
+    "source": "operator-reference/sweeps-and-operations.md"
   }
 ]
