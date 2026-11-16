@@ -53,18 +53,18 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/typos
-          key: typos-v1.52.0-${{ runner.os }}-x86_64-6155d4114f9a
+          key: typos-v1.52.2-${{ runner.os }}-x86_64-3b13d1291281
 
       - name: Install typos
         if: steps.typos-cache.outputs.cache-hit != 'true'
         env:
           # sha256 of the release asset below; bump together with the version.
-          TYPOS_SHA256: 6155d4114f9a0f5b8f6d4fda96266c9d5f6add71df80da7f684ee5e72eb14588
+          TYPOS_SHA256: 3b13d1291281d39d01822e54035636487a7a0f228e70097899b1e33aeb0e7e93
         run: |
           set -euo pipefail
           curl --fail --location --retry 8 --retry-all-errors --retry-delay 5 \
             -o "$RUNNER_TEMP/typos.tar.gz" \
-            https://github.com/crate-ci/typos/releases/download/v1.52.0/typos-v1.52.0-x86_64-unknown-linux-musl.tar.gz
+            https://github.com/crate-ci/typos/releases/download/v1.52.0/typos-v1.52.2-x86_64-unknown-linux-musl.tar.gz
           echo "$TYPOS_SHA256  $RUNNER_TEMP/typos.tar.gz" | sha256sum --check --strict
           cat "$RUNNER_TEMP/typos.tar.gz" | tar -xz -C "$RUNNER_TEMP" ./typos
           rm -f "$RUNNER_TEMP/typos.tar.gz"
