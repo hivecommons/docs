@@ -88,7 +88,7 @@ afterEach(() => {
 });
 
 describe("Footer content", () => {
-  it("renders brand, section headings, and the year-substituted copyright", () => {
+  it("renders brand, section headings, and the LF Projects legal footer", () => {
     render(<Footer />);
     expect(screen.getByAltText("Hive Commons logo")).toBeTruthy();
     expect(screen.getByText(footerMsgs.description)).toBeTruthy();
@@ -99,10 +99,15 @@ describe("Footer content", () => {
     ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
     }
-    const year = String(new Date().getFullYear());
-    const copyright = footerMsgs.copyright.replace("{year}", year);
-    expect(screen.getByText(copyright)).toBeTruthy();
-    expect(copyright).toContain(year);
+    const legal = screen.getByTestId("lf-projects-legal");
+    expect(legal.textContent).toContain(
+      "© Copyright Hive Commons Series of LF Projects, LLC"
+    );
+    expect(
+      screen
+        .getByRole("link", { name: "lfprojects.org/policies/" })
+        .getAttribute("href")
+    ).toBe("https://lfprojects.org/policies/");
   });
 
   it("renders internal docs links and external links with safe attributes", () => {

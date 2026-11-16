@@ -5,6 +5,7 @@ import Image from "next/image";
 import { GridLines, StarField } from "../index";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import LFProjectsLegal from "../LFProjectsLegal";
 
 const SECURITY_POLICY_URL =
   "https://github.com/hivecommons/.github/blob/main/SECURITY.md";
@@ -618,23 +619,20 @@ export default function Footer() {
             {/* Left side - copyright and CNCF info */}
             <div className="flex flex-col gap-4 md:text-left text-center flex-1">
               <div className="flex flex-col gap-2">
+                <LFProjectsLegal
+                  className={`text-xs sm:text-sm ${
+                    isDark ? 'text-ink-3' : 'text-ink-2'
+                  }`}
+                  linkClassName={`underline transition-colors ${
+                    isDark
+                      ? 'text-ink hover:text-ink-1'
+                      : 'text-ink-1 hover:text-ink'
+                  }`}
+                />
                 <p className={`text-xs sm:text-sm ${
                   isDark ? 'text-ink-3' : 'text-ink-2'
                 }`}>
-                  © {new Date().getFullYear()} The Linux Foundation / The Hive Commons authors. Code is licensed under Apache 2.0. Security contact: security@hivecommons.dev. The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our{" "}
-                  <a
-                    href="https://www.linuxfoundation.org/trademark-usage"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`underline transition-colors ${
-                      isDark
-                        ? 'text-ink hover:text-ink-1'
-                        : 'text-ink-1 hover:text-ink'
-                    }`}
-                  >
-                    Trademark Usage page
-                  </a>
-                  .
+                  Code is licensed under Apache 2.0. Security contact: security@hivecommons.dev.
                 </p>
                 <p className={`text-xs sm:text-sm ${
                   isDark ? 'text-ink-3' : 'text-ink-2'

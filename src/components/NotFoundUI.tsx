@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import LFProjectsLegal from "./LFProjectsLegal";
 
 // The 404 page must survive deploy propagation windows where hashed CSS can be
 // unavailable, so it mirrors the docs theme with inline styles and CSS custom
@@ -514,7 +515,7 @@ export default function NotFoundUI() {
       </main>
 
       <footer style={styles.footer}>
-        © {new Date().getFullYear()} Hive Commons. Apache 2.0 License.
+        <LFProjectsLegal style={{ margin: 0 }} />
       </footer>
     </div>
   );

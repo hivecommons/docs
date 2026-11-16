@@ -68,7 +68,7 @@ afterEach(() => {
 });
 
 describe("DocsFooter content", () => {
-  it("renders the brand copy, section headings, and year-substituted copyright", () => {
+  it("renders the brand copy, section headings, and LF Projects legal footer", () => {
     render(<DocsFooter />);
 
     expect(
@@ -82,13 +82,18 @@ describe("DocsFooter content", () => {
     ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
     }
+    const legal = screen.getByTestId("lf-projects-legal");
+    expect(legal.textContent).toContain(
+      "© Copyright Hive Commons Series of LF Projects, LLC"
+    );
+    expect(legal.textContent).toContain(
+      "For website terms of use, trademark policy and other project policies please see lfprojects.org/policies/."
+    );
     expect(
-      screen.getByText(
-        new RegExp(
-          `© ${new Date().getFullYear()} The Linux Foundation / The Hive Commons authors`
-        )
-      )
-    ).toBeTruthy();
+      screen
+        .getByRole("link", { name: "lfprojects.org/policies/" })
+        .getAttribute("href")
+    ).toBe("https://lfprojects.org/policies/");
     expect(
       screen.getByText(/Cloud Native Computing Foundation sandbox project/)
     ).toBeTruthy();

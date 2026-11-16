@@ -6,6 +6,7 @@ import { GridLines, StarField } from "./index";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { getLocalizedUrl } from "@/lib/url";
+import LFProjectsLegal from "./LFProjectsLegal";
 
 export default function Footer() {
   const t = useTranslations("footer");
@@ -340,9 +341,10 @@ export default function Footer() {
         <div className="border-t border-gray-800 pt-4 sm:pt-6 md:pt-8">
           <div className="flex flex-col md:flex-row justify-center items-center gap-3 sm:gap-4">
             {/* Copyright */}
-            <p className="text-gray-400 text-xs sm:text-sm text-center">
-              {t("copyright", { year: new Date().getFullYear() })}
-            </p>
+            <LFProjectsLegal
+              className="text-gray-400 text-xs sm:text-sm text-center"
+              linkClassName="underline hover:text-white"
+            />
           </div>
         </div>
       </div>
