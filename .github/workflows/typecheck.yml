@@ -64,7 +64,7 @@ jobs:
           set -euo pipefail
           curl --fail --location --retry 8 --retry-all-errors --retry-delay 5 \
             -o "$RUNNER_TEMP/typos.tar.gz" \
-            https://github.com/crate-ci/typos/releases/download/v1.52.0/typos-v1.52.2-x86_64-unknown-linux-musl.tar.gz
+            https://github.com/crate-ci/typos/releases/download/v1.52.2/typos-v1.52.2-x86_64-unknown-linux-musl.tar.gz
           echo "$TYPOS_SHA256  $RUNNER_TEMP/typos.tar.gz" | sha256sum --check --strict
           cat "$RUNNER_TEMP/typos.tar.gz" | tar -xz -C "$RUNNER_TEMP" ./typos
           rm -f "$RUNNER_TEMP/typos.tar.gz"
