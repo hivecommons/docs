@@ -116,6 +116,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Agent Definition YAML': 'agent-definition-yaml.md' },
       { 'Variable Substitution': 'variable-substitution.md' },
       { 'Governor': 'governor.md' },
+      { 'GitHub webhooks and the hub relay key': 'webhooks.md' },
       { 'hivectl': 'hivectl.md' },
       { 'crux CLI': 'crux-cli.md' },
       { 'Crux durable lanes': 'crux-lanes.md' },

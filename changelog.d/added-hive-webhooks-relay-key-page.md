@@ -1,0 +1,1 @@
+- Sync the Hive "GitHub webhooks and the hub relay key" page (hosted relay key setup, self-hosted secret setup, and the 503 "no secret configured" fix) into the docs site and link it under Hive > Operations.
