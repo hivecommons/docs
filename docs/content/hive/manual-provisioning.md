@@ -820,6 +820,9 @@ A standalone hive needs **no hub egress**. The minimal outbound allowlist is:
 - **Your inference endpoint** — if it's in-cluster (the shipped
   `src/deploy/inference` backend, or your own litellm/vllm Service) this is
   **cluster-internal traffic, not external egress** at all.
+- **`api.deepgram.com:443`** — only if you enable Inbox transcription
+  (`inbox.transcription.enabled`); see
+  [inbox-transcription.md](/docs/hive/inbox-transcription).
 
 Hub hosts (`hub.hivecommons.dev`) are **not** required. For the full egress matrix
 (ports, hosts, when each is needed) see

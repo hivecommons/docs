@@ -250,6 +250,9 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'DCO provider unavailable on large forward merges': 'operator-reference/dco-provider-unavailable.md' },
       { 'Hive operator reference': 'operator-reference/runtime-and-quota.md' },
       { 'Hive operator reference': 'operator-reference/sweeps-and-operations.md' },
+      { 'Meeting recordings in the Inbox: Zoom and Microsoft Teams': 'design/meeting-recordings.md' },
+      { 'Inbox transcription': 'inbox-transcription.md' },
+      { 'Meetings': 'meetings.md' },
     ]
   }
 ]

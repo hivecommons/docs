@@ -142,9 +142,25 @@ knowledge store holds typed facts with sources and confidence. Neither stores
 conversation text. Agents are primed with a bounded set of facts in the task
 prompt; they cannot query the store, so a poisoned fact cannot be amplified.
 Untrusted text is scanned by `ioscan` before it reaches a prompt
-([ioscan.md](https://github.com/hivecommons/hive/blob/v5/src/docs/ioscan.md)); canaries are planted per task and agent output is
+([ioscan.md](https://github.com/hivecommons/hive/blob/v5/src/docs/ioscan.md)). Inbox item text (voice and meeting transcripts,
+summaries, messages) is fenced in a nonce-tagged `<untrusted-inbox-data>`
+envelope before it reaches spektacular or an agent prompt
+([inbox-voice-sources.md](/docs/hive/inbox-voice-sources)); canaries are planted per task and agent output is
 scanned for them. Session state is pruned and logs are scrubbed
 ([security.md](https://github.com/hivecommons/hive/blob/v5/src/docs/security.md)).
+
+Untrusted recordings transcribed by the built-in whisper provider are decoded
+and transcribed outside the hive process, in the `hive-whisper` sandbox: a
+separate `hive-transcribe` uid with no home, shell or supplementary groups,
+reached through su-exec; an empty environment (no tokens or keys); the audio
+on stdin and the model as an inherited read-only descriptor; a private 0700
+work dir removed on exit; FFmpeg (an LGPL build with only audio demuxers and
+decoders and no network protocols) and whisper.cpp under rlimits (address
+space, CPU seconds, file size, open files, no core dumps), `nice` and a
+wall-clock timeout scaled to the recording; and an empty network namespace
+where the kernel allows unprivileged user namespaces. With whisper the audio
+never leaves the spoke; with Gemini or Deepgram it is sent to that provider
+under the hive's own account ([inbox-transcription.md](/docs/hive/inbox-transcription)).
 
 ## 5. Network and credentials
 
@@ -381,8 +397,9 @@ against `X-Hub-Signature-256`. Terminal access uses short-lived signed
 assertions. Systemd units refuse to run code from a directory an
 unprivileged user could have created.
 
-**Sessions.** With `dashboard.sessions.enabled` (default off; Settings →
-Dashboard → Sessions, overridden by `HIVE_SESSIONS_ENABLED`) the dashboard
+**Sessions.** With `dashboard.sessions.enabled` (default on; Settings →
+Dashboard → Inception (spek) sessions, overridden by `HIVE_SESSIONS_ENABLED`,
+`false` turns it off) the dashboard
 offers interactive CLI terminals (`/api/sessions`, [API
 reference](/docs/hive/api-reference/sessions)). A session is a plain vendor CLI, never
 a shell, launched with none of the permission-bypass flags agents run with, so
@@ -465,6 +482,17 @@ importance:
 - **Resume ids** never start with `-` and a resume command may carry only the
   vendor binary, a fixed set of resume words and a flag-free id, so a planted
   transcript name cannot add `--dangerously-skip-permissions`.
+- **Voice notes stay in the browser.** The input bar's Voice button (write
+  roles only) uses the browser's Web Speech API, so transcription is done by
+  the browser vendor's speech service (Chrome sends the audio to Google), not
+  by Hive; the audio never reaches the Hive backend. The transcript only fills
+  the Send textarea and goes through the same queued `/input` path as typed
+  text when the user presses Send. To allow it, the gateway's
+  `Permissions-Policy` for the dashboard document is
+  `geolocation=(), camera=(), microphone=(self)` (`src/deploy/nginx.conf`,
+  `map $uri $hive_document_permissions_policy`); the ttyd terminal iframe
+  (`/terminal/`) and `/api/` responses keep `microphone=()`, and no other origin
+  is ever granted the microphone.
 
 Audit: `session_created`, `session_started` (the outcome of the background
 start), `session_closed`, `session_renamed`, `session_input` and

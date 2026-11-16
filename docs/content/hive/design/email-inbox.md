@@ -56,8 +56,9 @@ The Inbox is source-agnostic by construction:
   (`src/cmd/hive/boot_inbox.go:111-129`).
 - Rules match `source`, `title_prefix` or `tag` (`src/pkg/inbox/rules.go:19-39`);
   the default prefixes are `RFC:` and `Hive:` (`src/pkg/inbox/rules.go:10`).
-- Destinations: `SpekDestination` pipes `Content.Text()` plus the provenance line
-  into `spektacular voice --from stdin --publish` or kicks an agent
+- Destinations: `SpekDestination` kicks an agent with the enveloped item text
+  plus provenance; the agent drafts the spec with spektacular and runs
+  `spektacular publish`
   (`src/pkg/inbox/spek.go:52-102`); `DibsDestination` posts a private draft idea
   (`src/pkg/inbox/dibs.go:44-87`).
 - State lives in `connector-state/_inbox.json` (`src/cmd/hive/boot_inbox.go:46`,
@@ -220,7 +221,8 @@ secret from `inbox.email.webhook_secret_env`.
   dependency in phase 1; type and size are the only gate.
 - **Prompt-injection posture.** The body is untrusted data, same as a Plaud
   transcript: it reaches a prompt only through `Content.Text()` into the spek
-  stdin or the agent kick prompt (`src/pkg/inbox/spek.go:76`), and the spoke
+  stdin or the agent kick prompt (`src/pkg/inbox/spek.go:76`), fenced in the
+  nonce-tagged `<untrusted-inbox-data>` envelope (`src/pkg/inbox/envelope.go:40`), and the spoke
   passes it through `ioscan.EnforceInput` (`src/pkg/ioscan/enforce.go:24`)
   before `Fetch` returns. Headers are never trusted for anything but routing;
   HTML is converted to markdown with scripts and tracking pixels stripped.

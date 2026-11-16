@@ -132,6 +132,19 @@ behavior. [Maintenance limitations](#keeping-this-reference-current) still apply
 | `HIVE_DOSSIER_CACHE_MAX_ENTRIES` | No | `512` | Caps each public dossier cache. Bounds username-spray memory while keeping normal contributor reuse hot. |
 | `HIVE_CONTRIBUTOR_KNOWLEDGE_EXPORT_MAX_FACTS` | No | `80` | Caps the number of facts returned by the contributor knowledge export API. Unset, non-numeric, or non-positive values fall back to the default. |
 | `HIVE_PUBLIC_REPOS` | No | none | Comma-separated, case-insensitive allowlist of additional Gource project names the dashboard's public war-room view may render, beyond the always-allowed default (`hive`). |
+| `DEEPGRAM_API_KEY` | No | none | The hive owner's own Deepgram API key for Inbox transcription with `inbox.transcription.provider: deepgram`, or `auto` when whisper and Gemini are unavailable ([inbox-transcription.md](/docs/hive/inbox-transcription)). Read at run time; `inbox.transcription.api_key_env` names a different variable. Never stored in `hive.yaml`, never shown (the UI reports only key present / missing). |
+| `HIVE_INBOX_TRANSCRIPTION_MAX_DURATION_MINUTES` | No | `120` | Overrides `inbox.transcription.max_duration_minutes`: longer recordings are skipped before upload. Non-numeric or non-positive values fall back to the config / default. |
+| `HIVE_INBOX_TRANSCRIPTION_MAX_BYTES` | No | `524288000` | Overrides `inbox.transcription.max_bytes`: an audio download larger than this is cut and the item skipped as too large. |
+| `HIVE_INBOX_TRANSCRIPTION_MONTHLY_BUDGET_MINUTES` | No | `600` | Overrides `inbox.transcription.monthly_budget_minutes`: audio minutes this hive may send per UTC month. |
+| `HIVE_INBOX_TRANSCRIPTION_DAILY_MAX_ITEMS` | No | `20` | Overrides `inbox.transcription.daily_max_items`: transcription runs per UTC day. |
+| `GEMINI_API_KEY` / `GOOGLE_API_KEY` / `GOOGLE_GENAI_API_KEY` | No | none | The hive's own Gemini API key, read in this order. Gemini model discovery already uses it; Inbox transcription with `inbox.transcription.provider: gemini` (or `auto` when whisper is unavailable) sends recordings to the Gemini API with it, in the `x-goog-api-key` header. Never stored in `hive.yaml`, never shown ([inbox-transcription.md](/docs/hive/inbox-transcription)). |
+| `HIVE_WHISPER_MODEL_DIR` | No | `/data/models/whisper` | Where the built-in whisper provider keeps its ggml model (`ggml-<model>.bin`, mode 0644). Air-gapped hives pre-seed the file here; it is checked against its pinned size and SHA-256 before use ([inbox-transcription.md](/docs/hive/inbox-transcription)). |
+| `HIVE_WHISPER_MODEL_DOWNLOAD` | No | `true` | `false` stops the hive from downloading a missing whisper model (air-gapped hives); whisper then reports *not ready* until the file is pre-seeded. |
+| `HIVE_WHISPER_MODEL_BASE_URL` | No | the pinned `huggingface.co/ggerganov/whisper.cpp` revision | HTTPS mirror the whisper model is downloaded from (`<url>/ggml-<model>.bin`). The pinned SHA-256 still applies. |
+| `HIVE_WHISPER_SANDBOX` | No | `/usr/local/bin/hive-whisper` | Path of the hive-whisper sandbox launcher. |
+| `HIVE_WHISPER_ENGINE_DIR` | No | `/opt/hive-whisper/bin` | Directory holding the bundled `whisper-cli` and LGPL `ffmpeg`. |
+| `HIVE_WHISPER_RUN_AS` | No | `hive-transcribe` | User the sandbox runs as (through su-exec). `self` runs it as the hive's own uid: weaker isolation, for development hosts without su-exec or the sandbox user. |
+| `HIVE_WHISPER_MEMORY_MB` | No | `3072` | Address-space limit (RLIMIT_AS) for each sandboxed engine process, in MiB. |
 
 ## Crux durable lanes
 
@@ -241,7 +254,7 @@ new value at the same time.
 | `HIVE_DASHBOARD_UPGRADE_HELPER` | No | config `deployment.upgrade_helper` fallback, then `/usr/local/libexec/hive-dashboard-upgrade-helper` | Absolute path to the standalone upgrade helper executable the dashboard invokes. Must be a regular, executable file at an absolute path or the upgrade button stays hidden. See [dashboard-standalone-upgrades.md](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-standalone-upgrades.md). |
 | `HIVE_GIT_BOT_EMAIL_DOMAIN` | No | `hive.hivecommons.dev` | Domain of the bracket-free bot sign-off address `<slug>@<domain>`. With `github.app_signed_commits` on, the PR-request watcher re-addresses any `<slug>[bot]@users.noreply.github.com` `Signed-off-by` trailer it copies into the GitHub-signed commit to this form, because probot-dco rejects the bracketed local-part as a malformed email ([#6251](https://github.com/hivecommons/hive/issues/6251)); on v4 `src/deploy/entrypoint.sh` mints the agents' pane identity under the same domain ([#6276](https://github.com/hivecommons/hive/pull/6276)). A plain hostname only (`[A-Za-z0-9.-]`); anything else falls back to the default. |
 | `HIVE_TMUX_HISTORY_LIMIT` | No | `50000` | tmux scrollback depth applied when an agent session is created (positive integer; the authoritative knob for terminal scrollback and full-log capture). |
-| `HIVE_SESSIONS_ENABLED` | No | config `dashboard.sessions.enabled` (default off) | Turns the dashboard Sessions feature (interactive CLI terminals, `/api/sessions`) on or off, overriding config. Limits: `HIVE_SESSIONS_MAX`, `HIVE_SESSIONS_MAX_PER_USER`, `HIVE_SESSIONS_IDLE_TTL_HOURS`. Workspace: `HIVE_SESSIONS_WORKSPACE_REPO` (the `org/repo` sessions open in, default `project.org/primary_repo`), `HIVE_SESSIONS_WORKSPACE_DIR` (clone root, default `/data/session-sandbox/workspace`), `HIVE_SESSIONS_GID` (the sessions-only group that shares it, default 20000); see [Sessions API](/docs/hive/api-reference/sessions). |
+| `HIVE_SESSIONS_ENABLED` | No | config `dashboard.sessions.enabled` (default on) | Turns the dashboard Inception (spek) sessions feature (interactive CLI terminals, `/api/sessions`) on or off; `false` hides it, overriding config. Limits: `HIVE_SESSIONS_MAX`, `HIVE_SESSIONS_MAX_PER_USER`, `HIVE_SESSIONS_IDLE_TTL_HOURS`. Workspace: `HIVE_SESSIONS_WORKSPACE_REPO` (the `org/repo` sessions open in, default `project.org/primary_repo`), `HIVE_SESSIONS_WORKSPACE_DIR` (clone root, default `/data/session-sandbox/workspace`), `HIVE_SESSIONS_GID` (the sessions-only group that shares it, default 20000); see [Sessions API](/docs/hive/api-reference/sessions). |
 | `HIVE_TTYD_HISTORY_LIMIT` | No | `50000` | Defense-in-depth history-limit raise applied at browser attach time; only affects panes created after attach. |
 | `HIVE_TMUX_PANE_WIDTH` | No | `200` | Column count agent tmux sessions are created with. A detached tmux session defaults to 80 columns because no attached client supplies a size. |
 | `HIVE_KICK_LOG_DIR` | No | `/data/logs/kicks` | Root directory per-kick log archives are written under. On the persistent volume so archives survive restarts, pod rolls, and image upgrades. |
@@ -356,6 +369,49 @@ Part 2 of [RFC #4492](https://github.com/hivecommons/hive/issues/4492): the hive
 | `LINEAR_AGENT_STORE` | No | `/data/linear-agent.json` | Path of the persisted install record (workspace identity + OAuth grant, mode 0600). Override for tests or non-container runs. |
 
 Inside an **agent** session (set by the hive, never by the operator): ISSUES_ONLY+ agents receive `LINEAR_ACCESS_TOKEN` (the connected app's OAuth token, `Authorization: Bearer`) or, when no workspace is connected, `LINEAR_API_KEY` (the work-source key, bare `Authorization`). Advisory agents receive neither and have both stripped. See [linear-agent.md](https://github.com/hivecommons/hive/blob/v5/src/docs/linear-agent.md#github-issue-parity-agents-writing-to-linear).
+
+## Meetings (Quorum)
+
+Hive as a live meeting participant ([#18284](https://github.com/hivecommons/hive/issues/18284)). Each variable overrides the matching `meetings.*` key in `hive.yaml`; with `meetings.enabled` off nothing starts. The default consent notice is: "Hive has joined to take notes and help with research. It records this meeting's transcript. Type 'hive leave' to remove it." Other `QUORUM_*` variables set on hive (the contract's numeric limits, for example `QUORUM_CHAT_MAX_CHARS`) pass through to the Quorum child unchanged.
+
+| Variable | Required | Default | Purpose |
+|---|---:|---|---|
+| `HIVE_MEETINGS_ENABLED` | No | `meetings.enabled` (off) | Turns meetings on: hive starts the Quorum child and can join live meetings. Accepts `1/true/yes/on` and `0/false/no/off`. |
+| `HIVE_MEETINGS_QUORUM_BINARY` | No | `/usr/local/lib/quorum/quorum.mjs` | Quorum bundle (run through `node` when it ends in `.mjs` or `.js`) or executable. Overrides `meetings.quorum.binary`. |
+| `HIVE_MEETINGS_QUORUM_LISTEN` | No | `127.0.0.1:8765` | Loopback address Quorum listens on (passed as `QUORUM_LISTEN`). Non-loopback values are rejected. |
+| `HIVE_MEETINGS_VEXA_URL` | Yes for Meet, Teams and Zoom | none | Vexa gateway base URL (passed as `QUORUM_VEXA_URL`). Overrides `meetings.vexa.url`. |
+| `HIVE_MEETINGS_VEXA_API_KEY` | No | none | Vexa tenant key. Secret. Wins over the keystore-sealed secret file; prefer the file, which the dashboard writes. |
+| `HIVE_MEETINGS_VEXA_API_KEY_FILE` | No | `/data/secrets/meetings_vexa_api_key` | Keystore-sealed secret file holding the Vexa tenant key. Overrides `meetings.vexa.api_key_file`. |
+| `HIVE_MEETINGS_DISCORD_TOKEN` | No | none | Per-hive Discord bot token. Secret. Wins over the secret file. Without a token Discord is unavailable. |
+| `HIVE_MEETINGS_DISCORD_TOKEN_FILE` | No | `/data/secrets/meetings_discord_token` | Keystore-sealed secret file holding the Discord bot token. Overrides `meetings.discord.token_file`. |
+| `HIVE_MEETINGS_TRANSCRIBE_URL` | No | none | Shared transcription service for Discord audio (passed as `QUORUM_TRANSCRIBE_URL`). Overrides `meetings.transcribe_url`. In-cluster: `http://vexa-transcription.meetings.svc.cluster.local:8000`. |
+| `HIVE_MEETINGS_TRANSCRIBE_TOKEN` | No | none | Transcription service token. Secret. Wins over the secret file. Hive passes it to Quorum as `QUORUM_TRANSCRIBE_TOKEN_FILE`; without it Discord audio is not transcribed. |
+| `HIVE_MEETINGS_TRANSCRIBE_TOKEN_FILE` | No | `/data/secrets/meetings_transcribe_token` | Keystore-sealed secret file holding the transcription service token. Overrides `meetings.transcribe_token_file`. |
+| `HIVE_MEETINGS_DELIVERY` | No | `chat` | Default delivery for meeting output. Only `chat` is supported. |
+| `HIVE_MEETINGS_VOICE_ON_ADDRESS` | No | `true` | Lets hive speak when addressed by name in a meeting whose voice is enabled; otherwise it answers in chat. |
+| `HIVE_MEETINGS_BOT_NAME` | No | `hive (notes)` | Display name the meeting bot joins with. |
+| `HIVE_MEETINGS_INVITE_POLICY` | No | `owner` | Who may send hive to a meeting. Only `owner` is supported. |
+| `HIVE_MEETINGS_RESEARCH_POOL_SIZE` | No | `2` | Number of research agents (`research-1..N`). |
+| `HIVE_MEETINGS_RESEARCH_PER_MEETING` | No | `5` | Research items one meeting may start before each further item needs dashboard approval. |
+| `HIVE_MEETINGS_CHAT_POSTS_PER_MINUTE` | No | `6` | Cap on hive's chat posts into one meeting. |
+| `HIVE_MEETINGS_LOBBY_TIMEOUT_S` | No | `600` | Seconds hive waits in a meeting lobby before leaving. |
+| `HIVE_MEETINGS_RETENTION_DAYS` | No | `30` | Days an ended meeting's transcript is kept before it is purged. |
+| `HIVE_MEETINGS_CONSENT_TEXT` | No | the notice above | Notice posted in the meeting chat on join, before anything else. At most 2000 characters. |
+| `HIVE_MEETINGS_DATA_DIR` | No | `/data/meetings` | Where meeting records and transcripts are stored. |
+| `HIVE_MEETINGS_MAX_TOKENS_PER_MEETING` | No | `200000` | Per-meeting LLM token budget for Spektacular live mode. |
+| `HIVE_MEETINGS_MAX_TOKENS_PER_HOUR` | No | `500000` | Hive-wide hourly token ceiling across meetings. |
+| `HIVE_MEETINGS_MAX_TOKENS_PER_DAY` | No | `2000000` | Hive-wide daily token ceiling across meetings. |
+| `HIVE_MEETINGS_MAX_INTENTS_PER_MEETING` | No | `500` | Per-meeting budget counted in Spek intents when Spek reports no token usage. |
+| `HIVE_MEETINGS_LLM_MODE` | No | `auto` | Model Spektacular live mode reasons with: `auto` (an Anthropic key if set, else the OpenAI-compatible endpoint), `openai`, `anthropic` or `none` (rules only). |
+| `HIVE_MEETINGS_LLM_ENDPOINT` | No | `governor.litellm` endpoint | OpenAI-compatible base URL `hive meeting-llm` calls for Spek. |
+| `HIVE_MEETINGS_LLM_MODEL` | No | `governor.litellm.default_model` | Model name for that endpoint. Without an endpoint and model, Spek runs on rules only. |
+| `HIVE_MEETINGS_LLM_API_KEY` | No | `governor.litellm` key | Key for that endpoint. Secret. Wins over the secret file. |
+| `HIVE_MEETINGS_LLM_API_KEY_FILE` | No | `/data/secrets/meetings_llm_api_key` | Keystore-sealed key file for the meetings endpoint. |
+| `HIVE_MEETINGS_ANTHROPIC_API_KEY` | No | none | Anthropic key; when set (mode `auto` or `anthropic`) Spek calls Anthropic directly. Secret; passed only into the Spek child's environment. |
+| `HIVE_MEETINGS_ANTHROPIC_API_KEY_FILE` | No | `/data/secrets/meetings_anthropic_api_key` | Keystore-sealed Anthropic key file. |
+| `HIVE_MEETINGS_ANTHROPIC_MODEL` | No | Spektacular's default | Anthropic model override (`SPEK_MEETING_MODEL`). |
+| `HIVE_MEETINGS_LLM_TIMEOUT_MS` | No | `2500` | Per-call model timeout. |
+| `HIVE_MEETINGS_LLM_MAX_IN_FLIGHT` | No | `4` | Concurrent model calls across all meetings. |
 
 ## Backend launch controls
 

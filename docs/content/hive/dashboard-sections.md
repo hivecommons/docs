@@ -174,19 +174,13 @@ An experimental planner that tries out code changes in your repositories and rec
 
 Full entry: [Experiment Lab](/docs/hive/dashboard-sections/workflow-and-agents#experiment-lab).
 
-## Inception
-
-A step-by-step guide that turns a new project idea into a first set of files and planned work.
-
-Full entry: [Inception](/docs/hive/dashboard-sections/workflow-and-agents#inception).
-
-## Sessions
+## Inception (spek)
 
 Named terminal sessions running command-line AI tools inside Hive; everyone who can see one watches live and one person at a time holds the keyboard.
 
-Sessions are named and grouped, and the section replaces Inception when sessions are enabled. Turn it on from Settings → Dashboard → **Sessions** (`dashboard.sessions.enabled`; `HIVE_SESSIONS_ENABLED` overrides). The terminal pane follows the dashboard theme, light or dark and any theme preset, instead of showing a black terminal.
+Sessions are named and grouped and open in the hive's shared spek workspace; the section replaced the removed Inception wizard. It is on by default; turning it off from Settings → Dashboard → **Inception (spek) sessions** (`dashboard.sessions.enabled: false`; `HIVE_SESSIONS_ENABLED=false` overrides) hides the section. The terminal pane follows the dashboard theme, light or dark and any theme preset, instead of showing a black terminal.
 
-Full entry: [Sessions](/docs/hive/dashboard-sections/workflow-and-agents#sessions).
+Full entry: [Inception (spek)](/docs/hive/dashboard-sections/workflow-and-agents#inception-spek).
 
 ## Knowledge
 
@@ -199,6 +193,12 @@ Full entry: [Knowledge](/docs/hive/dashboard-sections/workflow-and-agents#knowle
 Voice recordings and dictations waiting for you to file them as an RFC, send to dibs, or keep as knowledge.
 
 Full entry: [Inbox](/docs/hive/dashboard-sections/workflow-and-agents#inbox).
+
+## Meetings
+
+Meetings hive joins to take notes: send it to one, follow the live transcript, notes and research, or make it leave.
+
+Owner only. Approve research past the per-meeting cap and answer Discord join requests here; settings are under Settings, Meetings. Full entry: [Meetings](/docs/hive/meetings).
 
 ## Contributors
 
