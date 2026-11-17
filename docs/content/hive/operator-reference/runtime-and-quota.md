@@ -257,11 +257,11 @@ GraphQL query fails, or GitHub returns `mergeable: UNKNOWN` for that PR.
 
 ### Webhook-driven PR cache invalidation
 
-See [GitHub webhooks: cadence, patch and reconcile](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md) for the
+See [GitHub webhooks: cadence, patch and reconcile](/docs/hive/webhooks) for the
 cadence keys, the fallback to polling when deliveries degrade, and the
 accuracy guarantees of the ForgeState contract. Hive owners (not cluster
 operators) should start at the
-[owner guide](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md#setting-up-webhooks-owner-guide): it covers the
+[owner guide](/docs/hive/webhooks#setting-up-webhooks-owner-guide): it covers the
 ⚙ Settings → **Forge App** → **GitHub webhooks** section, which shows the
 payload URL, generates a per-hive secret and can create the org/repo hook.
 
@@ -367,7 +367,7 @@ v5 and v6 spokes) tracking one repo all stay on webhook mode.
   latency — and `/api/status.evalMode` reads `webhook`,
   `/api/status.webhooks.mode` reads `webhook`. The API budget stretch still
   applies; the larger interval wins.
-- **Fallback to polling** ([webhooks.md](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md#fallback-when-webhooks-degrade)).
+- **Fallback to polling** ([webhooks.md](/docs/hive/webhooks#fallback-when-webhooks-degrade)).
   Webhook mode degrades when the window lapses *while GitHub was active*
   (a cadence pass listed an item updated after the newest delivery) or when
   deliveries reach the receiver but fail verification; a quiet repository
@@ -409,6 +409,15 @@ v5 and v6 spokes) tracking one repo all stay on webhook mode.
   records `ci_failure_kick` — "CI failed on #N (check) — kicked agent X" /
   "nudged contributor lane". **Agents never watch or poll CI themselves**:
   detection is out-of-band via this webhook path, or the sweep as fallback.
+- **Upstream releases kick subscribed agents.** `governor.release_feeds`
+  lists, per agent, GitHub release/tag, PyPI or generic index feeds. The
+  release-feed watcher polls them with conditional requests every
+  `interval_s` (default `HIVE_RELEASE_FEED_INTERVAL`, else 15m) and, on a new
+  version, queues a kick for the agent through the same gates as the
+  CI-failure kick above, with the releases in `${NEW_RELEASES}`, the reason in
+  kick history, and at most one such kick per agent per cooldown
+  ([#18494](https://github.com/hivecommons/hive/issues/18494)). See
+  [release-feeds.md](/docs/hive/release-feeds).
 - **Gated workflow runs are approved for trusted heads.** GitHub holds
   workflow runs for dependabot and first-time/fork contributors behind
   "Approve and run workflows" (`action_required`); such runs create no check
@@ -555,7 +564,7 @@ v5 and v6 spokes) tracking one repo all stay on webhook mode.
 
 The full model — the three writers, the accuracy guarantees of #13373, every
 cadence key with its default, and the webhook-outage fallback — is
-[webhooks.md](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md). In brief: inbound webhooks cost nothing against
+[webhooks.md](/docs/hive/webhooks). In brief: inbound webhooks cost nothing against
 the GitHub rate limit; outbound API calls do. The governor therefore keeps three distinct paths and never lets a
 delivery trigger a full re-list:
 
@@ -692,7 +701,7 @@ starve the governor:
 targeted_refreshes_1h, tracker_invalidations_1h, mode, since, mode_reason,
 healthy_windows, verification}` (the middle two count the single-item re-reads and the
 tracker cache drops webhooks caused; `mode` is `webhook` | `polling` and
-`since` when it began — see [webhooks.md](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md); `verification` is
+`since` when it began — see [webhooks.md](/docs/hive/webhooks); `verification` is
 `github-signed`, `relay (hub-signed)` or `none`);
 `/api/status` adds `evalMode` (`webhook` | `poll`), `evalIntervalS`,
 `lastWakeReason`, `lastWakeAt` and `webhookWakes`;

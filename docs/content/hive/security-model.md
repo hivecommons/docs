@@ -162,6 +162,29 @@ where the kernel allows unprivileged user namespaces. With whisper the audio
 never leaves the spoke; with Gemini or Deepgram it is sent to that provider
 under the hive's own account ([inbox-transcription.md](/docs/hive/inbox-transcription)).
 
+Files dropped onto the Inbox (owner and read-write only) are typed by content,
+not by name or client MIME type: magic bytes refuse executables, archives,
+PDFs, Office and media files whatever they are called, then the text must be
+UTF-8 and parse as the format its extension asks for. Extraction runs with a
+timeout and size caps; the original, the extracted text and the meta are
+stored 0600 in a 0700 directory per upload, never executed or served raw, and
+bounded by a per-hive quota. The extracted text is fenced in the same
+`<untrusted-inbox-data>` envelope in its Knowledge fact and before any agent
+prompt ([inbox-uploads.md](/docs/hive/inbox-uploads)). Uploaded PDFs are never parsed in the hive process: the
+`hive-pdftext` sandbox reads them as the `hive-transcribe` uid through
+su-exec with an empty environment, under prlimit (address space, CPU, file
+size, open files, no core dumps) and nice, in an empty network namespace
+where the kernel allows it, from a private 0700 work dir, with a wall-clock
+timeout that kills the process group. Word documents are read in
+Go with zip-bomb caps (entry count, declared and actual inflated size,
+compression ratio) and an XML decoder that refuses DTDs and unknown entities
+(no XXE). Links dropped onto the Inbox are
+fetched by the hive under an SSRF guard: http/https only, no credentials in
+the URL, the hive's own DNS lookup with the connection pinned to the checked
+address (any private, loopback, link-local, CGNAT, multicast, ULA or metadata
+answer refuses the link), every redirect re-checked (at most 3), the body
+size- and time-capped, and the environment proxy never used.
+
 ## 5. Network and credentials
 
 **Inference keys.** An agent using a self-hosted inference gateway is
@@ -426,20 +449,78 @@ importance:
   transcripts for resume only through the launcher group. Deleting or pruning a
   session removes the sandbox and the uid's tmux socket directory before the
   slot can be reused; if removal fails the record and slot are kept and retried.
-- **A shared workspace, no shared credential.** Sessions open in one
-  per-repository checkout (`HIVE_SESSIONS_WORKSPACE_DIR`, default
-  `<sandbox root>/workspace/<org>/<repo>`) that the hive clones once as itself,
+- **A shared clone, a worktree per session, no shared credential.** The hive
+  keeps one per-repository clone (`HIVE_SESSIONS_WORKSPACE_DIR`, default
+  `<sandbox root>/workspace/<org>/<repo>`) that it clones once as itself,
   with a short-lived App token in a one-shot `git -c credential.helper` file
   removed right after, so neither the clone's config nor its remote holds a
   credential; root then hands the tree to the sessions-only group
   (`HIVE_SESSIONS_GID`, default 20000) as `root:<gid> 2770`, group read-write,
   nothing for "other". That group is every session's single group (su-exec
   gives a numeric uid exactly one), which is what lets sessions share the
-  checkout; it is refused when it is the hive's own group, the reader group or
-  inside the session uid range, and session sandboxes stay `hive-launch`
-  group-only, so sessions still cannot read each other's homes. `spektacular
-  init` runs in the workspace as the session uid. Pushing from a session uses
-  the person's own login; the hive's token never enters a session.
+  clone's objects and branches; it is refused when it is the hive's own group,
+  the reader group or inside the session uid range, and session sandboxes stay
+  `hive-launch` group-only, so sessions still cannot read each other's homes.
+  The hive itself runs as `dev`, which is never in that group, so it cannot
+  look inside the clone or a worktree: every check of what is in them runs in
+  a script as the session's own uid.
+  Each session opens in its own git worktree of that clone,
+  `<workspace>/.sessions/<id>/<org>/<repo>` on branch `hive-session/<id>`: the
+  hive makes the directory under hive-owned `0711` parents, root only hands
+  that one empty directory (never one another session already owns) to
+  `<session uid>:<gid> 2770`, and the session uid itself runs
+  `git worktree add`. Git never runs as root in the clone. `spektacular init`
+  runs in the session's worktree as the session uid.
+- **The shared clone's git config and hooks are locked.** Before any session
+  gets a worktree of a clone, and once per clone at every boot (which fixes a
+  clone made by an earlier release), root rewrites the clone's `.git/config`
+  from scratch, without running git, as `root:<gid> 0644`, and empties
+  `.git/hooks`, `.git/info` and `.git/modules` into `root 0755` directories.
+  `extensions.worktreeConfig` is on, so a person's own settings go in
+  `git config --worktree`, the worktree's own `config.worktree`, which only
+  that session's uid can write. Root-owned placeholders take the names a
+  session could otherwise create to redirect or configure git
+  (`.git/config.worktree`, `.git/commondir`). `objects/`, `refs/` and `logs/`
+  stay setgid group-writable, so commits, branches and fetches work.
+  `.git/worktrees/`, `.git` and the clone directory are `3770`: a session can
+  add its own entry, but the sticky bit stops it from renaming or replacing
+  anything root or another session owns there. A session's entry under
+  `.git/worktrees/` is created with no group write, even while
+  `git worktree add` is still checking it out. A session's pane gets no
+  `safe.directory`, because its worktree is its own; git's ownership check
+  therefore refuses a `.git` that another uid swapped into the
+  group-writable worktree. As a result, **one session can no longer plant a
+  config entry, hook, filter driver, `core.fsmonitor` or alias that runs as
+  another session's uid**, whether in that person's own git or in the git the
+  hive runs for them. The hive's own git always passes
+  `-c core.hooksPath=/dev/null -c core.fsmonitor=false`. Before the
+  add and remove scripts run git in a worktree, they check (as the session
+  uid) that its `.git` file, its entry under `.git/worktrees/` and that
+  entry's `commondir` are the session's own and lead back to the clone; if
+  they don't, the scripts refuse. What stays shared is data, not code: any
+  session can still read, write or delete the shared objects and refs, and a
+  branch another session made. A worktree is group-writable, so another
+  session can edit or delete its files. The worktree keeps one person's
+  working tree, checked-out branch and spek workflow state (`.spektacular/`)
+  apart from another's; it is not a defence against a session that sets out
+  to corrupt shared data. The lock also costs these, by design: writes to the
+  shared config fail (`git push -u` and `git branch --set-upstream-to` warn;
+  use `git config --worktree`), deleting a ref that is still in the clone's
+  `packed-refs` fails (for example a remote-tracking branch that
+  `git fetch --prune` drops; session branches are never packed), gc and
+  maintenance are off, submodules can't be initialised, and hooks only run
+  from a path the session names with `git config --worktree core.hooksPath`.
+- **Deleting a session never silently drops its work.** The removal script
+  runs as the worktree's owner uid. It auto-saves anything uncommitted
+  (untracked files included, ignored ones not) as a commit on the worktree's
+  branch, keeps a detached `HEAD` as `hive-session/<id>-detached`, then
+  deletes the worktree's entry, prunes, and keeps any branch the clone's
+  `HEAD` lacks. If git fails, the removal fails, and the record and uid slot
+  are kept for a retry. The periodic sweep removes the worktrees of sessions
+  whose record is gone. It does not run while the sessions store has failed
+  to load, or while an unreadable copy is set aside for recovery, so an
+  empty-looking store can't remove every worktree. Pushing from a session
+  uses the person's own login; the hive's token never enters a session.
 - **Environment.** Built from an allowlist: no dashboard token, terminal, hub,
   heartbeat, ttyd or attach-key secret and no GitHub token reaches it.
 - **Logins are read-only copies, not links.** A fixed allowlist of bare login
@@ -492,7 +573,10 @@ importance:
   `geolocation=(), camera=(), microphone=(self)` (`src/deploy/nginx.conf`,
   `map $uri $hive_document_permissions_policy`); the ttyd terminal iframe
   (`/terminal/`) and `/api/` responses keep `microphone=()`, and no other origin
-  is ever granted the microphone.
+  is ever granted the microphone. The same document policy carries
+  `display-capture=(self)` for Inbox ● Record's tab audio
+  ([inbox-recording.md](/docs/hive/inbox-recording)); `/terminal/` and `/api/` keep
+  `display-capture=()`.
 
 Audit: `session_created`, `session_started` (the outcome of the background
 start), `session_closed`, `session_renamed`, `session_input` and

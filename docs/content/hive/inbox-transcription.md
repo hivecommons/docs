@@ -174,8 +174,9 @@ Transcription is spoke-local. Nothing about it is shared or central:
   account. No hive pays for, or sees, another hive's transcriptions.
 - **Your data volume.** The transcript is written only to this hive's data
   volume, under `connector-state/transcripts/<source>/<id>.json` (mode
-  `0600`, written atomically). It is not sent to the hub, to other spokes, or
-  back to the recording's source.
+  `0600`, written atomically), and into the item's Knowledge fact on the
+  same volume. It is not sent to the hub, to other spokes, or back to the
+  recording's source.
 - **Your budget.** Monthly minutes, a daily item cap and size/duration limits
   are configured per hive and checked before any audio is uploaded. With
   whisper the minutes budget limits CPU time on the hive, not money.
@@ -352,10 +353,16 @@ and the boot log line `inbox transcription enabled` name the hosts. See
 
 ## Upstream text wins
 
-The machine transcript is a fallback. If the source later produces its own
-summary or transcript (for example the owner runs transcription in the Plaud
-app), the Inbox shows the source's text and the machine transcript is no
-longer used. If the source is unreachable, the stored machine transcript
+The machine transcript is a fallback. When a run finishes, the hive also
+writes the transcript into the item's Knowledge fact (marked
+`attr_<x>_content: machine` with `attr_transcript_provider`), so knowledge
+search, nous and agents see the text, not only the Inbox; see
+[What knowledge an Inbox item becomes](/docs/hive/inbox-voice-sources#what-knowledge-an-inbox-item-becomes).
+Later syncs that still find no text upstream keep that fact as it is. If
+the source later produces its own summary or transcript (for example the
+owner runs transcription in the Plaud app), the next sync replaces the
+machine text in the fact, the Inbox shows the source's text and the machine
+transcript is no longer used. If the source is unreachable, the stored machine transcript
 still serves the item's content.
 
 ## Cost
@@ -384,3 +391,7 @@ speed for the estimate.
 | `GET` | `/api/inbox/{source}/{id}/content` | Dashboard auth | Falls back to the machine transcript, with `transcript_label` |
 
 See also [api-reference/knowledge.md](/docs/hive/api-reference/knowledge).
+
+## Transcribe first, then share
+
+Choosing RFC… or Knowledge from 🔗 Share → Hive on an item that has audio but no text starts a transcription for it (the Transcribe path above, with the same consent, budget and daily caps) and keeps the choice as a pending share. The share runs when the transcript completes; the item's progress bar reads "Transcribing, then → RFC". The pending share holds only the dialog choices (destination, who chose it, repository), never item text, and is stored with the item state, so a restart resumes it. If the transcription fails or is skipped, nothing is sent and the item shows the reason with a Retry in the Share menu.

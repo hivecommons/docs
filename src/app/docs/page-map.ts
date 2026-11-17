@@ -254,6 +254,10 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Meeting recordings in the Inbox: Zoom and Microsoft Teams': 'design/meeting-recordings.md' },
       { 'Inbox transcription': 'inbox-transcription.md' },
       { 'Meetings': 'meetings.md' },
+      { 'Betty on Zoom without a Zoom app: dial-in, desktop companion, live stream': 'design/meetings-without-a-zoom-app.md' },
+      { 'Recording into the Inbox': 'inbox-recording.md' },
+      { 'Add files and links to the Inbox': 'inbox-uploads.md' },
+      { 'Release-feed watcher': 'release-feeds.md' },
     ]
   }
 ]

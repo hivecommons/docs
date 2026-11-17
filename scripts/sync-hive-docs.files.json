@@ -372,5 +372,17 @@
   },
   {
     "source": "webhooks.md"
+  },
+  {
+    "source": "design/meetings-without-a-zoom-app.md"
+  },
+  {
+    "source": "inbox-recording.md"
+  },
+  {
+    "source": "inbox-uploads.md"
+  },
+  {
+    "source": "release-feeds.md"
   }
 ]

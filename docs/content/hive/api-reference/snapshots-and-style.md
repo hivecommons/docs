@@ -8,7 +8,7 @@ Part of the [Dashboard REST API reference](https://github.com/hivecommons/hive/b
 | Method | Path | Auth | Purpose | Source |
 |---|---|---|---|---|
 | `GET` | `/api/style` | Public | Sanitized custom dashboard CSS | `pkg/dashboard/api.go:47` |
-| `GET` | `/branding/custom.css` | Dashboard auth/session | Operator branding stylesheet override, read per request (see [branding](https://github.com/hivecommons/hive/blob/v5/src/docs/branding.md)) | `pkg/dashboard/server.go:1839` |
+| `GET` | `/branding/custom.css` | Dashboard auth/session | Operator branding stylesheet override, read per request (see [branding](https://github.com/hivecommons/hive/blob/v5/src/docs/branding.md)) | `pkg/dashboard/server.go:1862` |
 | `GET` | `/api/snapshot/frame-ancestors` | Public | Snapshot framing allowlist | `pkg/dashboard/api.go:83` |
 | `GET` | `/api/snapshot` | Public | Snapshot data | `pkg/dashboard/api.go:84` |
 | `GET` | `/snapshot` | Public | Public read-only snapshot page | `pkg/dashboard/api.go:85` |

@@ -550,7 +550,20 @@ not what it records:
   stage-regressed notes, the trusted-human 071 note and the duplicate-PR
   redirect are sections of a single comment marked `<!-- hive:status -->`.
   The comment is created the first time a note is due and PATCHed for every
-  later note; only the creation sends email.
+  later note; only the creation sends email. The auto-merge note ("merged by
+  Hive trusted-author auto-merge …" or "merged by Hive on behalf of …") is
+  the card's `auto-merge` section too, with its @-mentions neutralised, so
+  a merge no longer emails the author and every watcher; in `normal` it is
+  still its own comment. The review Follow-ups checklist (findings held
+  below `review.backlog.min_severity`) is the card's collapsible
+  `review-followups` section, ticks kept across passes (a PR that already
+  has the old Follow-ups comment keeps editing that one), and a 090
+  ready-for-human-merge entry whose only objection is the author's trust
+  tier is the card's `stage-ready` line (hivecommons/hive#18606). A merge
+  that waits on a specific step from a person (every 085 needs-decision
+  entry, and a held or manual-merge 090) still posts a comment of its own.
+  On the issue side the stage note naming the covering PR
+  (`issue-pr-link`) is a section of the issue's card in quiet mode too.
 - **No "no findings" reviews.** A reviewer whose whole body is the clean
   acknowledgement — or whose body says it has no findings while its verdict
   report approves with an empty findings list, as the plain `reviewer`
@@ -589,6 +602,11 @@ post on issues and merged PRs as comments of their own:
 - a contributor's **claim marker** (`<!-- hive:claim … -->`) posted by the
   contribute hub — claim readers scan every hive comment body for the
   marker, so the section is as authoritative as the comment was;
+- the sentinel's **informational notice** for a trusted author's PR (no
+  label, merge not blocked), as a `sentinel` section stamped
+  `<!-- hive-sentinel-notice <head> -->`. A sentinel **hold**
+  (`sentinel-alert` label, maintainer review required) is never folded: it
+  always posts its own `<!-- hive-sentinel -->` comment (hivecommons/hive#18453);
 - an agent's relayed **status notes**: `hive/awaiting-ci: …`, `Parking on
   stage/045-needs-decision: …` and `Already fixed …`. Any other relayed
   comment — a finding, a triage verdict with evidence, a question — is still
@@ -698,7 +716,10 @@ auto-merge lane (dashboard queue, self-authored App sweep, trusted bot authors,
 or trusted authors). Trusted authors (the Hive App, configured trusted bots and
 owner/trusted-author allow-list entries) default to an informational notice and
 audit/dashboard finding only; no alert label is added unless the operator opts
-into blocking them. A maintainer who removes the label keeps the PR clear until
+into blocking them. In `github.notifications.mode: quiet` (the default) that
+informational notice is a `sentinel` section of the PR's `hive:status` card,
+edited in place, rather than a comment; an alert that needs a maintainer always
+gets its own comment ([#18453](https://github.com/hivecommons/hive/issues/18453)). A maintainer who removes the label keeps the PR clear until
 the author pushes again: the sweep reads the clearance back from the alert
 comment it left for that head (alert comment present, label absent), so it
 survives a hub restart or a second replica and nothing else needs to be posted.
@@ -725,7 +746,7 @@ push re-arms it.
 |---|---|---|
 | `sentinel.enabled` | **on** when unset | `false` disables the sweep entirely. |
 | `sentinel.label` | `sentinel-alert` | Label added to untrusted flagged PRs (created red if missing). Neutral on purpose: it means "look closely", not "malicious". This configured label is also added to Hive's hold/exclude set and blocks Hive approval plus every auto-merge lane until a human removes it. |
-| `sentinel.trusted_authors_block` | `false` | When `false`, trusted author findings are notice-only: comment, audit/dashboard record, no label, no approval/merge block. Set `true` to add the blocking label for trusted authors too. |
+| `sentinel.trusted_authors_block` | `false` | When `false`, trusted author findings are notice-only: audit/dashboard record, no label, no approval/merge block. The notice is the `sentinel` section of the PR's `hive:status` card in `github.notifications.mode: quiet` (the default) and its own comment in `normal` mode. Set `true` to add the blocking label and post the alert comment for trusted authors too. |
 | `sentinel.sensitive_paths` | shipped defaults (`sentinel.DefaultSensitivePaths`) | Glob list (same syntax as `intent.guardrail_path_patterns`; `**` crosses directories) that **replaces** the defaults when set. Defaults cover OWNERS/CODEOWNERS/MAINTAINERS, SECURITY.md, GOVERNANCE.md, `.github/workflows/**`, actions, dependabot, codeql, rulesets, CI config, Makefile/Justfile, pre-commit hooks, `policies/**`, `hive.yaml*`, `gh-wrapper*`, proxy rules, Dockerfiles, `install.sh`, dependency manifests and lockfiles, release workflows, `.env*`/key material, `deploy/**`, Terraform, Helm/k8s manifests. |
 | `sentinel.disabled_behaviors` | empty | Rule names from the table above to switch off. Unknown names are rejected. |
 | `sentinel.exempt_logins` | empty | GitHub logins never flagged (e.g. a release bot). Use sparingly. |

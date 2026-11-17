@@ -7,8 +7,8 @@ Part of the [Dashboard REST API reference](https://github.com/hivecommons/hive/b
 
 | Method | Path | Auth | Purpose | Source |
 |---|---|---|---|---|
-| `GET` | `/api/beads` | Dashboard auth/session | Beads List | `pkg/dashboard/api.go:503` |
-| `GET` | `/api/beads/{agent}` | Dashboard auth/session | Beads List | `pkg/dashboard/api.go:504` |
-| `POST` | `/api/beads/{agent}` | Owner only | Beads Create | `pkg/dashboard/api.go:505` |
-| `POST` | `/api/beads/reset` | Owner only | Beads Reset | `pkg/dashboard/api.go:506` |
-| `POST` | `/api/beads/reset/{agent}` | Owner only | Beads Reset Agent | `pkg/dashboard/api.go:507` |
+| `GET` | `/api/beads` | Dashboard auth/session | Beads List | `pkg/dashboard/api.go:486` |
+| `GET` | `/api/beads/{agent}` | Dashboard auth/session | Beads List | `pkg/dashboard/api.go:487` |
+| `POST` | `/api/beads/{agent}` | Owner only | Beads Create | `pkg/dashboard/api.go:488` |
+| `POST` | `/api/beads/reset` | Owner only | Beads Reset | `pkg/dashboard/api.go:489` |
+| `POST` | `/api/beads/reset/{agent}` | Owner only | Beads Reset Agent | `pkg/dashboard/api.go:490` |
