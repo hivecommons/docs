@@ -128,6 +128,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Using Spektacular with Hive': 'spektacular-runs.md' },
       { 'The agent Terminal window': 'agent-terminal.md' },
       { 'Troubleshooting': 'troubleshooting.md' },
+      { 'Kick refusals': 'kick-refusals.md' },
       { 'Release channels': 'release-channels.md' },
       { 'Stable soak and promotion policy': 'stable-soak-policy.md' },
       { 'Backup and disaster recovery': 'backup-dr.md' },

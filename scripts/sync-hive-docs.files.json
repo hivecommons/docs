@@ -78,6 +78,9 @@
     "source": "troubleshooting.md"
   },
   {
+    "source": "kick-refusals.md"
+  },
+  {
     "source": "dashboard-sections.md",
     "comment": "Dashboard section help pages (hivecommons/docs#253, hivecommons/hive#10915)."
   },

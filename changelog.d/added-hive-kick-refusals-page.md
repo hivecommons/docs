@@ -1,0 +1,1 @@
+- The Hive docs now include a Kick refusals page (Operations section), synced from hivecommons/hive#18695, explaining `kick_refusal` and every reason a kick is refused.
