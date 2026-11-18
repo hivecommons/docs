@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "id": "GHSA-FC5Q-39XC-VJPF",
+    "package": "picomatch",
+    "reason": "ReDoS in picomatch extglob parsing (<= 4.0.7). No patched release exists yet (latest is 4.0.7); picomatch is only reached transitively via build-time glob matching on repo-controlled patterns, not user input. Re-review when a fix ships.",
+    "expires": "2026-12-18"
+  }
+]
