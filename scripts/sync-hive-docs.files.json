@@ -387,5 +387,17 @@
   },
   {
     "source": "release-feeds.md"
+  },
+  {
+    "source": "api-reference/customers.md"
+  },
+  {
+    "source": "design/customers.md"
+  },
+  {
+    "source": "inbox-input-methods.md"
+  },
+  {
+    "source": "ui-render-evidence.md"
   }
 ]

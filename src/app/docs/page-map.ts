@@ -259,6 +259,10 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Recording into the Inbox': 'inbox-recording.md' },
       { 'Add files and links to the Inbox': 'inbox-uploads.md' },
       { 'Release-feed watcher': 'release-feeds.md' },
+      { 'Dashboard REST API reference — Customers': 'api-reference/customers.md' },
+      { 'Customers: a profile per person and a customer graph': 'design/customers.md' },
+      { 'Input methods and the Inbox': 'inbox-input-methods.md' },
+      { 'UI render evidence': 'ui-render-evidence.md' },
     ]
   }
 ]
