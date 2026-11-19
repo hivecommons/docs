@@ -94,6 +94,7 @@ contributor is one of several sources of identity for a person.
 | `goals` | See section 8. |
 | `satisfaction` | See section 8. |
 | `notes` | Free text, written by people only. |
+| `profile` | Optional `real_name`, `organization`, `location` and `country`, each `{value, source, rule, at, by}`. `source` is `auto` (the person's own public GitHub profile name, company and location, fetched once on accept; the country derived offline from the location, rule `location`) or `manual` (a person typed it or cleared it; neither the fetch nor the location changes it; `auto` hands it back). `country` is an ISO 3166 alpha-2 code. Also `dismissed_affiliations`, the suggested organizations a person refused (at most 20). Nothing here comes from the hub. |
 | `merged_from` | Merge history, so a merge can be undone. |
 
 **Identity** `{kind, value, source, confidence, manual, at, by}`. Kinds:
@@ -320,6 +321,35 @@ manual, by whom), answering no pins the pair so it is not asked again. A hint
 between two customers is answered by merging them, which is the merge and split
 UI of a later PR.
 
+Step E also makes ONE request for the accepted login's public profile, before the
+search, and keeps only the name, company and location the person published
+(`profile` in section 4). It shares step E's switch, hourly budget and quota
+stand-down, spends one request of that budget, and is never run by the sweep. A
+suggested person has no profile fields until accepted. Forget deletes the fields
+with the person and export includes them. The hub's own records of the same people
+(name, company, country, notes, inferred affiliation) are not read or copied: that
+is the open question in section 15 and needs a consent decision first.
+
+Country and likely affiliation add no request of their own. The country is derived
+from the location text by a bundled table (country names and aliases, ISO codes, US
+states and Canadian provinces, major cities; `pkg/customers/country_data.go`), offline
+and deterministically. The last comma-separated piece decides, a bare two-letter code
+after a comma reads as a US state first unless a city of another country precedes it
+("Berlin, DE"), and "remote", "Earth" or an empty location give no country. It is a
+guess about free text: a small city with no state or country, or a location that is
+a joke, can be wrong or empty, so it is an automatic field a person overwrites or
+clears, and a hand-set or hand-cleared country is never touched. A likely
+affiliation is a view-time suggestion, never stored: the GitHub company text tidied
+(legal suffix and "@" dropped, a bare handle capitalized), or, while the organization
+is empty, the domain of an email identity a person confirmed by hand (never a
+free-mail or code-host domain, and the address itself is not shown). It carries its
+evidence ("from GitHub company field"), Accept writes it as a by-hand organization,
+Dismiss remembers the refusal on the profile. Public GitHub organization membership
+is deliberately not used: it is not fetched, and fetching it would be a new request.
+Notes are free text up to 4000 bytes, written by the owner and read-write users, never
+shown to a read-only user (not even on their own profile), part of the owner's export
+and deleted with the person on Forget.
+
 Step E, the budgeted GitHub search on accept, is built and opt-in.
 `customers.mention_search.enabled` defaults to **off** (env
 `HIVE_CUSTOMERS_MENTION_SEARCH_ENABLED`), because it asks GitHub about a person's
@@ -524,7 +554,7 @@ or switch **Customer avatars** off in Settings, Features; the list then shows
 initials and makes no request to github.com. The default is on, because the
 dashboard already loads GitHub avatars for contributors and sign-ins.
 
-[telemetry.md](https://github.com/hivecommons/hive/blob/v5/src/docs/telemetry.md) records the review of Hive's outbound paths
+[telemetry.md](/docs/hive/dashboard/data-collection-and-telemetry) records the review of Hive's outbound paths
 against the Linux Foundation telemetry policy, which says project software
 should not collect telemetry by default without review and prior consent. This
 feature adds no outbound path from the hive, which is what allows it to be on by default. The avatar request above is made by the viewer's browser to a site they already use, and has its own switch.
@@ -590,7 +620,8 @@ On a live hive:
 
 - Should a hub send a spoke the email and linked GitHub login it already holds
   for its users? It fills most blanks at once, but it is a hub change and a
-  consent question.
+  consent question. Decided in [customers-hub-consent.md](https://github.com/hivecommons/hive/blob/v5/src/docs/design/customers-hub-consent.md):
+  only on the person's per-hive consent, only values they entered, off by default.
 - Does `/data/customers` belong in backups? That moves personal data off the
   hive's volume.
 - Is the four-value satisfaction ordinal enough, or is a value above

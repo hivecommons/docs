@@ -9,7 +9,7 @@ away, you need one answer: **who can make Hive do what in my repo?** The
 mechanisms are documented in [security-model.md](/docs/hive/security-model), the
 [ACMM policy matrix](/docs/hive/acmm-policy-matrix),
 [agent-configuration.md](/docs/hive/agent-configuration#reporter-trust-who-filed-it-not-only-what-it-is-labelled)
-and [contributor-trust-and-roles.md](https://github.com/hivecommons/hive/blob/v5/src/docs/contributor-trust-and-roles.md). This
+and [contributor-trust-and-roles.md](/docs/hive/security/contributor-trust-and-roles). This
 page explains what the settings mean for a stranger filing an issue against
 your repo tomorrow morning.
 

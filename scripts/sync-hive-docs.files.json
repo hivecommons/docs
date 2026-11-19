@@ -20,7 +20,7 @@
   },
   {
     "source": "acmm-policy-matrix.md",
-    "comment": "Operations pages \u2014 single-sourced from hive src/docs (previously hand-copied into docs/content/hive and prone to drift; migrated to auto-sync)."
+    "comment": "Operations pages — single-sourced from hive src/docs (previously hand-copied into docs/content/hive and prone to drift; migrated to auto-sync)."
   },
   {
     "source": "running-at-level-6.md",
@@ -539,5 +539,38 @@
   {
     "source": "upstream-watch.md",
     "route": "operations/automation-and-review/upstream-watch"
+  },
+  {
+    "source": "ai-gateway-evaluation.md"
+  },
+  {
+    "source": "dashboard-ui-map.md"
+  },
+  {
+    "source": "editing-hive-yaml.md"
+  },
+  {
+    "source": "knowledge-entries.md"
+  },
+  {
+    "source": "knowledge/techdocs-assessment-evidence.md"
+  },
+  {
+    "source": "knowledge/techdocs-assessment-ownership.md"
+  },
+  {
+    "source": "outbound-prose.md"
+  },
+  {
+    "source": "quality-report.md"
+  },
+  {
+    "source": "research/preregistration-2026-10.md"
+  },
+  {
+    "source": "review-feedback-rules.md"
+  },
+  {
+    "source": "rfc-process.md"
   }
 ]

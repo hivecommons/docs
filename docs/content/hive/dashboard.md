@@ -81,7 +81,7 @@ via YAML tags.
 
 Every dashboard section title has a small **?** mark. Hovering or focusing it shows a one-sentence summary; clicking it (or pressing Enter) opens that section's entry in [Dashboard sections explained](/docs/hive/dashboard-sections), the plain-language help page for operators. The help sentences live in one table in `index.html` (`DASHBOARD_SECTION_HELP`), and `dashboardDocsHref` is the single place that builds every help address: a hive built from the `v6` branch or a `v6.x.y` tag opens the `v6` page, anything else opens `v5`. A guard test fails when a section has no help entry or its sentence drifts from the page.
 
-Settings fields use the same **?** mark, rendered by `settingHelpMark(page, anchor, label, tip)`: hovering or focusing it shows the setting's tooltip, and clicking it opens the guide that explains the setting, or the tab's entry in [Dashboard settings explained](/docs/hive/settings), through the same `dashboardDocsHref`. Clicking the mark never changes the setting.
+Settings fields use the same **?** mark, rendered by `settingHelpMark(page, anchor, label, tip)`: hovering or focusing it shows the setting's tooltip, and clicking it opens the guide that explains the setting, or the tab's entry in [Dashboard settings explained](/docs/hive/dashboard/dashboard-settings-explained), through the same `dashboardDocsHref`. Clicking the mark never changes the setting.
 
 ## Design system
 
@@ -207,7 +207,7 @@ Governor settings **Features → Review Gate** includes the owner-only
 edits `review.require_labels` through `/api/config/review`; on, the hive
 reviews only PRs carrying one of the labels (enforced in the reviewer kick
 list, the review dispatch planner and the hive-review relay — see
-[review-swarm.md](https://github.com/hivecommons/hive/blob/v5/src/docs/review-swarm.md#only-review-labelled-prs-reviewrequire_labels)).
+[review-swarm.md](/docs/hive/operations/automation-and-review/review-swarm#only-review-labelled-prs-reviewrequire_labels)).
 Off (the default) sends an empty list and every open PR stays reviewable.
 
 The cadence table starts each agent row with the same `1`/`0` Agent power
@@ -665,7 +665,7 @@ The badge is derived from Hive's own PR-claim evidence — the same source that 
 
 ## Review pipeline board
 
-The **Review** section opens with a separately collapsible **Pipeline** tile that shows every open PR as a card in the column for its review stage, from `GET /api/review/pipeline`: unreviewed, reviewing, changes requested, fixing, human hold, approved (merged and abandoned columns stay empty until the API returns those PRs). Each card shows the PR link, an agent or contributor marker, time in stage, reviewer chips, P0–P3 finding counts, the fix-loop counter (red once it is within one of the cap) and the next-action link. Filter by repo, author kind or stage; column headers carry counts. A ⚡ marker on the card means a webhook push or review request triggered the review of the current head (`trigger: event`), ⏳ that one is queued; see [Event-driven dispatch](https://github.com/hivecommons/hive/blob/v5/src/docs/review-swarm.md#event-driven-dispatch). The board refreshes every 30 seconds and keeps its scroll position. The sibling **Queue** tile is separately collapsible too, ranking the same open PRs in Hive’s suggested review order from `GET /api/review/queue` without hiding the Pipeline tile. A contributor PR the supersession sweep detected as superseded by a merged PR is tagged **superseded** there, with a link to the merged PR, whether or not `supersession_sweep.close_contributor_prs` is on; only when auto-close is on does the tag also show when the grace window ends and the sweep will close it, otherwise it reads "close as superseded or keep open" with no countdown. Owners get **Close now** and **Keep open** (adds `hive/keep-open`, which the sweep never auto-closes). Each queue row reflects the PR's `stage` from the stage-label store ([labels-and-control-signals.md](/docs/hive/labels-and-control-signals/stage-labels#stagestalled--nobody-is-working-this)): the `stage/stalled` label's tooltip reads "no activity for Xh — nobody is working this PR", a red **waiting on hive Xh** pill marks a PR past its stage dwell while the hive itself holds it (checks running or reviewer verdict pending — the reviewer lane, not the author, needs attention), and an **N hops, M back** pill carries the stage transition history (`stage.history[]`) in its tooltip, replacing the retired `stage/regressed` label.
+The **Review** section opens with a separately collapsible **Pipeline** tile that shows every open PR as a card in the column for its review stage, from `GET /api/review/pipeline`: unreviewed, reviewing, changes requested, fixing, human hold, approved (merged and abandoned columns stay empty until the API returns those PRs). Each card shows the PR link, an agent or contributor marker, time in stage, reviewer chips, P0–P3 finding counts, the fix-loop counter (red once it is within one of the cap) and the next-action link. Filter by repo, author kind or stage; column headers carry counts. A ⚡ marker on the card means a webhook push or review request triggered the review of the current head (`trigger: event`), ⏳ that one is queued; see [Event-driven dispatch](/docs/hive/operations/automation-and-review/review-swarm#event-driven-dispatch). The board refreshes every 30 seconds and keeps its scroll position. The sibling **Queue** tile is separately collapsible too, ranking the same open PRs in Hive’s suggested review order from `GET /api/review/queue` without hiding the Pipeline tile. A contributor PR the supersession sweep detected as superseded by a merged PR is tagged **superseded** there, with a link to the merged PR, whether or not `supersession_sweep.close_contributor_prs` is on; only when auto-close is on does the tag also show when the grace window ends and the sweep will close it, otherwise it reads "close as superseded or keep open" with no countdown. Owners get **Close now** and **Keep open** (adds `hive/keep-open`, which the sweep never auto-closes). Each queue row reflects the PR's `stage` from the stage-label store ([labels-and-control-signals.md](/docs/hive/labels-and-control-signals/stage-labels#stagestalled--nobody-is-working-this)): the `stage/stalled` label's tooltip reads "no activity for Xh — nobody is working this PR", a red **waiting on hive Xh** pill marks a PR past its stage dwell while the hive itself holds it (checks running or reviewer verdict pending — the reviewer lane, not the author, needs attention), and an **N hops, M back** pill carries the stage transition history (`stage.history[]`) in its tooltip, replacing the retired `stage/regressed` label.
 
 ## Hive activity monitor
 
@@ -857,7 +857,7 @@ The Reporter trust block also controls the opt-in `clanker_requested` policy, wh
 - **Comment addendum** textarea for `clanker_requested_addendum` (optional, max 1000 bytes).
 - A live **preview** of the comment text, updated as you type.
 
-`GET`/`PUT /api/config/governor` expose and validate `clankerRequested`, `clankerRequestedLabel` and `clankerRequestedAddendum`. See [Contributor trust tiers and delegated agent roles](https://github.com/hivecommons/hive/blob/v5/src/docs/contributor-trust-and-roles.md#clanker-requested-policy-for-outside-prs).
+`GET`/`PUT /api/config/governor` expose and validate `clankerRequested`, `clankerRequestedLabel` and `clankerRequestedAddendum`. See [Contributor trust tiers and delegated agent roles](/docs/hive/security/contributor-trust-and-roles#clanker-requested-policy-for-outside-prs).
 
 ## Appearance themes
 
@@ -940,4 +940,4 @@ to control requirements.
   and written only on Save. Mergers see the tab read-only.
 
 Details, including which settings can be toggled inline, are in
-[Compliance controls](https://github.com/hivecommons/hive/blob/v5/src/docs/compliance.md#using-the-compliance-tab).
+[Compliance controls](/docs/hive/security/compliance-controls#using-the-compliance-tab).

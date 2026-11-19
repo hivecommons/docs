@@ -16,14 +16,14 @@ You do not need to reach L6. At L6, permitted lanes can merge when automated che
 
 | Starting point | Action | Continue when |
 |---|---|---|
-| No hive; you want hosting | Open [Request a hive](https://hive.hivecommons.dev/get-started) and follow [Hosted Hub onboarding](/docs/hive/hosted-hub). Sign in with GitHub, supply the repository URL, and request a starting level. | An admin has approved and provisioned it; **My Hives** shows its dashboard URL. |
+| No hive; you want hosting | Open [Request a hive](https://hive.hivecommons.dev/get-started) and follow [Hosted Hub onboarding](/docs/hive/hub/hosted-hive-hub-onboarding). Sign in with GitHub, supply the repository URL, and request a starting level. | An admin has approved and provisioned it; **My Hives** shows its dashboard URL. |
 | No hive; you will operate it | Choose [Docker Compose](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-docker-compose.md), [Podman](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-podman.md), or [Kubernetes](https://github.com/hivecommons/hive/blob/v5/src/docs/kubernetes-deployment.md). Complete that guide's runtime, storage, network, and login setup first. | Your container is running and you can open its dashboard. |
 | You already have a dashboard URL | Sign in with the GitHub identity granted access by its owner. | You can see the welcome checklist and settings. |
 
 Before Step 0, have:
 
 - A repository on **GitHub.com or GitHub Enterprise**. GitLab, Gitea, and Forgejo are not supported for running a hive today.
-- For the App route, someone with permission to install/authorize it for that repository. You can request a hosted hive before installing the App; the request is not an App authorization. A self-hosted PAT deployment instead needs the [documented token scopes](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md#personal-access-token-pat-scopes).
+- For the App route, someone with permission to install/authorize it for that repository. You can request a hosted hive before installing the App; the request is not an App authorization. A self-hosted PAT deployment instead needs the [documented token scopes](/docs/hive/integrating-with-hive/github-app-setup#personal-access-token-pat-scopes).
 - Owner access for changing owner-only settings, or an owner who will perform those steps. Viewing a dashboard does not grant configuration rights.
 - A supported agent-backend login/subscription or a model gateway and credentials. Hosting the hive does not automatically authenticate its coding agents.
 
@@ -53,7 +53,7 @@ The hosted wizard offers L1–L3 and currently recommends L3; **do not assume yo
 None of the level guidance below works until your hive is connected to your git host. Do this in your **first session**:
 
 **Self-hosted with an already configured PAT?** Verify repository access using
-your runtime guide and the [required scopes](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md#personal-access-token-pat-scopes);
+your runtime guide and the [required scopes](/docs/hive/integrating-with-hive/github-app-setup#personal-access-token-pat-scopes);
 do not install a second App just to follow this checklist. The App instructions
 below are the normal hosted path. The reclaim warning applies to hosted hives,
 not an unmanaged standalone deployment.
@@ -62,7 +62,7 @@ not an unmanaged standalone deployment.
    - **From the dashboard (easiest):** click **Install Forge App** in the welcome checklist, or open **Governor Config → Forge App** and use the install link there. Grant the app access to your repo. Can't find the checklist? It is the **🧭 Guide** button in the top navbar (also *Getting Started* in the sidebar); any GitHub App / setup error the dashboard shows carries an *Open the 🧭 Guide* link that jumps straight to this step, which also prints the install URL for your GitHub host. If you see neither the Guide nor the Governor Config gear, your account has the read-only role — ask the hive owner to grant access.
    - **On GitHub.com:** the install button sends you to `github.com/apps/<app-slug>` — pick your org/repo and approve.
    - **On GitHub Enterprise (IBM, corporate):** the same flow lives on your **GHE host**, not github.com — the install page is `https://<your-ghe-host>/github-apps/<app-slug>`. Make sure your hive is pointed at your GHE host URL (Governor Config → Forge App shows which host is configured).
-   - **Self-hosting or creating the app yourself?** See the [GitHub App setup guide](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md) for app creation, permissions, and the `/gh-setup` flow.
+   - **Self-hosting or creating the app yourself?** See the [GitHub App setup guide](/docs/hive/integrating-with-hive/github-app-setup) for app creation, permissions, and the `/gh-setup` flow.
    - **On GitLab, Gitea, or Forgejo?** There is no Forge App to install: those forges are **not supported for running a hive** today, and the rest of this guide assumes GitHub. See [Forge setup: GitLab, Gitea, and Forgejo](https://github.com/hivecommons/hive/blob/v5/src/docs/forge-app-setup.md) for what is and is not implemented.
 2. **For hosted hives, finish setup promptly.** Unconfigured instances are reclaimed on a timer. Finish the Forge App install in your first session or your hive may be reaped — see [What if my hive disappeared?](#what-if-my-hive-disappeared-inactive-hive-reaping) below.
 3. **Verify the connection.** Check the App's auth state and repository access. On a hosted hive, allow a few minutes for the next heartbeat to report the new state. A heartbeat does not clear unrelated backend or configuration errors; standalone hives do not need a hub heartbeat.
@@ -73,7 +73,7 @@ not an unmanaged standalone deployment.
 
 ## Your first week (do exactly this)
 
-1. **Connect and authenticate.** Finish Step 0, then follow [hosted first-run setup](/docs/hive/hosted-hub#3-finish-first-run-setup-on-the-spoke-dashboard) for **Settings → Model Gateways** or the per-backend CLI login. A gateway's **Test** should report `OK — N models available`; a CLI backend must finish its login. Check errors rather than waiting for authentication to fix itself.
+1. **Connect and authenticate.** Finish Step 0, then follow [hosted first-run setup](/docs/hive/hub/hosted-hive-hub-onboarding#3-finish-first-run-setup-on-the-spoke-dashboard) for **Settings → Model Gateways** or the per-backend CLI login. A gateway's **Test** should report `OK — N models available`; a CLI backend must finish its login. Check errors rather than waiting for authentication to fix itself.
 2. **Confirm limits before work starts.** Check the ACMM badge and **Settings → Budget**. Set Total Tokens, Period (days), and Critical Percent. To observe without new issues or PRs, use L2. Leave supervisor paused and brainstorm unchanged for this first exercise.
 3. **Set cadences, then enable workers.** At L2, open the gear settings for scanner, quality, and guide. Set each available governor/load-mode cadence to **12h or 1d**, then un-pause them. Start with one agent if you want to distinguish its output. Check reviewer separately if enabled: it can post COMMENT-only reviews at L2, not approvals or merges.
 4. **Verify setup.** Allow 2–3 minutes for configuration/status propagation. Confirm App access, backend authentication, the applied level, and the saved cadence. A first run can take 5–10 minutes or a full cadence interval; a heartbeat alone does not mean work has run. Check Activity and authentication errors if no run appears.
@@ -287,7 +287,7 @@ If you see one of those `_DANGEROUSLY_RUN_UNCONFINED` variables mentioned in set
 
 This matters beyond backend choice, too: the hub-side Podman sandbox (`agent_sandbox`) is a separate, opt-in mechanism, and enabling it requires setting **both** the global `agent_sandbox.enabled` flag **and** a per-agent `sandbox.enabled` flag — the dashboard's Security tab only writes the global one, so turning that toggle on by itself does not sandbox any agent.
 
-See [sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md) for the full threat model, the complete per-backend matrix, and the hub-side sandbox setup.
+See [sandbox-isolation.md](/docs/hive/security/sandbox-isolation) for the full threat model, the complete per-backend matrix, and the hub-side sandbox setup.
 
 ## L4 — Issues and Security
 
@@ -331,7 +331,7 @@ These agents first become available at L5 and remain **paused by default** at L5
 1. Open **Settings → Project Observability**. Declare the stack your managed project actually runs and save. This may be OpenTelemetry, Prometheus, Grafana, a `ServiceMonitor`, or a commercial backend. Without that declaration, their PR-capable policies fail closed.
 2. Set each agent's cadence before un-pausing it; **24h** is a conservative start. Saving the observability declaration never changes cadences (#7261), so both steps are required.
 
-Leaving them paused is valid. See [Telemetry agent](/docs/hive/telemetry), [Operations agent](https://github.com/hivecommons/hive/blob/v5/src/docs/operations.md), and the `project_observability` block in [agent configuration](/docs/hive/agent-configuration).
+Leaving them paused is valid. See [Telemetry agent](/docs/hive/dashboard/data-collection-and-telemetry), [Operations agent](https://github.com/hivecommons/hive/blob/v5/src/docs/operations.md), and the `project_observability` block in [agent configuration](/docs/hive/agent-configuration).
 
 ### L5 review routine
 
@@ -417,7 +417,7 @@ to grant; remaining at a lower level is valid.
 ---
 
 For configuration beyond this first path, use [agent configuration](/docs/hive/agent-configuration),
-[settings](/docs/hive/settings), and the [documentation map](/docs/hive/documentation-map).
+[settings](/docs/hive/dashboard/dashboard-settings-explained), and the [documentation map](/docs/hive/documentation-map).
 
 ## What this guide doesn't cover (and why)
 

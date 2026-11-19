@@ -34,7 +34,7 @@ One card per repository Hive looks after, listing its open issues and pull reque
 - `project.forge` (or a repo's `project.repo_policies[].forge` / `forge_url` override) and the `gitlab:` or `gitea:` instance URL set the host label and links. See [Forges](/docs/hive/integrations/forges).
 - The `dashboard.issue_bands` settings change the band rules.
 - **Merge only on current base** ([#15335](https://github.com/hivecommons/hive/issues/15335)). A green `current-base` chip in the card header means the hive only merges a pull request there once its head contains the current base tip; a green head tested on an older base is updated with GitHub update-branch and merges when CI is green on the new head. The hive-wide default is the **Merge only on current base** switch under **Settings → Features → Auto-merge** (`auto_merge.require_current_base_default`, off by default; help text: "OFF by default. Before auto-merging in any lane, require the PR head to contain the current base tip; a green head tested on an older base is updated with GitHub update-branch and merges once CI is green on the new head. Costs one compare call per merge candidate. Per-repo overrides live on the repo card."). Each row under **Settings → Repos** carries the per-repo override — the **Merge only on current base** checkbox with an *inherits* marker, or an **inherit** button when the repo has its own value — written as `auto_merge.require_current_base` (on, also strict: a head the App cannot update is parked) or `auto_merge.skip_current_base` (off). `/api/status` carries the effective value per repository as `requireCurrentBase`.
-- See [Repository card legend, issue bands, and PR bands](/docs/hive/dashboard#repository-card-legend-issue-bands-and-pr-bands).
+- See [Repository card legend, issue bands, and PR bands](/docs/hive/dashboard/dashboard-page-reference#repository-card-legend-issue-bands-and-pr-bands).
 
 ## ACMM Eval
 
@@ -251,7 +251,7 @@ The people who lend their computers or AI helpers to your projects, and how far 
 
 **When it appears.** At autonomy level L2 and above. The autonomy level is how much Hive may do on its own, from L1 to L6.
 
-**Settings that change it.** Trust and roles are changed on each contributor card. See [Contributor trust and roles](https://github.com/hivecommons/hive/blob/v5/src/docs/contributor-trust-and-roles.md).
+**Settings that change it.** Trust and roles are changed on each contributor card. See [Contributor trust and roles](/docs/hive/security/contributor-trust-and-roles).
 
 ## Diagnostics
 
@@ -288,7 +288,7 @@ The raw text output of each worker, for following what it is doing line by line.
 
 **When it appears.** Never, on both v5 and v6. The dashboard always hides it.
 
-**Settings that change it.** No settings change this section. See [Agent logging](https://github.com/hivecommons/hive/blob/v5/src/docs/agent-logging.md).
+**Settings that change it.** No settings change this section. See [Agent logging](/docs/hive/operations/agent-and-governor-controls/agent-peer-awareness-logging).
 
 ## Agents
 
@@ -362,7 +362,7 @@ More about the line:
 
 **Sandboxed worker's last run.** A sandboxed worker's card also carries a **last run** line: when it ran, how long it took, whether it succeeded, and the pull request it opened. If the worker's own report said the run failed, or the sandbox exited with an error, Hive keeps any commits the run made off GitHub and the line reads `no PR opened: <reason>` — for example `no PR opened: agent report status=failed: RPM install returned 401`. The same line appears when a configured publish preflight (`publish.verify`, for example a whole-suite `pytest --collect-only`) failed after the run: `no PR opened: verify failed (1/2): uv run pytest --collect-only -q (exit 2)`, with the command's output tail in the tooltip. The full reason is in the line's tooltip and in the full log's outcome block, where each verify command has its own `---- verify: … ----` section.
 
-**Turning on Run in sandbox.** The **Run in sandbox** switch on a worker's General settings tab now asks where the sandbox settings come from before it saves: the hive-wide sandbox defaults (Governor → Security) when they name an image, or a copy of another worker that already runs in a sandbox. A copy leaves out that worker's own publish checks (`publish.verify`). If there are no usable defaults and no worker to copy from, the switch shows a red message saying what is missing and the save is refused, instead of leaving a worker that fails every round. When the switch takes effect, the worker's terminal session is stopped and it waits idle for its next sandboxed round. Turning the switch off keeps the settings for next time. See [Credential-free sandbox isolation](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md#current-wiring).
+**Turning on Run in sandbox.** The **Run in sandbox** switch on a worker's General settings tab now asks where the sandbox settings come from before it saves: the hive-wide sandbox defaults (Governor → Security) when they name an image, or a copy of another worker that already runs in a sandbox. A copy leaves out that worker's own publish checks (`publish.verify`). If there are no usable defaults and no worker to copy from, the switch shows a red message saying what is missing and the save is refused, instead of leaving a worker that fails every round. When the switch takes effect, the worker's terminal session is stopped and it waits idle for its next sandboxed round. Turning the switch off keeps the settings for next time. See [Credential-free sandbox isolation](/docs/hive/security/sandbox-isolation#current-wiring).
 
 **Example.** A card says "needs login". You click **Login** and sign in again. Another card says `Now: working — no issue or pull request yet · started 50 min ago`. That worker has changed nothing through the hive for 50 minutes, so you open its log to see what it is doing.
 

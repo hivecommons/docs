@@ -307,6 +307,17 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Customers: a profile per person and a customer graph': 'design/customers.md' },
       { 'Input methods and the Inbox': 'inbox-input-methods.md' },
       { 'UI render evidence': 'ui-render-evidence.md' },
+      { 'Evaluation: fronting the model backend with a generic AI gateway': 'ai-gateway-evaluation.md' },
+      { 'Dashboard UI map': 'dashboard-ui-map.md' },
+      { 'Editing `hive.yaml`': 'editing-hive-yaml.md' },
+      { 'Repository knowledge entries (`src/docs/knowledge/`)': 'knowledge-entries.md' },
+      { 'techdocs-assessment-evidence': 'knowledge/techdocs-assessment-evidence.md' },
+      { 'techdocs-assessment-ownership': 'knowledge/techdocs-assessment-ownership.md' },
+      { 'Outbound text: no em-dashes': 'outbound-prose.md' },
+      { 'Quality report and README badges': 'quality-report.md' },
+      { 'Pre-registration: does Hive improve outcomes, and at what cost? (2026-10)': 'research/preregistration-2026-10.md' },
+      { 'Reviewer-stated rules from review feedback': 'review-feedback-rules.md' },
+      { 'RFC and proposal process': 'rfc-process.md' },
     ]
   }
 ]

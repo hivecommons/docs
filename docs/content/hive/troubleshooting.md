@@ -145,7 +145,7 @@ When no token or App credentials are usable, Hive starts the dashboard but disab
 - `GitHub App configured without credentials — hive starting in dashboard-only mode. Install the app and provide installation_id + key to enable agents.`
 - `persisted user token is invalid or expired`
 
-Check the configured `github:` block, the `HIVE_GITHUB_TOKEN` secret/env var, or the GitHub App `app_id`, `installation_id`, and `key_file`. For App setup, use the dashboard banner or `/gh-setup`; details are in [GitHub App setup](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md). Note the dashboard calls this the **Forge App** — the app for your forge (your source control system, e.g., GitHub, GitHub Enterprise, GitLab, or Gitea) — under Governor Config → Forge App. GitLab, Gitea, and Forgejo are **not supported for running a hive** today; see [Forge setup: GitLab, Gitea, and Forgejo](https://github.com/hivecommons/hive/blob/v5/src/docs/forge-app-setup.md).
+Check the configured `github:` block, the `HIVE_GITHUB_TOKEN` secret/env var, or the GitHub App `app_id`, `installation_id`, and `key_file`. For App setup, use the dashboard banner or `/gh-setup`; details are in [GitHub App setup](/docs/hive/integrating-with-hive/github-app-setup). Note the dashboard calls this the **Forge App** — the app for your forge (your source control system, e.g., GitHub, GitHub Enterprise, GitLab, or Gitea) — under Governor Config → Forge App. GitLab, Gitea, and Forgejo are **not supported for running a hive** today; see [Forge setup: GitLab, Gitea, and Forgejo](https://github.com/hivecommons/hive/blob/v5/src/docs/forge-app-setup.md).
 
 ## Workflow-file pushes are rejected by GitHub App tokens
 
@@ -200,7 +200,7 @@ human should run after applying it.
 Hosted hives that never complete setup or go inactive are **reaped on a timer**: the hive vanishes from the hub's Usage view and the old `https://<id>.hive.hivecommons.dev` URL times out permanently. This is expected reclamation, not an outage. Recovery:
 
 1. **Request a new hive** from the hub's `/get-started` wizard (hosted hub: `https://hive.hivecommons.dev/get-started`, the **Request a hive** button). The old URL will not come back.
-2. **Install the Forge App immediately** on the new hive — the GitHub App on GitHub.com, or the same app on your GHE host for enterprise. See [GitHub App setup](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md) and the [getting-started guide's Step 0](/docs/hive/getting-started#step-0--before-you-start-do-this-first).
+2. **Install the Forge App immediately** on the new hive — the GitHub App on GitHub.com, or the same app on your GHE host for enterprise. See [GitHub App setup](/docs/hive/integrating-with-hive/github-app-setup) and the [getting-started guide's Step 0](/docs/hive/getting-started#step-0--before-you-start-do-this-first).
 3. An installed Forge App plus regular heartbeats keeps the new hive from being reaped again.
 
 On GitHub Enterprise, a 404 from the install link usually means the hive is pointed at github.com instead of your GHE host (or vice versa) — check which source control host is configured under Governor Config → Forge App.
@@ -329,7 +329,7 @@ notifications:
     topic: my-hive-alerts
 ```
 
-The Docker Compose `NTFY_SERVER` / `NTFY_TOPIC` environment variables are just passthrough for this block and, when set, override the YAML values. Fields are `notifications.ntfy.server` and `notifications.ntfy.topic` (both required); Slack and Discord use `notifications.slack.webhook` and `notifications.discord.webhook`. See [Notifications](https://github.com/hivecommons/hive/blob/v5/src/docs/notifications.md) for the full schema.
+The Docker Compose `NTFY_SERVER` / `NTFY_TOPIC` environment variables are just passthrough for this block and, when set, override the YAML values. Fields are `notifications.ntfy.server` and `notifications.ntfy.topic` (both required); Slack and Discord use `notifications.slack.webhook` and `notifications.discord.webhook`. See [Notifications](/docs/hive/dashboard/notifications) for the full schema.
 
 To debug:
 
@@ -811,7 +811,7 @@ problem, and the recovery is:
 Within that tick the hive **promotes** the token you just logged in with to its
 durable store and then moves the fleet onto it: agents whose `backend_auth`
 reads `unlicensed`, `token-expired`, or `forbidden` (see
-[fleet-health.md](https://github.com/hivecommons/hive/blob/v5/src/docs/fleet-health.md#agent-backend-auth-health-canary-6558)) are
+[fleet-health.md](/docs/hive/hub/fleet-health#agent-backend-auth-health-canary-6558)) are
 relaunched onto the new credential, and healthy agents get it pushed into their
 session environment for their next relaunch. You should not have to restart
 agents by hand.

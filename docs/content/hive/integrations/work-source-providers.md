@@ -53,7 +53,7 @@ Before applying one of these examples:
 
 For a trial, record the previous source and settings first. Restore them through the same dashboard/deployment path afterward. Changing the listing source does not undo code changes or complete work already assigned.
 
-**Linear `assigned_only: true` requires a connected Linear agent.** It is not simply “tasks assigned to the API-key owner”; configuration fails closed without the connected-agent identity. Complete [Linear agent integration](https://github.com/hivecommons/hive/blob/v5/src/docs/linear-agent.md) first, or leave this optional filter off for the trial.
+**Linear `assigned_only: true` requires a connected Linear agent.** It is not simply “tasks assigned to the API-key owner”; configuration fails closed without the connected-agent identity. Complete [Linear agent integration](/docs/hive/integrating-with-hive/linear-agent-integration) first, or leave this optional filter off for the trial.
 
 ```yaml
 governor:
@@ -121,7 +121,7 @@ Use adapter-local HTTP/GraphQL fakes and table fixtures. Existing patterns cover
 
 - Auth and secrets: resolve whole-value environment references at use time so dashboard overlays can store `${NAME}` without persisting literal credentials (`src/pkg/worksource/factory.go:211`).
 - Rate limits: page at the provider maximum where documented. Linear and GitHub Projects use 100-item GraphQL pages (`src/pkg/worksource/linear.go:90`, `src/pkg/worksource/github_projects.go:55`); Jira uses `jiraSearchPageSize = 100` (`src/pkg/worksource/jira.go:19`).
-- Webhooks vs polling: primary work sources are polled by the governor through `ListIssues`; Linear's webhook-backed agent sessions are a separate integration documented in [Linear agent integration](https://github.com/hivecommons/hive/blob/v5/src/docs/linear-agent.md).
+- Webhooks vs polling: primary work sources are polled by the governor through `ListIssues`; Linear's webhook-backed agent sessions are a separate integration documented in [Linear agent integration](/docs/hive/integrating-with-hive/linear-agent-integration).
 - Identity mapping: always preserve source-native IDs in `ExternalID`, and route to a target repo through config rather than guessing.
 
 ## Gaps

@@ -328,7 +328,7 @@ v5 and v6 spokes) tracking one repo all stay on webhook mode.
   branch is the pushed branch. `issues` `opened`/`labeled`/`unlabeled`
   mark the issue dirty and wake evaluation; `reopened` wakes evaluation too.
   To select the scanner for newly seen actionable issues, configure a
-  top-level [CEL trigger](https://github.com/hivecommons/hive/blob/v5/src/docs/cel-triggers.md#run-the-scanner-for-newly-seen-github-issues)
+  top-level [CEL trigger](/docs/hive/operations/automation-and-review/cel-triggers#run-the-scanner-for-newly-seen-github-issues)
   matching `event.kind == "issue.opened"`. Agent Channels is not a webhook
   installer and only supports the governor `kick` runtime.
 - `pull_request` `opened`/`synchronize`/`reopened` also hands the PR to the
@@ -383,7 +383,7 @@ v5 and v6 spokes) tracking one repo all stay on webhook mode.
 - `pull_request` `opened`, `reopened`, `synchronize`, `ready_for_review` and
   `review_requested` deliveries also queue an early review dispatch when
   `review.event_driven` is on; see
-  [Event-driven dispatch](https://github.com/hivecommons/hive/blob/v5/src/docs/review-swarm.md#event-driven-dispatch).
+  [Event-driven dispatch](/docs/hive/operations/automation-and-review/review-swarm#event-driven-dispatch).
 - **A failed check reacts within seconds, not at the next sweep.** A
   `check_run` (`completed`, conclusion `failure`/`timed_out`), `check_suite`
   (`failure`/`timed_out`) or `status` (`failure`/`error`) delivery is
@@ -473,7 +473,7 @@ v5 and v6 spokes) tracking one repo all stay on webhook mode.
   the PR (a new head) or a hive restart (the ledger is in memory) lets the
   sweep attempt it again. The sweep uses
   the App token, so it needs **Actions: Read and write** on the App
-  ([github-app-setup.md](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md)); it runs alongside the
+  ([github-app-setup.md](/docs/hive/integrating-with-hive/github-app-setup)); it runs alongside the
   older `/ok-to-test` path, in which the contributor lane posts a comment
   and the repository's own `hive-ok-to-test` workflow approves with its
   `GITHUB_TOKEN` — operators who want to stay on Actions: Read and that
@@ -843,7 +843,7 @@ curl -s 'http://127.0.0.1:6060/debug/pprof/goroutine?debug=1' | head  # parked g
 
 | Name | Purpose |
 |---|---|
-| `HIVE_GITHUB_TOKEN` | Main PAT fallback when `github.token` is empty; also used for token identity/fleet stats fallback. Wrong-scope tokens fail with generic 403s at request time — see [github-app-setup.md](https://github.com/hivecommons/hive/blob/v5/src/docs/github-app-setup.md#personal-access-token-pat-scopes) for the required scopes per ACMM tier. |
+| `HIVE_GITHUB_TOKEN` | Main PAT fallback when `github.token` is empty; also used for token identity/fleet stats fallback. Wrong-scope tokens fail with generic 403s at request time — see [github-app-setup.md](/docs/hive/integrating-with-hive/github-app-setup#personal-access-token-pat-scopes) for the required scopes per ACMM tier. |
 | `GH_APP_KEY_FILE` | GitHub App private-key path fallback when `github.key_file` is empty. |
 | `HIVE_GITHUB_ETAG_CACHE_MAX_MB` / `HIVE_GITHUB_ETAG_CACHE_MAX_ENTRIES` | Size the shared GitHub ETag response cache (defaults `128` MiB compressed / `8192` entries); win over `github.etag_cache_max_mb` / `github.etag_cache_max_entries`. See [GitHub API quota](#github-api-quota). |
 | `HIVE_DASHBOARD_TOKEN` | Shared dashboard/API token fallback for `dashboard.auth_token`. Any non-empty string is accepted with no strength check — generate one with `openssl rand -hex 32`; see [env-vars.md](/docs/hive/env-vars#generating-and-rotating-hive_dashboard_token). |

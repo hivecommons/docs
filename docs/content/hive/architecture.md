@@ -9,6 +9,8 @@ Hive checks a reported problem, assigns an agent, and applies the configured
 review and merge gates. That example describes a permitted workflow, not what
 every ACMM level allows.
 
+Hive is the work-governance plane for AI coding agents, not a model gateway or inference server; see [what Hive is and is not](https://github.com/hivecommons/hive/blob/v5/src/docs/what-is-hive.md#what-hive-is-and-is-not).
+
 Hive is AI-agent orchestration for open-source projects. A single Go binary
 enumerates GitHub issues and PRs, classifies them, and dispatches work to AI
 coding agents (Claude, Copilot, Codex, Antigravity, Goose) on adaptive cadences governed by
@@ -457,7 +459,7 @@ flowchart LR
 - Log output is wrapped by `pkg/logscrub`, which redacts recognized GitHub token and JWT-like strings from messages and textual attributes (strings, errors, Stringers, TextAppenders, and TextMarshalers), resolving LogValuers and recursively scrubbing slog groups. See [Security notes](https://github.com/hivecommons/hive/blob/v5/src/docs/security.md) for guarantees and limits.
 - Network exposure and TLS termination are documented in [Network and port requirements](https://github.com/hivecommons/hive/blob/v5/src/docs/network-requirements.md) and [TLS setup](https://github.com/hivecommons/hive/blob/v5/src/docs/tls-setup.md).
 - `/terminal` is served by `ttyd`, which invokes `deploy/ttyd-tmux.sh` to attach to the selected `hive-<agent>` tmux session as the socket-owning UID. This is required when agents run under per-agent users and tmux rejects attaches from the proxy user.
-- `deploy/hive-panes.sh` backs a read-only peer-observation workflow: it reads pluk JSONL logs from `/var/run/pluk/logs`, skips the calling agent, strips terminal escapes, and prints recent output without opening another agent's tmux socket. See [Agent peer-awareness logging](https://github.com/hivecommons/hive/blob/v5/src/docs/agent-logging.md) for the log format, attachment conditions, and retention.
+- `deploy/hive-panes.sh` backs a read-only peer-observation workflow: it reads pluk JSONL logs from `/var/run/pluk/logs`, skips the calling agent, strips terminal escapes, and prints recent output without opening another agent's tmux socket. See [Agent peer-awareness logging](/docs/hive/operations/agent-and-governor-controls/agent-peer-awareness-logging) for the log format, attachment conditions, and retention.
 
 ---
 
@@ -506,5 +508,5 @@ flowchart TB
 [landscape.md](/docs/hive/landscape) ·
 [manual-provisioning.md](/docs/hive/manual-provisioning) ·
 [cross-cluster-migration.md](https://github.com/hivecommons/hive/blob/v5/src/docs/cross-cluster-migration.md) ·
-[trajectory-review.md](https://github.com/hivecommons/hive/blob/v5/src/docs/trajectory-review.md) ·
+[trajectory-review.md](/docs/hive/operations/automation-and-review/trajectory-review) ·
 [design/knowledge-system.md](https://github.com/hivecommons/hive/blob/v5/src/docs/design/knowledge-system.md)*

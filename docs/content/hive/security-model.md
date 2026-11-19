@@ -72,6 +72,7 @@ are enabled on a given hive.
 | `ioscan` scanning and canaries (default on) | prompt injection, secret leakage | `src/pkg/ioscan` | `ioscanEnabled`, `ioscanFailMode` in `GET /api/config/governor` |
 | Trajectory review (default on) | goal drift | `src/crux/trajectory` | `governor.trajectory.enabled` |
 | Policy proxy and repo allowlist | credential theft, out-of-scope writes | `src/crux/proxy/rules.go` | `403` with `X-Hive-Proxy-Blocked` |
+| Authorization decision seam, shadow mode (opt-in, enforces nothing) | undetected drift between a gate and its declared policy | `src/crux/authz`, `HIVE_AUTHZ_SHADOW` | `authz shadow` log lines; no behaviour change either way |
 | Forced egress through the proxy (iptables) | proxy bypass | `src/deploy/entrypoint.sh` | boot log; no `HIVE_PROXY_ADVISORY_OK` |
 | Tiered GitHub tokens per agent mode | blast radius of a leaked token | `src/crux/agentmode`, `src/crux/agent/manager_tokens.go` | token tier on the agent card |
 | Proxy-side credential injection (opt-in) | token theft | `HIVE_PROXY_INJECT_GH_AUTH` | `security.credentialInjection` in governor config |
@@ -95,6 +96,44 @@ are enabled on a given hive.
 | Log scrubbing | secrets in logs | `src/crux/logscrub` | redacted patterns in logs |
 | Supply-chain guards | supply chain | `.github/workflows/*.yml`, `src/Dockerfile` | PR checks |
 | DCO on every commit | unattributed code | `src/scripts/check-dco-trailers.sh` | DCO check on PR |
+
+### GraphQL repository scope
+
+The GitHub MITM proxy applies the **same per-agent repository scope predicate**
+to attributable GraphQL mutations as to REST writes, independently of autonomy
+mode. GraphQL queries are not scope-restricted: duplicate detection, linking,
+search and cross-repository lookups continue to work. The selected operation
+(`operationName`, when present), its arguments and variable defaults determine
+which mutation inputs are inspected; comment bodies and unused variables are
+not repository evidence.
+
+Mutation targets can name a repository directly (including
+`repositoryNameWithOwner` or `repository(owner:, name:)` arguments), or use a
+repository/issue/PR/comment node ID. The proxy learns ID-to-repository mappings
+from successful GitHub GraphQL responses (identity or gzip), following repository
+selections and their arguments, aliases and fragments. The bounded in-memory
+cache is isolated by agent, shared across that agent's connections and lost
+on proxy restart; it holds at most 8,192 entries and resets when full. Responses
+larger than 4 MiB on the wire or after decompression, and unsupported encodings,
+are relayed normally but do not seed the cache. Requests alone
+cannot seed it. Scope changes take effect on the next write, without invalidating
+the ID cache. Every resolved target is checked, including batched mutations.
+An out-of-scope target returns REST's `403`, `X-Hive-Proxy-Blocked: true`,
+`X-Hive-Proxy-Reason: agent_repo_scope` and standard denial body/violation audit.
+The internal control-plane caller retains its exemption.
+
+**Unresolved mutation targets remain fail-open for repository scope only.**
+This preserves ID-only `gh api graphql` calls, cold-cache/restarted sessions,
+and document/response shapes the proxy cannot attribute. Normal `gh` lookup →
+create/comment/edit/close/merge sequences are covered by document fixtures and
+proxy integration tests; the preceding reads populate the cache even when the
+repository is outside the agent's scope. Fail-closed is intentionally not chosen:
+there is no guarantee every legitimate ID-only write has a preceding observable
+lookup. Existing mode, write-surface and auto-merge gates still apply to unresolved
+writes. Consequently this best-effort attribution is **not a complete security
+boundary against an agent deliberately using previously unseen IDs**; token
+repository permissions remain necessary to bound that case. This change does
+not extend repository pause or the hive-wide REST allowlist to GraphQL.
 
 ## 3. Agent runtime isolation
 
@@ -133,7 +172,7 @@ container or a Kubernetes Job that holds no credentials. Both the global
 `agent_sandbox.enabled` and the per-agent `sandbox.enabled` must be set. A
 push broker outside the sandbox scans committed diffs for secrets and
 protected-path edits, mints a short-lived token and pushes the branch. See
-[sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md).
+[sandbox-isolation.md](/docs/hive/security/sandbox-isolation).
 
 ## 4. Context and memory
 
@@ -143,7 +182,7 @@ knowledge store holds typed facts with sources and confidence. Neither stores
 conversation text. Agents are primed with a bounded set of facts in the task
 prompt; they cannot query the store, so a poisoned fact cannot be amplified.
 Untrusted text is scanned by `ioscan` before it reaches a prompt
-([ioscan.md](https://github.com/hivecommons/hive/blob/v5/src/docs/ioscan.md)). Inbox item text (voice and meeting transcripts,
+([ioscan.md](/docs/hive/security/ioscan)). Inbox item text (voice and meeting transcripts,
 summaries, messages) is fenced in a nonce-tagged `<untrusted-inbox-data>`
 envelope before it reaches spektacular or an agent prompt
 ([inbox-voice-sources.md](/docs/hive/inbox-voice-sources)); canaries are planted per task and agent output is
@@ -195,9 +234,30 @@ compression ratio) and an XML decoder that refuses DTDs and unknown entities
 (no XXE). Links dropped onto the Inbox are
 fetched by the hive under an SSRF guard: http/https only, no credentials in
 the URL, the hive's own DNS lookup with the connection pinned to the checked
-address (any private, loopback, link-local, CGNAT, multicast, ULA or metadata
-answer refuses the link), every redirect re-checked (at most 3), the body
-size- and time-capped, and the environment proxy never used.
+address (any answer in a refused range, listed below, refuses the link), every
+redirect re-checked (at most 3), the body size- and time-capped, and the
+environment proxy never used.
+
+The same address classifier, `pkg/netguard`, is the single source of truth for
+every server-side fetch of a URL a user or remote party supplies: the dashboard
+and hub `isPrivateURL` guards and the Inbox link fetcher. An address is judged
+by what it is, not how it is written. Decimal, octal, hex and short IPv4
+spellings are parsed by value, and IPv4-mapped, NAT64 (`64:ff9b::/96`) and 6to4
+(`2002::/16`) addresses are judged by the IPv4 address they carry. A host made
+only of dot-separated numbers that is not a valid IPv4 literal, such as
+`1.2.3.4.5`, is refused before any DNS lookup. A name that resolves to even one
+refused address is refused, and a missing or failing resolver fails closed. The
+refused ranges are:
+
+| Family | Ranges |
+|---|---|
+| IPv4 | `0.0.0.0/8`, `10.0.0.0/8`, `100.64.0.0/10` (carrier-grade NAT, which includes the `100.100.100.200` metadata address), `127.0.0.0/8`, `169.254.0.0/16` (link-local, cloud metadata), `172.16.0.0/12`, `192.0.0.0/24`, `192.0.2.0/24`, `192.88.99.0/24`, `192.168.0.0/16`, `198.18.0.0/15`, `198.51.100.0/24`, `203.0.113.0/24`, `224.0.0.0/4` (multicast), `240.0.0.0/4` (reserved, includes broadcast) |
+| IPv6 | `::/128`, `::1/128`, `100::/64` (discard-only), `2001::/32` (Teredo), `2001:db8::/32` (documentation), `fc00::/7` (unique local), `fe80::/10` (link-local), `fec0::/10` (site-local), `ff00::/8` (multicast) |
+
+Names ending in `localhost` are refused as well. There is no opt-in to allow
+`100.64.0.0/10`: no registered hive or hub URL uses that range. The
+authoritative list is the switch and the `specialPurposePrefixes` table in
+`src/pkg/netguard/netguard.go`.
 
 ### Customers: people the hive has seen
 
@@ -345,11 +405,49 @@ on the same evidence as a literal IP. Set
 destination is intended; it lifts the guard for all three legs at once, and the
 proxy warns at boot when it is set.
 
+**Server-side fetches of user- or spoke-chosen URLs.** The dashboard's agent
+import and workflow spec fetches, the hub's hive config proxy and webhook
+relay to a spoke's self-reported dashboard URL, and knowledge document imports
+check the URL before fetching and then dial through a pinned transport
+(`netguard.PinnedDialer`): the name is resolved once per connection, every
+answer must pass the same classifier, and the connection goes to an address
+that was checked, never to the name. A name that rebinds between the check and
+the dial is refused, and because the check runs per connection it covers
+every redirect hop as well. Two limits are deliberate. When an
+`HTTP(S)_PROXY` applies, the connection is to the operator's proxy and the
+proxy resolves the target, the same limit as the agent proxy's chained
+upstream leg, so the pre-fetch check and the redirect policy are the controls
+there. Operator-configured gateway endpoints and the fixed-host `/api/style`
+fetch are not pinned: a gateway may legitimately sit on a private address, and
+redirects off either are still checked.
+
 **Hub-to-spoke channel.** Heartbeats carry a per-hive bearer key derived from
 the hub master secret and are compared in constant time. The payload is
 telemetry only: health, version, agent and governor summaries and 24-hour
 token counts. No credential leaves a spoke in a heartbeat. The hub delivers
 configuration, including App credentials for hosted spokes, in the response.
+
+**Authorization decision point (shadow mode).** Several gates decide whether
+a write may happen. They sit in different places, and the
+[design record](https://github.com/hivecommons/hive/blob/v5/src/docs/design/authorization-decision-point.md) proposes one shared
+point for them. The first slice is a measurement, and it is off by default.
+Set `HIVE_AUTHZ_SHADOW=true` to turn it on.
+
+With it on, a small checker re-derives one existing decision. That decision is
+the push broker's check for an empty push or a protected path. The checker
+runs after the broker has already decided. Hive compares the two answers and
+keeps one short event for each check. It logs any difference.
+
+The shadow enforces nothing. The broker stays the only authority, so a push
+goes through or is refused exactly as before. Nothing acts on the checker's
+answer. An event holds names, counts and codes. It never holds a request
+body, a diff, a file, a list of paths or a credential. Free text in an event is
+scrubbed and cut to a fixed length.
+
+The seam is meant to fail closed once it enforces, and that rule is already
+written down and tested. An error or crash in the checker counts as a deny. A
+request with a missing required field also counts as a deny. In this phase
+those are only log lines, not refusals.
 
 ## 6. Code admission
 
@@ -375,7 +473,7 @@ Hive runs deterministic gates that do not depend on the agent's own claims:
 
 Every merge leaves a review evidence bundle: canonical JSON of what was
 reviewed and which checks and verdicts were seen, hashed and optionally
-Ed25519-signed. See [review-evidence.md](https://github.com/hivecommons/hive/blob/v5/src/docs/review-evidence.md). Check the
+Ed25519-signed. See [review-evidence.md](/docs/hive/hub/review-evidence-bundle). Check the
 enforcing mode: `intent.enforce: true` blocks; shadow and report-only modes
 do not.
 
@@ -392,7 +490,7 @@ do not.
   `contributor` automatically after five completed pull-request tasks, to
   `trusted` by operator grant, and to `merger` or `advisor` by maintainer
   decision. Tiers do not decay. See
-  [contributor-trust-and-roles.md](https://github.com/hivecommons/hive/blob/v5/src/docs/contributor-trust-and-roles.md).
+  [contributor-trust-and-roles.md](/docs/hive/security/contributor-trust-and-roles).
 * **Claims and leases** are fenced by task generation, so no issue is held
   by two contributors at once. The lease protocol is formally modelled.
 * **Author kind, not author claim.** Pull-request authors are classified
@@ -435,6 +533,19 @@ ratchet test fails on any new direct GitHub write outside the package.
 compares each agent's assigned intent with the last 120 lines of its rendered
 terminal transcript and pauses the agent on divergence. It fails open if the
 reviewer is unavailable.
+
+**Session taint (observe only, off by default).** `session_taint.enabled`
+turns on a recorder that remembers which coarse labels an agent session has
+accrued (today: a canary hit sets `secret`) and, when that session later asks
+the issue, comment, PR or review relay to write, records which rule would have
+held the write. It writes a log line and an audit entry (`session_taint_label`,
+`session_taint_would_act`) and keeps bounded in-memory counters; it never
+blocks, holds, restricts or alters a request or an action, and it stores
+labels, counts and ids only, never a credential or any content. A restart
+starts every session clean. It is a measurement step toward the design in
+[design/session-taint.md](https://github.com/hivecommons/hive/blob/v5/src/docs/design/session-taint.md); no enforcement exists, so
+it adds no protection yet and must not be read as a control. Reads Hive cannot
+see (local files, shell output, direct provider traffic) produce no label.
 
 **Audit trails.** The dashboard audit log records every dashboard and API
 mutation, merge decision, sentinel finding and watchdog action to
@@ -637,58 +748,61 @@ importance:
   session in with an account of their own, and that login becomes the hive's
   when it is newer. The audit entry is the record of it, and a dashboard
   sign-in puts the hive back on the operator's account.
-  The other vendors' files are still plain copies, refresh token included
-  where the vendor stores one. Gemini's Google refresh token and the Copilot
-  CLI token do not rotate. Codex's ChatGPT login (`.codex/auth.json`) and an
-  OpenCode OAuth entry (`opencode/auth.json`) do, so a session that refreshes
-  its copy holds the only valid login; for these two the hive **adopts** that
-  login back into the shared file the agents link to
-  ([#18740](https://github.com/hivecommons/hive/issues/18740)). Codex: the
-  session's file was written after the shared one, holds a ChatGPT login
-  with a different refresh token and records a later `last_refresh`, and the
-  shared file itself holds a ChatGPT login (an API-key login does not rotate
-  and is never replaced). OpenCode, per provider entry: both entries are
-  `oauth`, the session's has a different refresh token and a later
-  `expires`, and the session's file was written after the shared one; only
-  those entries are replaced, every other entry of the shared file is kept,
-  and a provider the shared file does not hold is not added. Only those
-  fields and modification times decide; token values are never logged. The
-  replaced file is kept as `auth.json.stale-<UTC time>`, the new one keeps the
-  old one's mode (and owner, where the hive may set it), and
-  `user_session_login_adopted` names the session, trigger, vendor and file.
-  It runs when the Claude check runs, deletion included: a newer login that
-  cannot be adopted keeps the session. Unlike Claude, a session still holds a
-  copy that can refresh, on purpose. Both CLIs keep the refresh token as a
-  field their login file schema requires (from their source, not yet
-  confirmed on a live install) (Codex: `tokens.refresh_token`; OpenCode:
-  `refresh` of an `oauth` entry), so a copy with that field removed is read
-  as a corrupt or logged-out login, and one with a placeholder fails at its
-  first refresh: either would sign the person out of the session, which is
-  worse than the window it closes, and hive has no way to route a CLI's
-  refresh through the shared file. The adoption above is therefore the
-  safety net and the shared file stays the single owner: an adoption only
-  ever writes the shared file, never the session's copy, and the hive never
-  replaces a shared file that changed after it was compared, so a session
-  refresh and an agent refresh of the same token within one poll cannot
-  leave two diverged logins for long; the shared file converges on the newer
-  one at the next poll. If that file is ever needed again, the stale file the
-  adoption kept (`auth.json.stale-<UTC time>`, next to the shared login, same
-  mode) holds the login it replaced.
+  Codex's ChatGPT login (`.codex/auth.json`) and an OpenCode OAuth entry
+  (`opencode/auth.json`) rotate too, and follow the same three rules
+  ([#18740](https://github.com/hivecommons/hive/issues/18740)). A session
+  gets them **without a refresh token**: the key stays (Codex:
+  `tokens.refresh_token`; OpenCode: `refresh` of an `oauth` entry), because
+  both CLIs require it in their login file, but its value is empty. Both CLIs
+  accept an empty value (from their sources, Codex 0.170.0 and OpenCode v1;
+  the live check below confirms it on a real install): the CLI keeps using
+  the access token, and a refresh it attempts fails without rotating
+  anything. Every other field is copied as it is. So the shared file, which
+  each agent links to, is the only refreshable holder of the grant, and only
+  the agents' CLIs refresh it; a session refresh and an agent refresh can no
+  longer race. The hive replaces a session's copy, atomically and as the
+  session's uid, when the shared file was written after it. A session
+  therefore depends on an agent or a sign-in refreshing that login before
+  its access token expires. As a safety net, a complete login that is in a
+  session home anyway (a full copy from an earlier release, refreshed there,
+  or a person signing in inside the session) is **adopted** into the shared
+  file when it is strictly newer. Codex: the session's file was written
+  after the shared one, holds a ChatGPT login with a different refresh token
+  and records a later `last_refresh`, and the shared file itself holds a
+  ChatGPT login (an API-key login does not rotate and is never replaced).
+  OpenCode, per provider entry: both entries are `oauth`, the session's has a
+  different refresh token and a later `expires`, and the session's file was
+  written after the shared one; only those entries are replaced, every other
+  entry of the shared file is kept, and a provider the shared file does not
+  hold is not added. Only those fields and modification times decide; token
+  values are never logged. The replaced file is kept as
+  `auth.json.stale-<UTC time>`, the new one keeps the old one's mode (and
+  owner, where the hive may set it), `user_session_login_adopted` names the
+  session, trigger, vendor and file, and the session is put back on a
+  refresh-less copy. A full copy that carries the shared file's own refresh
+  token is put on a refresh-less copy too; a refresh token the shared file
+  does not hold that is not newer is the session's own login and is left
+  alone. It runs when the Claude check runs, deletion included: a newer login
+  that cannot be adopted keeps the session. The hive never replaces a shared
+  file that changed after it was compared, so an agent refresh that lands
+  during a check is never overwritten. Gemini's Google refresh token and the
+  Copilot CLI token do not rotate and are still plain copies.
   Manual check, needs a person and a real install (not run in CI, so the
   assumed file formats stay unconfirmed until it is done,
   [#18740](https://github.com/hivecommons/hive/issues/18740)): on a hive with
   a signed-in Codex and OpenCode, (1) start a session, confirm
   `.codex/auth.json` and `opencode/auth.json` in its home match the shared
-  files' shape (compare key names only, never print values); (2) in the
-  session force a refresh (Codex: `codex login status` after setting an
-  older `last_refresh`; OpenCode: wait past `expires`) and confirm the next
-  poll writes the shared file, leaves an `auth.json.stale-*` beside it and
-  audits `user_session_login_adopted` with vendor `codex` or `opencode`;
+  files' shape (compare key names only, never print values); (2) confirm
+  the refresh keys in the session's copies are present and empty, that the
+  CLI in the session still works, and that once its access token expires
+  (Codex: a request past the token's expiry; OpenCode: past `expires`) its
+  refresh attempt fails without changing the shared file and without an
+  `auth.json.stale-*` or a `user_session_login_adopted` entry;
   (3) confirm an agent of that vendor is still logged in; (4) remove the
   session and confirm the shared login still works; (5) grep the hive log
   for the access and refresh token values: there must be none. Attach a
-  redacted real file, with token values replaced, as the test fixture. For all of these vendors a resume
-  no longer overwrites a file the session's CLI rewrote after the shared one
+  redacted real file, with token values replaced, as the test fixture. For Gemini and Copilot a resume no
+  longer overwrites a file the session's CLI rewrote after the shared one
   was written.
 - **Terminal access is bound.** ttyd listens on loopback without a secret a
   session uid could not read (its `-c` credential is visible in `/proc`), so
@@ -831,6 +945,11 @@ until code-owner review is required in branch protection.
 ## 11. What Hive does not do yet
 
 * **Rootless containers cannot enforce the egress gate.**
+* **Nothing remembers what a session has read.** Pattern scanning checks each
+  outgoing message on its own, so a reworded copy of something an agent read
+  earlier passes. Session taint is designed for this
+  ([design/session-taint.md](https://github.com/hivecommons/hive/blob/v5/src/docs/design/session-taint.md)); only its observe-only
+  recorder exists, and it does not block anything.
 * **The proxy inspects GitHub API traffic only.** Other destinations are
   tunnelled. Use Kubernetes NetworkPolicies for full egress control.
 * **The L5 `hold` label is applied by agent policy.** The hard guarantee at
@@ -884,7 +1003,7 @@ relaxing gates.
 ## Compliance
 
 Hive holds no SOC 2, FedRAMP, ISO 27001 or other certification.
-[compliance.md](https://github.com/hivecommons/hive/blob/v5/src/docs/compliance.md) maps the controls above to SOC 2 requirements
+[compliance.md](/docs/hive/security/compliance-controls) maps the controls above to SOC 2 requirements
 and lists the requirements Hive cannot cover.
 
 ## Reporting vulnerabilities

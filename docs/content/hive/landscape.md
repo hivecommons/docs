@@ -151,7 +151,7 @@ Hive's [gh-aw sample](https://github.com/hivecommons/hive/blob/v5/src/deploy/gh-
 report-only issue triage with no merge rights. Keep existing gh-aw workflows
 when adopting Hive. Hive dispatching gh-aw as an external host is **not
 implemented**; see
-[backend support tiers](https://github.com/hivecommons/hive/blob/v5/src/docs/backend-support-tiers.md#github-agentic-workflows-on-ramp-not-a-cli-backend).
+[backend support tiers](/docs/hive/operations/agent-and-governor-controls/agent-backend-support-tiers#github-agentic-workflows-on-ramp-not-a-cli-backend).
 
 ## Focused comparison: maintenance, forge and managed agents
 
@@ -219,7 +219,7 @@ was published. Linked source versions have their own commit dates.
 | [Claude Code v2.1.316](https://github.com/anthropics/claude-code/releases/tag/v2.1.316) — Oct 31 | Hive already pins 2.1.316 in [main image][hive-image] and [contributor image][hive-contributor-image]. [Launcher][hive-launch] uses `--model`, unattended permissions and write/host deny flags. Notes fix process cleanup and `claude -p` reporting; they do not establish removal of those launch flags. | **No release-note break identified; already pinned.** Do not bump again. Permission honoring, readiness and output behavior still require executed CI smoke evidence; an existing pin is not a passing smoke result. |
 | [Goose v1.57.0](https://github.com/aaif-goose/goose/releases/tag/v1.57.0) — Oct 28 | Already pinned in both images above. Hive emits `goose run -s [--model …]` ([launcher][hive-launch]); tagged [CLI source][goose-cli] (source Oct 27) retains run input, model override and `-s` interactive behavior. Release's supplied-session-ID and ACP changes do not demonstrate removal of that path. | **Inspected launch contract retained.** No version change. Resume/log extraction is a separate seam, previously verified against 1.52.0 ([Hive resume contract][hive-resume]); 1.57.0 resume and confinement were not smoke-tested here. T1 pod credentials do not imply local sandboxing. |
 | [OpenCode v2.2.5](https://github.com/anomalyco/opencode/releases/tag/v2.2.5) — Oct 30 | Hive's [shell contract][hive-backends] uses `--auto` and local `OPENCODE_PERMISSION` host-state denials. Tagged [run handler][opencode-run] (source Oct 30) still passes model and auto/yolo settings into execution. Notes describe `bash` → `shell` tool-name handling with the same permissions. | **Inspected model/auto seam retained; denial semantics unverified.** Check existing local-posture tests and a credential-free permission fixture before promoting a new pin; do not infer that a tool alias bypasses denials or that deny-listing is an OS sandbox. |
-| [Cline SDK `sdk/sdk/v0.2.0`](https://github.com/cline/cline/releases/tag/sdk/sdk/v0.2.0) — Oct 26 | No `cline` in Hive's [15 CLI backend identities][hive-cli-list]. Notes change session reattachment, capability routing and SDK packaging; none is an implemented Hive SDK contract. | **Not an integrated engine; no current launcher to break.** No automatic SDK adoption. Any future integration must satisfy the [existing backend acceptance bar](https://github.com/hivecommons/hive/blob/v5/src/docs/backend-support-tiers.md) or external-host admission contract, including credentials, cancellation and evidence. |
+| [Cline SDK `sdk/sdk/v0.2.0`](https://github.com/cline/cline/releases/tag/sdk/sdk/v0.2.0) — Oct 26 | No `cline` in Hive's [15 CLI backend identities][hive-cli-list]. Notes change session reattachment, capability routing and SDK packaging; none is an implemented Hive SDK contract. | **Not an integrated engine; no current launcher to break.** No automatic SDK adoption. Any future integration must satisfy the [existing backend acceptance bar](/docs/hive/operations/agent-and-governor-controls/agent-backend-support-tiers) or external-host admission contract, including credentials, cancellation and evidence. |
 
 Existing guards include launch-command fixtures, backend list parity and
 contributor-local posture tests. The
@@ -243,7 +243,7 @@ returns on investment or approved roadmap changes.
 2. **Integrate with existing gh-aw jobs rather than replace them.** Lowest-risk
    entry is the [report-only sample](https://github.com/hivecommons/hive/blob/v5/src/deploy/gh-aw/README.md). Broader dispatch
    stays behind the existing [external-workflow admission design](https://github.com/hivecommons/hive/blob/v5/src/docs/design/external-workflow-admission.md)
-   and [acceptance bar](https://github.com/hivecommons/hive/blob/v5/src/docs/backend-support-tiers.md#github-agentic-workflows-on-ramp-not-a-cli-backend):
+   and [acceptance bar](/docs/hive/operations/agent-and-governor-controls/agent-backend-support-tiers#github-agentic-workflows-on-ramp-not-a-cli-backend):
    checked receipts, a way to cancel, and refusal of stages that can write.
    Benefit: reuse Actions work; cost: real checks on who may run what,
    not a CLI name added to a list. No dispatch adapter is shipped by this doc.
@@ -355,7 +355,7 @@ work-source adapters.
 By default Hive agents share one container, separated by Unix user. An
 opt-in sandbox mode runs each task in its own rootless Podman container or
 Kubernetes Job with no credentials at all; pushes go through a broker. See
-[sandbox isolation](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md) and the
+[sandbox isolation](/docs/hive/security/sandbox-isolation) and the
 [security model](/docs/hive/security-model#3-agent-runtime-isolation).
 
 The project is evaluating stronger isolation runtimes. One candidate is
@@ -370,7 +370,7 @@ a hive spoke. No integration exists today.
 | Project | Isolation unit | Checked |
 | --- | --- | --- |
 | Hive (default) | Shared container, per-user separation | this repo |
-| Hive (opt-in) | Rootless container or K8s Job per task, no credentials | [sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md) |
+| Hive (opt-in) | Rootless container or K8s Job per task, no credentials | [sandbox-isolation.md](/docs/hive/security/sandbox-isolation) |
 | Fullsend | One sandbox per agent role, policy in `.fullsend/` | [architecture](https://github.com/fullsend-ai/fullsend/blob/main/docs/architecture.md) |
 | gh-aw | Actions runner, read-only by default | [README](https://github.com/github/gh-aw) |
 | Symphony | Workspace per issue; not a sandbox by itself | [SPEC.md](https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/SPEC.md) |
@@ -431,4 +431,4 @@ not an assumption that hosted services lack fleets or explicit policy.
 - Hub/spoke and contributor compute: [architecture](/docs/hive/architecture#8-hub--spoke), [manual provisioning](/docs/hive/manual-provisioning).
 - Proxy write checks: [architecture](/docs/hive/architecture#5-layered-guardrails-defense-in-depth), [ADR-0002](/docs/hive/adr/0002-mitm-proxy-network-enforcement).
 - Work sources: [work-sources.md](/docs/hive/work-sources).
-- Isolation: [sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md), [security model](/docs/hive/security-model#3-agent-runtime-isolation).
+- Isolation: [sandbox-isolation.md](/docs/hive/security/sandbox-isolation), [security model](/docs/hive/security-model#3-agent-runtime-isolation).

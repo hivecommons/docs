@@ -5,7 +5,7 @@
 Status: Accepted (retroactive)
 
 For the operator-facing config reference (`mint:` block, key lifecycle, and
-the trust boundary stated plainly), see [Token mint](https://github.com/hivecommons/hive/blob/v5/src/docs/token-mint.md).
+the trust boundary stated plainly), see [Token mint](/docs/hive/security/token-mint).
 
 ## Context
 

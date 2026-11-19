@@ -7,7 +7,7 @@ Status: Accepted (phase 1 OpenShell implemented, runtime opt-in; measured on LKE
 ## Context
 
 By default Hive agents share one container, separated by Unix user. The opt-in
-sandbox ([sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md), #2804) runs a kick in a
+sandbox ([sandbox-isolation.md](/docs/hive/security/sandbox-isolation), #2804) runs a kick in a
 rootless Podman container or, with `sandbox.runtime: job`, a Kubernetes Job
 (#6311). Both are ordinary containers: the boundary is the runtime's default
 seccomp profile and namespaces, and network confinement in `restricted` mode is
@@ -200,7 +200,7 @@ moves to `Accepted`:
 Phase 1 landed in hivecommons/hive#17646 (epic #17642) as
 `sandbox.runtime: openshell`, `src/crux/sandbox/openshell.go`, configured
 under `agent_sandbox.openshell` — see
-[sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md#running-sandboxed-kicks-in-an-openshell-sandbox)
+[sandbox-isolation.md](/docs/hive/security/sandbox-isolation#running-sandboxed-kicks-in-an-openshell-sandbox)
 for the operator view and [deploy/openshell.md](https://github.com/hivecommons/hive/blob/v5/src/deploy/openshell.md) for
 the cluster side. Writing it against the real SDK moved four assumptions in
 this record:
@@ -234,7 +234,7 @@ egress leaves through `atenet-router` under an `EgressPolicy`, and every actor
 holds a SPIFFE identity issued through Kubernetes pod certificates. It was not
 in the 2026-10-25 comparison; the write-up that led here is the Substrate
 vs. crux research note, and the operator view is in
-[sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md#running-sandboxed-kicks-in-a-substrate-actor)
+[sandbox-isolation.md](/docs/hive/security/sandbox-isolation#running-sandboxed-kicks-in-a-substrate-actor)
 and [deploy/substrate.md](https://github.com/hivecommons/hive/blob/v5/src/deploy/substrate.md). Like OpenShell it is
 opt-in and inert unless selected.
 

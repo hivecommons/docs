@@ -52,7 +52,7 @@ Absent or `type: ""` behaves exactly like existing hives with no
 (`pkg/config/config.go:1336-1348`, `pkg/worksource/factory.go:15-89`).
 
 This page documents all four. Linear has its own deeper guide —
-[Linear agent integration](https://github.com/hivecommons/hive/blob/v5/src/docs/linear-agent.md) — for the two-way agent-session
+[Linear agent integration](/docs/hive/integrating-with-hive/linear-agent-integration) — for the two-way agent-session
 integration (webhooks, session acknowledgement, writing back to Linear);
 this page covers only the read side (`work_source.linear`) for parity with
 the other three.
@@ -91,7 +91,7 @@ filters (`require_labels`, `hold_labels`, `teams[].repo` / `states`,
 `project_keys` / `jql`). The hidden `<!-- spek:publish … -->` marker in each
 body keeps a child on the direct-fix path, skips the clarity score, carries the
 RFC link into the kick and marks the RFC itself as an umbrella Hive never
-claims; see [spektacular.md → Publish hand-off](/docs/hive/integrations/spektacular#publish-hand-off).
+claims; see [spektacular.md → Publish hand-off](/docs/hive/operations/automation-and-review/spektacular-stage-runner#publish-hand-off).
 
 ## Run stages (`run_stages: true`)
 
@@ -122,7 +122,7 @@ currently working is not offered again, and `implement` is listed only once the
 run's imported plan is approved. The hive binary wires that accessor during
 dashboard boot; if the accessor is unavailable, the additive source fails
 closed by listing no run stages. The Spektacular (Spek) stage runner that advances the
-lease is described in [spektacular.md](/docs/hive/integrations/spektacular).
+lease is described in [spektacular.md](/docs/hive/operations/automation-and-review/spektacular-stage-runner).
 
 </details>
 
@@ -322,7 +322,7 @@ the Linear agent app to already be connected (`linearagent.StoredViewerID`);
 without a connected app it is a startup error, not "enumerate everything"
 (`factory.go:58-67`).
 
-See [Linear agent integration](https://github.com/hivecommons/hive/blob/v5/src/docs/linear-agent.md) for the OAuth app setup,
+See [Linear agent integration](/docs/hive/integrating-with-hive/linear-agent-integration) for the OAuth app setup,
 webhook wiring, `LINEAR_CLIENT_ID`/`LINEAR_CLIENT_SECRET`/
 `LINEAR_WEBHOOK_SECRET`, and how agents write back to Linear.
 
@@ -485,7 +485,7 @@ Review findings below the blocking line (`review.severity.block_at`), and cited 
 | `linear` | `linear` | An issue on the team mapped to the PR's repo (`teams[].repo`), in `linear_state` when set. Labels that already exist on the team are applied. |
 | `jira` | `jira` | A Task in the first `project_keys` project, moved to `jira_status` when set. Labels have their whitespace replaced with `-`. |
 
-If the destination's work source is not active, or cannot be built (for example a missing `api_key`), the hive files a GitHub issue with the `agent/reviewer` label and logs why. Items are de-duplicated per repo by finding fingerprint. When another PR raises the same finding, the hive comments on the existing item instead of filing a new one. Findings below `review.backlog.min_severity` (default `P2`) are held in one Follow-ups comment on the PR instead of filed; new findings sharing a perspective are filed as one checklist item; and at most `max_per_pr` items (default 3) are filed per PR over its lifetime. See [review-swarm.md](https://github.com/hivecommons/hive/blob/v5/src/docs/review-swarm.md#backlog-routing) for the fingerprint, item body and audit entries.
+If the destination's work source is not active, or cannot be built (for example a missing `api_key`), the hive files a GitHub issue with the `agent/reviewer` label and logs why. Items are de-duplicated per repo by finding fingerprint. When another PR raises the same finding, the hive comments on the existing item instead of filing a new one. Findings below `review.backlog.min_severity` (default `P2`) are held in one Follow-ups comment on the PR instead of filed; new findings sharing a perspective are filed as one checklist item; and at most `max_per_pr` items (default 3) are filed per PR over its lifetime. See [review-swarm.md](/docs/hive/operations/automation-and-review/review-swarm#backlog-routing) for the fingerprint, item body and audit entries.
 
 ## Open questions
 
