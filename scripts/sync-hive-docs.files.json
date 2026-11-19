@@ -441,10 +441,6 @@
     "route": "dashboard/spoke-dashboard"
   },
   {
-    "source": "dashboard-ui-map.md",
-    "route": "dashboard/dashboard-ui-map"
-  },
-  {
     "source": "fleet-health.md",
     "route": "hub/fleet-health"
   },

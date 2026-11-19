@@ -162,7 +162,6 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
     title: 'Dashboard',
     items: [
       { 'Spoke dashboard': 'dashboard.md' },
-      { 'Dashboard UI map': 'dashboard-ui-map.md' },
       { 'Dashboard settings': 'settings.md' },
       { 'Notifications': 'notifications.md' },
       { 'Public snapshots': 'snapshots.md' },
