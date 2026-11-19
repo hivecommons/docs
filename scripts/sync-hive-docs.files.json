@@ -20,7 +20,7 @@
   },
   {
     "source": "acmm-policy-matrix.md",
-    "comment": "Operations pages — single-sourced from hive src/docs (previously hand-copied into docs/content/hive and prone to drift; migrated to auto-sync)."
+    "comment": "Operations pages \u2014 single-sourced from hive src/docs (previously hand-copied into docs/content/hive and prone to drift; migrated to auto-sync)."
   },
   {
     "source": "running-at-level-6.md",
@@ -399,5 +399,21 @@
   },
   {
     "source": "ui-render-evidence.md"
+  },
+  {
+    "source": "dashboard.md",
+    "comment": "Dashboard pages the dashboard help links and Ask AI answers rely on (hivecommons/hive#19182)."
+  },
+  {
+    "source": "settings.md"
+  },
+  {
+    "source": "hosted-hub.md"
+  },
+  {
+    "source": "hub-deployment.md"
+  },
+  {
+    "source": "telemetry.md"
   }
 ]

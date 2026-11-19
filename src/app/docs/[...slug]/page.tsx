@@ -7,6 +7,7 @@ import { escapeStrayBraces } from '@/lib/escapeStrayBraces'
 import { sanitizeHtmlForMdx, removeCommentPatterns } from '@/lib/sanitizeHtml'
 import { rewriteRelativeImagePaths } from '@/lib/rewriteImagePaths'
 import { rewriteRelativeDocLinks } from '@/lib/rewriteDocLinks'
+import { DESIGN_RECORD_ATTRIBUTE, DESIGN_RECORD_VALUE, isDesignRecordPage } from '@/lib/designRecord'
 import { remarkStripMdxJs } from '@/lib/remarkStripMdxJs'
 import { buildPageMap, docsContentPath, getContentPath, isGeneralSectionFile } from '../page-map'
 import { CURRENT_VERSION, type ProjectId } from '@/config/versions'
@@ -388,6 +389,9 @@ export default async function DocPage({ params }: Props) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(integrationsJsonLd()) }}
         />
+      ) : null}
+      {isDesignRecordPage(projectId, filePath) ? (
+        <div hidden {...{ [DESIGN_RECORD_ATTRIBUTE]: DESIGN_RECORD_VALUE }} />
       ) : null}
       {compilationFailed || !MDXContent ? <pre>{content}</pre> : <MDXContent />}
     </Wrapper>

@@ -129,6 +129,8 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'The agent Terminal window': 'agent-terminal.md' },
       { 'Troubleshooting': 'troubleshooting.md' },
       { 'Kick refusals': 'kick-refusals.md' },
+      { 'Hosted Hive Hub onboarding': 'hosted-hub.md' },
+      { 'Self-hosted hub deployment': 'hub-deployment.md' },
       { 'Release channels': 'release-channels.md' },
       { 'Stable soak and promotion policy': 'stable-soak-policy.md' },
       { 'Backup and disaster recovery': 'backup-dr.md' },
@@ -140,6 +142,8 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
     title: 'Dashboard',
     items: [
       { 'Dashboard sections explained': 'dashboard-sections.md' },
+      { 'Dashboard settings explained': 'settings.md' },
+      { 'Dashboard page reference': 'dashboard.md' },
       { 'Dashboard glossary': 'dashboard-glossary.md' },
       { 'Dashboard overview and metrics': 'dashboard-sections/overview-and-metrics.md' },
       { 'Dashboard workflow and agents': 'dashboard-sections/workflow-and-agents.md' },
@@ -170,6 +174,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Security threat model': 'security-threat-model.md' },
       { 'Hive trust levels vs Copilot assisted permissions': 'copilot-permissions-comparison.md' },
       { 'ACMM policy matrix': 'acmm-policy-matrix.md' },
+      { 'Data collection and telemetry': 'telemetry.md' },
     ]
   },
   {
