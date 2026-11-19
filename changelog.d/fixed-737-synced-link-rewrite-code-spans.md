@@ -1,0 +1,1 @@
+- The docs sync no longer leaves GitHub-relative links unrewritten when a synced page has a stray or mismatched backtick: inline code spans are now matched per paragraph and by backtick run length, which unbreaks the `Check internal doc links` gate on `main` (hivecommons/docs#737).

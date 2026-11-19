@@ -147,4 +147,24 @@ describe("rewriteMarkdownLinks fences", () => {
       `Use \`[x](./guide.md)\` or \`![img](./a.png)\`, then [y](${BLOB}/docs/guide/guide.md).\n`
     );
   });
+
+  it("matches code spans by backtick run length", () => {
+    const out = rewriteMarkdownLinks(
+      "Use ``a ` [x](./guide.md) ` b`` then [y](./guide.md).\n",
+      opts
+    );
+    expect(out).toBe(
+      `Use \`\`a \` [x](./guide.md) \` b\`\` then [y](${BLOB}/docs/guide/guide.md).\n`
+    );
+  });
+
+  it("does not let a stray backtick swallow links in later paragraphs", () => {
+    const out = rewriteMarkdownLinks(
+      "A lone ` backtick here.\n\nSee [x](./guide.md) and `code`.\n\nThen [y](./guide.md).\n",
+      opts
+    );
+    expect(out).toBe(
+      `A lone \` backtick here.\n\nSee [x](${BLOB}/docs/guide/guide.md) and \`code\`.\n\nThen [y](${BLOB}/docs/guide/guide.md).\n`
+    );
+  });
 });

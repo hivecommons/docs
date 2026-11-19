@@ -169,7 +169,7 @@ For the open issues and pull requests the hives you can see are working on,
 open **📡 Fleet activity** (next to **🔬 Evidence**) or
 <https://hive.hivecommons.dev/activity>. It is a read-only board that refreshes
 every 15 seconds and says which hives are stale or not reporting. See
-[Hub Fleet activity page](/docs/hive/hub/fleet-activity).
+[Hub Fleet activity page](https://github.com/hivecommons/hive/blob/v5/src/docs/hub-fleet-activity.md).
 
 ## Common problems and fixes
 
@@ -188,5 +188,5 @@ every 15 seconds and says which hives are stale or not reporting. See
   <https://github.com/hivecommons/hive/issues> and include the hive name, repo,
   and the visible fleet/dashboard error text. Do not include API keys, private
   keys, cookies, or tokens.
-- For self-hosted hub operation, use the [self-hosted hub deployment guide](/docs/hive/hub/self-hosted-hub-deployment),
-  [fleet health guide](/docs/hive/hub/fleet-health), and [troubleshooting guide](/docs/hive/troubleshooting).
+- For self-hosted hub operation, use the [self-hosted hub deployment guide](/docs/hive/hub-deployment),
+  [fleet health guide](https://github.com/hivecommons/hive/blob/v5/src/docs/fleet-health.md), and [troubleshooting guide](/docs/hive/troubleshooting).

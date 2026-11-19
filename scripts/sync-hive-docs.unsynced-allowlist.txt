@@ -160,3 +160,10 @@ v5-sync-policy.md
 vibe-kanban.md
 what-is-hive.md
 work-source-terminology.md
+
+# Design records stay on GitHub: proposals read as current behaviour to the
+# site search and its Ask AI answers (hivecommons/hive#19182).
+design/authorization-decision-point.md
+design/customers-hub-consent.md
+design/dashboard-ask-ai-help.md
+design/session-taint.md

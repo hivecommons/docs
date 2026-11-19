@@ -20,7 +20,7 @@
   },
   {
     "source": "acmm-policy-matrix.md",
-    "comment": "Operations pages — single-sourced from hive src/docs (previously hand-copied into docs/content/hive and prone to drift; migrated to auto-sync)."
+    "comment": "Operations pages \u2014 single-sourced from hive src/docs (previously hand-copied into docs/content/hive and prone to drift; migrated to auto-sync)."
   },
   {
     "source": "running-at-level-6.md",

@@ -161,12 +161,12 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
   {
     title: 'Dashboard',
     items: [
-      { 'Spoke dashboard': 'dashboard.md' },
-      { 'Dashboard settings': 'settings.md' },
       { 'Notifications': 'notifications.md' },
       { 'Public snapshots': 'snapshots.md' },
       { 'Data collection and telemetry': 'telemetry.md' },
       { 'Dashboard sections explained': 'dashboard-sections.md' },
+      { 'Dashboard settings explained': 'settings.md' },
+      { 'Dashboard page reference': 'dashboard.md' },
       { 'Dashboard glossary': 'dashboard-glossary.md' },
       { 'Dashboard overview and metrics': 'dashboard-sections/overview-and-metrics.md' },
       { 'Dashboard workflow and agents': 'dashboard-sections/workflow-and-agents.md' },
