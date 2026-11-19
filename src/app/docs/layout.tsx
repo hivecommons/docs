@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { DocsNavbar, DocsFooter } from '@/components/docs/index'
 import { DocsProvider } from '@/components/docs/DocsProvider'
 import { MobileOverlay } from '@/components/docs/MobileOverlay'
+import KapaWidget from '@/components/KapaWidget'
 import localFont from "next/font/local"
 import { Suspense } from 'react'
 import { ThemeProvider } from "next-themes"
@@ -180,6 +181,7 @@ export default async function DocsLayout({ children }: Props) {
             </div>
           </DocsProvider>
         </ThemeProvider>
+        <KapaWidget />
       </body>
     </html>
   )

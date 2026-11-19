@@ -3,6 +3,8 @@ import nextra from "nextra";
 
 import createNextIntlPlugin from "next-intl/plugin";
 
+import { KAPA_CSP_SOURCES, getKapaWebsiteId } from "./src/lib/kapa";
+
 const withNextra = nextra({
   latex: true,
   search: {
@@ -40,15 +42,21 @@ const nextConfig: NextConfig = {
     // - worker-src blob: is required by the Mermaid diagram renderer.
     // - frame-ancestors 'none' replaces X-Frame-Options: DENY (equivalent
     //   but CSP-native; X-Frame-Options kept for older browser compat).
+    // - The Kapa "Ask AI" widget hosts (script-src, connect-src, frame-src)
+    //   are appended only when NEXT_PUBLIC_KAPA_WEBSITE_ID is set at build
+    //   time; without it the policy is unchanged. See src/lib/kapa.ts.
+    const kapa = getKapaWebsiteId() ? KAPA_CSP_SOURCES : undefined;
+    const extra = (directive: keyof typeof KAPA_CSP_SOURCES) =>
+      kapa ? ` ${kapa[directive].join(" ")}` : "";
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
+      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com${extra("script-src")}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://api.github.com https://img.shields.io https://docs.hivecommons.dev https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
+      `connect-src 'self' https://api.github.com https://img.shields.io https://docs.hivecommons.dev https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com${extra("connect-src")}`,
       "worker-src blob:",
-      "frame-src https://www.youtube-nocookie.com",
+      `frame-src https://www.youtube-nocookie.com${extra("frame-src")}`,
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
