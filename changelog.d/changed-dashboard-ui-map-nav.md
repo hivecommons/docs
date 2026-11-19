@@ -1,0 +1,1 @@
+- Moved the Dashboard UI map into the Dashboard sidebar group so people can find the words on screen next to the section guides (hivecommons/hive#19182).
