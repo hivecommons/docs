@@ -438,7 +438,7 @@
   },
   {
     "source": "dashboard.md",
-    "route": "dashboard/spoke-dashboard"
+    "route": "dashboard/dashboard-page-reference"
   },
   {
     "source": "fleet-health.md",
@@ -514,7 +514,7 @@
   },
   {
     "source": "settings.md",
-    "route": "dashboard/dashboard-settings"
+    "route": "dashboard/dashboard-settings-explained"
   },
   {
     "source": "snapshots.md",
