@@ -20,7 +20,7 @@ steps while the overall sequence moves toward an unauthorized outcome. The
 trajectory-review docs describe this as the case where only the direction of the
 transcript reveals sandbox escape, scanner evasion, credential splitting, or a
 goal adopted from repository content
-([trajectory review](https://github.com/hivecommons/hive/blob/v5/src/docs/trajectory-review.md)).
+([trajectory review](/docs/hive/operations/automation-and-review/trajectory-review)).
 
 ## Decision
 

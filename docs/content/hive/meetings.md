@@ -37,7 +37,7 @@ Hive attends meetings as a persona: **Betty** ("Betty Bee from the hive") by def
 - **Addressing her.** Start or end a line with one of her names (`meetings.persona.aliases`: "betty", "betty bee", "hive"), for example "Betty, when does the release ship?", "hey betty, any blockers on the deploy?" or "what do you think, Betty?". Common speech-to-text spellings ("Bettie", "Betty Bea") count. A sentence that merely mentions the name ("push it to the hive", "hive is slow today") does not. An alias that shares no word with her name, such as "hive", is an everyday word and is stricter: it addresses her only at the start of a line followed by a comma or colon ("hive, what's the status?", "Hive: any blockers?"), after "hey" or "ok" ("hey hive what's up"), or closing a question after a comma ("what do you think, hive?").
 - **Intro.** "Betty, introduce yourself", "who are you, Betty?" or "who's the bot?" gets the intro (`meetings.persona.intro_template`), which says what she does and how to send her home. Asked in chat, the intro is posted in chat. Asked by voice in a meeting that can hear her, she says a short spoken intro (one or two sentences, at most 120 characters, so it starts quickly and fits the speech cache) and posts the full intro once in chat; it is never delivered in full twice.
 - **What she answers.** When addressed she answers briefly from the hive's knowledge vaults, its beads (work items), its code maps (when `knowledge.code_maps.enabled` is on) and the web (when `meetings.persona.searxng_url` is set, see [Web answers](#web-answers)), plus the last three minutes of the meeting. If she does not know, she says so. A request that is not a question gets one clarifying question or one or two sentences on the recent discussion.
-- **Voice.** She speaks only when the request was spoken (addressed in the meeting's audio) or asks for it ("say it", "out loud"). She answers directly, at most 2 sentences and 200 characters with no links or Markdown. A short acknowledgement ("Let me check on that.", rotating, in the persona's language, never with the speaker's name) is said only when the answer is still not ready 3 seconds after the request (6 seconds for a question about the hive's own state, which is normally answered well inside that), and one still waiting to be spoken when the answer arrives is skipped, so an acknowledgement never delays the answer behind it. The answer goes through the meeting's voice rules: it is spoken only when the meeting's voice is on and `meetings.voice_on_address` is true, and falls back to chat otherwise or when speaking fails; the acknowledgement is never posted to chat and is not charged to the budget. That gate is hive's, for every platform: Quorum v0.2.0 ignores `voice: false` on Discord, so hive never calls `say` for a meeting whose voice is off. A spoken "Betty?" with no question gets one clarifying question or one or two sentences on the last three minutes.
+- **Voice.** She speaks only when the request was spoken (addressed in the meeting's audio) or asks for it ("say it", "out loud"). She answers directly, at most 2 sentences and 200 characters with no links or Markdown. An answer over 120 characters is said as its first sentence plus "The details are in chat.", and the whole answer is posted once in chat, so first audio and the say call stay short. A short acknowledgement ("Let me check on that.", rotating, in the persona's language, never with the speaker's name) is said only when the answer is still not ready 3 seconds after the request (6 seconds for a question about the hive's own state, which is normally answered well inside that), and one still waiting to be spoken when the answer arrives is skipped, so an acknowledgement never delays the answer behind it. The answer goes through the meeting's voice rules: it is spoken only when the meeting's voice is on and `meetings.voice_on_address` is true, and falls back to chat otherwise or when speaking fails; the acknowledgement is never posted to chat and is not charged to the budget. That gate is hive's, for every platform: Quorum v0.2.0 ignores `voice: false` on Discord, so hive never calls `say` for a meeting whose voice is off. A spoken "Betty?" with no question gets one clarifying question or one or two sentences on the last three minutes. When she heard her name in a spoken request and is about to answer, she first plays a short, soft chime (`meetings.listening_tone`, on by default; see Configuration).
 - **Several requests at once.** Each request is worked on as soon as it is heard and answered as soon as its answer is ready, so answers can arrive out of order. Whenever that could confuse the room (another request is in flight, someone else spoke since, or the answer took more than 8 s) the answer opens with a short topic phrase: "On open PRs: ...". The topic is the model's 2 to 5 word label for the question, else the request's own words. She does not use the speaker's name in acknowledgements or answers; a name is added only when two people asked about the same topic within a minute ("Andy (re: open PRs): ..." in chat, "Andy, about open PRs: ..." spoken, first name only), written plain, never as `@name`, so nobody is pinged. A single quick answer has no prefix. With two or more requests in hand she posts one short chat note ("I have 3 questions; answering each as it's ready."), at most once a minute, through the chat rate limit and never charged;
 - **Questions about the hive itself.** "How many open issues are there?", "what PRs are open in the hive repo?", "which agents are working?" are answered from the hive's live dashboard state (the same open, actionable, held and blocked counts, agents and open PRs the Overview and the dashboard chat use), read in-process, so the answer comes in seconds and never goes to research. Such a question names the hive (or "the repo") or asks for open issues, open PRs, actionable items or recent merges. The numbers are the dashboard's own: every count states its scope the same way ("across 13 repos", or the one repo asked about); a count taken while some repos are still being read after a restart is worded "at least N, counted in 5 of 13 repos so far" and never given as a total; a snapshot older than three minutes says how old it is. Agents are counted as the sidebar counts them (each replica is one agent), the ones working are named (up to five, then "and N more") and a paused agent is never named as running. Asked about one issue or PR she gives a short summary of its description, its state (open, draft, merged, closed), the review and CI status the hive holds and what is blocking it, in at most three short sentences, with no extra GitHub call.
 - **About hive itself.** "What is hive?", "which voice memo providers does hive support?", "tell me all you know about hive" are answered from a short product brief built from the project's own docs (what hive is and who it is for, the Inbox voice sources, the meeting platforms, and how the docs position it beside adjacent tools), plus the knowledge base, which for her now includes the ready git sources as well as the vaults. A broad question gets a three sentence overview and an offer to go deeper. These questions are never sent to the public web or to research.
@@ -199,7 +199,7 @@ The desktop companion ([hivecommons/quorum-companion](https://github.com/hivecom
 - **Who can use it.** Owner or read-write users. A companion meeting can be used only by the person who started it (owners can use any). Read-only users cannot stream.
 - **Signing in.** Each owner or read-write user opens `/companion/token` on their hive and creates a companion token (shown once; only its SHA-256 is stored, one per user, **Replace** or **Revoke** any time). The companion sends it as `X-Hive-Companion-Token`. It works only on the `/api/companion/info` and `/api/companion/meetings` routes, acts as that user at their current role (a user removed or downgraded below read-write stops working at once), and never in `Authorization`. On hosted hives the hub lets those routes through to the hive, which does the check; the token page stays behind the hub sign-in.
 - **Audio.** Two channels of raw 16 kHz mono s16le PCM: `call` (the meeting app's audio, everyone else) and `mic` (the person). Quorum cuts each at silences and transcribes it with the shared transcription service (`meetings.transcribe_url` is required); `mic` segments are attributed to the person, `call` segments to "Call".
-- **Betty's replies** go to the companion window (and the meeting panel) instead of a meeting chat: the consent notice first, then answers. Betty cannot speak in a companion meeting yet. Saying "betty leave" ends the meeting, as does stopping the capture. The lines still waiting when the meeting ends ("Leaving now." among them) are served by the replies route after the end, until the window's cursor has passed them or two minutes are over.
+- **Betty's replies** go to the companion window (and the meeting panel) instead of a meeting chat: the consent notice first, then answers. Betty cannot speak in a companion meeting yet, but when she heard her name and will answer, the companion plays her soft listening chime on your own computer (never into the call), when `meetings.listening_tone` and `meetings.voice_on_address` are on; the meeting's own voice setting does not apply. Saying "betty leave" ends the meeting, as does stopping the capture. The lines still waiting when the meeting ends ("Leaving now." among them) are served by the replies route after the end, until the window's cursor has passed them or two minutes are over.
 - **After the meeting** it is an ordinary meeting: notes, research and the Inbox hand-off are unchanged.
 
 | Route | |
@@ -207,7 +207,7 @@ The desktop companion ([hivecommons/quorum-companion](https://github.com/hivecom
 | `GET /api/companion/info` | Consent notice and version, sample rate, channels, `max_chunk_bytes`. |
 | `POST /api/companion/meetings` | `{title, app, host_name, consent_version, consent_attested: true}`; 201 with the meeting record. |
 | `POST /api/companion/meetings/{id}/audio?channel=call\|mic&seq=N` | One PCM chunk; per channel in order from 0; 409 with `expected_seq` on a gap; a resend answers `duplicate: true`. |
-| `GET /api/companion/meetings/{id}/replies?after=N` | Betty's lines after the cursor, `next_seq`, and the meeting `state`; after the meeting ended, its last unfetched lines once. |
+| `GET /api/companion/meetings/{id}/replies?after=N` | Betty's lines after the cursor, `next_seq`, the meeting `state`, and `tone` (true once when the window should play the listening chime now; Quorum's `say.tone`); after the meeting ended, its last unfetched lines once. |
 | `POST /api/companion/meetings/{id}/end` | Ends the meeting after transcribing buffered speech. |
 
 The dashboard's ● Record ([Recording into the Inbox](/docs/hive/inbox-recording)) stays the no-install option: it records a Chromium tab's audio and is transcribed after the recording ends, so Betty cannot answer during the call, and it cannot hear a desktop meeting app.
@@ -242,7 +242,7 @@ What `hive-mx` does with a message:
 - **Sender authentication:** after DATA it checks SPF, DKIM and DMARC and records whether SPF or DKIM passed for a domain aligned with the `From` address (`adkim`/`aspf` honoured). Only an aligned sender can ever be trusted by a hive; the receiver itself decides nothing.
 - **Calendar invites:** only `text/calendar` and `application/ics` parts are read. It keeps UID, SEQUENCE, METHOD (REQUEST or CANCEL), RECURRENCE-ID, the summary (200 characters), organizer and attendees, start and end converted to UTC (Outlook's Windows time zone names such as "Eastern Standard Time" are mapped to IANA zones), RRULE and EXDATE, and the join details: the link from `X-GOOGLE-CONFERENCE`, `X-MICROSOFT-SKYPETEAMSMEETINGURL`, `LOCATION` or a link to `meet.google.com`, `teams.microsoft.com`, `teams.live.com` or `*.zoom.us` found in the description, the platform, and the meeting id and passcode where the platform uses one (Zoom `pwd`, the Teams "Meeting ID" and "Passcode" lines). Nothing else from the description is kept.
 - **Mail-in files:** a message with no invite may carry Markdown (`.md`), office document (`.pdf`, `.docx`, `.pptx`, `.xlsx`), audio (`.m4a`, `.mp3`, `.wav`, `.ogg`, `.webm`), video (`.mp4`, `.mov`, `.mkv`) and image (`.png`, `.jpg`, `.gif`, `.webp`) attachments. The type is decided by the file's content, not its name, and must agree with the extension; a Word, PowerPoint or Excel file must be a readable container of that kind with no macro project. At most 10 files, 25 MB per file and 30 MB in all ([#18564](https://github.com/hivecommons/hive/issues/18564), [#18699](https://github.com/hivecommons/hive/issues/18699)). The subject becomes the title. Nothing in the message is executed or followed, and a document is stored, never opened.
-- **Refusals say why:** a message that leaves nothing to deliver is refused after DATA with a reply the sender's provider returns in its bounce, naming each attachment's extension and what was wrong with it, for example `550 5.6.0 nothing to deliver: a .key attachment is not an accepted type. Accepted types: md, pdf, docx, pptx, xlsx, ...` or `552 5.3.4 nothing to deliver: a .mp4 attachment is over the 25 MB per-file limit (30 MB of attachments per message)`. An attachment left out of a message that is otherwise delivered is listed in the delivery (`files.skipped`: extension and reason) so the hive can show it. Every refusal that is about the message or the address ends with three more lines: how to try again, a link to the reason's entry in [Mailing your hive: what the replies mean](/docs/hive/inbox-voice-sources#mailing-your-hive-what-the-replies-mean), and where to report a problem ([#18744](https://github.com/hivecommons/hive/issues/18744)). The lines are the same for every sender. This bounce is the only message a sender gets: neither the receiver nor a hive sends mail, so nothing is ever sent to an address that may be forged (a reply to authenticated senders is designed in [#18746](https://github.com/hivecommons/hive/issues/18746)).
+- **Refusals say why:** a message that leaves nothing to deliver is refused after DATA with a reply the sender's provider returns in its bounce, naming each attachment's extension and what was wrong with it, for example `550 5.6.0 nothing to deliver: a .key attachment is not an accepted type. Accepted types: md, pdf, docx, pptx, xlsx, ...` or `552 5.3.4 nothing to deliver: a .mp4 attachment is over the 25 MB per-file limit (30 MB of attachments per message)`. An attachment left out of a message that is otherwise delivered is listed in the delivery (`files.skipped`: extension and reason) so the hive can show it. Every refusal that is about the message or the address ends with three more lines: how to try again, a link to the reason's entry in [Mailing your hive: what the replies mean](/docs/hive/inbox-voice-sources#mailing-your-hive-what-the-replies-mean), and where to report a problem ([#18744](https://github.com/hivecommons/hive/issues/18744)). The lines are the same for every sender. This bounce is the only message a sender gets unless the hub's confirmation reply is turned on, and the receiver never sends mail: nothing is ever sent to an address that may be forged, and a confirmation reply goes only to a sender whose mail passed DMARC alignment ([Replies to the sender](#replies-to-the-sender-off-by-default), [#18746](https://github.com/hivecommons/hive/issues/18746)).
 - **Text body:** the message's body becomes a Markdown note. `text/plain` is kept as sent; an HTML-only body is reduced to its text, headings, lists and link targets, with no scripts, styles, images or other remote content. A message with no attachment becomes one Markdown item (`message.md`); a message with attachments keeps its body as the note on each of its items. The same allowlist, DMARC and approval rules apply as to attachments, and the body is untrusted data, never instructions. At most 256 KiB of it is kept.
 - **Proof mails:** a message whose subject carries a proof code (`hive-proof-` and 12 letters or digits) is reported as a proof of the sender address.
 
@@ -302,6 +302,148 @@ keeps the last 50 in the Inbox's **Recent mail** list
 Reports are best effort: a hub or hive that does not take them yet changes
 nothing for the sender.
 
+### Replies to the sender (off by default)
+
+[#18746](https://github.com/hivecommons/hive/issues/18746) designs a short
+reply from the hive to whoever mailed it ("received", or "waiting for the
+owner's approval"). Hive has never sent mail, and `hive-mx` still does not:
+the reply is composed, decided and sent by the hub (option A of the design:
+a hub-side sender with DKIM, one fixed `From`, the hive's own address as
+`Reply-To`).
+
+It is off unless `HIVE_HUB_MAIL_REPLY_DKIM_KEY_FILE` names a file that
+exists and is not empty, and the `From` address, DKIM selector and HELO name
+are set (the variables are in [env-vars.md](/docs/hive/env-vars)). Removing the key
+file stops replies at once; a key file that cannot be loaded sends nothing
+and does not use up the mail's one reply. A hub with none of this set builds
+no sender and opens no connection.
+
+What decides a reply, all of it enforced in the hub:
+
+- **Only authenticated senders.** The mail must have passed DMARC alignment
+  (`wire.Auth.Aligned`). A mail whose `From` is not aligned gets what it gets
+  today (the SMTP refusal, or nothing) and no reply, so a forged `From` never
+  receives backscatter.
+- **Only a person's mail.** No reply to `Auto-Submitted` other than `no`,
+  `Precedence: bulk`, `list`, `junk` or `auto_reply`, any `List-*` header,
+  `X-Auto-Response-Suppress`, a null return path (`MAIL FROM:<>`), a delivery
+  status report, the local parts `mailer-daemon`, `postmaster`, `no-reply`,
+  `noreply` and `hive`, any `hive@<known hive host>`, or the configured `From`
+  address and domain. `hive-mx` passes these as `wire.Delivery.Facts`; a
+  delivery without them (an older `hive-mx`) is never answered. Every reply
+  carries `Auto-Submitted: auto-replied`, `X-Auto-Response-Suppress: All`,
+  `Precedence: auto_reply` and a null envelope sender, so a reply is never
+  answered, by a hive or anyone else.
+- **Only after the hive took the mail.** The hub reads the spoke's answer
+  (`items`, `awaiting_approval`): stored and allowlisted is "received", stored
+  and awaiting approval is "held". Refusals keep their SMTP reply; no mail is
+  sent for them. Only mail-in files are answered, never invites or proof
+  mails.
+- **At most one reply per `Message-ID` and hive**, remembered 8 days in the
+  ledger, across retries and restarts. A message without a `Message-ID` gets
+  none.
+- **Limits** per sender address (10 an hour, 30 a day), per sender domain
+  (100 a day) and per hive (200 a day). Past a limit the reply is dropped and
+  counted; the mail is unaffected.
+- **No content.** The reply is plain text. It repeats nothing of the mail but a
+  sanitized subject (control and invisible characters removed, 120
+  characters) in its `Subject`, and the `Message-ID` in `In-Reply-To` and
+  `References`. The held text does not say why the sender is not trusted.
+
+The ledger (`HIVE_HUB_MAIL_REPLY_LEDGER_FILE`) holds the delivery id, the
+outcome and salted hashes of the message id, sender, sender domain and hive:
+no address, subject or body. The hub logs a sent reply with the delivery id,
+the hive id and the outcome only, never a key or any part of a mail.
+
+#### How a reply is sent
+
+The sender (`src/pkg/hub/mail_reply_smtp.go`) runs only after the decision
+and the ledger above allowed the reply, so the limits are applied before
+anything is sent.
+
+- **Plain text, null envelope sender.** One `text/plain` message, 7-bit,
+  with the headers of the design, and `MAIL FROM:<>`. A failed reply
+  therefore never bounces into a hive.
+- **DKIM.** The message is signed (relaxed/relaxed, `rsa-sha256` or
+  `ed25519-sha256`) as the `From` domain with the configured selector, over
+  `From`, `To`, `Subject`, `Date`, `Message-ID`, `Reply-To`, `In-Reply-To`,
+  `References`, `Auto-Submitted`, `X-Auto-Response-Suppress`, `Precedence`
+  and the MIME headers. The signature expires after 72 hours.
+- **Direct delivery to one MX host.** The hub looks up the sender domain's
+  MX records and uses only the best-preference host: one connection, one
+  message, no second host, no retry, no redirect. A domain with no MX record
+  or a null MX gets no reply. The hub connects to a public IPv4 address of
+  that host (IPv6 only if it has no IPv4 address), on port 25. Addresses in
+  private, loopback, link-local, shared (100.64.0.0/10), documentation
+  (IPv6) and similar ranges are refused, because the sender domain is
+  chosen by whoever sent the mail.
+- **STARTTLS is required**, with a certificate that verifies for the MX host
+  name (TLS 1.2 or later). A server without it, or with a certificate that
+  does not verify, gets nothing.
+- **Optional relay (smarthost).** With `HIVE_HUB_MAIL_REPLY_RELAY` set to
+  `<relay host>` or `<relay host>:<port>` (port 587 when none is given), the
+  one connection goes to that host instead of the sender's MX, so the mail
+  leaves from one stable IP that carries the reverse DNS and SPF records. It
+  is off while the variable is unset, and then everything above is unchanged.
+  Nothing else changes with a relay: the message is DKIM-signed by the hub
+  before the hand-off (the relay must not re-sign it), the envelope sender is
+  still `MAIL FROM:<>`, STARTTLS is still required with a certificate that
+  verifies for the relay's host name (a relay without it, or whose handshake
+  fails, gets nothing, and the hub never falls back to direct delivery), and
+  any failure is still final. The relay is chosen by the operator, so unlike
+  an MX host it may have a private address. If the relay needs SMTP AUTH, set
+  `HIVE_HUB_MAIL_REPLY_RELAY_AUTH_FILE` to a mounted file with the user name
+  on the first line and the password on the second; AUTH PLAIN is sent only
+  after STARTTLS, the credentials are read from the file for each send and
+  never come from an inline setting, and they are never logged. A relay
+  setting that is not a host name with an optional port, or a credentials
+  file named without a relay, builds no sender (the log names the variable,
+  not its value); credentials that cannot be read send nothing and use up
+  nothing, like an unusable key. The hub has no YAML block for this sender,
+  so the relay is configured through these environment variables only. A
+  relay runbook is the owner's side of this option.
+- **Bounded.** 10 seconds for each DNS lookup, 15 for the connection, 45
+  for the whole SMTP conversation, 90 for the whole reply. At most 8 replies
+  are in flight; past that a reply is dropped and counted.
+- **Any failure is final.** A refused recipient, a DNS or TLS failure, a
+  timeout or a server error ends the reply: it is not retried and the
+  ledger keeps the claim, so the same message is never answered twice.
+- **Refused before sending.** A header value with a control character or a
+  line break, an address with a display name or outside ASCII, a
+  `Message-ID` that is not a plain token, a body that is not 7-bit text, or
+  a `From` other than the configured one is refused before any DNS lookup
+  or connection. The sender's subject only reaches the `Subject` header,
+  after the template removed control and invisible characters, and is sent
+  as an RFC 2047 encoded word when it has letters outside ASCII.
+- **Nothing private in the log.** The hub logs a failed reply with the
+  delivery id, the hive id, a reason class (for example `mx_lookup`,
+  `no_mx`, `timeout`, `starttls`, `recipient_refused`, `connect`,
+  `signing_key_unusable`, and with a relay `relay_address_lookup`,
+  `relay_auth_unavailable`, `relay_auth`, `relay_credentials_unusable`) and, when the server refused, its numeric code.
+  Never a key, an address, a domain, a subject, a body or a server's text.
+
+#### DNS records and network the hosted hub needs
+
+For option A with one fixed `From` (shape 1), `<project domain>` being the
+project's organizational domain and `<selector>` the DKIM selector:
+
+| Record | Type | Value |
+|---|---|---|
+| `<selector>._domainkey.hive.<project domain>` | TXT | `v=DKIM1; k=rsa; p=<base64 public key>` (2048-bit; the private key stays in the hub's Secret) |
+| `hive.<project domain>` | TXT | `v=spf1 ip4:<sending IP> -all` (recommended: DKIM alone satisfies DMARC, since the envelope sender is null) |
+| `<sending host name>` | TXT | `v=spf1 a -all` (recommended: covers the HELO identity used with a null envelope sender); this is the name to set in `HIVE_HUB_MAIL_REPLY_HELO` |
+| reverse DNS of `<sending IP>` | PTR | `<sending host name>`, set at the cloud provider, not in the zone |
+
+No existing record changes: the organizational DMARC policy (`p=reject`,
+strict alignment) already covers `hive.<project domain>`, and the DKIM
+signing domain equals the `From` domain, so it aligns. The hub's network
+also needs outbound TCP 25 (many clouds block it by default); if it cannot
+be opened the fallback is a transactional mail provider (option C of the
+design), or a relay with a fixed IP (the optional relay above), in which
+case the records name the relay's IP and host name and the hub itself needs
+no outbound port 25. Before turning replies on for everyone, send to a test mailbox at
+two large providers and check `Authentication-Results` shows `dmarc=pass`.
+
 ### Who can invite Betty
 
 An invite is scheduled at once only when all of these hold:
@@ -341,7 +483,7 @@ People in the meeting can ask Betty, spoken or typed in the meeting chat, to dra
 | "Betty, start a Spek session on calendar sync" | a Spek session | handed to the Inbox `spek_rfc` destination: a hive agent drafts the spec with spektacular and publishes it to the repo |
 | "Betty, save that as a knowledge note" | a knowledge note | written to the `meetings` knowledge vault, the same write meeting notes use |
 
-- **Recognising a request.** The line must be addressed to her (her name opens or closes it, with or without a comma before a verb such as "open", "file", "make", "start" or "save") and ask to make an item ("issue", "bug", "ticket", "RFC", "Spek session", "knowledge note"). Questions about an item ("what's the issue with the lobby?") and negations ("don't open an issue") are not requests.
+- **Recognising a request.** The line must be addressed to her (her name opens or closes it, with or without a comma before a verb such as "open", "file", "make", "start" or "save") and ask to make an item ("issue", "bug", "ticket", "RFC", "Spek session", "knowledge note"). Plain "spec" and "design" (and their plurals) also count as a Spek session when they are the object of a request: "Betty, start a spec for this", "can you write a spec for the login flow", "draft a design for X" (verbs: start, write, draft, create, kick off, open, make; optionally led by "can you", "could you", "please"). Statements about a spec ("the spec says", "per the design", "the design review happened") are not requests. Questions about an item ("what's the issue with the lobby?") and negations ("don't open an issue") are not requests.
 - **Drafting.** Betty drafts a short title and body from the request and the last three minutes of the meeting, with a link back to the meeting (the dashboard's Meetings section, when `dashboard.public_url` is set) and a transcript excerpt. The repo is a monitored repo the request names ("in spektacular", "hivecommons/spektacular"), else `meetings.persona.actions.default_repo`, else `inbox.spek.repo`, else `project.primary_repo`, else the first repo. A repo the model suggests is used only when it is a monitored repo. With no meetings model she drafts from the request itself.
 - **Confirmation.** She replies in the meeting chat: "Drafted an issue: '<title>'. It's waiting for approval in the hive." If the request does not say what the item is about and nothing was said before it, she asks one clarifying question ("Happy to draft an issue. What should it be about?") and drafts from the asker's next line (or "never mind" drops it). The model may ask that one question too; it never asks twice.
 - **Approval.** Speaker identity in a meeting is only a display name, so nothing is created from the meeting. Every draft lands in **Drafts from meetings** in the Calendar section, with the meeting, who asked (display name), the body and the transcript excerpt. The hive owner or a read-write user can **Edit** (type, title, body, repo), **Approve** or **Reject** it. Approval creates the item; a failed creation stays in the list with its error and can be approved again after a fix.
@@ -424,6 +566,7 @@ Every key has an environment override that wins over `hive.yaml`. The full list 
 | `meetings.tts_token_file` | `/data/secrets/meetings_tts_token` | Keystore-sealed TTS service token file. |
 | `meetings.delivery` | `chat` | Where meeting output goes. |
 | `meetings.voice_on_address` | `true` | Allow speaking when addressed in a voice-enabled meeting. |
+| `meetings.listening_tone` | `true` | Betty plays a short, soft two-note chime when she heard her name in a spoken request and is about to answer, so the room knows she is listening (`HIVE_MEETINGS_LISTENING_TONE`). The only setting: no volume or sound options. It plays only when voice is on (a companion meeting plays it in the companion on the host's computer instead), never over speech, and is dropped silently if the audio path is busy. |
 | `meetings.bot_name` | the persona's display name | Bot display name; `hive (notes)` with the persona off. |
 | `meetings.invite_policy` | `owner` | Who may send hive to a meeting. |
 | `meetings.research_pool_size` | `2` | Research agents (`research-1..N`). |

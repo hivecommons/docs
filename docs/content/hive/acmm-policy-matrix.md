@@ -336,7 +336,7 @@ governor:
 
 ## Which levels may publish audit findings
 
-The audit campaign's issue publisher ([audit-campaign.md](https://github.com/hivecommons/hive/blob/v5/src/docs/audit-campaign.md#publication)) files validated findings as issues only at **L3 and above**, the first level whose pack grants an agent the measured (issues) mode. At L1 and L2 every agent is advisory, so the publisher refuses with a typed error and an audit entry instead of filing. Security-sensitive findings never become public issues at any level; they go to `publication.private_channel` or are refused. Publication also requires `publication.enabled: true` and the `enforce` convergence mode; `shadow` records `withheld:mode` and writes nothing.
+The audit campaign's issue publisher ([audit-campaign.md](/docs/hive/operations/automation-and-review/audit-campaign#publication)) files validated findings as issues only at **L3 and above**, the first level whose pack grants an agent the measured (issues) mode. At L1 and L2 every agent is advisory, so the publisher refuses with a typed error and an audit entry instead of filing. Security-sensitive findings never become public issues at any level; they go to `publication.private_channel` or are refused. Publication also requires `publication.enabled: true` and the `enforce` convergence mode; `shadow` records `withheld:mode` and writes nothing.
 
 ## Where ACMM gap issues are filed
 

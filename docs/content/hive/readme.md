@@ -14,7 +14,7 @@ Choose how to obtain a running hive **before** configuring its agents:
 
 | Your situation | Start here | Expected result |
 |---|---|---|
-| You want a hosted hive, without running a cluster | [Hosted onboarding](/docs/hive/hosted-hub); request at [hive.hivecommons.dev/get-started](https://hive.hivecommons.dev/get-started) | After admin approval and provisioning, **My Hives** links to your dashboard. |
+| You want a hosted hive, without running a cluster | [Hosted onboarding](/docs/hive/hub/hosted-hive-hub-onboarding); request at [hive.hivecommons.dev/get-started](https://hive.hivecommons.dev/get-started) | After admin approval and provisioning, **My Hives** links to your dashboard. |
 | You want to run one hive yourself | [Docker Compose](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-docker-compose.md), [Podman](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-podman.md), or [Kubernetes](https://github.com/hivecommons/hive/blob/v5/src/docs/kubernetes-deployment.md) | Your own running container and dashboard, with storage and authentication configured. To list it on a hub afterwards, see [Register a self-hosted hive](/docs/hive/register-self-hosted-hive). |
 | Someone has already given you dashboard access | [Getting started](/docs/hive/getting-started#step-0--before-you-start-do-this-first) | Connect the GitHub App, authenticate a model backend, set a budget, then enable agents conservatively. |
 
@@ -26,7 +26,7 @@ the chosen runtime, deployment privileges, and repository credentials; the
 Compose guide supports a PAT as well as an App. An agent separately needs its
 supported backend login, subscription, or model-gateway credentials.
 
-Once you can open a dashboard, follow [Getting started](/docs/hive/getting-started) for the first session and its success checks. Operating a fleet is a separate task: see [self-hosted hub deployment](/docs/hive/hub-deployment).
+Once you can open a dashboard, follow [Getting started](/docs/hive/getting-started) for the first session and its success checks. Operating a fleet is a separate task: see [self-hosted hub deployment](/docs/hive/hub/self-hosted-hub-deployment).
 
 ## How Hive is organized
 
@@ -42,7 +42,7 @@ A terminal agent is a power tool: you hold it, aim it, and it stops when you sto
 - **[Agents](/docs/hive/agent-configuration):** AI workers assigned a job, model, schedule (cadence), and permissions.
 - **[Governor](/docs/hive/architecture#3-the-governor-loop--from-queue-depth-to-a-kick):** the scheduler that checks for work and sends an agent a task (a kick).
 - **[ACMM levels](/docs/hive/acmm-policy-matrix):** the **AI Codebase Maturity Model** — six levels that map how mature a codebase's tests, reviews and security posture are to what agents may observe, propose, open, review, or merge ([paper](https://arxiv.org/abs/2604.09388)).
-- **[Hub](/docs/hive/hosted-hub):** the service that registers hives, receives their periodic status reports (heartbeats), and shows the fleet.
+- **[Hub](/docs/hive/hub/hosted-hive-hub-onboarding):** the service that registers hives, receives their periodic status reports (heartbeats), and shows the fleet.
 - **[Contributors and ClankeR relay](/docs/hive/contributor-relay):** a way for trusted contributors to donate compute and run delegated work with permissions checked by the hub.
 
 ## How it works
@@ -63,14 +63,14 @@ A terminal agent is a power tool: you hold it, aim it, and it stops when you sto
 - [Dashboard sections explained](/docs/hive/dashboard-sections) — what each dashboard section shows and what to do about it.
 - [Activity monitor copy inventory](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-copy-inventory.md) — every operator-visible string builder in the activity monitor, with before/after word counts and the hover budget.
 - [Hive on your iPhone Home Screen](https://github.com/hivecommons/hive/blob/v5/src/docs/ios-widget.md) — a Home Screen widget with issue/PR counts and sparklines (Scriptable, no server change).
-- [Dashboard settings explained](/docs/hive/settings) — what each Settings tab controls and where each setting is documented.
-- [Maintainer commands](https://github.com/hivecommons/hive/blob/v5/src/docs/maintainer-commands.md) — slash commands for un-parking
+- [Dashboard settings explained](/docs/hive/dashboard/dashboard-settings-explained) — what each Settings tab controls and where each setting is documented.
+- [Maintainer commands](/docs/hive/operations/automation-and-review/maintainer-commands) — slash commands for un-parking
   issues, requesting help, confirming fixes, reopening issues, and using label
   or assignment helpers.
 - [Release channels](/docs/hive/release-channels) — what `stable`, `candidate`, and `edge` each mean and what to expect from them.
 - [Security model](/docs/hive/security-model) — agent safety control inventory, threats, enforcement modes, residual gaps and operator audit checklist.
 - [Hive trust levels vs Copilot assisted permissions](/docs/hive/copilot-permissions-comparison) — what GitHub's per-action permission mode (GA 2026-10-26) does, what Hive's levels, lanes, proxy and gates do, and where each covers ground the other does not.
-- [Data collection and telemetry](/docs/hive/telemetry)
+- [Data collection and telemetry](/docs/hive/dashboard/data-collection-and-telemetry)
 - [Monitoring a hive with Prometheus and Grafana](https://github.com/hivecommons/hive/blob/v5/src/docs/monitoring.md)
 - [Securing your hive: a first-time operator's guide](/docs/hive/securing-your-hive)
 - [Community and support](https://github.com/hivecommons/hive/blob/v5/src/docs/community.md)

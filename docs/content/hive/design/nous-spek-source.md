@@ -16,7 +16,7 @@ came from in `sources[]`. The missing input is Nous: the experiment variant
 (code + config) that measured best should become a source, so the spec is
 written from evidence of what worked. The spec then leaves through the existing
 publish hand-off (RFC + children → Hive, see
-[Spektacular: Publish hand-off](/docs/hive/integrations/spektacular#publish-hand-off)).
+[Spektacular: Publish hand-off](/docs/hive/operations/automation-and-review/spektacular-stage-runner#publish-hand-off)).
 
 Prior art: [#13579](https://github.com/hivecommons/hive/issues/13579) (Experiment
 Lab → Spektacular, closed) asked for the same hand-off as two dashboard buttons;

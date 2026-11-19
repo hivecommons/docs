@@ -2,7 +2,7 @@
 
 # Benchmarks: publishing per-PR agent/model/runtime outcomes
 
-Every hive already seals one [review evidence bundle](https://github.com/hivecommons/hive/blob/v5/src/docs/review-evidence.md) per
+Every hive already seals one [review evidence bundle](/docs/hive/hub/review-evidence-bundle) per
 PR head. Those bundles record which agent and model opened the PR, which
 backend (harness) ran it, how the review swarm scored it, whether CI was green
 at merge, when it was opened and merged, and whether it was reverted. The
@@ -103,6 +103,10 @@ spoke (/data/evidence)  --hourly POST /api/benchmarks/ingest-->  hub (/data/benc
 Until the hub publisher is rolled out, the data repo's
 `scripts/backfill-from-cluster.sh` pulls `/data/evidence` straight from spoke
 pods and a nightly workflow rebuilds the index.
+
+## Publishing by hand: `hivectl benchmarks export`
+
+An owner who does not want the hourly push, or wants to review the records first, can run `hivectl benchmarks export` over a copy of `/data/evidence`. It uses the same converter and privacy rules as the endpoint below, identifies the hive only by its hash, names repositories only when listed with `--public-repo`, and with `--by-month` writes the `data/fleet/<hash>/<YYYY-MM>.json` files ready to commit to the data repo. See [hivectl](/docs/hive/hivectl#benchmarks-export-leaderboard-records-offline).
 
 ## Endpoints
 

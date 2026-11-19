@@ -2,7 +2,7 @@
 
 # Register a self-hosted hive on a hub
 
-This page is for people who run their own hive and want it listed on a hub such as hive.hivecommons.dev. It mirrors the **Self-host** card on the hub's `/get-started` page. Operators who run a hub and want to enable or audit this flow should read [hub-deployment.md](/docs/hive/hub-deployment#self-service-registration) instead.
+This page is for people who run their own hive and want it listed on a hub such as hive.hivecommons.dev. It mirrors the **Self-host** card on the hub's `/get-started` page. Operators who run a hub and want to enable or audit this flow should read [hub-deployment.md](/docs/hive/hub/self-hosted-hub-deployment#self-service-registration) instead.
 
 A self-hosted hive is complete on its own. Listing it on a hub is optional and gives you a public entry in Active Hives, an online badge, and a place in the fleet views. The hub lists your hive as directory metadata only. It never sends your hive credentials, upgrades or management actions, and you never receive the hub's master secret.
 

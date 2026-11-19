@@ -9,7 +9,7 @@ of the ForgeState epic
 [#13381](https://github.com/hivecommons/hive/issues/13381)). The receiver,
 the App/hub set-up and what each delivery invalidates are in
 [Webhook-driven PR cache invalidation](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference.md#webhook-driven-pr-cache-invalidation);
-the dashboard side is in [dashboard.md](/docs/hive/dashboard#hive-activity-monitor).
+the dashboard side is in [dashboard.md](/docs/hive/dashboard/dashboard-page-reference#hive-activity-monitor).
 
 The priority order throughout is **accuracy → latency → API thrift**. A
 delivery is a free hint; every outbound GitHub call is budgeted. The rules

@@ -9,7 +9,7 @@ over events to select agents. A **normalized forge event** is Hive's common
 representation of a repository-host event, so rules do not depend on a
 GitHub-specific webhook payload.
 
-For configuration and examples, use the [CEL triggers operator guide](https://github.com/hivecommons/hive/blob/v5/src/docs/cel-triggers.md).
+For configuration and examples, use the [CEL triggers operator guide](/docs/hive/operations/automation-and-review/cel-triggers).
 
 ## Context
 

@@ -682,14 +682,14 @@ instrumentation without changing any write: every new comment, review,
 review request and @-mention is classified by producer and class, repeats of
 the same condition are counted as would-suppress, and the counters are
 exported on `/metrics`. See [GitHub writes: inventory and shadow
-mode](https://github.com/hivecommons/hive/blob/v5/src/docs/notifications.md#github-writes-inventory-and-shadow-mode-githubnotificationsshadow)
+mode](/docs/hive/dashboard/notifications#github-writes-inventory-and-shadow-mode-githubnotificationsshadow)
 for the write-site inventory and how to compare baseline windows.
 
 `github.notifications.attention_pilot: true` (default off) opts the hive in
 to the attention pilot: routine issue notes fold into the issue's single
 `hive:status` card, and a newly required action is still announced by
 exactly one notifying write. See [Attention pilot and the issue status
-card](https://github.com/hivecommons/hive/blob/v5/src/docs/notifications.md#attention-pilot-and-the-issue-status-card-githubnotificationsattention_pilot).
+card](/docs/hive/dashboard/notifications#attention-pilot-and-the-issue-status-card-githubnotificationsattention_pilot).
 
 ## Suspicious-activity alerts (`sentinel`)
 
@@ -757,7 +757,7 @@ Owners edit all of this from **Settings → Security → Suspicious Activity**;
 the dashboard writes the owner-only `/api/config/governor/security` overlay.
 Every alert is also written to the dashboard audit log as `sentinel-alert`,
 and, when `evidence.enabled` is on, recorded under `sentinel` in the flagged
-head's [review evidence bundle](https://github.com/hivecommons/hive/blob/v5/src/docs/review-evidence.md).
+head's [review evidence bundle](/docs/hive/hub/review-evidence-bundle).
 
 On the dashboard's Projects cards, every open PR that carries the configured
 sentinel label is drawn as a red pill (status chip and main pill), taking
@@ -911,7 +911,7 @@ level=INFO msg="knowledge: injected 3900 bytes from 7 entries (skipped 3 for cap
 
 `injected_bytes` / `entries` are the rendered `# Relevant Knowledge` block; `skipped_for_cap` counts relevant facts dropped whole because they did not fit `knowledge.primer.max_bytes` (`cap_bytes`); `agents_md_bytes` and `skills_bytes` are the repository `AGENTS.md` block and the requested-skills block that share the kick. A zero line (`primed=true`, 0 entries) means priming ran and found nothing relevant — the signal that the store lacks entries for that lane's work. The line is not emitted when knowledge is disabled or there was nothing to prime, so a hive without a knowledge store does not log a zero on every kick. Read it against `src/docs/knowledge-entries.md` when deciding whether a fact belongs in `AGENTS.md` (paid on every kick) or in a scoped entry (paid only when it matches).
 
-**Maintainer notes in the kick.** When a maintainer has left [notes](/docs/hive/dashboard#maintainer-notes) on an item the kick lists, the scheduler appends one `# Maintainer notes` section — a `## owner/repo#N` block per noted item, newest note first, each capped at 1 KiB with "… and N more note(s) on the dashboard" when the rest did not fit. The notes come from the spoke's `/data/maintainer-notes.jsonl`, never from GitHub, and the section is omitted entirely when no listed item has any, so an unused feature costs no bytes.
+**Maintainer notes in the kick.** When a maintainer has left [notes](/docs/hive/dashboard/dashboard-page-reference#maintainer-notes) on an item the kick lists, the scheduler appends one `# Maintainer notes` section — a `## owner/repo#N` block per noted item, newest note first, each capped at 1 KiB with "… and N more note(s) on the dashboard" when the rest did not fit. The notes come from the spoke's `/data/maintainer-notes.jsonl`, never from GitHub, and the section is omitted entirely when no listed item has any, so an unused feature costs no bytes.
 
 ### What consumes tokens while agents are paused
 

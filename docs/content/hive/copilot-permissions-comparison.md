@@ -87,7 +87,7 @@ and the limits of the observations.
 - **Review gates.** `bin/merge-gate.sh` is deterministic: required CI green,
   not a draft, no `hold`, and an approved review for community PRs. The
   reviewer swarm adds verdicts after the change; `review.require_approval`
-  makes a same-head approval required at L6. See [review swarm](https://github.com/hivecommons/hive/blob/v5/src/docs/review-swarm.md)
+  makes a same-head approval required at L6. See [review swarm](/docs/hive/operations/automation-and-review/review-swarm)
   and [running at level 6](/docs/hive/running-at-level-6).
 - **Hold and approval.** Below L6 every agent PR gets `hold`; a human removes
   it. `needs-human` is a triage signal, not a universal merge stop. At L6 a

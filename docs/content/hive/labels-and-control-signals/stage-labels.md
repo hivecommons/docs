@@ -219,6 +219,8 @@ stateDiagram-v2
     s100 --> [*]: merged (labels removed)
 ```
 
+**Umbrella and owner-only issues have no stage of their own.** An umbrella or tracker issue (and an issue that waits on a person) keeps whatever stage the engine derives (`010`, `018`, `040`, `045`) and stays actionable for the owner and the hive; it is shown with a derived **Umbrella · owner** or **Owner only** pill and is never handed to a contributor relay (`hub.contribute_umbrella`, [reference](/docs/hive/labels-and-control-signals/reference#umbrella-also-tracker-epic-meta-tracker----hiveumbrella----human-only)). A dedicated `stage/0NN-umbrella` label was considered and not added: a stage is keyed in the engine table, the transition table, the dashboard column and filter vocabulary and every stage-aware harness (the `018` change touched more than fifty files), and the umbrella property is orthogonal to pipeline progress (a decomposed parent is still `010` while it waits on children and `040` while a PR covers it). The pill reads the same rules the contributor gate uses, so nothing can disagree. Because an umbrella is not a tracking archive, it is closable and closing it removes its stage labels like any other close.
+
 #### The regressed marker: when it is set, when it clears
 
 The dashboard's `regressed` chip and the `<!-- hive:stage-regressed -->`
@@ -368,7 +370,7 @@ legend is in [dashboard-sections.md](/docs/hive/dashboard-sections#hive-activity
 
 The automerge sweep already computes one reason per PR per lane each cycle
 (self-authored, trusted-author, contributor lane — see
-[hive-merge.md](https://github.com/hivecommons/hive/blob/v5/src/docs/hive-merge.md)). `automerge_stage_labels.go` maps that reason,
+[hive-merge.md](/docs/hive/operations/automation-and-review/hive-merge)). `automerge_stage_labels.go` maps that reason,
 the review-swarm verdict for the head, and the author tier the lane actually
 used to admit the PR:
 
@@ -383,7 +385,7 @@ used to admit the PR:
 | a trusted maintainer answered that question on the same head — `/hive decision <instruction>` or a CHANGES_REQUESTED review (recorded in `review-human-change-requests.json`, head-scoped) | `070-fixing`, reason `contributor-lane:decision-answered`: the answer is folded into the reviewer verdict for that head on every tick and after a restart, so the stage never re-derives 085 from the stale `requires_human` verdict. A bare `/hive decision approve` instead answers that `requires_human` question; it does not remove a `hold` label or provide the broad GitHub-review override for `changes_requested`/`reject`. A new head draws a new verdict with no answer and asks again ([#14679](https://github.com/hivecommons/hive/issues/14679)) |
 | CI red (`check-failing:*`, `required-check-failing:*`, `status-*`), `conflicting`, `not-mergeable`, `changes-requested`, verdict changes_requested/reject, `needs-rebase` present | `070-fixing` (self-authored lane or `author/hive`) / `071-needs-author` (`author/human`) / `072-returned-to-contributor` (`author/clanker`) — see [Stage 07x by author kind](#stage-07x-by-author-kind). A head whose App-linked commits carry a `Signed-off-by` the squash would misattribute to the PR author (`hive-signoff-attribution`) follows the same split: the branch owner is the only one who can rewrite them. |
 | `contributor-lane:soaking(...)` — and no red check on the head | `095-pre-merge-soak` |
-| `head-changed-since-eval`, `merge-failed`, `merge-queue-required` (the base branch's ruleset only accepts merges through GitHub's merge queue and the transport is a static token that cannot enqueue, so the direct REST merge is refused; with App auth on a repo opted in through `auto_merge.native_merge_queue` these bases are enqueued instead, see [native-merge-queue.md](https://github.com/hivecommons/hive/blob/v5/src/docs/native-merge-queue.md); logged as a skip rather than a merge error, [#14018](https://github.com/hivecommons/hive/issues/14018); the self-authored sweep then skips the direct merge on that base for 30 minutes and logs the skip once per PR head, [#14068](https://github.com/hivecommons/hive/issues/14068); the trusted-author, queued and contributor-lane sweeps skip it the same way), `required-checks-expected`, `behind`, `updated-branch`, `behind-update-budget-exhausted` (a behind self-authored PR the sweep did not update only because this tick's branch-update budget was spent; retried next tick, waits on the hive, [#12607](https://github.com/hivecommons/hive/issues/12607)), `release-hold*`, `native-merge-queued: queued (position N, STATE)` (the PR was enqueued into GitHub's native merge queue) and the failures `native-merge-queue-read`, `native-merge-queue-enqueue`, `native-merge-queue-method` — and no red check on the head | `100-merge-queue` |
+| `head-changed-since-eval`, `merge-failed`, `merge-queue-required` (the base branch's ruleset only accepts merges through GitHub's merge queue and the transport is a static token that cannot enqueue, so the direct REST merge is refused; with App auth on a repo opted in through `auto_merge.native_merge_queue` these bases are enqueued instead, see [native-merge-queue.md](/docs/hive/operations/automation-and-review/native-github-merge-queues); logged as a skip rather than a merge error, [#14018](https://github.com/hivecommons/hive/issues/14018); the self-authored sweep then skips the direct merge on that base for 30 minutes and logs the skip once per PR head, [#14068](https://github.com/hivecommons/hive/issues/14068); the trusted-author, queued and contributor-lane sweeps skip it the same way), `required-checks-expected`, `behind`, `updated-branch`, `behind-update-budget-exhausted` (a behind self-authored PR the sweep did not update only because this tick's branch-update budget was spent; retried next tick, waits on the hive, [#12607](https://github.com/hivecommons/hive/issues/12607)), `release-hold*`, `native-merge-queued: queued (position N, STATE)` (the PR was enqueued into GitHub's native merge queue) and the failures `native-merge-queue-read`, `native-merge-queue-enqueue`, `native-merge-queue-method` — and no red check on the head | `100-merge-queue` |
 | CI red (required or optional check) while the PR is deferred to an open `[shared-ci]` incident (`<!-- hive-shared-ci-<n> -->`, the governor's `deferred_incident`) for the same head | `050-review-pending` / `060-reviewed`, reason `shared-ci-incident:<n>`: the base or a shared check is what is red, so the PR is never sent to 070/071/072, never nudged and never stalled; once the incident closes a still-red head is handed back as usual. Conflicts and requested changes stay author-facing ([#12606](https://github.com/hivecommons/hive/issues/12606)) |
 | CI red (required or optional) while **every** failing check on the head is also red on the base branch's tip — the governor's `base_red_checks` / `base_red`, set during CI enrichment when a same-named latest check run on the base ref (meta checks excluded) concluded failure / timed_out / cancelled / action_required / startup_failure / stale **and** the PR's changed files include none of `.github/workflows/*`, `Dockerfile` / `Dockerfile.*` / `*.Dockerfile`, `go.mod` / `go.sum` (a PR touching those plausibly owns the check and stays author-facing; a lookup error or a diff beyond the file-list page budget also stays author-facing) | `050-review-pending` / `060-reviewed`, reason `base-branch-red:<check>,<check>` ("waiting for the base branch's CI to recover (…) — not this PR's fault"): never 070/071/072, never nudged, never stalled, still not merged (the lane's skip reason is the same token). The fix loop counts no attempt, kicks no fixer, and posts one `<!-- hive-base-branch-red -->` hold comment per head; an escalation the hive itself raised (ledger `label_applied`) over such a head has its `needs-human` removed with the hold wording. The next evaluation after the base goes green re-evaluates the head: a still-red PR is handed back as usual. Conflicts and requested changes stay author-facing (seen on [#13270](https://github.com/hivecommons/hive/pull/13270) and [#13258](https://github.com/hivecommons/hive/pull/13258), 2026-10-20) |
 | CI red (required or optional) on a **fork** PR while **every** failing check's annotation says the check refuses forks (case-insensitive `fork pull request(s) cannot`, `maintainer must push this branch`, or `cannot publish` together with `fork` — a fork-publication / fork-secrets guard) | `085-needs-decision`, reason `fork-guard:<check>,<check>`: never 070/071/072, never nudged, never adopted (074) — neither the author nor the hive can turn the check green by pushing to the fork. The entry comment names the check and says a maintainer must push the branch to the repository (or approve the run as the repository requires). The guard's checks are remembered on the PR's stage record: a head the CI-enriched enumeration has not classified yet (a new push, or a snapshot that dropped the PR) parks the same way when every red check in its check digest is one the guard refused before, so a fork PR is not nudged and adopted on each new head first ([projectbluefin/utah-packages#869](https://github.com/projectbluefin/utah-packages/pull/869)). A same-repo PR with the same message, or a fork PR with any other red check, is handed back as usual ([#14273](https://github.com/hivecommons/hive/issues/14273)) |
@@ -535,7 +537,7 @@ revert-rate-by-author-kind drill-down (#12428) reads it.
 | Label | Meaning | Example |
 |---|---|---|
 | `author/human` | a person pushed the PR themselves | a maintainer's hand-written PR |
-| `author/clanker` | a **contributor's own agent** (relay) authored the PR under that contributor's GitHub login — "clanker" is the project's word for a contributor's agent (it is their clanker, not a hive) | mendezr's or Karibhou's relay-opened PRs: human login, `— hive:` trailer |
+| `author/clanker` | a **contributor's own agent** (relay) authored the PR under that contributor's GitHub login — "clanker" is the project's word for a contributor's agent (it is their clanker, not a hive) | mendezr's or Karibhou's relay-opened PRs: human login, `-- hive:` trailer |
 | `author/hive` | **this repository's own hive** — the App or one of its agent lanes — authored the PR | `app/hivecommons-hive` PRs, anything stamped `agent/<lane>` |
 
 Detection rules, first match wins (`authorkind.Explain` returns the rule
@@ -546,7 +548,7 @@ name, logged at debug as `stage labels: author kind`):
    same pass strips as strays from a non-App PR, #12545, are ignored first)
 3. `<!-- hive:origin hive=<id> -->` in the body: `<id>` is this hive's
    `hive_id` → `author/hive`; another hive → `author/clanker`
-4. the visible `— hive:` attribution trailer (what the hub's
+4. the visible `-- hive:` attribution trailer (what the hub's
    `ReconcilePRAttribution` stamps on every relay-reported PR) → `author/clanker`
 5. the `🐝 **Hive Agent**` identity footer from `gh-wrapper.sh` → `author/clanker`
 6. a `Generated by …` provenance line whose run link is under
@@ -714,6 +716,7 @@ Per repo, `repos.<repo>.parent_autoclose` chooses the policy:
 |---|---|
 | `true` (default) | close a decomposed parent when all children are closed, except `epic`/`hold`-labelled issues |
 | `epics_too` | also close `epic`/`hold`-labelled parents |
+| `trackers_too` | `epics_too`, and also close tracker/umbrella issues that have no sub-issue children once everything they reference is finished (below) |
 | `false` | never auto-close a parent in this repo |
 
 ```yaml
@@ -722,8 +725,50 @@ repos:
     parent_autoclose: false
 ```
 
+You can also set it without editing YAML: Settings, Repos tab, "Parent auto-close"
+(owner only). Each monitored repo has a choice of "Close finished parents
+(default)", "Also close epics and holds", "Also close trackers whose work is done" and "Never auto-close parents"; saving
+applies it without a restart and is recorded in the audit log. Issues marked as
+tracking issues (`hive/tracking`, the `<!-- hive:tracking -->` marker, or "Keep
+this issue open") are never auto-closed under any value.
+
 The dashboard does not yet show a "kept open: reopened by <login>" pill; the
 kept-open decision is logged (`decomposed parent kept open`).
+
+**Trackers and umbrellas with no sub-issues (`trackers_too`).** Many umbrella and
+audit trackers are not decomposed parents: they have no sub-issue children and
+are referenced by `Refs`-only PRs. Under v5 a merge never closes an issue, so
+with `repos.<repo>.parent_autoclose: trackers_too` the sweep computes "done"
+from the state of what the tracker references, never from close keywords. It is
+off unless you choose it, and nothing changes for any other value.
+
+- *Which issues are read.* Only an issue that announces itself as a tracker: one
+  the shared umbrella classifier recognises (`umbrella`, `tracker`, `epic` or
+  `meta-tracker` label, the `<!-- hive:umbrella -->` marker, a `[Tracker]`-style
+  title prefix, or a task list of two or more issue references; see
+  `hub.contribute_umbrella`), an `audit` or `roadmap` label, or a `close_when`
+  checklist. A design or feature issue that merely has `Refs` PRs is never
+  closed this way, because a `Refs` PR is partial work by definition.
+- *The reference set.* With a `close_when` heading (or `close_when:` line) in the
+  body, the checklist under it is the whole set: the tracker is done when every
+  item is ticked or, for an item naming an issue or PR, closed. Otherwise the set
+  is every task-list item that names an issue or PR plus every PR that
+  references the tracker with `Refs`, a closing keyword or `Part of`. The tracker
+  is done when that set is non-empty, every PR in it is merged or closed and
+  every issue in it is closed.
+- *Safety.* `hive/tracking` issues (label, `<!-- hive:tracking -->` marker, "Keep
+  this issue open") and `hold`-labelled issues are never closed, even though
+  `trackers_too` implies `epics_too`. A tracker a person reopened after a hive
+  auto-close is never closed again. An unreadable reference or timeline, or more
+  than 50 references, means no close. Reads are cached per tracker, and the close
+  needs the same finished evidence on two fresh reads 15 minutes apart, so a
+  tracker is not closed between two PRs landing.
+- *Audit.* Before closing, the hive posts one comment (carrying
+  `<!-- hive:parent-autoclose -->`) listing every referenced issue and PR with
+  its state, then closes the tracker as completed. Reopening it is final.
+
+Closing done-but-open issues that sit in `stage/040-covered-by-pr` when the
+covering PR merges is not part of this rule.
 
 ### `stage/stalled` — "nobody is working this"
 
@@ -802,7 +847,7 @@ does not bump itself.
 ### Off the happy path: 072 → nudge → 074 → takeover
 
 When a contributor-agent PR goes red the hive does not just relabel it (a human-authored one goes to `stage/071-needs-author` and waits) (full flow in
-[hive-merge.md](https://github.com/hivecommons/hive/blob/v5/src/docs/hive-merge.md#stage-labels)):
+[hive-merge.md](/docs/hive/operations/automation-and-review/hive-merge#stage-labels)):
 
 1. `stage/072-returned-to-contributor` and ONE `<!-- hive:contributor-nudge
    reason=<slug> head=<sha> n=<1|2> mode=<comment|queued|spawn|preempt> -->`
@@ -842,6 +887,25 @@ When a contributor-agent PR goes red the hive does not just relabel it (a human-
    (`contributor-offline`, supersede now) only fires for an author who is not
    reachable, the same condition. This follows the documented rule that a
    contributor who has gone quiet is superseded now (#13975).
+   **A contributor PR another open PR already covers is never adopted**
+   ([#18900](https://github.com/hivecommons/hive/issues/18900), child of
+   #18890: the hive adopted #18870 as #18879 while the owner's #18873 for the
+   same issue was open). Before it adopts, the automatic path (`adoptContributorPR`,
+   the executor behind the `AutoAdoption` clock) and the ladder (rung 5a,
+   `covered-by-other-pr`, just before rung 5) look for another open PR, on the
+   same base branch, that closes an issue this PR closes and is a person's (an
+   owner or `author/human`, or an owner/member/collaborator not driving a
+   clanker) or the hive's. If there is one the contributor PR is closed as a
+   duplicate of it with one thank-you note that credits the contributor, and the
+   head records the block `covered-by-open-pr` (tracker row: "another open PR
+   already covers the issue"); a write-back gate refusal or a failed close
+   leaves the PR open with adoption still off. The hive's own copy of this PR
+   (`Supersedes #N`), a PR on another release line, another contributor's PR and
+   a duplicate the merge queue holds behind this one do not count: "green first,
+   then earlier-opened" only breaks ties between PRs of equal trust. With no
+   competing PR but a live claim by a person or a hive agent on the issue, the
+   ladder recommends leaving the PR open and names the holder, and the engine
+   refuses adoption (`human-claim`, see [maintainer commands](/docs/hive/operations/automation-and-review/maintainer-commands#claiming-an-issue)).
 2. Relay contributors (the author has a contributor profile and a live relay
    connection) also receive the diagnosis in their relay session as a
    `fix-pr` task with `priority: interrupt`. Presence = a relay heartbeat
@@ -1212,7 +1276,7 @@ When a contributor-agent PR goes red the hive does not just relabel it (a human-
    The superseding PR is App-authored and red with the same failures, so the
    existing machinery takes over: it lands in `ci-failing.json` and the
    scanner's FIX-BEFORE-NEW kick (the route every red hive-authored PR takes,
-   [hive-merge.md](https://github.com/hivecommons/hive/blob/v5/src/docs/hive-merge.md#stage-labels)) rebases and fixes it on
+   [hive-merge.md](/docs/hive/operations/automation-and-review/hive-merge#stage-labels)) rebases and fixes it on
    `hive/adopt-<n>`; it then runs the normal `050 → 100` path, while the
    original stays 074 at the adopted head whatever its own CI says. The only
    second takeover is the DCO re-home of an in-place adoption (below); a
@@ -1426,6 +1490,20 @@ comment and the dashboard claim detail (`@login` next to the claim).
 | A person — dashboard, `/claim`, hivectl, or a Copilot CLI / Claude Code / Codex session acting on their behalf | `kind=human who=<login>` | `hive/claimed-by-human` |
 | A relay contributor or external bot | `kind=contributor` / `kind=external`, `who=<login>` | `hive/claimed-by-human` |
 | A hive agent with no human principal | `kind=agent who=<agent>` | `hive/claimed-by-<agent>` (e.g. `hive/claimed-by-scanner`) |
+
+**A person outranks a contributor, ledger entry or not.** The ledger ranks
+`kind=human` over `kind=contributor`, but an owner's claim made outside it
+(the assignee set by an owner or maintainer, a `/claim` comment, or
+`hive/claimed-by-human` applied by hand rather than by the hive) used to leave
+a live contributor lease untouched (#18866: the owner claimed at 03:21Z and the
+contributor still opened a PR at 03:32Z). Since
+[#18899](https://github.com/hivecommons/hive/issues/18899) the contributor
+claim's admission check reads those signals, so the next renewal or the
+five-minute release tick releases the lease (reason `human claim: ...`), yanks
+the relay task and records the person as the claim holder; see
+[Maintainer commands](/docs/hive/operations/automation-and-review/maintainer-commands#claiming-an-issue). The hive's
+own `hive/claimed-by-human` label (applied for a person's or a contributor's
+ledger claim) is never read as a person's claim; only a hand-applied one is.
 
 A backend or model name (`copilot`, `claude`, `codex`, `gemini`, `pi`) is
 **never** a suffix: it names the tool, not who answers for the work. A

@@ -233,7 +233,7 @@ which feeds the author/reviewer model-pair metrics.
 The same pool drives the **review swarm** ([#13243](https://github.com/hivecommons/hive/issues/13243)).
 Each `[review-perspective:…]` kick (and the combined kick on non-fan-out hives)
 is planned against the PR's author model — taken from `pr.HiveModel`, i.e. the
-`— hive:` trailer / `agent_pr_created` audit record — and the perspective prompt
+`-- hive:` trailer / `agent_pr_created` audit record — and the perspective prompt
 carries the same `## Independent review — run this review with <backend>/<model>`
 section the queue kick's PR lines do. Pool selection, `exclude_author_model`,
 `exclude_author_family` and `fallback` behave exactly as above; in the swarm
@@ -415,7 +415,7 @@ For prompt file resolution and the complete built-in `${VAR}` reference, see
 
 ### Sandbox settings (`agents.<name>.sandbox`)
 
-An agent's `sandbox` block (image, runtime, Job fields) is editable from its General tab under "Sandbox settings: image, runtime and Job", and through `PUT /api/config/agent/<name>/general` with `sandboxImage`, `sandboxRuntime`, `sandboxJob` and `sandboxCopyFrom` (hivecommons/hive#18797). A blank value inherits the hive-wide `agent_sandbox` default, which is set under Settings, Security. "Copy sandbox settings from..." copies another agent's complete block, Secret names included and never values. Enabling a sandbox that resolves no image is refused with the field named. The full set of controls and keys is in [sandbox-isolation.md](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md#setting-up-a-sandbox-from-the-dashboard). `sandbox.job.image_pull_secrets` (Secret names only, at most 32; a per-agent block that sets none inherits `agent_sandbox.job`) adds registry pull secrets to the Job pod beside hive's own and the Job service account's; the API field is `sandboxJob.imagePullSecrets` ([#18819](https://github.com/hivecommons/hive/issues/18819), see [Private-registry images](https://github.com/hivecommons/hive/blob/v5/src/docs/sandbox-isolation.md#running-sandboxed-kicks-as-kubernetes-jobs)).
+An agent's `sandbox` block (image, runtime, Job fields) is editable from its General tab under "Sandbox settings: image, runtime and Job", and through `PUT /api/config/agent/<name>/general` with `sandboxImage`, `sandboxRuntime`, `sandboxJob` and `sandboxCopyFrom` (hivecommons/hive#18797). A blank value inherits the hive-wide `agent_sandbox` default, which is set under Settings, Security. "Copy sandbox settings from..." copies another agent's complete block, Secret names included and never values. Enabling a sandbox that resolves no image is refused with the field named. The full set of controls and keys is in [sandbox-isolation.md](/docs/hive/security/sandbox-isolation#setting-up-a-sandbox-from-the-dashboard). `sandbox.job.image_pull_secrets` (Secret names only, at most 32; a per-agent block that sets none inherits `agent_sandbox.job`) adds registry pull secrets to the Job pod beside hive's own and the Job service account's; the API field is `sandboxJob.imagePullSecrets` ([#18819](https://github.com/hivecommons/hive/issues/18819), see [Private-registry images](/docs/hive/security/sandbox-isolation#running-sandboxed-kicks-as-kubernetes-jobs)).
 
 ### Declarative extensions
 
@@ -440,7 +440,7 @@ Presets map onto modes (`advisory` denies issue and PR creation, `issues-only` d
 
 ### Replicated agents
 
-Set `replicas: N` on a declared agent to run a small pool with the same prompt, backend, model, mode, channel, tool, and metadata settings. `N` defaults to `1` and is capped at `5`; config load fails if it is outside `1..5`. Hive materializes derived names as `<base>-2`, `<base>-3`, ... (`scanner`, `scanner-2`, `scanner-3`). Do not declare those derived names yourself: a real `scanner-2` entry collides with `scanner: { replicas: 2 }` and is rejected. Derived replicas get their own IDs and bead directories (`/data/beads/scanner-2`) but inherit the base agent's kick template/prompt selection. Runtime-derived replicas are stripped before saving and recreated on the next load. For the reviewer lane, `review.reviewers.autoscale` can raise and lower the materialised count at runtime between `min` and `max`; the declared `replicas` then only seeds the initial size. See [review-swarm.md](https://github.com/hivecommons/hive/blob/v5/src/docs/review-swarm.md#reviewer-autoscale-reviewreviewersautoscale).
+Set `replicas: N` on a declared agent to run a small pool with the same prompt, backend, model, mode, channel, tool, and metadata settings. `N` defaults to `1` and is capped at `5`; config load fails if it is outside `1..5`. Hive materializes derived names as `<base>-2`, `<base>-3`, ... (`scanner`, `scanner-2`, `scanner-3`). Do not declare those derived names yourself: a real `scanner-2` entry collides with `scanner: { replicas: 2 }` and is rejected. Derived replicas get their own IDs and bead directories (`/data/beads/scanner-2`) but inherit the base agent's kick template/prompt selection. Runtime-derived replicas are stripped before saving and recreated on the next load. For the reviewer lane, `review.reviewers.autoscale` can raise and lower the materialised count at runtime between `min` and `max`; the declared `replicas` then only seeds the initial size. See [review-swarm.md](/docs/hive/operations/automation-and-review/review-swarm#reviewer-autoscale-reviewreviewersautoscale).
 
 ### Trigger channels
 
@@ -724,6 +724,39 @@ The agent inference proxy (`127.0.0.1:18444`) no longer keeps the key it resolve
 
 When the gateway answers `401`, the proxy re-resolves the key once. If that yields a different key, it retries the request once with it, and counts an auth failure only when the retry is also rejected. An unchanged key is not retried. The `inference backend auth failure` WARN carries `key_source` (`file:<path>`, `env:<NAME>`, `static` for a route with a fixed credential such as a minted watsonx IAM token, or `none`) and `key_changed_since_start` (whether the key differs from the first key this process resolved for that backend). It never logs the key.
 
+#### Translator timeouts and bounded retry
+
+The inference translator that carries every agent's model calls to a gateway has no timeout and no retry for a rate limit or server error unless you opt in ([#19057](https://github.com/hivecommons/hive/issues/19057)). Everything below is **off by default**: with the block absent, or every value at its default, the translator behaves exactly as before. Settings are read once at start, so a change needs a restart.
+
+```yaml
+governor:
+  inference_resilience:
+    connect_timeout_s: 0           # TCP connect to the gateway; 0 = off
+    response_header_timeout_s: 0   # wait for the upstream to start answering; 0 = off
+    idle_stream_timeout_s: 0       # cut a response that sends no bytes for this long; 0 = off
+    retry_enabled: false           # bounded retry for 429 and 5xx
+    retry_max_retries: 2           # retries after the first attempt (at most 5)
+    retry_base_delay_ms: 500       # first backoff step; doubles each retry
+    retry_max_delay_s: 20          # cap on one wait and on an honored Retry-After
+```
+
+| Key | Environment variable | Default |
+| --- | --- | --- |
+| `connect_timeout_s` | `HIVE_INFERENCE_CONNECT_TIMEOUT_S` | `0` (off) |
+| `response_header_timeout_s` | `HIVE_INFERENCE_RESPONSE_HEADER_TIMEOUT_S` | `0` (off) |
+| `idle_stream_timeout_s` | `HIVE_INFERENCE_IDLE_STREAM_TIMEOUT_S` | `0` (off) |
+| `retry_enabled` | `HIVE_INFERENCE_RETRY_ENABLED` | `false` |
+| `retry_max_retries` | `HIVE_INFERENCE_RETRY_MAX_RETRIES` | `2` (maximum `5`) |
+| `retry_base_delay_ms` | `HIVE_INFERENCE_RETRY_BASE_DELAY_MS` | `500` |
+| `retry_max_delay_s` | `HIVE_INFERENCE_RETRY_MAX_DELAY_S` | `20` |
+
+A valid environment variable wins over the yaml key; an invalid one is ignored and named in a start-up warning. Values are whole numbers, and seconds are capped at 3600.
+
+- **Timeouts.** The connect and response-header timeouts apply to the request to the gateway. A non-streaming call only gets headers once the model has finished, so keep `response_header_timeout_s` above your longest healthy generation. The idle-stream timeout counts only time spent waiting for the upstream, from one byte to the next, so a stream that is slow but keeps producing bytes is never cut. A timeout is not retried: the agent gets the same `502` (before any byte) or the same stopped stream (after) that a dead upstream always gave.
+- **Retry.** With `retry_enabled`, a `429` or a `5xx` other than `501` is resent up to `retry_max_retries` times, with exponential backoff (`base * 2^(n-1)`, capped at `retry_max_delay_s`) and jitter in the upper half of each step. A `Retry-After` (seconds or an HTTP date) is honored, plus jitter of up to one base step; one longer than `retry_max_delay_s` is not waited for, and the response is passed to the agent instead. A retry happens only while no response byte has reached the agent, so a stream that has started is never replayed. The retry resends the translated request that is already held in memory with the same headers and the route's current key, so there is no buffer to size and no body-size cap. The existing single resend after a `401` is separate and unchanged, and key resolution is untouched.
+- **Mid-stream death.** A stream that dies after its first byte is logged (`inference SSE translation failed`) and stopped, as before.
+- **Observability.** Each retry logs `inference upstream retrying` and each timeout logs `inference upstream timeout`, with `backend`, `status` and `agent` (and `attempt`, `delay_ms` or `kind`), never a request or response body and never a header value. Counters `crux.proxy.inference.retries` (attributes `route`, `status`) and `crux.proxy.inference.timeouts` (attributes `route`, `kind` of `connect`, `response_header` or `idle`) are exported through the OpenTelemetry meter.
+
 ### Claude Managed Agents hosted execution
 
 Claude Managed Agents is an external hosted engine, not a `backend:` value.
@@ -770,7 +803,7 @@ yet covered.
 
 Kubernetes manifests for deploying inference backends (vllm Deployment, EPP RBAC, kustomization) are in [`deploy/inference/`](https://github.com/hivecommons/hive/blob/v5/src/deploy/inference/).
 
-Agents can inspect peer panes with `hive-panes [lines]` when the deployment includes `src/deploy/hive-panes.sh`. It reads pluk JSONL logs from `/var/run/pluk/logs`, skips the calling agent named by `HIVE_PROXY_AGENT`, strips terminal escapes, and prints the last N raw-output lines for every other agent. Use it for situational awareness; it is read-only and does not attach to another agent's tmux session. See [Agent peer-awareness logging](https://github.com/hivecommons/hive/blob/v5/src/docs/agent-logging.md) for the pluk log format, when it's available, and its retention behavior.
+Agents can inspect peer panes with `hive-panes [lines]` when the deployment includes `src/deploy/hive-panes.sh`. It reads pluk JSONL logs from `/var/run/pluk/logs`, skips the calling agent named by `HIVE_PROXY_AGENT`, strips terminal escapes, and prints the last N raw-output lines for every other agent. Use it for situational awareness; it is read-only and does not attach to another agent's tmux session. See [Agent peer-awareness logging](/docs/hive/operations/agent-and-governor-controls/agent-peer-awareness-logging) for the pluk log format, when it's available, and its retention behavior.
 
 Every discovery probe is best-effort: a failed or absent probe falls back to a current static list, so a model dropdown is never empty. Fallback entries are marked "unverified" in the UI.
 
@@ -840,6 +873,17 @@ Two consequences worth knowing:
 - **Model validation does not save you here.** `POST /api/model/...` checks the model against the agent's *current effective* backend, and deliberately fails **open** when that backend's model list cannot be enumerated (see `validateModelForAgent`). Codex is exactly such a backend, so `switch` to codex followed by `model` set to a Claude id is accepted. Reverse the order and the model is validated against the backend you are about to leave. Neither order gives you a checked pair.
 - **The atomic route does not restart the agent.** It persists the pair and syncs it into the live process config, so the running CLI keeps its current method until the agent next restarts. That is usually what you want for a scripted change — the two-call path pays for two restarts — but if you need the change to take effect now, restart the agent afterwards.
 
+### Switching the method or model of an agent that is not running
+
+`POST /api/switch/{agent}/{backend}` and `POST /api/model/{agent}/{model}` accept a change for any **configured** agent, not only a live one ([#18905](https://github.com/hivecommons/hive/issues/18905)). An agent can be configured but absent from the runtime (stopped, held back by the ACMM level gate) or present but paused:
+
+- **Not in the runtime (stopped or gated):** the choice is persisted to both config layers (`hive.yaml` and the per-agent overlay, see [config-layering](https://github.com/hivecommons/hive/blob/v5/src/docs/config-layering.md)), marked operator-owned, and nothing is restarted. The model is validated against the agent's saved backend and a backend against the supported list or a configured gateway name, exactly as for a running agent.
+- **Paused or stopped in the runtime:** the override is set and persisted as usual, but the agent is **not** restarted, so a model change does not wake a paused agent.
+
+In both cases the response is `{"ok": true, "applied": false, "message": "saved; applies when <agent> starts", ...}` and the dashboard shows that message instead of "session restarted". A live switch is unchanged and carries no `applied` field. A name that is neither running nor configured still fails with `400` and `agent <name> not found (valid agents: ...)`.
+
+On the dashboard, switching an agent's method, model or reasoning effort keeps the page where it was: the re-render re-pins the window to the same agent card, returns focus to the dropdown you used (including after the model list reloads), and never re-sorts the cards ([#18906](https://github.com/hivecommons/hive/issues/18906)).
+
 ### `launch_cmd` and `backend`
 
 `backend` is the operator-owned field; `launch_cmd` is derived from it. The two must agree: a `launch_cmd` whose executable is a different agentic CLI than `backend` names (say `backend: codex` next to `launch_cmd: /usr/bin/bob …`) is rejected by config validation, because the agent would be launched as one CLI and health-checked as another. Hive enforces this on every path that can move the two apart:
@@ -871,7 +915,7 @@ governor:
       architect: pause     # "pause" stops kicks for this agent in this mode
 ```
 
-- **Thresholds scale with repo count.** The *default* thresholds above are per-repo bases, multiplied by `len(project.repos)` — so `surge` is 20 on a 1-repo hive and 780 on a 39-repo one, and the mode ladder means the same thing at any hive size. A `threshold:` you set yourself is used verbatim and never scaled. Tune the curve with `governor.threshold_scaling` (`linear` default, `sqrt`, `none`). See [Governor mode thresholds](https://github.com/hivecommons/hive/blob/v5/src/docs/governor-thresholds.md), which also covers the ACMM-pack interaction.
+- **Thresholds scale with repo count.** The *default* thresholds above are per-repo bases, multiplied by `len(project.repos)` — so `surge` is 20 on a 1-repo hive and 780 on a 39-repo one, and the mode ladder means the same thing at any hive size. A `threshold:` you set yourself is used verbatim and never scaled. Tune the curve with `governor.threshold_scaling` (`linear` default, `sqrt`, `none`). See [Governor mode thresholds](/docs/hive/operations/agent-and-governor-controls/governor-thresholds), which also covers the ACMM-pack interaction.
 - **Mutually exclusive modes.** Each per-agent, per-mode cadence is either an interval (`5m`, `2h`, `pause`) or a time-of-day schedule — never both. Config load and API writes reject mixed forms with a 400/error.
 - **Time-of-day schedules.** Use `times: ["HH:MM"]` with optional `days` (`mon` … `sun`) and a required IANA `tz`. The timezone is stored explicitly and displayed with the schedule; it does not float with the viewer.
 - **Advanced cron.** Power users can provide a constrained five-field cron expression plus `tz`. Hive evaluates these with robfig/cron and schedule-local timezone handling.
@@ -889,7 +933,7 @@ Cadences are not the only way an agent gets kicked: the additive `triggers:`
 config key declares CEL rules that kick a named agent directly off a
 source-control event (issue opened, PR opened, a label applied, a comment
 posted), independent of the governor's queue-depth cadence. See
-[CEL-based agent triggers](https://github.com/hivecommons/hive/blob/v5/src/docs/cel-triggers.md).
+[CEL-based agent triggers](/docs/hive/operations/automation-and-review/cel-triggers).
 
 ### Continuous scheduling: configure and verify
 
@@ -941,7 +985,7 @@ agents:
   historical one-timer behavior.
 - **Base thresholds, unscaled.** In per-repo scope each repo's own actionable
   queue depth (issues + PRs) is compared against the **base** thresholds —
-  repo-count [threshold scaling](https://github.com/hivecommons/hive/blob/v5/src/docs/governor-thresholds.md) does not apply,
+  repo-count [threshold scaling](/docs/hive/operations/agent-and-governor-controls/governor-thresholds) does not apply,
   because the comparison is already per-repo.
 - **One timer per repo.** An opted-in agent gets a cadence entry — and
   last-kick bookkeeping — per successfully scanned repo, keyed `agent|repo`.
@@ -990,7 +1034,7 @@ L5/L6. Set top-level `quality.formal: true` to let quality identify
 protocol-shaped subsystems and author Spin/Promela models, their executable
 property contract, and reporting-only CI. The setting is inert below L5 and
 does not turn modeling into a default for every repository. See
-[Formal verification](https://github.com/hivecommons/hive/blob/v5/src/docs/formal-verification.md) for the admission, artifact,
+[Formal verification](/docs/hive/operations/automation-and-review/formal-verification) for the admission, artifact,
 reporting, and maintenance rules.
 
 Telemetry and operations are L5/L6-only agents. They stay absent below L5 and remain paused at L5/L6 until an operator deliberately opts in. Their lane keywords are disjoint: telemetry owns instrumentation and observability terms, while operations owns health, SLO, runbook, incident, rollback, and alerting terms.
@@ -1124,7 +1168,7 @@ The seed edit is still the only way to allow a repo outside the hive. For one of
 
 `Config.GitHubPromptAllowed(slug)` (and `GitHubDefinitionAllowed`, which delegates to it) admits a repo when either the seed gate or an owner approval allows it, so every caller (prompt, definition and review-perspective resolvers) honors both paths without change.
 
-`review.perspectives_source` (the live-linked review perspective set; see [review-swarm.md](https://github.com/hivecommons/hive/blob/v5/src/docs/review-swarm.md#live-linked-perspectives-reviewperspectives_source)) uses the same seed-only gate: the resolver is allowed to read a repo only when `GitHubPromptAllowed` permits it, it resolves at the same resolve points (startup and every reload), and it follows the same fallback shape as `Resolve` above (last-known-good, then the inline config).
+`review.perspectives_source` (the live-linked review perspective set; see [review-swarm.md](/docs/hive/operations/automation-and-review/review-swarm#live-linked-perspectives-reviewperspectives_source)) uses the same seed-only gate: the resolver is allowed to read a repo only when `GitHubPromptAllowed` permits it, it resolves at the same resolve points (startup and every reload), and it follows the same fallback shape as `Resolve` above (last-known-good, then the inline config).
 
 ### Fetch failures never blank an agent
 
@@ -1314,7 +1358,7 @@ The own-item follow-up below follows the items opened under either identity, eac
 
 **Fork-and-PR.** The owner's account cannot push to a repository it does not own, so a PR against a remote repo goes through the owner's fork: `gh repo fork <owner>/<name> --clone=false`, push the topic branch to `https://<host>/<login>/<name>`, then `gh pr create --repo <owner>/<name> --head <login>:<branch>`. The proxy allows exactly that (fork creation, pushes to the fork with its default branch protected, the PR against the remote) and refuses everything else on the fork. The kick spells the commands out, so `git push` and `gh pr create` need no agent-side special casing.
 
-**Own-item follow-up.** Remote repos send no webhooks and are not enumerated, so the hive polls them: it lists the open issues and PRs created by the login each repo writes as (the owner's, or the App bot's on a repo that writes as the bot, [#18516](https://github.com/hivecommons/hive/issues/18516)), reading each repo under its own reference-repo credential, keeps the ones whose body carries a hive marker (the `— hive:` attribution trailer or the `🐝 **Hive Agent**` footer), fetches new comments, review comments and reviews, and delivers them to the agent the marker names, into its live session or as a `🌐 REMOTE ITEM FOLLOW-UP` section on its next kick. State is in `/data/turn/remote-items.json` (`HIVE_REMOTE_ITEMS_FILE` overrides). Nothing else happens on the remote: no backlog scan, no queue, no stage engine ([#18199](https://github.com/hivecommons/hive/issues/18199)).
+**Own-item follow-up.** Remote repos send no webhooks and are not enumerated, so the hive polls them: it lists the open issues and PRs created by the login each repo writes as (the owner's, or the App bot's on a repo that writes as the bot, [#18516](https://github.com/hivecommons/hive/issues/18516)), reading each repo under its own reference-repo credential, keeps the ones whose body carries a hive marker (the `-- hive:` attribution trailer or the `🐝 **Hive Agent**` footer), fetches new comments, review comments and reviews, and delivers them to the agent the marker names, into its live session or as a `🌐 REMOTE ITEM FOLLOW-UP` section on its next kick. State is in `/data/turn/remote-items.json` (`HIVE_REMOTE_ITEMS_FILE` overrides). Nothing else happens on the remote: no backlog scan, no queue, no stage engine ([#18199](https://github.com/hivecommons/hive/issues/18199)).
 
 What agents see: the `📚 REFERENCE REPOS` block appends `(from owner/repo#N)` to each derived line, `(from owner/repo#N; read-only: <reason>)` when the credential fell back, and `(read-only this pass: <reason>)` while an App lookup is unresolved. The proxy rules are the ones in the table above: a derived entry unlocks opening issues and PRs on that repo and nothing else, and the read-only fallback unlocks nothing. On the dashboard, Settings shows derived entries read-only with a link to the request issue and the credential state, and the API answers an edit of one with `409`.
 
@@ -1343,7 +1387,7 @@ Semantics:
 - An issue must carry **at least one** required label to be eligible. Matching is case-insensitive and **exact** (a prefix like `approved-for-agents-maybe` does not satisfy `approved-for-agents` — prefix matching would over-admit through an approval gate).
 - **Exempt wins on conflict**: an issue carrying both an exempt label and a required label stays excluded. There is deliberately no separate `exclude_labels` field — the exempt list *is* the exclusion mechanism, applied first.
 - PRs and the Hold list are unaffected: open PRs are in-flight work, and held issues still appear under On Hold.
-- PRs have their own, separate allow-list for **reviews**: `review.require_labels` (Settings → Features → Review Gate → "Only review labelled PRs") keeps the hive from reviewing a PR until it carries an approval label; see [review-swarm.md](https://github.com/hivecommons/hive/blob/v5/src/docs/review-swarm.md#only-review-labelled-prs-reviewrequire_labels). Use a distinct label from the issue gate if the two approvals mean different things to your maintainers.
+- PRs have their own, separate allow-list for **reviews**: `review.require_labels` (Settings → Features → Review Gate → "Only review labelled PRs") keeps the hive from reviewing a PR until it carries an approval label; see [review-swarm.md](/docs/hive/operations/automation-and-review/review-swarm#only-review-labelled-prs-reviewrequire_labels). Use a distinct label from the issue gate if the two approvals mean different things to your maintainers.
 
 Both polarities are enforced at **enumeration** — the point where GitHub issues become the hive's actionable set — not in the prompt. A filtered issue never enters the queue, never appears in a kick, never triggers plan-from-label, and cannot be re-selected by a confused (or prompt-injected) agent re-listing the repo. Kick prompts additionally state the active require policy so agents know the list is intentionally short. Both lists are edited on the Labels tab; an active require gate is also noted read-only under **Projects**, and hub-managed hives can receive `issue_filter` with their project config over the heartbeat.
 
@@ -1419,6 +1463,14 @@ Issues managed by [GitHub Agentic Workflows](https://github.com/github/gh-aw) (`
 
 The `hive/tracking` label also satisfies the tracker-issue check used by `/contribute`, so a tracking issue is never handed to an external contributor either.
 
+### Umbrella and owner-only issues
+
+Umbrella, epic, tracker and decomposed-parent issues, and issues that wait on a person, are the opposite of a tracking archive: they stay actionable for the owner and the hive and **can be closed**. They are never handed to a contributor relay. Mark one with a label (`umbrella`, `tracker`, `epic`, `meta-tracker`), the body marker `<!-- hive:umbrella -->`, a `[Tracking]` / `[Epic]` / `[Umbrella]` / `[Tracker]` title prefix, a task list of two or more issue or PR references, or sub-issues; owner-only by `needs-human`, `human-only`, `human-only:*` or `<!-- hive:human-only -->`. The rules, defaults and per-repo overrides live under `hub.contribute_umbrella` (see the [label reference](/docs/hive/labels-and-control-signals/reference) and [Contributor relay](/docs/hive/contributor-relay#umbrella-and-owner-only-issues-are-never-handed-to-a-relay)).
+
+- **Not offered.** `/contribute` selection and the ready-work queue refuse them (withheld reasons `umbrella` and `human_only`); `/api/contribute/status` counts them as `umbrella_items` and `human_only_items` and leaves them out of `actionable_items` and `candidate_items`.
+- **Not advertised.** The good-first-issue sweep scores them `umbrella:<rule>` / `human-only:<rule>` and withdraws `help wanted` and `good first issue` on the next sweep (logged and audited as `gfi-withdraw`; `withdraw_advertisement: false` opts out).
+- **Still closable.** Unlike `hive/tracking`, none of these markers blocks `CloseIssue`, `parent_autoclose` or the tracker-closing rule.
+
 **Not the same thing as the contribute filters.** `hub.contribute_labels_mode` + its label list gate which issues are *handed out to external contributors* over `/contribute` — they have never gated the hive's **own** agents, so an operator who allow-listed a queue label there (a common setup for routing labeled issues to contributors) still had a hive whose own scanner could work every other open issue. `project.issue_filter.require_labels` is the agent-side gate; configure both if you want the same label to govern both lanes.
 
 ## Write-back containment (`writeback`)
@@ -1459,7 +1511,7 @@ is in [acmm-policy-matrix.md](/docs/hive/acmm-policy-matrix#what-hive-will-say-o
 | `pause` in a mode | an agent is noisy exactly when the queue is deep (e.g. pause `architect` during surge) |
 | `stale_timeout` | you changed cadences — keep it above the longest interval |
 | `clear_on_kick: false` | the agent genuinely benefits from remembering previous kicks (rare; context bloat is real) |
-| `channels` | Make the default timer trigger explicit; `kick` is the only supported type. For event-based work use [CEL triggers](https://github.com/hivecommons/hive/blob/v5/src/docs/cel-triggers.md) or [work sources](/docs/hive/work-sources), not `webhook`, `schedule`, or `bead` channel types. |
+| `channels` | Make the default timer trigger explicit; `kick` is the only supported type. For event-based work use [CEL triggers](/docs/hive/operations/automation-and-review/cel-triggers) or [work sources](/docs/hive/work-sources), not `webhook`, `schedule`, or `bead` channel types. |
 | `tools` rules | one agent needs a sharper permission edge than its `mode` tier provides |
 | a higher ACMM level | your review capacity, CI trust, and appetite for autonomy have all grown — raise the level and let the pack reconcile the roster |
 | an inference method | you have GPUs (or a LiteLLM gateway) and want agents off subscription seats |
