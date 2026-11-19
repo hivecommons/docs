@@ -33,8 +33,7 @@ afterEach(() => {
 async function loadCsp(): Promise<string> {
   const { default: config } = await import("../../next.config");
   const rules = await config.headers!();
-  return rules[0].headers.find(h => h.key === "Content-Security-Policy")!
-    .value;
+  return rules[0].headers.find(h => h.key === "Content-Security-Policy")!.value;
 }
 
 describe("getKapaWebsiteId", () => {
