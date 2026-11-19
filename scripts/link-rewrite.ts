@@ -110,12 +110,30 @@ export function rewriteMarkdownLinks(
   return mapOutsideFences(content, text => rewriteProse(text, opts));
 }
 
-// Rewrite a prose segment, skipping inline code spans.
+// An inline code span per CommonMark: a backtick run closed by a run of the
+// same length (a longer or shorter run inside does not close it).
+const CODE_SPAN_RE = /(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)/g;
+
+// Rewrite a prose segment, skipping inline code spans. Code spans never cross
+// a blank line (the paragraph ends first), so each paragraph is scanned on its
+// own: one stray or mismatched backtick then only affects its own paragraph
+// instead of shifting every later span pairing in the file and leaving real
+// links inside a phantom "code span" unrewritten.
 function rewriteProse(text: string, opts: LinkRewriteOptions): string {
   return text
-    .split(/(`+[^`]*?`+)/)
-    .map((chunk, i) => (i % 2 === 1 ? chunk : rewriteLinksInText(chunk, opts)))
+    .split(/(\r?\n[ \t]*\r?\n)/)
+    .map((chunk, i) => (i % 2 === 1 ? chunk : rewriteParagraph(chunk, opts)))
     .join("");
+}
+
+function rewriteParagraph(text: string, opts: LinkRewriteOptions): string {
+  let out = "";
+  let last = 0;
+  for (const m of text.matchAll(CODE_SPAN_RE)) {
+    out += rewriteLinksInText(text.slice(last, m.index), opts) + m[0];
+    last = m.index + m[0].length;
+  }
+  return out + rewriteLinksInText(text.slice(last), opts);
 }
 
 function rewriteLinksInText(text: string, opts: LinkRewriteOptions): string {
