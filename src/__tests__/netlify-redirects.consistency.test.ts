@@ -60,6 +60,17 @@ export function parseTableValue(
 }
 
 const redirects = parseRedirects(NETLIFY_TOML);
+
+// Published nav-slug URLs that moved when pages changed nav section
+// (hivecommons/docs#740). Each old URL must 301 to the page's new nav URL.
+const MOVED_HIVE_PAGES: Record<string, string> = {
+  "/docs/hive/operations/hosted-hive-hub-onboarding":
+    "/docs/hive/hub/hosted-hive-hub-onboarding",
+  "/docs/hive/operations/self-hosted-hub-deployment":
+    "/docs/hive/hub/self-hosted-hub-deployment",
+  "/docs/hive/security/data-collection-and-telemetry":
+    "/docs/hive/dashboard/data-collection-and-telemetry",
+};
 const docsRedirects = redirects.filter(r =>
   (r.from ?? "").startsWith("/docs/")
 );
@@ -96,6 +107,7 @@ describe("netlify.toml redirects", () => {
       .filter(
         from =>
           from !== "/docs/hive/overview/intro" &&
+          !(from in MOVED_HIVE_PAGES) &&
           !known.has(from.replace(/^\/docs\//, "").replace(/\/$/, ""))
       );
     expect(stale).toEqual([]);
@@ -108,6 +120,17 @@ describe("netlify.toml redirects", () => {
     expect(rule?.to).toBe("/docs/hive/overview/introduction");
     expect(rule?.status).toBe("301");
   });
+
+  it.each(Object.entries(MOVED_HIVE_PAGES))(
+    "redirects moved Hive page %s to %s",
+    (from, to) => {
+      const rule = docsRedirects.find(r => r.from === from);
+      expect(rule, `missing [[redirects]] for ${from}`).toBeDefined();
+      expect(rule?.to).toBe(to);
+      expect(rule?.status).toBe("301");
+      expect(rule?.force).toBeUndefined();
+    }
+  );
 
   it("has exactly one redirect per /docs/* source path", () => {
     const seen = new Map<string, number>();

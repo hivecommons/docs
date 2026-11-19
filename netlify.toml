@@ -143,6 +143,24 @@
   to = "/docs/spektacular/overview/introduction"
   status = 302
 
+# Hive pages that moved between nav sections (hivecommons/docs#740). The old
+# nav-slug URLs were published, so keep inbound links and dashboard help links
+# working. The flat /docs/hive/<file> URLs are unchanged and still resolve.
+[[redirects]]
+  from = "/docs/hive/operations/hosted-hive-hub-onboarding"
+  to = "/docs/hive/hub/hosted-hive-hub-onboarding"
+  status = 301
+
+[[redirects]]
+  from = "/docs/hive/operations/self-hosted-hub-deployment"
+  to = "/docs/hive/hub/self-hosted-hub-deployment"
+  status = 301
+
+[[redirects]]
+  from = "/docs/hive/security/data-collection-and-telemetry"
+  to = "/docs/hive/dashboard/data-collection-and-telemetry"
+  status = 301
+
 # Short URLs
 [[redirects]]
   from = "/code"

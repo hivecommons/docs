@@ -401,19 +401,143 @@
     "source": "ui-render-evidence.md"
   },
   {
+    "source": "advisory.md",
+    "route": "operations/automation-and-review/advisory-digest"
+  },
+  {
+    "source": "agent-logging.md",
+    "route": "operations/agent-and-governor-controls/agent-peer-awareness-logging"
+  },
+  {
+    "source": "agent-watchdog.md",
+    "route": "operations/agent-and-governor-controls/agent-watchdog"
+  },
+  {
+    "source": "audit-campaign.md",
+    "route": "operations/automation-and-review/audit-campaign"
+  },
+  {
+    "source": "backend-support-tiers.md",
+    "route": "operations/agent-and-governor-controls/agent-backend-support-tiers"
+  },
+  {
+    "source": "cel-triggers.md",
+    "route": "operations/automation-and-review/cel-triggers"
+  },
+  {
+    "source": "cli-pins.md",
+    "route": "operations/agent-and-governor-controls/cli-pins"
+  },
+  {
+    "source": "compliance.md",
+    "route": "security/compliance-controls"
+  },
+  {
+    "source": "contributor-trust-and-roles.md",
+    "route": "security/contributor-trust-and-roles"
+  },
+  {
     "source": "dashboard.md",
-    "comment": "Dashboard pages the dashboard help links and Ask AI answers rely on (hivecommons/hive#19182)."
+    "route": "dashboard/dashboard-page-reference"
   },
   {
-    "source": "settings.md"
+    "source": "fleet-health.md",
+    "route": "hub/fleet-health"
   },
   {
-    "source": "hosted-hub.md"
+    "source": "formal-verification.md",
+    "route": "operations/automation-and-review/formal-verification"
   },
   {
-    "source": "hub-deployment.md"
+    "source": "github-app-setup.md",
+    "route": "integrating-with-hive/github-app-setup"
   },
   {
-    "source": "telemetry.md"
+    "source": "governor-thresholds.md",
+    "route": "operations/agent-and-governor-controls/governor-thresholds"
+  },
+  {
+    "source": "hive-merge.md",
+    "route": "operations/automation-and-review/hive-merge"
+  },
+  {
+    "source": "hosted-hub.md",
+    "route": "hub/hosted-hive-hub-onboarding"
+  },
+  {
+    "source": "hub-deployment.md",
+    "route": "hub/self-hosted-hub-deployment"
+  },
+  {
+    "source": "hub-fleet-activity.md",
+    "route": "hub/fleet-activity"
+  },
+  {
+    "source": "ioscan.md",
+    "route": "security/ioscan"
+  },
+  {
+    "source": "linear-agent.md",
+    "route": "integrating-with-hive/linear-agent-integration"
+  },
+  {
+    "source": "maintainer-commands.md",
+    "route": "operations/automation-and-review/maintainer-commands"
+  },
+  {
+    "source": "native-merge-queue.md",
+    "route": "operations/automation-and-review/native-github-merge-queues"
+  },
+  {
+    "source": "notifications.md",
+    "route": "dashboard/notifications"
+  },
+  {
+    "source": "retro-lane.md",
+    "route": "operations/automation-and-review/retro-lane"
+  },
+  {
+    "source": "review-bot-threads.md",
+    "route": "operations/automation-and-review/review-bot-threads"
+  },
+  {
+    "source": "review-evidence.md",
+    "route": "hub/review-evidence-bundle"
+  },
+  {
+    "source": "review-swarm.md",
+    "route": "operations/automation-and-review/review-swarm"
+  },
+  {
+    "source": "sandbox-isolation.md",
+    "route": "security/sandbox-isolation"
+  },
+  {
+    "source": "settings.md",
+    "route": "dashboard/dashboard-settings-explained"
+  },
+  {
+    "source": "snapshots.md",
+    "route": "dashboard/public-snapshots"
+  },
+  {
+    "source": "spektacular.md",
+    "route": "operations/automation-and-review/spektacular-stage-runner"
+  },
+  {
+    "source": "telemetry.md",
+    "route": "dashboard/data-collection-and-telemetry"
+  },
+  {
+    "source": "token-mint.md",
+    "route": "security/token-mint"
+  },
+  {
+    "source": "trajectory-review.md",
+    "route": "operations/automation-and-review/trajectory-review"
+  },
+  {
+    "source": "upstream-watch.md",
+    "route": "operations/automation-and-review/upstream-watch"
   }
 ]

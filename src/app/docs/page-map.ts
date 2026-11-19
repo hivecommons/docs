@@ -127,10 +127,30 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Contributor relay': 'contributor-relay.md' },
       { 'Using Spektacular with Hive': 'spektacular-runs.md' },
       { 'The agent Terminal window': 'agent-terminal.md' },
+      { 'Agent and governor controls': [
+        { 'Agent peer-awareness logging': 'agent-logging.md' },
+        { 'Agent watchdog': 'agent-watchdog.md' },
+        { 'Agent backend support tiers': 'backend-support-tiers.md' },
+        { 'CLI pins': 'cli-pins.md' },
+        { 'Governor thresholds': 'governor-thresholds.md' },
+      ] },
+      { 'Automation and review': [
+        { 'Advisory digest': 'advisory.md' },
+        { 'Audit campaign': 'audit-campaign.md' },
+        { 'CEL triggers': 'cel-triggers.md' },
+        { 'Formal verification': 'formal-verification.md' },
+        { 'Hive merge': 'hive-merge.md' },
+        { 'Maintainer commands': 'maintainer-commands.md' },
+        { 'Native GitHub merge queues': 'native-merge-queue.md' },
+        { 'Retro lane': 'retro-lane.md' },
+        { 'Review-bot threads': 'review-bot-threads.md' },
+        { 'Review swarm': 'review-swarm.md' },
+        { 'Spektacular stage runner': 'spektacular.md' },
+        { 'Trajectory review': 'trajectory-review.md' },
+        { 'Upstream watch': 'upstream-watch.md' },
+      ] },
       { 'Troubleshooting': 'troubleshooting.md' },
       { 'Kick refusals': 'kick-refusals.md' },
-      { 'Hosted Hive Hub onboarding': 'hosted-hub.md' },
-      { 'Self-hosted hub deployment': 'hub-deployment.md' },
       { 'Release channels': 'release-channels.md' },
       { 'Stable soak and promotion policy': 'stable-soak-policy.md' },
       { 'Backup and disaster recovery': 'backup-dr.md' },
@@ -141,6 +161,9 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
   {
     title: 'Dashboard',
     items: [
+      { 'Notifications': 'notifications.md' },
+      { 'Public snapshots': 'snapshots.md' },
+      { 'Data collection and telemetry': 'telemetry.md' },
       { 'Dashboard sections explained': 'dashboard-sections.md' },
       { 'Dashboard settings explained': 'settings.md' },
       { 'Dashboard page reference': 'dashboard.md' },
@@ -155,9 +178,21 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
     ]
   },
   {
+    title: 'Hub',
+    items: [
+      { 'Hosted Hive Hub onboarding': 'hosted-hub.md' },
+      { 'Self-hosted hub deployment': 'hub-deployment.md' },
+      { 'Fleet activity': 'hub-fleet-activity.md' },
+      { 'Fleet health': 'fleet-health.md' },
+      { 'Review evidence bundle': 'review-evidence.md' },
+    ]
+  },
+  {
     title: 'Integrating with Hive',
     items: [
       { 'Integration guide': 'integration-guide.md' },
+      { 'GitHub App setup': 'github-app-setup.md' },
+      { 'Linear agent integration': 'linear-agent.md' },
       { 'Public knowledge MCP endpoint': 'public-knowledge-mcp.md' },
       { 'Work-source providers': 'integrations/work-source-providers.md' },
       { 'Clanker (Flue-style) interface': 'integrations/clanker-flue.md' },
@@ -174,7 +209,11 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Security threat model': 'security-threat-model.md' },
       { 'Hive trust levels vs Copilot assisted permissions': 'copilot-permissions-comparison.md' },
       { 'ACMM policy matrix': 'acmm-policy-matrix.md' },
-      { 'Data collection and telemetry': 'telemetry.md' },
+      { 'Compliance controls': 'compliance.md' },
+      { 'Contributor trust and roles': 'contributor-trust-and-roles.md' },
+      { 'ioscan': 'ioscan.md' },
+      { 'Sandbox isolation': 'sandbox-isolation.md' },
+      { 'Token mint': 'token-mint.md' },
     ]
   },
   {

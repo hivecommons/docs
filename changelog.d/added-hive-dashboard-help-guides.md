@@ -1,0 +1,1 @@
+- Publish the Hive dashboard UI map and the guides linked from dashboard settings, including hub onboarding, deployment, and review evidence.

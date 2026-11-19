@@ -1,0 +1,631 @@
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/fleet-health.md) during the docs build. Edit the canonical source in the Hive repository.
+
+# Fleet health: the verdict and remediation hints
+
+The hub's fleet page (`/fleet`) shows one health verdict per hive: a colored
+dot, a small "WHY" chip next to the hive name that states the reason in one
+phrase, and — for a non-green verdict that matches a known failure signature —
+a one-line remediation hint that says what to do and where to do it.
+
+This page documents what each verdict state means, how the verdict is
+computed, every remediation hint an operator can see, and how to go from a
+symptom on the fleet page to a fix.
+
+For sustained congestion, [Guide flow-health diagnosis](https://github.com/hivecommons/hive/blob/v5/src/docs/guide-flow-health.md)
+adds ranked, advisory root-cause recommendations using existing queue signals.
+
+The verdict answers one question:
+
+> **Does this hive have recent output back to its work source, for the ACMM
+> level it is at?**
+
+"Recent" is a 12-hour window, owned by the hub — a spoke cannot widen it.
+The verdict is computed on the hub at read time from signals the spoke
+already reports in its heartbeat; it costs the spoke no extra work and no
+extra GitHub API calls.
+
+This is a different check from
+[dashboard route and health checks](https://github.com/hivecommons/hive/blob/v5/src/docs/health-checks.md), which covers HTTP
+probes of the dashboard URL. A hive can pass every route probe and still be
+red here, because the verdict measures *output*, not *reachability*.
+
+It is also distinct from [fleet drift signals](https://github.com/hivecommons/hive/blob/v5/src/docs/fleet-drift-signals.md), the
+per-hive deviation badges on My Hives (`heartbeat-stale`, `duplicate-spoke`,
+`version-absent`, …): drift asks whether the row can be trusted and whether the
+hive's configuration matches the fleet, while the verdict here asks whether the
+hive is producing output.
+
+## The four states
+
+| State | Dot on `/fleet` | Meaning |
+|---|---|---|
+| **green** | ok | The hive has recent output for its level, or legitimately has nothing to produce (empty queue, or no agent is configured/on duty for the output its level is judged on). A green verdict **never** carries a remediation hint — a healthy hive gets no instruction. |
+| **amber** | warning | The hive is working or intentionally quiet, but something needs an operator: all agents paused with work queued, output parked behind hold labels awaiting human review, an agent looping on a consent screen, an agent that will never be kicked, or a spoke lagging its release channel. |
+| **red** | problem | Output is absent or impossible and the hive is expected to produce. The chip names the most fundamental cause it can prove (see [precedence](#precedence-the-most-fundamental-cause-wins)). |
+| **unknown** | dashed ring | The hub cannot see enough to claim health: the hive is not reporting (offline), or the spoke is too old to send the signals the verdict needs. Unknown is never softened to green. |
+
+Two display states on `/fleet` are more specific than the verdict and take
+over the row when they apply:
+
+- **parked** — every agent is deliberately paused or off-schedule and the
+  hive has no queued reason to run; shown as a parked chip instead of a
+  plain ok dot. A broken GitHub App still outranks parked: auth is broken
+  whether or not the hive is in use.
+- **offline** — not reporting; the dashed offline dot replaces the WHY chip.
+
+## What "output" means at each ACMM level
+
+The verdict is banded by the hive's ACMM level, because different levels are
+*supposed* to produce different things. Absence of output a level does not
+produce is never a fault.
+
+| Level | Judged on | Healthy when |
+|---|---|---|
+| L1 (Inception) | nothing | Always green while reporting — no output is expected, and even precondition gaps (App, logins, cadences) are not faulted at L1. |
+| L2 (Advisory) | the advisory digest | The advisory issue is fresh or aging. A spoke-reported posting error is red regardless of timestamps — the spoke proved the digest is wedged. |
+| L3–L5 | writes to the work source: issue/PR creates, comments, and reviews | Any write in the last 12 hours. Merges are the human's job at these levels, so an unmerged PR is never a fault. Comments and reviews count: an agent triaging a backlog is producing real output. |
+| L6 | merges | A merge in the last 12 hours. A create that never merges, with work still queued, is exactly the failure this level exists to catch. |
+
+Three gates soften "no output" into green before anything goes red:
+
+- **The queue gate.** If the actionable backlog (open issues + PRs the hive
+  could work) is zero, "no output" means *idle*, not broken: the chip reads
+  "queue empty — idle".
+- **No writers on duty.** If no on-duty agent holds the write grant the level
+  is judged on (for example, a quiet-mode hive whose only running agent
+  cannot open issues or PRs), the hive is quiet by configuration, not
+  failing. When grant-holding agents exist but are paused or off-schedule,
+  the chip names them: "no output expected — create-capable agent(s) off:
+  …", so you don't have to hunt the agent rows for the correlation.
+- **Hold-stale (amber, not red).** At L3–L5, when the write stream is stale
+  but work is parked behind hold labels awaiting human review, the agents
+  produced and then correctly stood down — the next move is a person's.
+  The chip reads "awaiting human review — N held for approval" and the row
+  goes amber instead of red.
+
+## Precedence: the most fundamental cause wins
+
+When output is absent, three preconditions explain why it was *impossible*:
+the GitHub App must be green, at least one agent must be logged in, and at
+least one agent must be running at cadence. The verdict checks these in a
+fixed order and returns on the first match, so a deeper cause can never be
+shadowed by a shallower one:
+
+1. **Inference gateway failing** — beats inferred App breakage. Runtime proxy
+   failures and Gateway Test report DNS/connect/5xx/auth/budget classes; the
+   chip says, for example, "inference gateway 'litellm' unreachable (dns)"
+   or "inference gateway 'litellm' rejected key (401)" and points at
+   Settings → Model Gateways.
+2. **GitHub App broken** — applies when an actual App/auth problem is reported
+   or no gateway fault is present. The chip names the specific failure when the
+   spoke reported one (for example "GitHub App: repo-not-covered", which needs
+   a different remedy than a bad key). New spokes also send the App host,
+   App ID, installation ID, HTTP status, and error class, so token-mint 404s
+   render as an installation mismatch instead of a generic auth failure.
+3. **Provider spending limit reached** — the model provider is refusing
+   calls; shown with the refused-call count when known.
+4. **Budget exhausted / budget misconfigured** — the hive's own token budget
+   closed the gate (see [the budget signals](#budget-exhausted-vs-budget-misconfigured)).
+5. **Blocked agents** — all blocked agents share one cause when possible:
+   "N agent(s) out of provider quota", "N agent(s) stuck at login —
+   re-login needed", "starting failed ×N: <reason> (last <age>)",
+   "N agent(s) down — restart needed", "N agent(s) idle with work queued",
+   "agent restarts: NAME ×N/24h (reason)", or the generic "N agent(s)
+   blocked". Agent restart storms use the hub threshold
+   `HIVE_HUB_AGENT_RESTART_PROBLEM_THRESHOLD` (default `5`). Provider quota
+   is counted per named quota-exhausted agent unless the heartbeat explicitly
+   marks the provider limit as hive-wide.
+6. **No agents running** (red) or **all agents paused** (amber — pausing is
+   operator choice, not an outage, but queued work will not move until
+   someone resumes them).
+7. **Repo Issues disabled** — the repo's Issues tab is off (the GitHub
+   default on forks), so the advisory digest and every agent-filed issue
+   have nowhere to go. Nothing about the App, key, or agents is wrong; the
+   fix is the repo setting.
+7. **Banded output freshness** — only now, with every precondition green,
+   can "no write in 30h (7 queued)" or "advisory stale" appear.
+
+Because the precondition reds return early, a budget-exhausted hive shows
+"budget exhausted", never the downstream "no write in Nh" — the remedies are
+entirely different.
+
+### Detector layering on top of the base verdict
+
+Three detector signals refine the base verdict without ever masking a harder
+fault:
+
+- **Error-streak (red, re-explains).** When the base verdict is the
+  *generic* stale-output red and an agent has 3 or more consecutive failed
+  model calls, the chip is rewritten to "agent NAME model calls failing
+  (N consecutive) — pin a working model". It only ever re-explains the
+  generic red: precondition reds (App, provider, budget, login) keep their
+  reason, because they gate the output stream upstream of the model calls
+  and already name a more fundamental fix.
+- **Consent-wedge and no-cadence (green → amber).** These demote a green
+  verdict only. Output may still look acceptable, but a named agent is
+  looping on a consent screen, or is enabled yet will never be kicked, and
+  only an operator can fix either. They never touch a red or amber verdict —
+  a harder fault stays the headline.
+- **Channel-lag (green → amber).** A spoke tracking the `stable` release
+  channel that is 2 or more commits behind the channel head, and not
+  currently upgrading, ambers with "spoke lags its channel — N commits
+  behind stable". One commit behind is a rollout in flight and is ignored,
+  as is any hive where the channel signals are absent. See
+  [release channels](/docs/hive/release-channels).
+
+L1 (Inception) hives and non-reporting hives are exempt from all detector
+layering: no output is expected there, so a configuration gap is not a
+health fault.
+
+## Remediation hints: the signature → action table
+
+Every non-green verdict whose cause matches a known signature carries a
+one-line hint, rendered under the WHY chip as "→ *action*", with an
+**open** link when the hub can build a direct URL. A hint is only shown when
+it is *specifically* true: causes without a precise fix (provider limit,
+agents down, advisory stale, …) deliberately get none rather than a guess.
+
+| Cause | WHY chip you see | Verdict | Hint (action) | Where to do it |
+|---|---|---|---|---|
+| Inference gateway | "inference gateway 'litellm' unreachable (dns)" / "rejected key (401)" | red | Fix or retest the failing gateway (Settings → Model Gateways) | spoke dashboard settings |
+| App broken | "GitHub App broken" or "GitHub App: \<state\>" | red | Install or repair the GitHub App for this repo | GitHub App settings (link resolved per cluster/forge) |
+| Login stuck | "N agent(s) stuck at login — re-login needed" | red | Copilot device-flow login on the spoke dashboard | spoke dashboard `/login` |
+| Budget exhausted | "budget exhausted — spend X of Y, kicks suppressed" | red | Raise or reset the budget limit (Settings → Budget) | spoke dashboard settings |
+| Budget misconfigured | "budget limit misconfigured (N tokens) — agents halted, window reset will not help" | red | Raise or reset the budget limit (Settings → Budget) | spoke dashboard settings |
+| Error streak | "agent NAME model calls failing (N consecutive) — pin a working model" | red | Pin a working model on the agent card | spoke dashboard agent card |
+| Consent wedge | "agent(s) NAME stuck at Copilot consent — restarting in a loop" | amber | Complete the Copilot consent flow on the live pod dashboard | spoke dashboard |
+| No cadence | "agent(s) NAME enabled but never kicked — set cadences" | amber | Set cadences on the agent card | spoke dashboard agent card |
+| Hold stale | "awaiting human review — N held for approval" | amber | Review the needs-human queue | the repo's PR list (direct link) |
+| Channel lag | "spoke lags its channel — N commits behind stable" | amber | Check auto-upgrade / force rollout | hub fleet version controls |
+
+## Detector semantics
+
+These are the signals behind the table above — what each one actually
+measures on the spoke, and why a recovered hive clears its own alarm.
+
+### Budget exhausted vs. budget misconfigured
+
+`budget exhausted` means the governor is actively suppressing agent kicks
+because the current budget window's tokens ran out. The chip shows "spend X
+of Y" when the spoke reported the numbers, so you can tell at a glance
+whether the hive is one rolled window away from healing or needs a bigger
+limit.
+
+`budget misconfigured` is separated out because the remedy is unrelated: a
+positive limit below 100,000 tokens cannot fund even one model call, so the
+gate closed on the first kick and *nothing was ever spent* — waiting for the
+window to roll changes nothing, and the operator must fix the number. This
+is almost always a unit mistake (a limit of "50" that meant 50M). A limit of
+zero is exempt: it is the documented way to disable budget tracking
+entirely.
+
+### Agent error streaks
+
+An agent whose CLI keeps running turns while every model call inside them
+dies produces no output and no token usage, yet its session stays up and
+reads green. The spoke detects this from its own chat recordings: each kick
+appends a user turn, and a successful call appends an assistant reply
+carrying real token usage — so a run of trailing turns with no usage-bearing
+reply *is* the consecutive-failure streak, attributed per agent.
+
+- The newest unanswered turn is ignored for its first 10 minutes (a kick
+  delivered moments ago legitimately has no reply yet). A reply that
+  explicitly recorded zero usage is a completed failure and counts
+  regardless of age.
+- A streak whose newest failure is older than 24 hours is history, not a
+  live fault, and is not reported.
+- The hub only rewrites the chip at 3 or more consecutive failures: one
+  failure is noise, three in a row is a pattern.
+
+The fix is to pin a working model on the agent's card in the spoke
+dashboard. Note that when the agent is in automatic model selection, editing
+config files cannot outrun the auto-picker — pin in the dashboard.
+
+### Consent wedge
+
+A Copilot CLI parked on an interactive consent screen looks alive to the
+kick path's prompt check, so the kick path restarts the agent before sending
+— which lands right back on the same consent screen. The result is a restart
+loop (roughly once a minute) during which the agent reads green while doing
+no work.
+
+The spoke reports an agent as consent-wedged when its kick path hit a
+consent-screen restart **within the last hour**. A live loop refreshes the
+stamp on every kick attempt; once you complete the consent flow on the
+spoke dashboard, no new restarts occur and the agent ages out of the list
+by itself.
+
+### No cadence
+
+An agent that is enabled and governor-kickable but appears in **no** mode's
+cadence map is never timer-kicked; if it has also never been kicked by any
+other path, it will sit green and idle forever until someone sets a cadence.
+The detector names exactly that: enabled + kickable + no cadence configured
+in any mode + never kicked. An explicit "off" or "pause" cadence entry
+counts as configured — that is operator choice, not omission — and on-demand
+or event-driven agents are excluded. Fix: set cadences on the agent card.
+See [agent configuration](/docs/hive/agent-configuration).
+
+### Carry-forward: why a recovered hive clears its own alarm
+
+The three detector fields (error streaks, consent-wedged list, no-cadence
+list) distinguish **"not measured"** from **"measured and clear"**:
+
+- A spoke that is too old to report them, or that just restarted and whose
+  collectors have not warmed up yet, sends *nothing* (null). The hub
+  **carries the last real measurement forward** — blanking it would hide a
+  live wedge for exactly the window an operator is most likely to be
+  looking.
+- A spoke that measured and found nothing wrong sends an explicit **empty**
+  value (`{}` / `[]`), which **overwrites** the carried value on the hub.
+
+The practical consequence: you never need to clear these alarms by hand.
+Complete the consent flow, set the cadence, or pin a working model, and the
+spoke's next heartbeat carries a measured all-clear that clears its own
+signal. Conversely, an alarm that persists across a spoke restart is not a
+stale artifact — it is the last real measurement, held until the spoke
+measures again.
+
+The scalar quadrant signals (budget spend/limit/exhausted, hold totals)
+follow the same nil-means-not-measured rule: an old spoke that never sends
+them is simply not judged on them.
+
+## Output-freshness telemetry
+
+For L3-L6 hives, newer spokes add optional heartbeat fields that explain stale write/merge streams: the most recent write-capable kick, the last kick disposition or skip reason, and how many queued items were deliberately deemed not writable. The hub treats missing fields as an old spoke and keeps the legacy red `no write in Nd (M queued)` behavior. When the fields are present, the verdict can distinguish a broken pipeline (recent write-capable kicks but no writes) from quiet-by-design states such as no due agents, budget-suppressed kicks, advisory-only operation, or work that agents intentionally declined as not writable.
+
+## Agent backend-auth health canary (#6558)
+
+The verdict above answers "is this hive producing output?" — but a hive whose
+agents cannot even authenticate to their model backend produces nothing to
+judge, and (before this canary) could sit at a stale green/unknown verdict
+indefinitely. That is exactly what happened in #6500 (every agent hit
+`You are not licensed to use Copilot`) and #6489 (a self-hosted inference
+backend went unreachable): the fleet was fully down and nothing on the hub or
+dashboard said so until a human happened to open a terminal.
+
+Each agent tracks its own `backend_auth` state, derived from the same
+provider-error classifier the dashboard already uses
+(`classifyProviderError` in `src/pkg/agent/pane_classify.go`):
+
+| Status | Meaning |
+|---|---|
+| `ok` | The agent's last completed turn succeeded, or it has never seen an auth-shaped provider error. |
+| `unlicensed` | The provider rejected the account/token as not licensed to use this backend (the #6500 shape). |
+| `token-expired` | The provider rejected a **credential**: a 401, bad credentials, or an invalid/expired key/token. Re-login is the remedy. |
+| `forbidden` | An auth-class rejection whose cause the pane does not spell out — a bare `403 Forbidden` with neither the `not licensed` wording nor a recognised credential rejection (#6500). Reported honestly as "authorization denied, cause undetermined" rather than guessing an expiry: a re-login may not help (it can be an entitlement or org-policy denial). The pane is still relaunched onto a refreshed token in case a stale credential caused it. |
+| `unreachable` | The inference backend itself could not be reached (the #6489 shape). |
+| `quota` | The provider is refusing calls on quota grounds. |
+
+This is per-agent state, visible on the spoke dashboard's `/api/status`
+(`backendAuthStatus` / `backendAuthSince` / `backendAuthLastError` on each
+agent, omitted entirely when the agent is `ok`) and carried in the same
+heartbeat the spoke already sends the hub.
+
+The hub aggregates per hive into `auth_health`, stored on the hive's registry
+entry and returned from the fleet/My-Hives APIs alongside the health verdict:
+
+| `auth_health` | Meaning |
+|---|---|
+| `ok` | Every enabled agent's `backend_auth` is `ok`. |
+| `degraded` | At least one, but not all, enabled agents are failing backend auth. |
+| `down` | **Every** enabled agent has been failing backend auth for longer than the down threshold — default 15 minutes, configurable per hub via the `HIVE_HUB_AUTH_HEALTH_DOWN_THRESHOLD` env var (a Go duration string, e.g. `10m`). |
+
+On `/fleet` and My Hives, a hive whose `auth_health` is `down` renders its row
+red (`problem`) regardless of what the base verdict would otherwise say, and
+the expanded diagnosis block names the failing agents and their status —
+this is deliberately checked before every other verdict signal, so a fleet
+that is silently dead can never hide behind a stale green dot.
+
+**Notification.** When a hive's `auth_health` transitions from `ok`/`degraded`
+to `down`, the hub sends the hive owner one Slack DM (the same
+`HIVE_HUB_SLACK_BOT_TOKEN` + `slack_id` channel issue #4149's access-request
+notifier uses — see `src/pkg/hub/auth_health_notify.go`). Exactly one DM per
+down episode: the hub does not re-notify while the hive stays down, and only
+notifies again after a genuine recovery to `ok` followed by a second,
+independent outage. If no Slack token or no `slack_id` is on file for the
+owner, the hub logs a structured `Warn` line instead of failing silently.
+
+This canary is intentionally a separate signal from the health verdict above,
+not yet folded into its cause/remediation taxonomy (see [where the verdict
+comes from](#where-the-verdict-comes-from-for-the-curious)) — the verdict's
+precondition-red ordering and per-cause remediation hints are their own
+well-tested surface, and merging `auth_health` into that taxonomy is left as
+a deliberate follow-up rather than risking that machinery in the same change
+that adds the canary.
+
+## Provider auth vs availability (#12611)
+
+[ADR-0024](/docs/hive/adr/0024-provider-credential-lifecycle) splits provider health
+into two separate dimensions, so "not authenticated" never reads as
+"provider unavailable" or the other way round. It is read-only status: hive
+does not refresh, warm or share credentials.
+
+Each agent's backend-auth evidence gains `backendAuthRefreshable` (on
+`/api/status` and in the heartbeat's `agents[]`). For Claude agents it is
+`claude.HasUsableToken` over the agent's own credential: `true` when the
+access token is live or the refresh grant behind it still is (a CLI restart
+heals it), `false` when only a human login can. It is absent for every other
+backend, because hive has verified no idle-refresh path for them.
+
+The spoke rolls its **enabled** agents up per provider (the agent's effective
+backend) into a `providers[]` block, served on `/api/status` and sent in the
+hub heartbeat. The hub stores it on the hive's registry entry as `providers`.
+Disabled agents are skipped, so a provider nobody uses never becomes an
+incident. Each entry:
+
+| Field | Meaning |
+|---|---|
+| `provider` | Effective backend name (`claude`, `copilot`, …). |
+| `auth_state` | Worst auth state across the provider's enabled agents. |
+| `availability_state` | Worst availability state across the provider's enabled agents. |
+| `since` | Earliest `backendAuthSince` among affected agents (RFC3339), when known. |
+| `evidence` | Status counts only, for example `2 of 3 enabled agents: token-expired×2`. Never pane text or credential material. |
+| `next_action` | The one operator action for the worst condition. |
+| `affected_agents` | Agents contributing a non-healthy state. |
+
+`backendAuthStatus` is mapped onto the two dimensions, not replaced:
+
+| Per-agent evidence | `auth_state` | `availability_state` |
+|---|---|---|
+| `ok` / empty | `usable` | `available` |
+| `token-expired`, refreshable | `refreshable` | no evidence |
+| `token-expired`, not refreshable or unknown | `needs-login` | no evidence |
+| `unlicensed` | `needs-login` (next action: restore the seat) | no evidence |
+| `forbidden` | `unknown` (cause undetermined, never convicted as a logout) | no evidence |
+| `unreachable` | no evidence | `unavailable` |
+| `quota` | `usable` | `quota-exhausted` |
+| CLI sitting on a login prompt | `refreshable` or `needs-login` | no evidence |
+
+A dimension with no evidence from any agent is `unknown`, never silently
+healthy. `store-inaccessible` and `rate-limited` are part of the vocabulary
+but are not emitted yet: today's evidence cannot tell an unreadable store from
+an absent one, and rate limits are transient and deliberately never change
+`backendAuthStatus`.
+
+On `/fleet`, a hive with any provider that is not `usable` + `available`
+shows a **providers** row in its diagnosis block (red for `needs-login`,
+`store-inaccessible`, `unavailable` or `quota-exhausted`). The spoke
+dashboard shows the same as a **Providers** chip in the header. Set
+`providers.status.enabled: false` in `hive.yaml` to omit the block from both
+`/api/status` and the heartbeat (default `true`). Old hubs ignore the block;
+old spokes do not send it, which the hub reads as no signal.
+
+## Compliance rollup (#11083)
+
+A spoke with a compliance framework selected (`compliance.frameworks`) adds a
+`compliance` block to its hub heartbeat:
+
+```json
+{"compliance": {"frameworks": ["soc2-type2"], "posture": {"pass": 7, "fail": 1, "lastRun": "2026-10-01T12:00:00Z"}}}
+```
+
+`posture` is the summary of the spoke's latest posture-check run and is absent
+until the first run. A spoke with no framework selected sends an empty block,
+which clears whatever the hub stored; a beat with no block at all (an older
+spoke, or a minimal upgrade beat) keeps the last stored profile.
+
+The hub Fleet table (`my-hives`) does not yet render this data: there is no
+Compliance column in the hub UI. The stored profile is exposed only through the
+API below, and only to the hive owner and hub admins: the compliance summary is
+omitted from `/api/registry` entirely and from other members' rows in
+`/api/saas/my-hives`.
+
+`GET /api/hub/compliance` (hub admin only) exports the fleet-wide aggregate:
+spoke counts, per-framework spoke counts, total pass/fail with the overall
+pass rate, and one row per spoke with a framework selected. Pass rates are
+rounded to whole percent and are `null`/absent when no check has been decided.
+
+## Evidence summary heartbeat (#12114)
+
+Every spoke adds an `evidence` block to its hub heartbeat: a 90-day summary of
+its [review evidence](/docs/hive/hub/review-evidence-bundle) bundles. Every bundle of a PR is
+folded into one row and windowed on PR open time with the same
+`evidence.FoldPRs` behind `GET /api/evidence/summary` (#12516), so a PR with a
+live and a backfilled bundle counts once, with the live verdicts and the
+forge outcome:
+
+```json
+{"evidence": {"verdicts_90d": 30, "false_approve_90d": 2, "false_block_90d": 3,
+  "merged_90d": 12, "reverted_14d_90d": 1, "automerge_self_authored": false,
+  "reviewer_families": ["claude", "gpt"], "author_families": ["gpt"],
+  "calibration": [{"n": 4, "bad": 1}, {"n": 0, "bad": 0}, {"n": 0, "bad": 0},
+                  {"n": 0, "bad": 0}, {"n": 6, "bad": 0}, {"n": 20, "bad": 4}]}}
+```
+
+- `false_approve_90d` — approve verdicts on PRs later reverted or followed up
+  within 14 days of merge; `false_block_90d` — blocking verdicts on PRs that
+  were merged anyway; `reverted_14d_90d` — merged PRs reverted or followed up
+  within 14 days.
+- `calibration` — six reviewer-confidence buckets (bucket `i` covers
+  `[i/6, (i+1)/6)`); `bad` counts verdicts that were a false approve or false
+  block.
+- `automerge_self_authored` — `auto_merge.self_authored` at the hive's ACMM
+  level (`AutoMerge.SelfAuthoredAutoMergeAllowed`).
+- `reviewer_families` / `author_families` — model families (`claude`, `gpt`,
+  …) seen on verdicts and agent-authored PRs; unknown models are omitted.
+- Fleet-panel aggregates (#12370), each optional and omitted when the spoke
+  has nothing to report: `outcomes_by_author_kind` (`human`/`agent`/`bot` →
+  `{n, merged, reverted}` PRs, `reverted` ⊆ `merged`), `write_counters`
+  (intent tier → `{attempted, blocked}` agent writes seen by the proxy since it
+  started — not a 90-day window), and `shadow_gate` (`review_gate` / `intent`
+  → `{held, passed}`, each `{n, merged, reverted}`: what the shadow gate would
+  have done versus how the PR turned out). A spoke predating #12370 sends none
+  of them and the hub shows "not reported", never zero.
+- `time_to_merge` ([#12464](https://github.com/hivecommons/hive/issues/12464))
+  — `{median_s, n}`: the median time from PR opened to merged, in seconds,
+  over the `n` merged PRs that recorded `merge.opened_at`. Omitted when no
+  merged PR in the window recorded it (and by older spokes); the hub shows
+  "not reported", never zero. The hub reports the median of hive medians per
+  ACMM level (see [review evidence](/docs/hive/hub/review-evidence-bundle#median-time-to-merge-per-autonomy-level)).
+- `windows` ([RFC #12062](https://github.com/hivecommons/hive/issues/12062)) —
+  the same counts (verdicts, false approves/blocks, merged, reverted,
+  calibration, author-kind outcomes, shadow gates, time to merge) re-counted over trailing
+  windows keyed `24h`, `7d` and `30d`, so the hub evidence view can switch
+  between windows. The field names keep their `_90d` suffix for wire
+  compatibility; `write_counters` (lifetime) and `automerge_self_authored`
+  are not repeated. A spoke predating windows sends none and the hub lists it
+  as "not reported for this window" when a shorter window is selected.
+- `hive_state` — the spoke's 24 h / 7 d hive state trends
+  ([#12339](https://github.com/hivecommons/hive/issues/12339)): per window
+  (`24h`, `7d`) `samples`, `coverage_hours`, median/p90 `queue_issues`,
+  `queue_prs` and `queue_hold`, `sla_violation_rate`, `agent_idle_ratio`,
+  `kicks_per_day` and `tokens_per_day`. Omitted when the spoke has no snapshot
+  in the last 7 days. See
+  [Hive state time series](https://github.com/hivecommons/hive/blob/v5/src/docs/strategy-lab.md#hive-state-time-series).
+
+The hub clamps every count (subset counts never exceed their total), caps and
+de-duplicates the family lists, bounds `hive_state` (ratios to `[0, 1]`,
+coverage to the window, p90 never below the median), and stores the result with the other per-hive
+quadrant inputs. A beat without the block (an older spoke, a minimal upgrade
+beat, or a spoke whose evidence directory was unreadable that cycle) keeps the
+last stored summary. Reporting only: nothing here gates a merge.
+
+## Fleet quadrant
+
+The **Fleet quadrant** card on the hub dashboard (and the kite in each hive's
+Quadrant column) scores every hive on four axes — Trust, Productivity,
+Satisfaction, Efficiency — from 0 to 100. The rules are deliberately simple so
+a reader can check any number by hand:
+
+- **Every criterion maps to 0–100 on a fixed, named curve.** Scores are
+  absolute, not ranks: a hive's Trust does not change because a different set
+  of hives is in view. The curves are the `curve*` constants in
+  `pkg/hub/quadrant_curve.go`; the table below is their documentation.
+- **An axis is the weighted mean of its *measured* criteria only.** A
+  criterion whose input the spoke has not reported (or whose sample is too
+  small to be honest) is listed as *not measured yet* with the reason, and is
+  left out of the average — it is never scored 0. An axis with no measured
+  criterion is unscored and draws collapsed to the centre of the kite with a
+  "—".
+- **The fleet card is the per-axis median across the *active* hives** —
+  assigned (not an unassigned `available-*` placeholder slot) and online (the
+  same heartbeat-staleness flag the table's status column shows). The header
+  names that population ("47 active hives · 54 offline or unassigned
+  excluded"); a hive that is not reporting has nothing to say about the fleet,
+  and counting it would turn its silence into zeros. Per axis the median is
+  over the active hives that *measured* the axis, and each axis tile says so
+  ("47 of 61 measured"); a hive with no measured criterion on an axis never
+  enters that axis as a zero. A median cannot be dragged by one runaway hive
+  the way the previous fleet mean could. Each hive's `delta` is against that
+  same active-hive median.
+- **The ⓘ beside each axis label** opens the same explainer on the fleet card
+  and in the per-hive hover: *What this covers* (each criterion with its
+  current value, sub-score and weight, or its not-measured reason), *How it's
+  scored*, *What good looks like* and *What ours shows*. Under the fleet glyph
+  there is one plain line per scored axis, weakest first — "Productivity 26:
+  median over 47 of 61 hives · merges per active repo per week 0.5
+  merges/repo/week (47 hives) · …" — and an axis at or below 50 also names the
+  criterion with the lowest median score, so a 0 is never shown without the
+  fact that produced it. The per-hive hover keeps the single line for its
+  weakest axis.
+
+Weights: ×3 is the criterion the axis is named for, ×2 a major signal, ×1
+supporting. "Measured when" states the input and its minimum sample. Linear
+curves interpolate straight between worst and best; log curves interpolate on
+log₁₀ so an order of magnitude is worth the same anywhere on the scale. Values
+past either end clamp.
+
+| Axis | Criterion | Input | Curve (0 → 100) | Weight | Measured when |
+|---|---|---|---|---|---|
+| Trust | Reverted within 14 days | heartbeat `evidence.reverted_14d_90d / merged_90d` | linear 10% → 0% | ×2 | ≥10 merges with evidence |
+| Trust | Approved then fixed by a human | `evidence.false_approve_90d / verdicts_90d` | linear 10% → 0% | ×2 | ≥10 reviewer verdicts |
+| Trust | Autonomy level | ACMM level | linear L1 → L6 | ×2 | always |
+| Trust | Self-merge delegated | App may merge its own PRs | yes = 100, no = 0 | ×1 | setting reported |
+| Trust | Merge acceptance | merged / (merged + rejected) 90d | linear 50% → 100% | ×1 | ≥4 agent PRs reached a verdict |
+| Trust | Merges with evidence | `evidence.merged_90d / prs_merged_90d` | linear 0% → 100% | ×1 | PR counts and evidence reported |
+| Trust | Agent writes blocked at the boundary | Σ `evidence.write_counters` blocked / attempted | linear 20% → 0% | ×1 | ≥10 proxied writes |
+| Trust | Org repos enrolled | enrolled / org repo count | linear 0% → 100% | ×1 | *not yet* — spokes do not report the org count |
+| Productivity | Merges per active repo per week | Σ `repo_activity[].merges` / weeks / active repos; falls back to org-wide `prs_merged_90d` per enrolled repo | log 0.1 → 10 per week | ×3 | PR counts reported |
+| Productivity | Contributor-relay tasks (7d) | `tasks_completed_7d` | linear 0 → 20 | ×1 | relay reported |
+| Productivity | Contributors active | active / enrolled contributors | linear 0% → 100% | ×1 | contributors reported |
+| Productivity | Finds its own work | scanner-sourced vs human-filed | yes = 100, no = 0 | ×1 | merges or PR counts reported (a setting alone must not score the axis) |
+| Productivity | Items waiting on a human | hold labels + plans awaiting review | linear 20 → 0 | ×1 | queues reported |
+| Productivity | Items past SLA | `sla_violations` | linear 10 → 0 | ×1 | SLA counts reported |
+| Productivity | Time to merge | median open → merge | log 14 days → 0.5 day | ×2 | *not yet* — spokes do not report it |
+| Efficiency | Tokens per merged PR | tokens/day × 90 / `prs_merged_90d` | log 20M → 100k | ×3 | ≥5 merges and a token trend |
+| Efficiency | Token burn rate | budget window or `hive_state.last_7d.tokens_per_day` | log 10M → 100k per day | ×1 | hive is shipping |
+| Efficiency | Agent PRs rejected | rejected / (merged + rejected) 90d | linear 50% → 0% | ×1 | ≥4 agent PRs reached a verdict |
+| Efficiency | Merged PRs per agent (90d) | `prs_merged_90d` / agents | linear 0 → 10 | ×1 | agents configured |
+| Efficiency | Agent time idle (7d) | `hive_state.last_7d.agent_idle_ratio` | linear 100% → 0% | ×1 | ≥6 hive-state samples |
+| Efficiency | Cost per merged PR | spoke `GET /api/launch-cost` | log $100 → $1 | ×2 | *not yet* — stays on the spoke, not in the heartbeat |
+| Satisfaction | Swarm blocks lifted by a human | `evidence.false_block_90d / verdicts_90d` | linear 10% → 0% | ×2 | ≥10 reviewer verdicts |
+| Satisfaction | SLA kept (7d) | 1 − `hive_state.last_7d.sla_violation_rate` | linear 0% → 100% | ×1 | ≥6 hive-state samples |
+| Satisfaction | Time to lift a hold | median hold → lift | log 7 days → 6 hours | ×1 | *not yet* — not reported |
+| Satisfaction | Contributors who come back | relay users who return | linear 0% → 100% | ×1 | *not yet* — not reported |
+| Satisfaction | Direct feedback on agent output | thumbs up share | linear 0% → 100% | ×2 | *not yet* — no feedback signal exists; a thumbs up/down on agent output would feed it |
+
+Why Satisfaction used to read "—" for the whole fleet: it had a single
+criterion (human-override rate) that needed ten verdicts *and* a five-hive
+percentile population, so a fleet where most spokes had not yet shipped the
+evidence heartbeat was declared "too small" everywhere. It is now scored for
+any hive that reports ten verdicts or six hive-state samples, and where it is
+still unscored the explainer says exactly which input is missing.
+
+Reading the merge-throughput curve: it is logarithmic from 0.1 to 10
+merges per active repo per week, so 0.1/week (one merge a quarter) scores 0,
+0.5/week scores 35, 1/week 50, 3/week 74 and 10/week 100. A hive shipping
+0.5 merges/repo/week is therefore a 35 on the headline criterion, not a 0 —
+a Productivity 0 on the fleet card used to come from counting silent hives,
+not from this curve.
+
+Why Productivity used to read 0 for the whole fleet while the card's own
+line said the median hive merged 0.5 merges/repo/week across 47 hives: the
+median ran over every row in the view (101, including 44 unassigned
+placeholders and 10 offline hives), and "Finds its own work" was always
+measured, so a hive that had reported nothing else still scored Productivity
+0 from that one setting. 54 zeros out of 101 made the median 0. The
+population is now the active hives only, and work source is unmeasured until
+the hive reports merges or PR counts.
+
+The quadrant is reporting only: it reads the heartbeat evidence summary
+(read-only, see above) and never feeds a merge decision.
+
+## Troubleshooting: symptom → hint → fix
+
+| Symptom on `/fleet` | What it means | Fix, and where |
+|---|---|---|
+| "GitHub App broken" / "GitHub App: repo-not-covered" | The hive cannot authenticate to its repo, or the App is installed but this repo is not selected | Install or repair the App; for repo-not-covered, add the repo to the App installation. Follow the row's **open** link, or see [GitHub App setup](/docs/hive/integrating-with-hive/github-app-setup) |
+| "GitHub App N on HOST: installation M not found (404) …" | The spoke can identify the App/host it used, but GitHub did not find that installation for the App on that host | Reinstall the App for the target account, or fix `github.app_id`, `github.installation_id`, or the GitHub Enterprise host |
+| "GitHub App: repo-moved" | The App installation is healthy, but it covers this hive's repositories under a **different account** — they were transferred to another org | Point the hive's configured organization at the account named in the message. Do **not** add the repo to the old org's installation: it has left that account, so there is nothing there to add |
+| "provider spending limit reached — N refused calls" | The model provider is refusing calls on billing/limit grounds | Raise the provider's spending limit or wait for it to reset (provider console — no hint link) |
+| "budget exhausted — spend X of Y, kicks suppressed" | The hive spent its window's tokens; the governor halted kicks | Raise the limit in the spoke dashboard (Settings → Budget), or wait for the window to roll |
+| "budget limit misconfigured (N tokens) …" | The limit is too small to fund one model call — likely a unit mistake | Fix the number in Settings → Budget. Window reset will **not** help |
+| "N agent(s) stuck at login — re-login needed" | Every blocked agent is wedged at a login prompt | Run the Copilot device-flow login on the spoke dashboard `/login` |
+| "N agent(s) out of provider quota" | Agents hit per-account model quota | Wait for quota reset or change the account/model on the agent cards |
+| "N agent(s) down — restart needed" | Agent sessions failed or died | Restart the agents from the spoke dashboard |
+| "starting failed ×N: REASON (last AGE ago)" | The spoke has a current launch failure, even if it has not reached the blocked threshold yet | Follow the named reason (for example login, missing CLI, rejected key, or no prompt); restart only after fixing that cause |
+| "N agent(s) idle with work queued" | Sessions are alive but agents sat past the idle threshold with work available | Kick the agents or review their schedules — this is not a restart problem |
+| "agent restarts: NAME ×N/24h (reason)" | One agent has been relaunched at least the configured threshold within the recent window | Use the `/fleet` reset button next to the restart chip before troubleshooting; the hub records a reset marker and asks the spoke to zero its counter on the next heartbeat so recurrence is visible |
+| "agent restarts: NAME ×N/24h **(login token refreshed)**" | The token-triggered restart: the agent sits at a login prompt while a valid shared credential exists, so hive relaunches the CLI to nudge it into picking the credential up | Guarded by a quiet-output window so hive does not restart an agent that is still producing pane output; then bounded at three consecutive attempts. After that hive stops and writes the reason into the agent's error line instead ("still at a login prompt after 3 restarts…"). Read that line — it names which credential file is the problem. **A count in the hundreds means the cap was not holding** ([#6578](https://github.com/hivecommons/hive/issues/6578), fixed): the give-up latch was being cleared by the boot pane of its own restart. These agents are blocked on a **human** device-flow login, which no number of restarts can supply — log in on the spoke dashboard |
+| "no agents running" | Agents are expected on but none are running | Start/resume agents on the spoke dashboard |
+| "all agents paused — resume to produce output" (amber) | Every agent is operator-paused while work is queued | Resume agents when you want the queue to move — deliberate pause is respected, not faulted |
+| "repo Issues disabled — advisory/issues have nowhere to go" | The repo's Issues tab is off (common on forks) | Enable Issues in the repo's settings on your forge |
+| "advisory stale" / "advisory posting failing" | The L2 output — the advisory digest — is old, or the spoke reported a posting error | See [advisory digest staleness](https://github.com/hivecommons/hive/blob/v5/src/docs/advisory-staleness.md) |
+| "pipeline broken — write-capable kick … but no writes" | Kicks are reaching write-capable agents, but no work-source writes are appearing | Check the kicked agent logs and write permissions on the spoke dashboard |
+| "nothing to write — governor idle since … because …" | The governor is intentionally idle (for example no due agents), so stale writes are not a broken pipeline | Review schedules only if you expected an agent to be due |
+| "advisory-only — …" | The hive is in an advisory-only band/path, so writes are not expected from that activity | Nothing, unless you intended L3+ write behavior |
+| "nothing writable — N queued deemed not writable" | Agents classified queued items as held or not writable and stood down | Review the queued/held items; no restart is implied |
+| "no write in Nh (M queued)" / "no create output" | Older spoke or no freshness telemetry: preconditions are green but the write stream appears stalled | Check agent activity and logs on the spoke dashboard; if an error-streak chip appears instead, follow that hint first |
+| "no merge in Nh (M queued)" (L6) | PRs are being created but nothing merges | Check merge-agent grants and required checks on the queued PRs |
+| "agent NAME model calls failing (N consecutive) — pin a working model" | The agent's turns run but every model call dies | Pin a working model on the agent card in the spoke dashboard |
+| "agent(s) NAME stuck at Copilot consent — restarting in a loop" | The kick path keeps restarting an agent parked on a consent screen | Complete the consent flow on the spoke dashboard; the alarm clears itself within the hour |
+| "agent(s) NAME enabled but never kicked — set cadences" | The agent has no cadence in any mode and has never been kicked | Set cadences on the agent card |
+| "awaiting human review — N held for approval" | Output is parked behind hold labels; the next move is a person's | Review the held PRs (the hint links straight to the repo's PR list) |
+| "spoke lags its channel — N commits behind stable" | The channel moved and the spoke did not follow | Check auto-upgrade / force a rollout from the hub's fleet version controls; see [release channels](/docs/hive/release-channels) |
+| "not reporting (offline)" (unknown) | No recent heartbeat | Check the spoke's pod/container and network path to the hub; see [troubleshooting](/docs/hive/troubleshooting) |
+| "spoke too old to report health" (unknown) | The spoke predates the health signals | Upgrade the spoke image |
+| "queue empty — idle" (green) | Nothing to work on — this is healthy | Nothing. Add work sources if you expected a backlog |
+| "no output expected — …-capable agent(s) off: NAMES" (green) | The agents that could produce this level's output are paused/off-schedule | Nothing, unless you want output — then resume the named agents |
+
+## Where the verdict comes from (for the curious)
+
+The verdict is computed in `src/pkg/hub/health_verdict.go` (base verdict and
+ACMM banding) and `src/pkg/hub/remediation.go` (detector layering and the
+signature → action map), from fields the spoke reports in its heartbeat
+(`src/pkg/hub/heartbeat.go`). The spoke-side detectors live in
+`src/pkg/tokens/error_streak.go` (error streaks, from chat recordings),
+`src/pkg/agent/consent_wedge.go` (consent-screen restart tracking), and
+`src/pkg/governor/no_cadence.go` (cadence-less agents). The `/fleet`
+rendering — dot, WHY chip, and hint line — is in
+`src/pkg/hub/static/my-hives.html`.

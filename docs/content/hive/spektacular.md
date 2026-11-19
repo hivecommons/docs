@@ -1,0 +1,499 @@
+> **Synced from Hive.** This page is pulled from [hivecommons/hive@v5](https://github.com/hivecommons/hive/blob/v5/src/docs/spektacular.md) during the docs build. Edit the canonical source in the Hive repository.
+
+# Spektacular (Spek) stage runner
+
+The Spektacular (Spek) stage runner is the Hive side of long-running runs
+(hivecommons/hive#8303, part of the #8290 umbrella). A run moves through the
+`spec`, `plan`, and `implement` stages on one task lease. Spek owns the
+state of each artifact; Hive owns the workflow: it asks Spek whether the
+current artifact is finished and advances the lease when it is.
+
+The runner is OFF by default. With `runs.spektacular.enabled` unset or `false`
+Hive never starts a Spek process and every existing lease behaviour is
+unchanged.
+
+Retained Spek runs are listed in [Runs](https://github.com/hivecommons/hive/blob/v5/src/docs/runs.md) (`GET /api/runs` and
+`GET /api/runs/{key}`). The old campaign projection (`/api/campaigns`), campaign
+Jam and campaign recheck were retired together with inception campaigns in
+favour of [Inception (spek) sessions](/docs/hive/dashboard-sections/workflow-and-agents#inception-spek).
+On the first start after the upgrade Hive writes a one-time, read-only export of
+any campaign archives and Jam data it finds; see
+[Inception: retired campaigns export](/docs/hive/api-reference/inception#retired-campaigns-export).
+
+## Enabling it
+
+```yaml
+runs:
+  max_stage_retries: 2        # default; generations one stage may burn
+  spektacular:
+    enabled: true             # default false
+    binary: spektacular       # default; resolved through PATH
+    poll_interval_s: 30       # default
+```
+
+The Governor dialog's Features panel exposes the toggle and the binary path
+under "Long-running runs"; the poll interval and the retry budget are yaml
+only. The same keys are accepted by `PUT /api/config/governor/features` as
+`spektacularEnabled` and `spektacularBinary`. The runner is installed at boot
+(`cmd/hive`, `wireSpektacularRunner`), so a change to the toggle takes effect
+on the next boot, like the other feature switches.
+
+Package layout: `pkg/spektacular` owns the CLI boundary, the poll loop, and
+the receipt; `pkg/dashboard` exposes its lease registry as a primitives-only
+surface on `*Server` (`VisitActiveStageLeases`, `AdvanceStageLease`,
+`RetryStageLease`, `RefuseStageLease`, `EscalateStageLease`, `ImportRunPlan`)
+and drives whatever `StageRunner` was installed with `SetStageRunner` from the
+contribute hub's cleanup tick. The dashboard never imports `pkg/spektacular`
+(its internal-import ratchet); `pkg/spektacular.NewHubRunner` takes the
+server through the `LeaseRegistry` interface.
+
+## Publish hand-off
+
+Spek can also run the other way round: a finished spec or epic is
+**published** as an RFC plus child issues into the hive's work source — GitHub
+Issues, Jira or Linear — so Hive picks the children up from its normal queue
+whether Spek ran standalone or in-hive
+([spektacular#109](https://github.com/hivecommons/spektacular/issues/109),
+[spektacular#114](https://github.com/hivecommons/spektacular/issues/114)). No
+new input path is involved: the children are enumerated, staged and claimed
+exactly like human-filed items. What Spek adds is one hidden marker in every
+body it files:
+
+```text
+<!-- spek:publish name=<name> artifact_id=<id> target=<github|jira|linear> [task=<id>] [rfc=<url>] -->
+```
+
+`name` and `artifact_id` identify the spek, `target` the work source. `task`
+is the plan task / member spec id and is present on every **child**; the
+**RFC** itself carries the marker without it. `rfc` is the RFC's URL. Values
+are bare tokens (optionally quoted) separated by whitespace; a marker missing
+`name`, `artifact_id` or a known `target` is malformed and is ignored as a
+whole, and `rfc` is kept only when it parses as an http(s) URL — nothing in
+the marker is echoed into a kick as free text. The parser is
+`pkg/spekmarker`.
+
+Hive reads the marker in four places, none of which needs configuration:
+
+| Behaviour | Where | Effect of the marker |
+|---|---|---|
+| Triage | `runs.triage` (below) | A marker-carrying item is **never** routed into a new `spec` run, whatever `spec_labels` or complexity tier it carries; it takes the direct-fix path as `run/fix` does (signal `marker:spek:publish`). `run/spec` still overrides. |
+| Clarity gate | `runs.triage.clarity_gate` | Not scored, the same way `approved-direction` is skipped: the item is already specified. |
+| Kick context | kick issue list | A child's line gains `↳ specified by Spek: RFC <url> (spek <name>, artifact <id>, task <id>) — build against the spek's acceptance criteria …` and the instruction that the PR body must say `Fixes #<child>`. |
+| Umbrella | `governor.claims.never_claim_labels`, `IsTrackerIssue` | A marker **without** `task=` is the RFC: it is treated like `epic` — refused by every automated claim producer (`never-claim label: spek:publish`), never staged 020/030 from a stray claim, and flagged `[TRACKER]` — even when the repo has no `epic` label. |
+
+Everything else in the handshake is unchanged and documented where it lives:
+enumeration and the hard-suppress labels ([labels-and-control-signals.md](/docs/hive/labels-and-control-signals)),
+reporter trust (`issue_filter.reporter_trust`: publish as a trusted identity
+or expect the `triage/accepted` step), the prior-art gate (expected to fire on
+the RFC title, not the children), native sub-issue / blocked-by relations
+([hive-open-issue.md](https://github.com/hivecommons/hive/blob/v5/src/docs/hive-open-issue.md)) and the Jira / Linear source
+filters ([work-sources.md](/docs/hive/work-sources)). The in-hive stage runner is not
+involved in a publish; a published issue is ordinary work.
+
+## Triage
+
+The runs triage pass is separate from the Spek runner and is also OFF by
+default. When `runs.triage.enabled: true`, the scheduler classifies each
+incoming actionable GitHub issue before a direct-fix kick:
+
+- `run/spec` always admits a `spec` run.
+- `run/fix` always leaves the issue on the normal direct-fix path.
+- An issue whose body carries the Spek publish marker (`<!-- spek:publish … -->`,
+  see [Publish hand-off](#publish-hand-off)) likewise stays on the direct-fix
+  path: it is already specified.
+- Complex issues, or issues carrying `spec_labels` (default `kind/feature`,
+  `Epic`, `architecture discussion`), admit a `spec` run by creating the first
+  stage lease. The lease is keyed as the run-stage work source expects: the
+  repository plus the run key and `:spec` suffix (see
+  [work-sources.md](/docs/hive/work-sources)).
+- Simple issues, medium issues, or issues carrying `fix_labels` (default
+  `kind/bug`, `good first issue`) stay on the existing direct-fix path.
+- Short bodies (`min_body_chars`, default 80), unchosen option lists, and
+  unsubstituted template placeholders get one marker comment (`hive-triage`)
+  asking the reporter for the missing details and are skipped for that cycle.
+
+The decision is stored on the stage lease as `triage_verdict` and
+`triage_rationale`, surfaced by `GET /api/runs` and run detail, and copied into
+the first stage receipt timeline event. Owner reset with reason `triage_fix`
+retires a run in the `spec` stage so the issue can return to the direct-fix path.
+
+```yaml
+runs:
+  triage:
+    enabled: false             # default
+    spec_labels: [kind/feature, Epic, architecture discussion]
+    fix_labels: [kind/bug, good first issue]
+    min_body_chars: 80
+    clarify_comment: true
+```
+
+### Clarity gate
+
+`runs.triage.clarity_gate` ([#13577](https://github.com/hivecommons/hive/issues/13577))
+pushes back on vague issues before an agent claims them. It is OFF by default
+and independent of `runs.triage.enabled`. When on, the scheduler scores every
+human-filed, unclaimed GitHub issue in the kick list, without a model call:
+
+| Signal | Points | Found when the body has |
+|---|---|---|
+| Goal | 25 | a goal/problem/summary heading, or a goal sentence (`should`, `expected`, `so that`, `fails`, …) |
+| Acceptance criteria | 35 | an `Acceptance criteria` / `Definition of done` / `Expected behavior` heading or line, or a `- [ ]` checklist |
+| Scope | 20 | a code span, a path or file name, or a scope word (`component`, `command`, `page`, `out of scope`, …) |
+| Detail | 20 | 300+ characters (10 at `min_body_chars` or more) |
+| Open choice | −30 | an unchosen `high/medium/low` list, an unfilled `<placeholder>`, `TBD`, `???`, `not sure if`, `or maybe` |
+
+An issue scoring under `threshold` (default 60, Settings → Features →
+Incoming issue triage → **Clarity threshold**) is withheld from the kick. Hive
+posts one comment carrying `<!-- hive:clarity-gate -->` with one short question
+per missing signal and adds the `needs-spec` hard-suppress label (the first
+label of `project.issue_filter.hard_suppress_labels.needs_spec`). The issue then
+derives `stage/045-needs-decision` ("parked on a person: needs-spec"), leaves
+enumeration and is refused by the claim gate. The marker is never posted twice.
+If the comment posts but the label write fails, the issue stays withheld and the
+label is retried on the next kick; a restart in between does not lose the
+retry, because the gate reads the issue's label history and tells a park that
+never landed from one a person removed.
+
+The issue resumes on its own once somebody answers
+([#13588](https://github.com/hivecommons/hive/issues/13588)). While the gate is
+on, a resume sweep (every 5 minutes, at most 10 issues per pass) looks at open
+issues carrying `needs-spec` and lifts it when all of these hold:
+
+- the issue has a `<!-- hive:clarity-gate -->` comment written by one of the
+  hive's own accounts (a pasted marker does not count);
+- the newest `needs-spec` label event is by the hive, so a `needs-spec` a
+  person added, with or without an older gate comment, is never lifted;
+- after both, the issue author, or a person other than the hive with write,
+  maintain or admin permission on the repo (checked live), commented.
+
+The sweep removes `needs-spec` and records the un-park on the stage engine, so
+the issue re-derives `stage/010-actionable` and re-enters the queue. Removing
+`needs-spec` by hand resumes it too. Either way the gate sees the marker and
+does not ask again, however the issue scores. Issues filed by Hive or an agent,
+issues already claimed, issues carrying `approved-direction` and Spek-published
+issues (body marker `<!-- spek:publish … -->`) are not scored.
+
+```yaml
+runs:
+  triage:
+    clarity_gate:
+      enabled: false           # default
+      threshold: 60            # 0-100; 0 uses the default
+```
+
+### Prior-art gate
+
+`runs.triage.prior_art` ([#13575](https://github.com/hivecommons/hive/issues/13575))
+answers "does this already exist?" before any agent claims a feature request.
+It is ON by default and independent of `runs.triage.enabled`. For every
+unclaimed GitHub issue of a gated kind (`kinds`, default `feature`, `rfc`,
+`epic`, `enhancement` — matched as a bare or `kind/`-prefixed label, or as a
+leading `[RFC]` / `RFC:` / `Epic:` title tag; anything labelled `bug` is never
+gated) the scheduler derives the issue's key terms (backticked identifiers,
+config keys and `--flags` weigh 4, title words 3, the most frequent body
+words 1) and asks, without a model call:
+
+| Source | What it searches | Hit kind |
+|---|---|---|
+| knowledge | the hive's knowledge layers (`SearchAll`, deprecated/superseded facts dropped) | `knowledge` |
+| settings | the dashboard Settings search index, as the `rfc_existing_check` does | `setting` |
+| merged_prs | merged PRs in the repo from the last 12 months | `merged PR` |
+| closed_issues | closed issues in the repo (declined `not_planned` ones skipped unless `duplicate`) | `closed issue` |
+| docs | `README*`, `CHANGELOG*`, `docs/` in every `project.repos` checkout under `checkouts_dir`, by identifier and top terms (local `pkg/codeindex` snapshot) | `doc` |
+| code | source files in every registered checkout, by identifier only (local `pkg/codeindex` snapshot) | `code` / `setting` |
+
+Each candidate's confidence is the share of the issue's weighted terms it
+contains; a candidate needs two shared terms including a title term or an
+identifier to count at all. Every source is optional and soft (a failed
+search drops its candidates only), a missing, dirty or partly indexed
+checkout is called out as "checkout missing/partial for <repo>" instead of
+being read as no prior art — in the gate comment when one is posted, and as a
+`prior-art-gate-coverage-gap` audit entry otherwise; reports with a
+still-building index are not cached, the whole search is bounded (20s, one
+query per source) and the report is cached per issue content hash, so an
+unchanged issue costs nothing on later cycles.
+
+When the best finding reaches `threshold` (default **70**: deliberately
+high because a park costs a person a round trip — 70 means the finding
+covers about three quarters of the issue's weighted vocabulary including a
+title term) what happens depends on who filed the issue:
+
+| Author | Detected by | What the gate does |
+|---|---|---|
+| a person | `author/human`, or the enumerator's human verdict | one `<!-- hive:prior-art-gate -->` comment quoting up to `max_findings` (default 5) findings with links and a one-line quote, the `stage/017-possible-existing` park label, and a `discoverability: <feature> was asked for though it exists` advisory bead so the docs can be improved. Never auto-closed. |
+| the hive's own agent | `author/hive`, the App login, or an `agent/*` / `origin/*` label | **never parked** — a `<!-- hive:prior-art-findings -->` note is attached once and the issue carries on; the claiming agent must open its claim comment with a *Gap vs existing* paragraph. At filing time the `hive-open-issue` relay enforces it for feature kinds: a high-confidence match is refused naming the existing item and recorded as a knowledge bead; a medium one is refused unless the body has a *Gap vs existing* section, and is then filed with the findings note attached. |
+| a clanker (another hive, a contributor CLI, an external bot) | `author/clanker`, or a `[bot]` / non-human, non-hive login | parked like a person, with notice that silence closes it: after `bot_close_ttl` (default 72h) with no reply the resume sweep closes it `not_planned` with the `already-exists` label. Reopenable. |
+
+While an issue carries `stage/017-possible-existing` no agent claims it
+(it is a hard suppress, like 045). The resume sweep (every un-park cadence)
+answers the author's or a maintainer's reply:
+
+- `/hive decision proceed — <what is missing>` lifts the label, appends a
+  **Scope vs existing** section with the delta to the issue body as
+  acceptance criteria, and records the un-park so the issue re-derives
+  `stage/010-actionable`;
+- `/hive decision exists` adds `already-exists`, closes the issue
+  `not_planned` and replies with a pointer at the findings;
+- a plain reply lifts the label too (the claiming agent is told to state the
+  gap first).
+
+The gate's marker keeps it from asking twice; a `stage/017` a person added by
+hand is never lifted by the sweep. At most `max_parks_per_cycle` (default 5)
+issues are parked per enumeration cycle, so turning the gate on against a
+backlog never floods a repo.
+
+```yaml
+runs:
+  triage:
+    prior_art:
+      enabled: true            # default
+      threshold: 70            # 0-100; 0 uses the default
+      max_findings: 5
+      kinds: [feature, rfc, epic, enhancement]
+      max_parks_per_cycle: 5
+      bot_close_ttl: 72h       # clanker parks only; negative disables auto-close
+```
+
+## What the runner does
+
+Every 30 seconds (the contribute hub's cleanup tick) the runner looks at every
+lease that carries a stage. For each `spec` or `plan` stage whose poll interval
+has elapsed it runs
+
+```text
+spektacular <spec|plan> status <name>
+```
+
+where `<name>` is the bare artifact name (`000057_git-commit`, never
+`000057_git-commit.md` or `000057_git-commit/plan.md`): the lease's canonical
+work-item key `<repo>!<runKey>:<stage>` (see [work-sources.md](/docs/hive/work-sources))
+with the repository prefix and stage suffix stripped, then reduced to the bare
+name (`spektacular.ArtifactKey`; the dashboard applies the same rule in
+`runKeyOfLease`). The CLI has no `--json` flag (its only global flag is
+`--fields`); every verb already prints JSON, and an unknown flag is a usage
+error. Then:
+
+- `document_status: draft` leaves the lease alone.
+- `document_status: final` writes a stage receipt
+  (`/data/runs/receipts/<runKey>/<stage>-gen<gen>.json`, the
+  `stage-receipt/v1` shape from `pkg/outputschema`), records a `stage_receipt`
+  timeline event carrying the receipt digest and path, and calls the same
+  `advanceLeaseStage` path the API uses. That fires the `stage_completed` hook
+  and CEL trigger and records the `lease_stage_advanced` audit entry exactly
+  as a manual advance would.
+- `document_status: stale` means Spek strict mode invalidated the plan
+  after the spek changed. Hive refuses the plan-to-implement advance, parks the
+  run with `waiting_on=human` and `waiting_reason=stale_plan`, and records a
+  `blocked` timeline event. The lease is not retried; recovery is a fresh
+  plan/re-approval.
+- The status payload's `artifact_id`, when present, is the durable
+  Spek artifact join key Hive stores in receipts and stage attributes.
+  The bare `name` remains the CLI address and backward-compatible display
+  alias; older CLIs that lack `artifact_id` fall back to `name`.
+- Progress is decided by `document_status`, `current_step` and
+  `completed_steps` only. The status document's `updated_at` is never read
+  for a progress or staleness decision: it is workflow activity only while
+  Spek's in-progress state matches the artifact, and otherwise a file
+  mtime that a `git checkout`, a reformat or a `touch` moves without anything
+  having happened. Spek may also omit it entirely when no workflow
+  state matches, so the parser treats an absent, `null` or empty
+  `updated_at` (and an empty `created_at` / `closed_at`) as unknown. A stale
+  stage is decided by Hive's own lease clock (the lease's expiry), never by
+  the artifact's timestamps. `TestUpdatedAtNeverDecides` in `pkg/spektacular`
+  keeps it that way.
+- A lease that lapses without `final` is retried through `retryLeaseStage`
+  (a new generation of the same stage, `lease_stage_retried` in the audit
+  log) while the budget allows. `max_stage_retries` counts generations
+  including the first: at the default of 2 the stage runs once, is retried
+  once, and the second expiry raises an escalation with `decision` severity
+  (`lease_stage_escalated` in the audit log, a `blocked` timeline event with
+  `severity=decision`). No third generation is ever minted; a person resets
+  the stage or abandons the run.
+- The `implement` stage has no Spek document. The runner never polls
+  it; its completion is the existing hold-gated PR flow.
+
+Ticks are idempotent per lease generation: once a generation has advanced it
+is never polled or advanced again, a generation change (a retry, or the
+successor stage of an advance) keeps the poll pacing instead of earning an
+extra status call, and a second tick at the same instant is a no-op.
+
+A retry is the one lease mutation allowed on an expired lease: it exists
+because the generation lapsed, so the expired lease is its expected input and
+receives a fresh window under its new generation. An advance still requires a
+live lease.
+
+### Plan import
+
+When a `plan` reaches `final` the runner runs
+
+```text
+spektacular plan export <name> --format json
+```
+
+(requested upstream in
+[spektacular#50](https://github.com/hivecommons/spektacular/issues/50)) and
+admits the returned tasks through `planning.DecomposeFromOutput` with
+`AutoApprove: false`. Spek's structure is rendered verbatim into the
+planner's task-list shape (`[T1] title (depends: T2) [agent_suitable]`); no
+model is asked to redecompose an already-structured plan.
+
+Until that export verb exists, Hive falls back only when export is unavailable
+(for example `unknown_subcommand` for `plan export`). The fallback reads the
+plan artifact through Spek's existing store boundary:
+
+```text
+spektacular plan file read <name>/tasks.json
+spektacular plan file read <name>/plan.md
+```
+
+The preferred fallback file is `<name>/tasks.json`, using the same shape Hive
+asked upstream to standardize:
+
+```json
+{
+  "kind": "plan",
+  "name": "000057_git-commit",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add encoding helpers",
+      "repo": "hivecommons/hive",
+      "depends_on": ["T0"],
+      "execution": "agent_suitable"
+    }
+  ]
+}
+```
+
+If `tasks.json` is absent, Hive parses a deliberately small `plan.md` task-list
+convention from the same plan directory:
+
+```markdown
+- [T1] Add encoding helpers (repo: hivecommons/hive) [agent_suitable]
+- [T2] Wire helpers into the parser (depends: T1)
+```
+
+`repo`, `depends`, and the trailing execution marker are optional; a missing
+task id is assigned in order (`T1`, `T2`, ...). If neither fallback yields a
+task list, the final plan stays parked and the runner logs the import error.
+
+The epic is found by its `run_key` metadata (or created with it, bound to the
+run key as its external ref). Its plan is a DRAFT: the run-stage work source
+lists `implement` only after `ApprovePlan` (`POST /api/plans/{id}/approve`)
+sets `plan_status` to `approved`. A run whose epic already carries a plan is
+not re-imported.
+
+## Continuous convergence (retired)
+
+Campaign recheck (scheduler-owned recheck revisions, outward discovery and the
+`POST /api/campaigns/{id}/recheck` endpoint) was retired with inception
+campaigns. `runs.spektacular.recheck` is still accepted in `hive.yaml` so an
+existing file keeps loading and validating, but it has no effect and Hive logs a
+one-line deprecation warning; remove the block. The design history is in
+[ADR-0020](/docs/hive/adr/0020-spek-continuous-convergence).
+
+## Defensive handling of the open questions
+
+The #8227 questions were answered on jumppad-labs/spektacular#45. The runner
+encodes the answers and still handles the alternatives it cannot rule out:
+
+- **The bare artifact name is the join key.** The stable key across spek,
+  plan and implement is the artifact name itself (`000057_git-commit`),
+  shared by convention across the spek file, the plan directory and the
+  changelog record, and recorded as the workflow's `data.name`. It is NOT the
+  `spec:` / `plan:` frontmatter cross-references the status response also
+  carries: those are almost never populated (0 of 57 speks, 3 of 55 plans in
+  the Spek repository itself), so the runner surfaces them as
+  `ArtifactStatus.Spec` / `.Plan` for diagnostics only and never joins on
+  them. Every spelling of an address (`<name>.md`, `<name>/plan.md`) reduces
+  to the bare name before it reaches the CLI. If a status answer ever
+  carries a different bare `name` than the one requested, the runner treats
+  it as a contract violation and does not advance.
+- **Invalidation after `final`.** If `document_status` goes from `final` back
+  to `draft` under the same name, the runner treats the artifact as a stale
+  plan: it refuses to advance, logs, and records `lease_stage_refused` with
+  reason `stale_plan`. If the artifact the lease is bound to disappears after
+  having been observed (a new document with a new name replaced it), the
+  runner refuses with reason `replaced_document` and parks the lease for an
+  explicit reset. It never rebinds a lease to a document it was not minted
+  for. A parked stage is polled again only after its generation changes.
+
+## What Hive never does
+
+Hive never opens a Spek file. Every fact about an artifact reaches the
+runner through the CLI boundary (`Runner.Exec`), which is also the seam tests
+replace. `TestNoDirectFileAccess` in `pkg/spektacular` scans the package for
+file access to keep it that way.
+
+## Contract: what is confirmed, what changed, what is still open
+
+`pkg/spektacular/testdata/spektacular-fake/spektacular` is a shell fake of the
+CLI. It encodes the per-artifact status contract exactly as
+jumppad-labs/spektacular#45 ships it, after the Spek maintainer's
+review of 2026-09-23 answered the questions Hive had left open. The original
+assumptions from the first cut of the runner (PR #8398) and their fate:
+
+Confirmed:
+
+1. `spektacular <spec|plan> status <name>` prints one JSON object with
+   `kind`, `name`, `document_status` (`draft|final`), `current_step`,
+   `completed_steps[]`, `created_at`, `updated_at`, `closed_at` (#8301). The
+   response also carries `error: false` (every Spek result does) and
+   the `spec` / `plan` frontmatter cross-references. `created_at` and
+   `closed_at` are frontmatter dates emitted as RFC3339 midnight UTC.
+2. A missing artifact exits non-zero and prints the JSON error envelope on
+   stdout. The code is `artifact_not_found` (the `file` verbs use
+   `not_found` for the same condition; both are typed as `NotFoundError`).
+3. Returning a `final` artifact to `draft` flips `document_status` on the
+   same document and clears its close date; it does not create a new
+   document. This is stated in the #45 description from the metadata
+   lifecycle rules and was not contradicted in review, though the maintainer
+   did not address it explicitly. The `stale_plan` refusal is therefore the
+   normal invalidation path and `replaced_document` the exception.
+
+Changed:
+
+4. The join key is the bare artifact name, not the `spec:` / `plan:`
+   cross-references (see above). Hive now strips a document path and a
+   markdown extension from every address before it reaches the CLI.
+5. The error envelope is `{"error": true, "code", "message", "resource",
+   "next_action"}`, not `{"error": "<message>", "code"}`. The parser accepts
+   both (the string form stays as a defensive fallback).
+6. `updated_at` is "last modified", not "last activity", and may be absent.
+   Hive no longer uses it anywhere: the receipt ends at `closed_at` (or the
+   advance instant) and its input hash excludes `updated_at` so two
+   observations of one final document hash the same.
+7. `closed_at` is `""` while the document is open, not `null`; `created_at`
+   may be `""` when the frontmatter carries no date. Both decode as unknown.
+8. There is no `--json` flag on any verb (`unknown flag: --json`); output is
+   already JSON. Hive passes none. `spec file list` / `plan file list`
+   likewise take no flag; Hive does not call them today, but Spek may
+   add a `ModTime` per list entry so one list call can replace N status
+   calls, which is the shape a future list-based poll would consume.
+9. `plan status <name>` reports `plan.md` only (`PlanFilePath` hardcodes
+   it), so a plan's `document_status` is that of `plan.md`, not of the whole
+   plan document set. Hive advances on it as the plan's status; if a plan
+   ever grows documents whose completion matters, the verb has to widen
+   first.
+
+Still open:
+
+10. `spektacular plan export <name> --format json` printing `{kind: "plan",
+    name, tasks: [{id, title, repo, depends_on, execution}]}` for a final plan
+    is still an upstream ask
+    ([spektacular#50](https://github.com/hivecommons/spektacular/issues/50)).
+    Until it lands, Hive advances final plans through the documented
+    `<name>/tasks.json` or `<name>/plan.md` fallback contract above.
+
+Scenarios: `draft-final` (draft, draft, final), `never-final`,
+`final-then-draft`, `final-no-updated-at` (final with the `updated_at`
+member absent), `missing`, selected through `SPEK_FAKE_SCENARIO`. The fake
+answers `artifact_not_found` for a name spelled with an extension or a
+document path, as the real store does, and a usage error for `--json`.
+
+## Related
+
+- [work-sources.md](/docs/hive/work-sources): run stages as work items
+  (`run_stages: true`) and the `<repo>!<runKey>:<stage>` key.
+- [hooks.md](https://github.com/hivecommons/hive/blob/v5/src/docs/hooks.md): the `stage_completed` transition.
+- [design/run-artifacts.md](https://github.com/hivecommons/hive/blob/v5/src/docs/design/run-artifacts.md): multi-repo waves.
