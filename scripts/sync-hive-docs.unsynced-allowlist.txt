@@ -51,7 +51,6 @@ dashboard-copy-inventory.md
 dashboard-design-system.md
 dashboard-source-layout.md
 dashboard-standalone-upgrades.md
-dashboard.md
 deployment-scripts.md
 design/crux.md
 design/discord-issue-promotion.md
@@ -92,9 +91,7 @@ hive-open-issue.md
 hive-open-pr.md
 hivecommons-migration.md
 hooks.md
-hosted-hub.md
 house-style.md
-hub-deployment.md
 hub-fleet-activity.md
 inception.md
 intent-verification.md
@@ -168,7 +165,6 @@ scale-envelope.md
 security-response.md
 security-self-assessment.md
 security.md
-settings.md
 skills.md
 snapshots.md
 soc2-control-mapping.md
@@ -179,7 +175,6 @@ strategy-lab.md
 streaming-the-activity-monitor.md
 supervisor.md
 swarm.md
-telemetry.md
 tls-setup.md
 token-access-log.md
 token-mint.md
@@ -194,3 +189,10 @@ v5-sync-policy.md
 vibe-kanban.md
 what-is-hive.md
 work-source-terminology.md
+
+# Design records stay on GitHub: proposals read as current behaviour to the
+# site search and its Ask AI answers (hivecommons/hive#19182).
+design/authorization-decision-point.md
+design/customers-hub-consent.md
+design/dashboard-ask-ai-help.md
+design/session-taint.md

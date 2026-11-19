@@ -2,7 +2,7 @@
 
 **Hive Commons** is a family of open source tools for working with AI coding agents. **Hive** manages project work. **Crux** runs the agents and can be used on its own.
 
-Hive Commons is a [Cloud Native Computing Foundation](https://www.cncf.io/) Sandbox project. The CNCF Technical Oversight Committee voted to accept it in October 2026 ([cncf/sandbox#516](https://github.com/cncf/sandbox/issues/516)), and onboarding is tracked in [cncf/sandbox#545](https://github.com/cncf/sandbox/issues/545).
+Hive Commons is a [Cloud Native Computing Foundation](https://www.cncf.io/) Sandbox project. The CNCF Technical Oversight Committee voted to accept it in September 2026: the vote in [cncf/sandbox#516](https://github.com/cncf/sandbox/issues/516) passed on September 28, 2026, and the [CNCF project page](https://www.cncf.io/projects/hive-commons/) lists it as accepted on September 29, 2026. Onboarding is tracked in [cncf/sandbox#545](https://github.com/cncf/sandbox/issues/545).
 
 ## Hive or Crux?
 

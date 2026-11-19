@@ -16,7 +16,7 @@ You do not need to reach L6. At L6, permitted lanes can merge when automated che
 
 | Starting point | Action | Continue when |
 |---|---|---|
-| No hive; you want hosting | Open [Request a hive](https://hive.hivecommons.dev/get-started) and follow [Hosted Hub onboarding](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md). Sign in with GitHub, supply the repository URL, and request a starting level. | An admin has approved and provisioned it; **My Hives** shows its dashboard URL. |
+| No hive; you want hosting | Open [Request a hive](https://hive.hivecommons.dev/get-started) and follow [Hosted Hub onboarding](/docs/hive/hosted-hub). Sign in with GitHub, supply the repository URL, and request a starting level. | An admin has approved and provisioned it; **My Hives** shows its dashboard URL. |
 | No hive; you will operate it | Choose [Docker Compose](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-docker-compose.md), [Podman](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-podman.md), or [Kubernetes](https://github.com/hivecommons/hive/blob/v5/src/docs/kubernetes-deployment.md). Complete that guide's runtime, storage, network, and login setup first. | Your container is running and you can open its dashboard. |
 | You already have a dashboard URL | Sign in with the GitHub identity granted access by its owner. | You can see the welcome checklist and settings. |
 
@@ -73,7 +73,7 @@ not an unmanaged standalone deployment.
 
 ## Your first week (do exactly this)
 
-1. **Connect and authenticate.** Finish Step 0, then follow [hosted first-run setup](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md#3-finish-first-run-setup-on-the-spoke-dashboard) for **Settings → Model Gateways** or the per-backend CLI login. A gateway's **Test** should report `OK — N models available`; a CLI backend must finish its login. Check errors rather than waiting for authentication to fix itself.
+1. **Connect and authenticate.** Finish Step 0, then follow [hosted first-run setup](/docs/hive/hosted-hub#3-finish-first-run-setup-on-the-spoke-dashboard) for **Settings → Model Gateways** or the per-backend CLI login. A gateway's **Test** should report `OK — N models available`; a CLI backend must finish its login. Check errors rather than waiting for authentication to fix itself.
 2. **Confirm limits before work starts.** Check the ACMM badge and **Settings → Budget**. Set Total Tokens, Period (days), and Critical Percent. To observe without new issues or PRs, use L2. Leave supervisor paused and brainstorm unchanged for this first exercise.
 3. **Set cadences, then enable workers.** At L2, open the gear settings for scanner, quality, and guide. Set each available governor/load-mode cadence to **12h or 1d**, then un-pause them. Start with one agent if you want to distinguish its output. Check reviewer separately if enabled: it can post COMMENT-only reviews at L2, not approvals or merges.
 4. **Verify setup.** Allow 2–3 minutes for configuration/status propagation. Confirm App access, backend authentication, the applied level, and the saved cadence. A first run can take 5–10 minutes or a full cadence interval; a heartbeat alone does not mean work has run. Check Activity and authentication errors if no run appears.
@@ -331,7 +331,7 @@ These agents first become available at L5 and remain **paused by default** at L5
 1. Open **Settings → Project Observability**. Declare the stack your managed project actually runs and save. This may be OpenTelemetry, Prometheus, Grafana, a `ServiceMonitor`, or a commercial backend. Without that declaration, their PR-capable policies fail closed.
 2. Set each agent's cadence before un-pausing it; **24h** is a conservative start. Saving the observability declaration never changes cadences (#7261), so both steps are required.
 
-Leaving them paused is valid. See [Telemetry agent](https://github.com/hivecommons/hive/blob/v5/src/docs/telemetry.md), [Operations agent](https://github.com/hivecommons/hive/blob/v5/src/docs/operations.md), and the `project_observability` block in [agent configuration](/docs/hive/agent-configuration).
+Leaving them paused is valid. See [Telemetry agent](/docs/hive/telemetry), [Operations agent](https://github.com/hivecommons/hive/blob/v5/src/docs/operations.md), and the `project_observability` block in [agent configuration](/docs/hive/agent-configuration).
 
 ### L5 review routine
 
@@ -417,7 +417,7 @@ to grant; remaining at a lower level is valid.
 ---
 
 For configuration beyond this first path, use [agent configuration](/docs/hive/agent-configuration),
-[settings](https://github.com/hivecommons/hive/blob/v5/src/docs/settings.md), and the [documentation map](/docs/hive/documentation-map).
+[settings](/docs/hive/settings), and the [documentation map](/docs/hive/documentation-map).
 
 ## What this guide doesn't cover (and why)
 

@@ -18,7 +18,7 @@ Each entry answers the same questions in the same order:
 
 Hive has two release lines. **v5** is the stable line. **v6** is the newer line. Where something exists on only one line, the entry says so.
 
-For short definitions of the names the dashboard uses, see the [dashboard glossary](/docs/hive/dashboard-glossary). For how the dashboard is built, see the [spoke dashboard guide](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard.md).
+For short definitions of the names the dashboard uses, see the [dashboard glossary](/docs/hive/dashboard-glossary). For how the dashboard is built, see the [spoke dashboard guide](/docs/hive/dashboard).
 
 ### Live sidebar count feedback
 

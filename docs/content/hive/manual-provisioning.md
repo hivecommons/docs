@@ -2,7 +2,7 @@
 
 # Provisioning a Hosted Hive
 
-This is a **Kubernetes operator runbook**, including a separate standalone path. If you only want a hosted dashboard, use [Hosted Hive Hub onboarding](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md): request a hive and wait for an administrator to provision it. You do not need cluster credentials.
+This is a **Kubernetes operator runbook**, including a separate standalone path. If you only want a hosted dashboard, use [Hosted Hive Hub onboarding](/docs/hive/hosted-hub): request a hive and wait for an administrator to provision it. You do not need cluster credentials.
 
 ## Choose one provisioning task
 
