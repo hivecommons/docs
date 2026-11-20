@@ -54,8 +54,9 @@ terminal, sign in that agent's CLI (for example Copilot or Claude); see
 |---|---|
 | Open Settings | **⚙ Settings** in the top bar, or **Settings** in the account menu. A link of the form `<dashboard>/#config/governor/<tab>` opens a given tab ([Linking to a setting](/docs/hive/dashboard/dashboard-settings-explained#linking-to-a-setting)). |
 | Find a setting by name | Open Settings and type in its search box. |
+| Get help | **? Help** in the top bar opens a menu with the same entries as the sidebar Help group: **🚀 Getting started** (the setup checklist, for users who can change the hive; it links to the full guide), **📖 Docs** (docs.hivecommons.dev, new tab), **❓ FAQ** and **🐛 Report an issue**. Arrow keys move through it and Esc closes it. |
 | Add a repository | Settings, **Repos** tab: type `org/repo` or a GitHub URL, click **+ Add**, then **Save & close**. See [Repos](/docs/hive/dashboard/dashboard-settings-explained#repos). |
-| Pause or resume one agent | Sidebar, **Admin**, **Agents**: on the agent's card click **⏸ pause**, and **▶ resume** to lift it. Owner only. See [Resuming a paused agent](/docs/hive/dashboard/dashboard-page-reference#resuming-a-paused-agent). |
+| Pause or resume one agent | Sidebar, **Agents**, **Control panel**: on the agent's card click **⏸ pause**, and **▶ resume** to lift it. Owner only. See [Resuming a paused agent](/docs/hive/dashboard/dashboard-page-reference#resuming-a-paused-agent). |
 | Pause every agent at once | The fleet breaker chip in the top bar. Releasing it restores only the agents the breaker paused. |
 | Configure one agent | The ⚙ button on the agent's card opens its settings tabs (listed below). |
 | Add an agent | Sidebar, **Agents** group: **＋ Add agent**. |
@@ -84,28 +85,28 @@ terminal, sign in that agent's CLI (for example Copilot or Claude); see
 | Collaborate | **Meetings** | Meetings | Meetings hive joins to take notes: send it to one, follow the live transcript, notes and research, or make it leave. | [Meetings](/docs/hive/dashboard-sections#meetings) |
 | Collaborate | **Customers** (only when switched on) | Customers | The people you build for: who each one is, what they are trying to get done, and how it is going for them. | [Customers](/docs/hive/dashboard-sections#customers) |
 | Collaborate | **Inception (spek)** (only when switched on) | Inception (spek) | Named terminal sessions running command-line AI tools inside Hive; everyone who can see one watches live and one person at a time holds the keyboard. | [Inception (spek)](/docs/hive/dashboard-sections#inception-spek) |
-| Agents | One entry per agent, plus **＋ Add agent** and **＋ Group** | | Opens that agent's card. | [Agents](/docs/hive/dashboard-sections#agents) |
+| Agents | **Control panel** | Control panel | One card per worker with its status and buttons to pause, restart or configure it. | [Control panel](/docs/hive/dashboard-sections#control-panel) |
+| Agents | **Activity** | Activity | One line per worker showing what it is doing now, how long since it last acted, and which issues it has reserved. | [Activity](/docs/hive/dashboard-sections#activity) |
+| Agents | **All agents (n)**: one entry per agent, plus **＋ Add agent** and **＋ Group** | | Opens that agent's card. Collapsing the list keeps the entries above it visible. | [Control panel](/docs/hive/dashboard-sections#control-panel) |
 | Resources | **Projects** | Projects | One card per repository Hive looks after, listing its open issues and pull requests grouped by what each one needs next. | [Projects](/docs/hive/dashboard-sections#projects) |
 | Resources | **Contributors** | Contributors | The people who lend their computers or AI helpers to your projects, and how far Hive trusts each of them. | [Contributors](/docs/hive/dashboard-sections#contributors) |
 | Intelligence | **Advisory** | Advisory | Reports, advice and suggestions Hive has written about your projects and about how it is running. | [Advisory](/docs/hive/dashboard-sections#advisory) |
 | Intelligence | **ACMM Eval** | ACMM Eval | How ready your repositories are for Hive to work on them alone, scored against a published checklist. | [ACMM Eval](/docs/hive/dashboard-sections#acmm-eval) |
 | Intelligence | **Knowledge** | Knowledge | The facts Hive has learned about your projects, where they came from, and how much Hive trusts each one. | [Knowledge](/docs/hive/dashboard-sections#knowledge) |
 | Intelligence | **Experiment Lab (nous)** (only when switched on) | Experiment Lab | An experimental planner that tries out code changes in your repositories and records what it learned. | [Experiment Lab](/docs/hive/dashboard-sections#experiment-lab) |
-| Admin | **Tokens** | Tokens | How much text the AI models read and wrote for Hive recently, broken down by model and by worker. | [Tokens](/docs/hive/dashboard-sections#tokens) |
-| Admin | **Cost** | Cost | What Hive's use of AI models would cost at public per-token list prices; an estimate, not a bill. | [Cost](/docs/hive/dashboard-sections#cost) |
-| Admin | **Review** | Review | Review Pipeline shows pull requests by stage first; Review Queue lists the same open pull requests in Hive's suggested review order. | [Review](/docs/hive/dashboard-sections#review) |
-| Admin | **Agents** | Agents | Each worker Hive runs, what it is doing now, and buttons to pause, restart or configure it. | [Agents](/docs/hive/dashboard-sections#agents) |
-| Admin | **Agent activity** | Agent activity | One line per worker showing what it is doing now, how long since it last acted, and which issues it has reserved. | [Agent activity](/docs/hive/dashboard-sections#agent-activity) |
-| Admin | **Audit Log** | Audit Log | A searchable record of everything Hive has done, newest first. The collapsed “sensitive” badge opens a 24h sensitive-only view, matching the server-side risk count. | [Audit Log](/docs/hive/dashboard-sections#audit-log) |
-| Admin | **Lifecycle Timeline** | Lifecycle Timeline | A timeline of recent pull requests, from when they were opened to when they were merged or got stuck. | [Lifecycle Timeline](/docs/hive/dashboard-sections#lifecycle-timeline) |
-| Admin | **Diagnostics** | Diagnostics | Health checks for Hive itself, such as its connections, credentials and safety switches, to help you find out why something is not working. | [Diagnostics](/docs/hive/dashboard-sections#diagnostics) |
+| Pull requests | **Review** | Review | Review Pipeline shows pull requests by stage first; Review Queue lists the same open pull requests in Hive's suggested review order. | [Review](/docs/hive/dashboard-sections#review) |
+| Pull requests | **PR timeline** | PR timeline | A timeline of recent pull requests, from when they were opened to when they were merged or got stuck. | [PR timeline](/docs/hive/dashboard-sections#pr-timeline) |
+| Usage | **Tokens** | Tokens | How much text the AI models read and wrote for Hive recently, broken down by model and by worker. | [Tokens](/docs/hive/dashboard-sections#tokens) |
+| Usage | **Cost** | Cost | What Hive's use of AI models would cost at public per-token list prices; an estimate, not a bill. | [Cost](/docs/hive/dashboard-sections#cost) |
+| Troubleshooting | **Diagnostics** | Diagnostics | Health checks for Hive itself, such as its connections, credentials and safety switches, to help you find out why something is not working. | [Diagnostics](/docs/hive/dashboard-sections#diagnostics) |
+| Troubleshooting | **Audit log** | Audit log | A searchable record of everything Hive has done, newest first. The collapsed “sensitive” badge opens a 24h sensitive-only view, matching the server-side risk count. | [Audit log](/docs/hive/dashboard-sections#audit-log) |
+| Help | **Getting started** | | A link or dialog, not a dashboard section. | |
 | Help | **FAQ** | FAQ | Short answers to the questions people ask once a hive is running, each linking to the guide that explains it fully. | [FAQ](/docs/hive/dashboard-sections#faq) |
-| Help | **Getting Started** | | A link or dialog, not a dashboard section. | |
-| Help | **API Spec (Redoc)** | | A link or dialog, not a dashboard section. | |
-| Help | **Getting Started Guide** | | A link or dialog, not a dashboard section. | |
-| Help | **Join our Discord** | | A link or dialog, not a dashboard section. | |
-| Help | **Watch live on Twitch** | | A link or dialog, not a dashboard section. | |
-| Help | **Report an Issue** | | A link or dialog, not a dashboard section. | |
+| Help | **Docs** | | A link or dialog, not a dashboard section. | |
+| Help | **API reference** | | A link or dialog, not a dashboard section. | |
+| Help | **Report an issue** | | A link or dialog, not a dashboard section. | |
+| Community | **Discord** | | A link or dialog, not a dashboard section. | |
+| Community | **Live on Twitch** | | A link or dialog, not a dashboard section. | |
 
 ### Settings tabs
 
