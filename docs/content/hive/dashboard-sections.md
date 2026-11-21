@@ -104,11 +104,13 @@ Whether Hive thinks you could safely let it do more on its own, and what still h
 
 Full entry: [Ready to level up?](/docs/hive/dashboard-sections/overview-and-metrics#ready-to-level-up).
 
-## Lifecycle Timeline
+<a id="lifecycle-timeline"></a>
+
+## PR timeline
 
 A timeline of recent pull requests, from when they were opened to when they were merged or got stuck.
 
-Full entry: [Lifecycle Timeline](/docs/hive/dashboard-sections/overview-and-metrics#lifecycle-timeline).
+In the Pull requests group of the left menu, after Review. Earlier versions called it Lifecycle Timeline. Full entry: [PR timeline](/docs/hive/dashboard-sections/overview-and-metrics#lifecycle-timeline).
 
 ## Throughput
 
@@ -146,11 +148,11 @@ Actions Hive wants to take that are waiting for you to approve or reject them.
 
 Full entry: [Approvals](/docs/hive/dashboard-sections/workflow-and-agents#approvals).
 
-## Audit Log
+## Audit log
 
 A searchable record of everything Hive has done, newest first. The collapsed “sensitive” badge opens a 24h sensitive-only view, matching the server-side risk count.
 
-Full entry: [Audit Log](/docs/hive/dashboard-sections/workflow-and-agents#audit-log).
+In the Troubleshooting group of the left menu, after Diagnostics. Full entry: [Audit log](/docs/hive/dashboard-sections/workflow-and-agents#audit-log).
 
 ## Review
 
@@ -228,7 +230,7 @@ Opening a profile shows:
 - **Merge** (owner and read-write): fold another customer into this profile when they are the same person. Identities, tags, goals and activity come across, and **Undo merge** gives them back exactly. Two dashboard users cannot be merged. **Split off** on an identity moves it, and the activity it produced, to a new customer.
 - **Export** and **Forget** (owner only): **Export this person** shows everything held about them in a viewer you can copy from. **Forget**: deletes the person, their identities and their activity links, and stops hive rebuilding the profile.
 
-Nothing in this section leaves the hive. Turn it off with **Settings › Features › Customers** (`customers.enabled`), which takes effect when the hive restarts. API: [customers](/docs/hive/api-reference/customers). Design: [customers](/docs/hive/design/customers).
+Nothing in this section leaves the hive, and nothing is read from the hub, unless the owner turns on **Settings › Features › Import details people shared on the hub** (`customers.hub_import.enabled`, default off). Then the hive sends the hub salted hashes of its confirmed customers' GitHub logins, and a person who opted in on the hub's **Profile sharing** page for this hive can have the real name, organization or country they entered there fill their profile, shown as "from the hub". A value set by hand here is never overwritten, and a withdrawal on the hub clears the imported value at the next sync. See [Customers hub import](/docs/hive/dashboard/data-collection-and-telemetry#customers-hub-import). Turn the section off with **Settings › Features › Customers** (`customers.enabled`), which takes effect when the hive restarts. API: [customers](/docs/hive/api-reference/customers). Design: [customers](/docs/hive/design/customers).
 
 ## Contributors
 
@@ -248,13 +250,17 @@ The raw text output of each worker, for following what it is doing line by line.
 
 Full entry: [Agent Logs](/docs/hive/dashboard-sections/workflow-and-agents#agent-logs).
 
-## Agents
+<a id="agents"></a>
 
-Each worker Hive runs, what it is doing now, and buttons to pause, restart or configure it.
+## Control panel
+
+One card per worker with its status and buttons to pause, restart or configure it.
+
+First entry in the Agents group of the left menu (earlier versions called it Agents and listed it under Admin). Below it sit Activity and the collapsible **All agents (n)** list, one row per agent with **＋ Add agent** and **＋ Group**; collapsing that list keeps Control panel and Activity visible.
 
 The pause/resume control is owner-only but never absent: below the owner role, or while the role is still being checked, it renders disabled with the tooltip "Needs the owner role" or "Checking your access...". Cards and the detail panel repaint when the role settles. A paused sandboxed agent offers plain `resume` (no session to start). The cadence table shows a single `paused` chip (with its reason on hover) beside the agent name; the mode columns show plain `paused` text.
 
-Full entry: [Agents](/docs/hive/dashboard-sections/workflow-and-agents#agents).
+Full entry: [Control panel](/docs/hive/dashboard-sections/workflow-and-agents#agents).
 
 ## Hive activity monitor
 
@@ -266,11 +272,13 @@ Full entry: [Hive activity monitor](/docs/hive/dashboard-sections/activity-monit
 
 The monitor's decision feature has its own entry: [Let hive decide](/docs/hive/dashboard-sections/activity-monitor#let-hive-decide).
 
-## Agent activity
+<a id="agent-activity"></a>
+
+## Activity
 
 One line per worker showing what it is doing now, how long since it last acted, and which issues it has reserved.
 
-Full entry: [Agent activity](/docs/hive/dashboard-sections/activity-monitor#agent-activity).
+In the Agents group of the left menu, after Control panel (earlier versions called it Agent activity). Full entry: [Activity](/docs/hive/dashboard-sections/activity-monitor#agent-activity).
 
 ## FAQ
 

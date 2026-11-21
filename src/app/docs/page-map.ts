@@ -318,6 +318,15 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Pre-registration: does Hive improve outcomes, and at what cost? (2026-10)': 'research/preregistration-2026-10.md' },
       { 'Reviewer-stated rules from review feedback': 'review-feedback-rules.md' },
       { 'RFC and proposal process': 'rfc-process.md' },
+      { 'Refresh-only heads: which CI jobs skip a base refresh': 'ci-refresh-only-heads.md' },
+      { 'Customers enrichment: public affiliation and activity': 'customers-enrichment.md' },
+      { 'agent-pane-test-suite-hazard': 'knowledge/agent-pane-test-suite-hazard.md' },
+      { 'changelog-fragment-exemptions': 'knowledge/changelog-fragment-exemptions.md' },
+      { 'ci-is-the-verdict': 'knowledge/ci-is-the-verdict.md' },
+      { 'docs-citation-guard': 'knowledge/docs-citation-guard.md' },
+      { 'go-workspace-two-modules': 'knowledge/go-workspace-two-modules.md' },
+      { 'trusted-scripts-tree-repin': 'knowledge/trusted-scripts-tree-repin.md' },
+      { 'Pre-registration amendment: within-repo control arms (2026-10-22)': 'research/control-arm-amendment-2026-10-22.md' },
     ]
   }
 ]

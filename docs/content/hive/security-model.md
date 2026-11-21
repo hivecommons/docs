@@ -263,7 +263,11 @@ authoritative list is the switch and the `specialPurposePrefixes` table in
 
 The Customers section keeps one profile per person. It lives in two files on the
 hive's own volume and nothing in it leaves the hive. It is not sent to the hub,
-written to GitHub or put in a heartbeat. The design is in
+written to GitHub or put in a heartbeat. The one exception is the opt-in
+Customers hub import (`customers.hub_import.enabled`, default off): it sends the
+hub only salted hashes of confirmed customers' GitHub logins, and receives only
+fields a person consented to share with this hive
+([telemetry](/docs/hive/dashboard/data-collection-and-telemetry#customers-hub-import)). The design is in
 [customers](/docs/hive/design/customers).
 
 Some of these people never signed up. They are issue authors, meeting guests and
@@ -405,6 +409,14 @@ on the same evidence as a literal IP. Set
 destination is intended; it lifts the guard for all three legs at once, and the
 proxy warns at boot when it is set.
 
+**HTTP relay header boundary.** Plain HTTP, inspected agent HTTP, and the
+sandbox read relay remove `Proxy-Authorization`, `X-Forwarded-*`,
+`X-Hive-*`, standard hop-by-hop fields, and fields nominated by `Connection`
+from forwarded requests. The parsed response path removes hop-by-hop fields
+in the other direction. These paths regenerate HTTP framing without
+forwarding trailers. The inspected agent relay and sandbox read relay apply
+the filter before adding their own upstream credentials.
+
 **Server-side fetches of user- or spoke-chosen URLs.** The dashboard's agent
 import and workflow spec fetches, the hub's hive config proxy and webhook
 relay to a spoke's self-reported dashboard URL, and knowledge document imports
@@ -420,6 +432,72 @@ upstream leg, so the pre-fetch check and the redirect policy are the controls
 there. Operator-configured gateway endpoints and the fixed-host `/api/style`
 fetch are not pinned: a gateway may legitimately sit on a private address, and
 redirects off either are still checked.
+
+The hub's contribute proxies, lite-enrollment repo access checks and mail
+relay to a spoke's dashboard, and the dashboard's GitHub token check, dial
+through the same pinned transport. The
+token check refuses every barred class for public `api.github.com`; for a
+configured API URL, which is intentionally chosen and may be private, it still
+pins every dial but refuses only link-local (cloud metadata), multicast and
+unspecified answers, and it refuses any cross-host redirect so that allowance
+never reaches another host. Git knowledge sources run `git` as a subprocess, so
+they pin through git instead: each clone, `ls-remote` and pull resolves the
+host once, refuses the fetch when any answer is barred or the lookup fails or
+comes back empty, and passes the checked addresses to git as
+`-c http.curloptResolve=host:port:addr`, so git connects to them and never
+looks the name up itself (git 2.37 or later; redirects are already refused with
+`http.followRedirects=false`). `HIVE_ALLOW_PRIVATE_GIT_SOURCE=true` allows a
+private or loopback Git server; link-local, multicast and unspecified answers
+stay refused even then.
+
+**Proxy decisions fail closed.** The egress audit
+([#18986](https://github.com/hivecommons/hive/issues/18986), item 5) walked
+every branch of the proxy's per-request decision path that can fail and
+checked what each does. The rule is that a check the proxy cannot evaluate
+refuses the request. Each branch below has a test that injects the failure.
+
+| Failure | Outcome |
+|---|---|
+| Body read error or body over the scan limit, canary scan | Refused, `403`. |
+| Body read error or body over the limit, Linear | Refused, `403`. |
+| Body read error, GitHub GraphQL | The connection is closed and nothing is forwarded. |
+| GraphQL or Linear document that does not parse | Refused by the mutation classifier. |
+| REST method and path with no matching rule | Refused at every mode. |
+| Repo pause, agent repo scope, auto-merge or `write_surface.enforce` predicate panics or hangs | That gate refuses, `403` naming the failed check ([#18994](https://github.com/hivecommons/hive/issues/18994)). |
+| Review-thread ownership seams (which agent opened a PR, the hive's own logins) panic or hang | Refused, `403` naming the failed check ([#19224](https://github.com/hivecommons/hive/issues/19224)). |
+| GitHub lookup behind the reference-repo and review-thread gates errors, panics or hangs | Refused, naming the lookup failure. |
+| Canary scanner panics or hangs | Refused, also in advisory canary mode ([#19224](https://github.com/hivecommons/hive/issues/19224)). |
+| No review-thread guard installed | Every guarded reply and delete is refused. |
+| Caller cannot be identified (`/proc/net/tcp` read fails) | Treated as advisory: writes refused, reads allowed. |
+| Plain-HTTP or uninspected tunnel address that cannot be parsed | Refused at dial time. |
+
+The panic and timeout cases share one guard. A panic is recovered and a hang
+is cut off at a deadline (two seconds for a config predicate, ten for a
+canary scan, fifteen for a GitHub lookup), and either answer is that gate's
+deny. Before the guard, a panic in any of these took down the whole proxy and
+with it every agent's egress, and a hang held the request open with no
+answer.
+
+Accepted risks, written down rather than fixed:
+
+- **Unidentified reads are allowed.** An agent the proxy cannot attribute is
+  given advisory mode, which allows GitHub reads. Denying them would break
+  every agent on a host where `/proc/net/tcp` cannot be read, and reads carry
+  the agent's own scoped token. Writes from such a caller are refused and
+  logged as a UID attribution failure.
+- **Budget, credential and audit seams are not guarded.** The GitHub budget
+  cap and reserve floor are rate limits: they fall back to config values, and
+  a wrong answer costs quota, not a policy bypass. The agent token source,
+  the Linear credential and the reference-repo token supply credentials; a
+  missing one makes GitHub refuse the request. The refused-write audit, the
+  canary leak handler and the review-reply handoff run after the decision
+  is made and cannot turn a deny into an allow.
+- **A timed-out check keeps running.** Go cannot cancel a goroutine, so a
+  hung predicate finishes in the background after the request is refused.
+  It holds no lock the request path needs.
+- **The canary scan is off when not configured.** With `ioscan` or canaries
+  disabled, no scan runs and nothing is refused on its account. That is the
+  operator's choice, not a failure of the check.
 
 **Hub-to-spoke channel.** Heartbeats carry a per-hive bearer key derived from
 the hub master secret and are compared in constant time. The payload is
@@ -517,7 +595,14 @@ sensitive paths, owner self-nomination, permission escalation in workflows,
 secret exposure, CI gate weakening, test removal, security policy edits, and
 remote code execution patterns. A match applies `sentinel-alert`, posts one
 comment and writes an audit entry. The label blocks Hive approval and every
-automerge lane until a maintainer removes it.
+automerge lane until a maintainer removes it, or until a later head matches
+no rule. Findings are head-scoped: every new head is evaluated again, and
+when the current head is clean Hive removes the label only if Hive itself
+added it for an earlier head's finding (its own alert comment names that
+head, and the newest label event is Hive's own, made no later than that
+comment). A label a person added stays. The earlier finding is kept in the
+audit log (`sentinel-alert-cleared` records the removal), `/api/sentinel`
+and that head's review evidence bundle.
 Whether that label and comment reach GitHub is decided by the **write-back
 containment gate** (`pkg/writeback`): on a PR Hive did not open, sentinel
 writes need ACMM L5 plus the review opt-in label (L6 without it), the repo

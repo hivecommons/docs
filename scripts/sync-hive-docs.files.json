@@ -572,5 +572,32 @@
   },
   {
     "source": "rfc-process.md"
+  },
+  {
+    "source": "ci-refresh-only-heads.md"
+  },
+  {
+    "source": "customers-enrichment.md"
+  },
+  {
+    "source": "knowledge/agent-pane-test-suite-hazard.md"
+  },
+  {
+    "source": "knowledge/changelog-fragment-exemptions.md"
+  },
+  {
+    "source": "knowledge/ci-is-the-verdict.md"
+  },
+  {
+    "source": "knowledge/docs-citation-guard.md"
+  },
+  {
+    "source": "knowledge/go-workspace-two-modules.md"
+  },
+  {
+    "source": "knowledge/trusted-scripts-tree-repin.md"
+  },
+  {
+    "source": "research/control-arm-amendment-2026-10-22.md"
   }
 ]

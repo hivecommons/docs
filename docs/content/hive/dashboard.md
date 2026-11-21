@@ -2,6 +2,13 @@
 
 # Spoke dashboard
 
+## Pausing an agent
+
+On the hive dashboard, open **Agents** in the sidebar and select the worker.
+As a hive owner, choose **⏸ pause** on its card. This pauses the individual
+agent, not the fleet, and is separate from disabling the agent or changing
+its per-mode cadences.
+
 ## Resuming a paused agent
 
 On the agent card, hover or focus the information icon beside **paused** to
@@ -83,6 +90,27 @@ Every dashboard section title has a small **?** mark. Hovering or focusing it sh
 
 Settings fields use the same **?** mark, rendered by `settingHelpMark(page, anchor, label, tip)`: hovering or focusing it shows the setting's tooltip, and clicking it opens the guide that explains the setting, or the tab's entry in [Dashboard settings explained](/docs/hive/dashboard/dashboard-settings-explained), through the same `dashboardDocsHref`. Clicking the mark never changes the setting.
 
+Use the [dashboard UI map](/docs/hive/dashboard-ui-map) to match section headings to
+their sidebar locations and Settings tabs.
+
+## Optional Ask AI help
+
+Where an operator has enabled **Ask**, the panel answers dashboard navigation
+questions with links to the docs. Answers are AI-generated; check the cited
+page before acting. Use the `?` marks or the docs directly if Ask is off,
+unavailable, or has no cited answer.
+
+Ask is off by default. Before your first question, review and accept the
+disclosure in the panel. Consent is recorded server-side for your signed-in
+dashboard identity, not shared with other users, and can be withdrawn in the
+panel. Hive asks again if the disclosure changes. Withdrawal stops future
+requests; it does not erase questions already sent.
+
+When you submit a question, Hive sends what you typed and, if enabled, a
+fixed dashboard section label to Kapa.ai. Project administrators can read
+questions in Kapa analytics. Do not paste secrets or private details.
+See [Ask data and consent](/docs/hive/dashboard/data-collection-and-telemetry#ask-ai-help) for the full payload.
+
 ## Design system
 
 Dashboard UI changes should follow the shared [dashboard design system](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-design-system.md), [dashboard glossary and sidebar IA](/docs/hive/dashboard-glossary), and [ADR-0018](/docs/hive/adr/0018-dashboard-design-tokens). The token layer is the theme contract for future user theme/background work and the migration path away from static inline styles; `go test ./pkg/dashboard/... -run StyleRatchet -v` ratchets inline styles and raw CSS values so the debt only goes down.
@@ -115,7 +143,7 @@ The main dashboard layout is browser-local and display-only. Use the `⠿` grip 
 
 ## Default collapsed cards
 
-A browser that has never stored any dashboard state (a new hive, or a first visit from a fresh profile) starts with the non-critical cards collapsed so a new operator first sees the cards that say whether the hive is alive and merging: **Overview**, **Governor**, **Projects**, **Review**, **Approvals**, **Agents** and **Agent activity** open expanded; **Throughput**, **Tokens**, **Cost**, **Advisory**, **Knowledge**, **Contributors**, **Inception**, **ACMM Eval**, **Diagnostics**, **Audit Log**, **Agent Logs**, **Experiment Lab** and **FAQ** start collapsed with their one-line summaries visible. The set is the `DASHBOARD_DEFAULT_COLLAPSED_SECTIONS` constant in the dashboard page. A browser that already holds dashboard state when it first loads this version is marked `legacy` in `localStorage` (`hive.dashboard.collapseDefaults`) and keeps the historical all-expanded default, including after **Reset layout to default**. An operator's explicit choice always wins: expanding a default-collapsed card stores `hive-section-collapsed-<id>=0`, collapsing any card stores `1`, and saved presets, JSON export/import and reset round-trip those values. The avatar menu's **Layout** section also offers **Expand all sections** and **Collapse all sections**.
+A browser that has never stored any dashboard state (a new hive, or a first visit from a fresh profile) starts with the non-critical cards collapsed so a new operator first sees the cards that say whether the hive is alive and merging: **Overview**, **Governor**, **Projects**, **Review**, **Approvals**, **Control panel** and **Activity** open expanded; **Throughput**, **Tokens**, **Cost**, **Advisory**, **Knowledge**, **Contributors**, **Inception**, **ACMM Eval**, **Diagnostics**, **Audit log**, **Agent Logs**, **Experiment Lab** and **FAQ** start collapsed with their one-line summaries visible. The set is the `DASHBOARD_DEFAULT_COLLAPSED_SECTIONS` constant in the dashboard page. A browser that already holds dashboard state when it first loads this version is marked `legacy` in `localStorage` (`hive.dashboard.collapseDefaults`) and keeps the historical all-expanded default, including after **Reset layout to default**. An operator's explicit choice always wins: expanding a default-collapsed card stores `hive-section-collapsed-<id>=0`, collapsing any card stores `1`, and saved presets, JSON export/import and reset round-trip those values. The avatar menu's **Layout** section also offers **Expand all sections** and **Collapse all sections**.
 
 To hide a dashboard section, hover or focus its left-menu row and press the small eye-off control. The row remains in the sidebar in a muted state, while the matching dashboard card is removed from the main layout. The same control changes to **Unhide <section>** with an eye icon; choosing it, or clicking the hidden row, restores the card in its saved order and jumps to it. Hidden sections are stored locally as `hive.dashboard.hiddenSections`; Overview cannot be hidden.
 
@@ -140,6 +168,14 @@ with the percentage left and when it resets:
 - **Claude**: the weekly limit, plus a 5-hour or model-specific weekly limit
   when the plan has one. A model-specific limit is named after its model the
   way Claude Code's `/usage` names it, for example "Weekly (Fable)".
+  Under the dials, one line shows Claude's usage credits (extra usage, which
+  keeps the account working past a plan limit) when Claude reports them:
+  "Usage credits: on · $0.00 of $350.00 used this month", "off", or "limit
+  reached" in amber once the monthly cap is spent. The line is hidden when
+  Claude does not report them. It is display only: the hive never turns
+  credits on or spends them. Claude's usage endpoint does not report a
+  purchased credit balance or banked limit resets, so the gauge cannot show
+  those; claude.ai's Settings › Usage page does.
 - **Copilot**: the monthly premium-request quota ("Premium requests"), as
   Copilot itself reports it, resetting at the start of each month.
 
@@ -879,7 +915,7 @@ dashboard:
       .panel { border-radius: 2px; }
 ```
 
-Built-ins are loaded from one YAML file per theme under `src/pkg/dashboard/theme/themes/`. Initial themes include `hive`, `hive-dark`, `hive-light`, `star-wars`, `dungeons-and-dragons`, `star-trek`, `cyberpunk`, `terminal`, `solarized-dark`, `nord`, and migrated contributor profile skins such as `contributor-violet-advisor`. Theme files can set `scopes: [dashboard, contributor]` so the same catalog drives dashboard Appearance and contributor profile styling. Tokens are
+Built-ins are loaded from one YAML file per theme under `src/pkg/dashboard/theme/themes/`. Initial themes include `hive`, `hive-dark`, `hive-light`, `star-wars`, `dungeons-and-dragons`, `star-trek`, `cyberpunk`, `terminal`, `solarized-dark`, `nord`, `sandstone`, and migrated contributor profile skins such as `contributor-violet-advisor`. Theme files can set `scopes: [dashboard, contributor]` so the same catalog drives dashboard Appearance and contributor profile styling. Tokens are
 validated against the dashboard's `:root` CSS custom properties so typos fail
 fast. Custom CSS is capped at 32 KiB, strips HTML/style-breakout characters, and
 only permits `https:` or bounded `data:` URLs; inlined backgrounds are capped at
