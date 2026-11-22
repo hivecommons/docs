@@ -327,6 +327,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'go-workspace-two-modules': 'knowledge/go-workspace-two-modules.md' },
       { 'trusted-scripts-tree-repin': 'knowledge/trusted-scripts-tree-repin.md' },
       { 'Pre-registration amendment: within-repo control arms (2026-10-22)': 'research/control-arm-amendment-2026-10-22.md' },
+      { 'Prompt-injection defences: Hive compared with trentina': 'prompt-injection-trentina-comparison.md' },
     ]
   }
 ]
