@@ -132,7 +132,7 @@ The OpenAI-compatible gateways (LiteLLM, OpenRouter, vLLM, and others) agents se
 
 ## Appearance
 
-The dashboard's look, stored under `dashboard.theme_overrides`: a background image (URL, opacity, position, size, attachment), the UI and monospace fonts, CSS token overrides and custom CSS. See [Appearance themes](/docs/hive/dashboard/dashboard-page-reference#appearance-themes).
+The dashboard's look, stored under `dashboard.theme_overrides`: a background image (URL, opacity, position, size, attachment), the UI and monospace fonts, CSS token overrides, light-mode token overrides and custom CSS. See [Appearance themes](/docs/hive/dashboard/dashboard-page-reference#appearance-themes).
 
 ## Agents
 
