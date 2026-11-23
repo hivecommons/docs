@@ -32,6 +32,10 @@ npx vitest run --coverage   # what CI runs: tests plus the coverage gate
 npm run check-links   # internal docs links
 npm run lint          # ESLint for src/, scripts/ and netlify/
 npm run format        # Prettier; CI runs format:check, so run this before pushing
+npm run format:check  # what CI runs: Prettier in check-only mode
+npx tsx scripts/npm-audit-gate.ts npm-audit.json --level=high   # high-severity audit gate CI runs on npm audit output
+npx tsx scripts/check-deploy-preview-ignore.ts   # deploy-preview ignore check CI runs
+npx tsx scripts/update-meeting-recordings.ts   # meeting recordings refresh, run by a scheduled workflow
 npm run build         # production build and doc-sync scripts
 typos                 # spell check (https://github.com/crate-ci/typos); not an npm script
 ```
