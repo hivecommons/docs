@@ -602,5 +602,11 @@
   },
   {
     "source": "prompt-injection-trentina-comparison.md"
+  },
+  {
+    "source": "ask-ai-help.md"
+  },
+  {
+    "source": "contributing-drift-gate.md"
   }
 ]

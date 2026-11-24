@@ -19,6 +19,7 @@ Documentation for the current Hive line (branch `v5`; the code and docs live und
 ### First installation
 
 - [Hosted Hive Hub onboarding](/docs/hive/hub/hosted-hive-hub-onboarding) — signing in at `https://hive.hivecommons.dev`, requesting a hosted hive, installing the GitHub App, configuring model gateways and Copilot login, reading `/fleet`, and fixing common setup problems.
+- [Ask AI help](/docs/hive/ask-ai-help) — the optional Ask panel on the hub and hive dashboards: what leaves, consent, hub relay and direct modes, configuration keys and the docs-link fallback (#19177).
 - [Hub Fleet activity page](/docs/hive/hub/fleet-activity) — the read-only `/activity` board of open issues and PRs across the hives you can see: per-viewer scoping, hive chips, group-by-hive freshness headers, always-visible truncation and stale-source disclosures, 15-second ETag polling, and display mode (`?kiosk=1`, `?display=1`, `am.*` views and `hub-activity` playlists).
 - [Docker Compose quick start](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-docker-compose.md) — default standalone installation, prerequisites, and verification.
 - [Podman quick start](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-podman.md) — standalone Quadlet/systemd installation, with rootless/rootful prerequisites.
@@ -254,6 +255,7 @@ Documentation for the current Hive line (branch `v5`; the code and docs live und
 - [CNCF reference architecture](https://github.com/hivecommons/hive/blob/v5/src/docs/cncf-reference-architecture.md) — CNCF submission/reference template.
 - [Podman CI runner map](https://github.com/hivecommons/hive/blob/v5/src/docs/podman-ci-runner-map.md) — measured hosted-runner capabilities and which Podman lane goes where; SELinux is the only lane needing non-hosted infrastructure.
 - [CI runner labels](https://github.com/hivecommons/hive/blob/v5/src/docs/ci-runner-labels.md) — how `runs-on:` picks the self-hosted fleet, why a fork must degrade to a GitHub-hosted runner, and the one variable `hivecommons` sets.
+- [Contributing drift gate](/docs/hive/contributing-drift-gate) - the reusable workflow that fails a repo's CI when a command it runs is not mentioned in its CONTRIBUTING.md or README.md, its exemptions file, and how a sibling repo pins it by SHA.
 - [Refresh-only heads](/docs/hive/ci-refresh-only-heads) - which heavy CI jobs (Docker multi-arch, FOSSA, Mutation) skip a verified hive App base refresh that leaves the PR diff unchanged, and the fail-safe proof behind the skip.
 - [Session taint design](https://github.com/hivecommons/hive/blob/v5/src/docs/design/session-taint.md) - **design/proposal:** a session-level record of what an agent has read and the rules that would hold or deny later pushes, comments and PRs against it, off by default with an observe-only first phase (RFC #18987).
 - [Gate-integrity invariants for agent lanes](https://github.com/hivecommons/hive/blob/v5/src/docs/design/gate-integrity-invariants.md) — proposed write-gate rules for agent lanes: no history rewrites on branches a lane did not create, no sign-off on other authors' commits, and hold-gated demotion for gate manipulation.
