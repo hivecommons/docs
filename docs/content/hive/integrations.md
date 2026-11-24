@@ -73,6 +73,14 @@ Gateway backends are not agent binaries. Hive routes Claude-style agent calls th
 
 TypeSafe AI is a Hive Commons partner.
 
+## Forges
+
+Where a hive's repositories, branches and change requests live. GitHub.com and GitHub Enterprise are the forges agents work against today. See [Forges: GitLab, Gitea and Forgejo](/docs/hive/integrations/forges) for every adapter.
+
+| Integration | Hive config | Status | Notes |
+| --- | --- | --- | --- |
+| ![Forgejo forge](/integrations/forgejo.svg) Forgejo | `project.forge: forgejo`, `forgejo.forgejo_url`, `forgejo.token_env` | Partial, in progress | Self-hosted or Codeberg. The `forgejo` forge kind and config are on v5, and a hive with every repository on Forgejo boots without GitHub credentials. A Forgejo-only hive does not find work yet, and agents cannot yet clone or push to a Forgejo host ([hive#19494](https://github.com/hivecommons/hive/issues/19494)). See [Forgejo](/docs/hive/integrations/forgejo). Forgejo work contributed by `sdwilsh`. |
+
 ## Isolation and secrets
 
 Agent sandboxes and the spoke keystore. The keystore moves spoke secrets on the `/data` volume behind one provider interface, so a copy of the volume on its own no longer yields them. This shipped in [hive#18222](https://github.com/hivecommons/hive/pull/18222) and [hive#18225](https://github.com/hivecommons/hive/pull/18225).
@@ -91,6 +99,7 @@ Logos are trademarks of their owners and are used for identification only. Sourc
 - OpenShell: the project mark (not the NVIDIA corporate logo), unmodified from [`openshell-mark.svg`](https://github.com/NVIDIA/OpenShell/blob/2e5589b2180dd432320adda124c4f7bcede119b5/docs/brand/assets/openshell-mark.svg), [Apache-2.0](https://github.com/NVIDIA/OpenShell/blob/2e5589b2180dd432320adda124c4f7bcede119b5/LICENSE).
 - Agent Substrate: "Yolo", designed and donated by Nan Hockin, from [`ate-logo.png`](https://github.com/agent-substrate/substrate/blob/cf5768a075b741511829a207bdfb4e296d4114c7/logo/ate-logo.png), resized to 128 x 128. Licensed [Apache-2.0 OR CC-BY-4.0](https://github.com/agent-substrate/substrate/blob/cf5768a075b741511829a207bdfb4e296d4114c7/logo/LICENSE), used here under CC-BY-4.0.
 - OpenBao: unmodified from [`openbao-color.svg`](https://github.com/openbao/artwork/blob/2387118edc846d2ec82ffd72409a3e0fe3be8519/color/openbao-color.svg), [CC-BY-4.0](https://github.com/openbao/artwork/blob/2387118edc846d2ec82ffd72409a3e0fe3be8519/LICENSE).
+- Forgejo: created by [Caesar Schinas](https://caesarschinas.com/), unmodified from [`assets/logo.svg`](https://codeberg.org/forgejo/forgejo/src/commit/31bfb80c03287ab527eca7a72a2bbb029e2a43ab/assets/logo.svg) in the Forgejo source tree, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) per the [Forgejo branding page](https://codeberg.org/forgejo/meta/src/commit/9810d8469ab58d4604ed222eb2a47f90d2bc03fc/branding/README.md#logo).
 - Podman and Kubernetes: [Simple Icons](https://github.com/simple-icons/simple-icons/tree/90646e4bf7f3b89df6c37e65baf3e7bc759a517c/icons), [CC0 1.0](https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md).
 
 ## Planning, work sources, and related ecosystem
@@ -118,7 +127,7 @@ Hive Commons thanks [Akamai (Linode)](https://www.linode.com/) and [Oracle Cloud
 
 The product landing page groups runtime integrations separately from the agent CLI and inference list above. Current shipped surfaces are:
 
-- **Source control:** GitHub and GitHub Enterprise are the production GitHub App path. The forge-neutral adapter layer includes GitLab and Gitea / Forgejo issue and change-request flows as those paths graduate.
+- **Source control:** GitHub and GitHub Enterprise are the production GitHub App path. The forge-neutral adapter layer includes GitLab, Gitea and Forgejo issue and change-request flows as those paths graduate. Forgejo has its own forge kind on v5 and is partial, in progress: see [Forgejo](/docs/hive/integrations/forgejo).
 - **Work sources:** GitHub Issues (default), GitHub Projects, Linear, Jira Cloud, Jira Data Center / Server (`deployment: datacenter`), Spektacular run stages, and Crustify / Wavefront migration graphs.
 - **Sign-in:** Microsoft, GitHub, IBM, Google, and other OIDC providers by hub configuration.
 

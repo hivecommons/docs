@@ -1,0 +1,1 @@
+- The Hive docs now include a Forgejo page (Integrating with Hive), synced from hivecommons/hive#19674, and the Supported integrations page has a Forges section with the official Forgejo logo (Caesar Schinas, CC BY-SA 4.0). Forgejo is marked partial, in progress until hivecommons/hive#19494 closes.

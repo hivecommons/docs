@@ -200,6 +200,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Spektacular project inception': 'integrations/spektacular.md' },
       { 'Cline coding workers': 'integrations/cline.md' },
       { 'Forges: GitLab, Gitea and Forgejo': 'integrations/forges.md' },
+      { 'Forgejo': 'integrations/forgejo.md' },
     ]
   },
   {
