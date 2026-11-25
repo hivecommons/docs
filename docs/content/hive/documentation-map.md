@@ -62,6 +62,7 @@ Documentation for the current Hive line (branch `v5`; the code and docs live und
 
 - [Work source providers](/docs/hive/integrations/work-source-providers) — **Developer:** implement an adapter. To configure an existing tracker, use [Work sources](/docs/hive/work-sources).
 - [Forges: GitLab, Gitea and Forgejo](/docs/hive/integrations/forges) — `project.forge`, the `gitlab:`/`gitea:` keys, which `pkg/forge` operations each adapter supports, which governor writes already use them, and how the dashboard shows the forge.
+- [Forgejo](/docs/hive/integrations/forgejo): what Hive does with a Forgejo repository on v5 today (partial, in progress), the `forgejo:` config keys, and the open work in [#19494](https://github.com/hivecommons/hive/issues/19494).
 - [OpenBao Transit as the spoke keystore](/docs/hive/integrations/openbao) — **Opt-in:** `HIVE_KEYSTORE_PROVIDER=openbao` seals the spoke's secrets at rest through an OpenBao transit engine; the `HIVE_OPENBAO_*` variables, token and Kubernetes auth, rotation, the refuse-to-boot failure mode and a dev-mode walkthrough.
 - [Hive Labels and Control Signals](/docs/hive/labels-and-control-signals) — authoritative operator reference for labels, holds, approvals, contributor skip labels, planning labels, and dashboard bands. The old [Hive issue labels](https://github.com/hivecommons/hive/blob/v5/src/docs/issue-labels.md) page redirects here.
 - [GitHub webhooks: cadence, patch and reconcile](/docs/hive/webhooks) — configure event-driven updates, understand snapshot accuracy, and diagnose fallback to polling.
