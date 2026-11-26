@@ -53,5 +53,6 @@ configuration issue, not a deploy regression.
 
 ## 6. After the incident
 
-Record what happened, the time to restore, and the follow-up fixes. Use the
-postmortem template in `hivecommons/hive` if the outage reached users.
+Record what happened, the time to restore, and the follow-up fixes. If the
+outage reached users, write it up with
+[postmortem-template.md](postmortem-template.md).
