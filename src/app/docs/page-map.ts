@@ -331,6 +331,8 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Prompt-injection defences: Hive compared with trentina': 'prompt-injection-trentina-comparison.md' },
       { 'Ask AI help': 'ask-ai-help.md' },
       { 'Contributing drift gate': 'contributing-drift-gate.md' },
+      { 'Colony as the customer-data backend': 'design/colony-customer-data-backend.md' },
+      { 'Customers: signal audit and using customer data to shape managed repos': 'design/customers-signal-audit.md' },
     ]
   }
 ]

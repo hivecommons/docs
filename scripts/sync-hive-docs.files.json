@@ -611,5 +611,11 @@
   },
   {
     "source": "contributing-drift-gate.md"
+  },
+  {
+    "source": "design/colony-customer-data-backend.md"
+  },
+  {
+    "source": "design/customers-signal-audit.md"
   }
 ]
