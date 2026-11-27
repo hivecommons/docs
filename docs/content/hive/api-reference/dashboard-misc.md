@@ -63,7 +63,7 @@ review are settled.
 | Method | Path | Auth | Purpose | Source |
 |---|---|---|---|---|
 | `GET` | `/api/audit` | Read-write role | Audit Log — `{"entries": [...]}` envelope, newest first, capped at 200; response shape and the serve-time `user_name` field in [audit-log.md](https://github.com/hivecommons/hive/blob/v5/src/docs/audit-log.md#get-apiaudit) | `pkg/dashboard/api.go:65` |
-| `GET` | `/api/watchdog/activity` | Read-write role | Watchdog activity readout for the Health tab (#7254): `watchdog-*` audit actions over `?days=` (default 30, clamped to 90) — total / taken / observed / `byAction`, a zero-filled per-day `daily` histogram, per-agent `agents` liveness, and the Observe → Heal `promotion` hint; see [agent-watchdog.md](/docs/hive/operations/agent-and-governor-controls/agent-watchdog#watchdog-activity-strip) | `pkg/dashboard/api.go:509` |
+| `GET` | `/api/watchdog/activity` | Read-write role | Watchdog activity readout for the Health tab (#7254): `watchdog-*` audit actions over `?days=` (default 30, clamped to 90) — total / taken / observed / `byAction`, a zero-filled per-day `daily` histogram, per-agent `agents` liveness, and the Observe → Heal `promotion` hint; see [agent-watchdog.md](/docs/hive/operations/agent-and-governor-controls/agent-watchdog#watchdog-activity-strip) | `pkg/dashboard/api.go:510` |
 | `GET` | `/api/ask/status` | Dashboard auth/session | Ask AI help status for the signed-in person (`enabled`, `text_version`, `disclosure`, `consented`, `docs_url`, `ai_label`); `404` unless `ask.enabled` is on and configured. See [Ask AI help](/docs/hive/ask-ai-help) | `pkg/dashboard/api.go:83` |
 | `PUT` | `/api/ask/consent` | Dashboard auth/session | Confirm the Ask disclosure (`{text_version}`); `409` on an older text; `204` | `pkg/dashboard/api.go:84` |
 | `DELETE` | `/api/ask/consent` | Dashboard auth/session | Withdraw Ask consent; `204` | `pkg/dashboard/api.go:85` |
@@ -95,7 +95,7 @@ review are settled.
 | `GET` | `/api/upstream-watch` | Owner only | Upstream-watch divergence: per watched fork the upstream followed, the watermark and last-run time, surfaced/ported/dismissed/skipped counts, and the recent upstream refs with their upstream URL, diff URL, fork issue number and state. Read-only — it reads the config and the watch state file, never GitHub. Also carries `interval`, `project_repos` and each repo's configured entry (`config`) for the editor. | `pkg/dashboard/api.go:297` |
 | `PUT` | `/api/config/upstream-watch` | Owner only | Upstream Watch Config Update: edit `upstream_watch` from the Features tab. Body `{enabled?, interval?, repos?: {<repo>: {upstream?, sources?, pr_labels?, max_issues_per_run?, label?} \| null}}` — absent keys are unchanged, `null` removes a repo, keys are stored as the bare repo name. Validated with the loader's rules before the config changes (400 on failure), then persisted and audited as `config_upstream_watch`. | `pkg/dashboard/api.go:298` |
 
-| `GET` | `/api/hotspots` | Dashboard auth/session | Merge-hotspot advisor report (`?repo=owner/name` optional): files repeatedly touched by concurrent PRs over the last `governor.hotspot_window_days`, each with `prs` (distinct PRs), `pr_numbers`, `overlaps` (PR pairs open at the same time), `conflicts` (rebase conflicts blamed on the file), `lines`, `kind` (`code`/`doc`/`lock`/`generated`/`data`), `score`, `symbol_groups`, `recommendation` (`split-code`/`split-doc`/`split-source`/`report-only`/`none`), `reason`, `generated_from`, `source_files` (files under `generated_from`, when known), `issue_number`/`issue_url` of the modularize issue filed, `last_updated`; top-level `count`/`actionable`/`filed`. Derived from the merge train's own PR file lists and the rebase follow-through's conflict records — never lists PRs or files from GitHub. See [operator-reference.md § Merge-hotspot advisor](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference.md#merge-hotspot-advisor-governorhotspot_). | `pkg/dashboard/api.go:547` |
+| `GET` | `/api/hotspots` | Dashboard auth/session | Merge-hotspot advisor report (`?repo=owner/name` optional): files repeatedly touched by concurrent PRs over the last `governor.hotspot_window_days`, each with `prs` (distinct PRs), `pr_numbers`, `overlaps` (PR pairs open at the same time), `conflicts` (rebase conflicts blamed on the file), `lines`, `kind` (`code`/`doc`/`lock`/`generated`/`data`), `score`, `symbol_groups`, `recommendation` (`split-code`/`split-doc`/`split-source`/`report-only`/`none`), `reason`, `generated_from`, `source_files` (files under `generated_from`, when known), `issue_number`/`issue_url` of the modularize issue filed, `last_updated`; top-level `count`/`actionable`/`filed`. Derived from the merge train's own PR file lists and the rebase follow-through's conflict records — never lists PRs or files from GitHub. See [operator-reference.md § Merge-hotspot advisor](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference.md#merge-hotspot-advisor-governorhotspot_). | `pkg/dashboard/api.go:556` |
 | `GET` | `/api/widget` | Dashboard auth/session | Widget | `pkg/dashboard/api.go:108` |
 | `GET` | `/api/pane/{agent}` | Dashboard auth/session | Pane | `pkg/dashboard/api.go:113` |
 | `GET` | `/api/role` | Dashboard auth/session | Role | `pkg/dashboard/api.go:127` |
@@ -111,6 +111,7 @@ review are settled.
 | `PUT` | `/api/hive-id` | Owner only | Hive IDSet | `pkg/dashboard/api.go:439` |
 | `POST` | `/api/chat` | Dashboard auth/session | Chat | `pkg/dashboard/api.go:470` |
 | `GET` | `/api/auth/token` | Public | Auth Token | `pkg/dashboard/api.go:504` |
+| `POST` | `/api/auth/github-link/revoke` | Owner | Revoke GitHub Login Link (owner revokes an identity's hub-proven link; a body naming a login is refused, #19992) | `pkg/dashboard/api.go:505` |
 | `GET` | `/api/v1/` | GitHub token | Contributor v1 API dispatcher | `pkg/dashboard/api_contribute.go:351` |
 | `POST` | `/api/v1/` | GitHub token | Contributor v1 API dispatcher | `pkg/dashboard/api_contribute.go:352` |
 | `GET` | `/api/docs` | Dashboard auth/session | APIDocs | `pkg/dashboard/api_contribute.go:353` |
@@ -128,7 +129,7 @@ review are settled.
 | `POST` | `/api/hives/{id}/heartbeat` | Dashboard auth/session | Hives Heartbeat | `pkg/dashboard/api_contribute.go:378` |
 | `DELETE` | `/api/hives/{id}` | Owner only | Hives Delete | `pkg/dashboard/api_contribute.go:379` |
 | `POST` | `/api/hives/onboard` | Dashboard auth/session | Hives Onboard | `pkg/dashboard/api_contribute.go:380` |
-| `GET` | `/sso` | Public | SSO | `pkg/dashboard/server.go:1841` |
+| `GET` | `/sso` | Public | SSO | `pkg/dashboard/server.go:1855` |
 ### Activity observation provenance
 
 The CI snapshot retains real check/node IDs, head, App ID and transition times.
