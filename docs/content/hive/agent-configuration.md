@@ -667,11 +667,43 @@ Hive tells the CLI the real window with `CLAUDE_CODE_MAX_CONTEXT_TOKENS` when it
        max_context_tokens: 262144
    ```
 
-2. The window the inference translator discovered from the endpoint's `/v1/models`: `max_model_len` (vLLM), then `context_length` (gufo, OpenRouter), then `max_input_tokens` (used by some gateways; LiteLLM's own `/v1/models` does not report a window, so set `max_context_tokens` there). A listing entry is used only when its `id` matches the model, or when the listing has a single model. The discovery runs in the background when the route is set, so a window learned for a model applies from the next launch of an agent on that model. Learned windows are kept in memory only, so after a hive restart the first launch on each model gets no discovered window. Set `max_context_tokens` when the window must apply from the first launch. The `inference route max context length resolved` log line records a learned window.
+2. The window the inference translator discovered from the endpoint's `/v1/models`: `max_model_len` (vLLM), then `context_length` (gufo, OpenRouter), then `max_input_tokens` (used by some gateways). A listing entry is used only when its `id` matches the model, or when the listing has a single model. When the listing names no window, as LiteLLM's own `/v1/models` does not, Hive asks the gateway's `/model/info` next and uses `model_info.max_input_tokens` of the entry whose `model_name` is the model. LiteLLM reports that value for models it knows, and for others when the LiteLLM config sets `model_info.max_input_tokens` on the deployment; otherwise set `max_context_tokens`. The discovery runs in the background when the route is set, so a window learned for a model applies from the next launch of an agent on that model. Learned windows are kept in memory only, so after a hive restart the first launch on each model gets no discovered window. Set `max_context_tokens` when the window must apply from the first launch. The `inference route max context length resolved` log line records a learned window.
 
 `max_context_tokens` describes the agent's configured `model`. It is not applied while a model override (a dashboard switch or pin) runs another model, and a review head on a different model does not inherit it; those fall back to discovery.
 
-Hive does not export the variable for model IDs that contain `claude` (for example `anthropic/claude-sonnet-5-5`), because the CLI already knows those windows. Set `HIVE_INFERENCE_PASS_CONTEXT_WINDOW=0` to turn the export off for the whole hive. Sandbox Job kicks do not get the variable yet: the sandbox drops every variable whose name contains `TOKEN`.
+#### Earlier auto-compaction (opt-in)
+
+Claude CLI agents, direct or inference-routed, can opt into an earlier compaction window:
+
+```yaml
+agents:
+  quality:
+    auto_compact_window_tokens: 160000
+```
+
+The per-agent `auto_compact_window_tokens` is a token count; `0` or omission
+leaves it unset, and a nonzero value below `100000` is rejected. It takes
+priority over `HIVE_INFERENCE_AUTO_COMPACT_PERCENT`. The CLI caps the effective
+window at `CLAUDE_CODE_MAX_CONTEXT_TOKENS` when declared, or `1000000` otherwise,
+and floors it at `100000`. It subtracts 33000 tokens from that effective window
+to calculate the compaction trigger.
+
+Alternatively, set `HIVE_INFERENCE_AUTO_COMPACT_PERCENT` to an integer from
+`1` to `100` to opt in hive-wide. The CLI compacts at that percentage of
+`(effective window - 20000)`; the 33000-token adjustment does not apply.
+Unset or invalid values leave this option off. This fallback requires a known
+exported context window, so it inherits the discovery, model-ID, and
+`HIVE_INFERENCE_PASS_CONTEXT_WINDOW` limitations above and below. The explicit
+per-agent setting does not depend on the context-window export and also works
+for Claude model IDs. It describes the configured model and is dropped for a
+review head using a different model. Sandbox Job kicks receive the same context
+and compaction settings as pane launches.
+
+#### Setting the windows
+
+Use the **Context window (tokens)** and **Auto-compact window (tokens)** fields in the agent's Settings dialog (General section) for `max_context_tokens` and `auto_compact_window_tokens`. Saving writes the config file, the dashboard overlay and `/data/agent-configs/<agent>.yaml` together and restarts the agent, because the CLI reads both values at launch. An empty field or `0` clears the key. A hand edit to the agent file or to the agent's block in the config file also takes effect at the next boot or reload: on a Kubernetes spoke a non-zero value in either layer is no longer replaced by an older dashboard overlay entry for the agent that does not set the key, and a non-zero value in the agent file wins over the overlay. Because `0` means unset, clearing a value in the dashboard does not override a non-zero value in a read-only ConfigMap seed; remove it there.
+
+Hive does not export the variable for model IDs that contain `claude` (for example `anthropic/claude-sonnet-5-5`), because the CLI already knows those windows. Set `HIVE_INFERENCE_PASS_CONTEXT_WINDOW=0` to turn the export off for the whole hive.
 
 ### Per-agent homes: what is shared and what is private
 
@@ -790,6 +822,27 @@ Through a custom `ANTHROPIC_BASE_URL`, the Claude CLI aborts a stream that sends
 Because the `200` has already gone out, a gateway failure on a streamed request (unreachable, a non-2xx status, or a broken stream) reaches the CLI as an SSE `error` event, not as an HTTP status. The message is the same `inference backend returned <status>: ...` or `inference backend unreachable: ...` text, and the error type follows the status: `rate_limit_error` for `429`, `overloaded_error` for `503` and `529`, `authentication_error` for `401`, `api_error` for other `5xx`. Non-streaming requests are unchanged.
 
 If a turn is still cut, raise the CLI's own limits: `CLAUDE_STREAM_IDLE_TIMEOUT_MS` (5 to 30 minutes) lengthens the watchdogs, and `API_FORCE_IDLE_TIMEOUT=0` turns the body idle timeout off. Hive does not set either. An agent in a tmux pane inherits the hive process's environment, so setting them in the hive container's environment reaches the CLI; a sandbox Job runs in its own pod and does not inherit it.
+
+#### Headless turns (`headless_turns`): one `claude -p` per kick
+
+A translator-routed agent (`vllm`, `llm-d`, `litellm`, `watsonx` or a named gateway) normally runs the interactive Claude CLI resident in its pane. Anthropic counts that as interactive Claude Code even when the route ends at Anthropic with a Console API key, and the monthly API credits that come with Max, Ultra and Team plans do not pay for interactive Claude Code: the request fails with `Your credit balance is too low` while the credit sits unspent. Per Anthropic's [help article](https://support.claude.com/en/articles/17154008), `claude -p` run with an API key from the linked Console organization is billed as Agent SDK usage, which those credits do cover ([#19902](https://github.com/hivecommons/hive/issues/19902)).
+
+`headless_turns: true` on an agent switches it to that mode. It is off by default:
+
+```yaml
+agents:
+  ci-maintainer:
+    backend: litellm
+    model: anthropic/claude-sonnet-5-5
+    headless_turns: true
+```
+
+- **What changes.** The pane holds a shell instead of a resident CLI. Each kick runs `hive claude-turn`, which starts one `claude -p --input-format stream-json --output-format stream-json` with the agent's usual launch flags (model, `--bare --settings`, the GitHub-write and host-state deny rules, tool rules, MCP flags), feeds it the prompt on stdin, and renders its output as plain pane text. The pane shows `HIVE_CLAUDE_HEADLESS_RUNNING` while a turn runs and `HIVE_CLAUDE_HEADLESS_READY` at the prompt, which the kick, busy and turn-end gates read.
+- **What does not change.** The CLI still talks to Hive's translator, so the real gateway key stays out of the agent's environment, `/v1/models` discovery, metering, key rotation, the opt-in timeouts and retries, and spending-limit detection all work as before. Hive does not edit the CLI's requests or its system prompt.
+- **Continuity.** The first kick after a launch starts a new session; later kicks resume it by id (`--resume`). `clear_on_kick: true` (the default) starts a new session on every non-resume kick, which replaces the interactive `/clear`. If the recorded session can no longer be resumed, the turn starts a new one and says so in the pane.
+- **What is skipped.** There is no idle placeholder kick at launch (a headless turn is a full model call), no consent-screen watcher, and no post-kick "continue" or action nudges, because the pane is a shell between turns and each turn ends when `claude -p` exits. PR follow-up resume kicks are refused, as for headless agy.
+- **Setting it.** Use the **Headless turns** toggle in the agent's Settings dialog (General section); saving it writes the config file, the dashboard overlay and `/data/agent-configs/<agent>.yaml` together and restarts the agent. A hand edit to the agent file or to the agent's block in the config file also takes effect at the next boot or reload: on a Kubernetes spoke an opt-in in either layer is no longer replaced by the dashboard overlay's older copy of the agent. An explicit `headless_turns: false` is kept as a real value: turning the toggle off writes `false` to the config file, the overlay and the agent file, and that overlay `false` overrides a `true` in the ConfigMap seed, which the dashboard cannot rewrite.
+- **Scope.** The setting applies only to translator-routed agents; it is ignored on `claude` (subscription) and every other CLI backend, and when `launch_cmd` is set. Whether a given request is covered by subscriber credits is Anthropic's decision; Hive only changes how the CLI is started.
 
 ### Claude Managed Agents hosted execution
 
@@ -1283,7 +1336,7 @@ One agent reaches its template by **role** rather than by `kick_template`: an ag
 | Is there work? | Go, before any template is read | An empty escalated queue means scheduled kicks are skipped (logged as `nothing to adjudicate`) and a forced kick is a stand-down with no repo-rotation instructions ([#11045](https://github.com/hivecommons/hive/issues/11045), [#11046](https://github.com/hivecommons/hive/issues/11046)). A template must not be able to manufacture a contract with nothing to adjudicate. |
 | May this agent close a PR? | Go, rendered into `${REVIEWER_CLOSE_AUTHORITY}` | Closing is operator-only below ACMM L6. Whether an agent may close a human-queued PR is a trust decision, not wording. |
 
-So the worst an override can do is change the *wording* of a kick that was already going to be sent. The template-specific variables are `${REVIEWER_WORK_LIST}`, `${REVIEWER_MAX_PRS}`, `${REVIEWER_PASSED_LABEL}`, `${REVIEWER_RECOMMEND_CLOSE_LABEL}` and `${REVIEWER_CLOSE_AUTHORITY}`, alongside the usual built-ins.
+So the worst an override can do is change the *wording* of a kick that was already going to be sent. The template-specific variables are `${REVIEWER_WORK_LIST}`, `${REVIEWER_MAX_PRS}`, `${REVIEWER_PASSED_LABEL}`, `${REVIEWER_RECOMMEND_CLOSE_LABEL}`, `${REVIEWER_CLOSE_AUTHORITY}` and `${REVIEWER_MERGE_AFTER_GREEN}` (what happens to a repaired PR once its checks are green: at ACMM L5 it carries `ready-for-review` and waits for a maintainer, at L6 the sweep merges it), alongside the usual built-ins.
 
 Do not confuse it with `reviewer-queue.md`, which belongs to the pack-defined `reviewer` agent in the L5/L6 packs: that agent wakes on a 30-minute cadence, works the open PR queue in advisory mode and routes `requires_human` / `reject` verdicts to a maintainer via the triage label itself. Because a `kick_template` shadows the role-based routing, that agent never reaches this lane; the L5/L6 packs therefore ship a separate template-less `adjudicator` agent (`role: reviewer`, `mode: ISSUES_AND_PRS`, 30-minute cadence) to work escalated PRs ([#9477](https://github.com/hivecommons/hive/issues/9477)). Its work list covers every escalated hive PR the hub lists — the escalated rows of `ci_failing` plus the `escalated` list in `ci-failing.json`, which carries conflicted, green, and pending escalations that have no failing check.
 
